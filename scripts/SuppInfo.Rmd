@@ -1,0 +1,190 @@
+---
+title: "Supplementary Information"
+author: "Tan, M., Xie, X., Jaeger, T. F."
+date: "28/12/2019"
+output:
+  html_document:
+    number_sections: yes
+    theme: readable
+    toc: yes
+    toc_depth: 4
+    toc_float: yes
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+```
+
+**Appendix**
+
+This supplementary information describes the methods of the behavioural studies that were carried out in English and Swedish.
+
+# Methods
+The two experiments were similar and only differed minimally in language, number of participants, and number of test items. These differences are detailed under the respective subheaders of "English" and "Swedish" in the following subsections. 
+The studies employed an exposure-test paradigm. Exposure was manipulated between participants. Both groups were exposed to foreign-accented speech from the same talker. The two groups of participants differed, however, in whether the exposure materials contained the critical phonological contrast (syllable-final \/d-t\/). The control group never heard any instances of syllable-final /d/ or /t/. The \/d\/-exposure group heard words with syllable-final \/d\/ (e.g., "episod"), but no words with syllable-final /t/. Following exposure, both groups went through the exact same test phase, during which they categorized tokens along the /d/-/t/ continuum that were part of minimal pairs (e.g., "sead" or "seat").
+
+## Participants ##
+### English ###
+48 students 
+
+### Swedish ###
+25 people recruited from the Department of Swedish \& Multilingualism at Stockholm University participated. Two of the participants were excluded from the analysis because they were not native speakers of Swedish. Participants were alternately assigned to the experimental or control group.
+
+## Materials##
+
+### English ###
+
+### Swedish ###
+Recordings were made of a 25-year old, female native speaker of the Brabantish dialect of Central Flanders, with level A1 (CEFR) knowledge of Swedish at the time of recording. As the speaker was very inexperienced with Swedish and therefore unfamiliar with many of the words, recordings of the materials spoken by a female native Swedish speaker were also made which served as native exemplars for the Flemish speaker. 
+Recordings were made in a sound-attenuated room at the Stockholm University Multilingualism Lab. A recording of the native speaker producing the target word was first played to the Flemish speaker over Sony MDR-7506 headphones at a comfortable volume. Simultaneously and throughout the trial, the target word was displayed on a computer screen placed within a comfortable viewing distance. An audible beep was played after 2 seconds from trial onset (after the native recording had finished playing) to cue production of the target. Words were spoken into an Audio-Technica AT3035 microphone, placed directly in front of the speaker. Recordings were sampled at 44.1kHz. The experimenter controlled the presentation of each word which appeared three times in random order in order to give the speaker sufficient time and opportunity to say the words correctly. Recording samples were screened for vowel mispronunciation (e.g. mispronouncing a long vowel as short) and excluded from consideration. The word lists were divided into exposure /d/-final words, filler words, replacement words, and test words. These were recorded in separate sessions. Minimal pair test words were presented in separate lists to avoid deliberate contrastive hyper-articulation.
+
+##Exposure stimuli##
+
+### English ###
+
+### Swedish ###
+
+##Test stimuli##
+
+### English ###
+
+### Swedish ###
+
+##Procedure##
+
+### English ###
+
+### Swedish ###
+
+## Results ##
+
+### Swedish ###
+```{r preamble, message=FALSE, warning=FALSE, error=FALSE, echo=FALSE, results='hide'}
+library(tidyverse)
+library(magrittr)
+library(cowplot)
+library(stringi)
+library(lme4)
+library(lmerTest)
+library(ggplot2)
+
+d.pilot = read_csv(file = "../data/pilot_test/testrun2.csv")
+d.prod = readRDS("../data/prod.rds")
+
+d.pilot %<>%
+  dplyr::rename(Filename = sound) %>%
+  mutate(
+    Block = gsub("^([A-Z]).*$", "\\1", item_cond),
+    Block = factor(case_when(
+      Block == "E" ~ "exposure",
+      Block == "T" ~ "test",
+      T ~ NA_character_
+    )),
+    MinimalPairID = factor(
+      ifelse(Block == "exposure", NA,
+             tolower(gsub("^[A-Z]+_([0-9]+)_.*$", "\\1", Filename)))),
+    ItemTemp = gsub("^[A-Z]([A-Z]+)$", "\\1", item_cond),
+    Item.WordStatus = factor(case_when(
+      ItemTemp == "NW" ~ "non-word",
+      ItemTemp %in% c("FW", "CW", "TW", "TF", "DF", "TI", "DI") ~ "word",
+      T ~ NA_character_
+    )),
+    Item.Type = factor(case_when(
+      ItemTemp %in% c("NW", "FW") ~ "filler",
+      ItemTemp %in% c("CW", "TW", "TF", "DF", "TI", "DI") ~ "critical",
+      T ~ NA_character_
+    )),
+    Sound.Type = factor(case_when(
+      ItemTemp %in% c("DI", "DF", "TW") ~ "d",
+      ItemTemp %in% c("TI", "TF") ~ "t",
+      T ~ NA_character_
+    )),  
+    Sound.Position = factor(case_when(
+      ItemTemp %in% c("TF", "DF", "TW") ~ "final",
+      ItemTemp %in% c("TI", "DI") ~ "initial",
+      T ~ NA_character_
+    )),
+  
+    Word = str_replace(stri_trans_general(Filename, "Latin-ASCII"), "^[A-Z]+_[0-9]+_([a-z]+)_.*$", "\\1"),
+    group = NULL,
+    ItemTemp = NULL,
+    position = NULL,
+    X1 = NULL,
+    X = NULL
+  ) %>%
+  group_by(participant) %>%
+  mutate(
+    Group = if(sum(ifelse(item_cond == "ECW", 1, 0)) > 0) "control" else "training",
+    Trial = row_number()
+  ) %>%
+  ungroup() %>%
+  mutate_at(
+    c("item", "participant", "rating_for", "Group"),
+    .funs = factor
+  ) %>%
+  left_join(d.prod %>%
+              select(-c("filename")) %>%
+              filter(language == "non-native"), 
+            by = c("Word" = "word"))
+
+d.pilot %<>% filter(!participant %in% c(100, 111)) #remove participants 100 & 111 because they are nonnative
+summary(d.pilot)
+
+## -------------------------------------------------------------------------------
+# Exposure accuracy
+## -------------------------------------------------------------------------------
+
+# Showing by-subject accuracy and RTs during exposure
+d.pilot.expoosure.BySubject = d.pilot %>%
+  filter(Block == "exposure") %>%
+  group_by(participant, Group) %>%
+  summarise(
+    meanAccuracy = mean(key_resp_2.corr),
+    meanAccuracy.critical = mean(ifelse(Item.Type == "critical" & Group == "training", key_resp_2.corr, NA), na.rm = T),
+    meanRT = mean(key_resp_2.rt)
+  ) 
+#View(d.pilot.expoosure.BySubject)
+
+levels(d.pilot.expoosure.BySubject$Group) <- c("Control", "/d/-Exposure")
+d.pilot.expoosure.BySubject %>%
+  ggplot(
+    aes(x = meanRT, y = meanAccuracy, label = participant, fill = Group)
+  ) + 
+  geom_label() +
+  scale_fill_manual( values = c( "#a6a6a6", "#80d0ff")) + ylab("Mean Accuracy") + xlab("Mean Reaction Time") + theme_cowplot()
+  
+d.pilot.expoosure.BySubject %>%
+  filter(Group == "/d/-Exposure") %>% 
+  ggplot(aes(x = meanRT, y = meanAccuracy.critical, label = participant, fill = Group) ) + 
+  geom_label() +
+  scale_fill_manual( values = c( "#a6a6a6", "#80d0ff")) + ylab("Mean Accuracy") + xlab("Mean Reaction Time")
+
+## -------------------------------------------------------------------------------
+# Test ratings
+## -------------------------------------------------------------------------------
+d.pilot.test.BySubject = d.pilot %>%
+  filter(Block == "test") %>%
+  group_by(participant, Group, rating_for, Sound.Type, Sound.Position) %>%
+  summarise(
+    meanRating = mean(rating_1.response),
+    meanRT = mean(rating_1.rt)
+  ) 
+
+levels(d.pilot.test.BySubject$rating_for) <- c("Rating for /d/", "Rating for /t/")
+levels(d.pilot.test.BySubject$Group) <- c("Control", "/d/-Exposure")
+d.pilot.test.BySubject %>%
+  filter(Sound.Position == "final") %>% 
+  ggplot(aes(x = Sound.Type, y = meanRating, color = Group)) +
+  scale_colour_manual( values = c( "#a6a6a6", "#80d0ff"))  + geom_violin( position = position_dodge (0.8)) + 
+  stat_summary(fun.data = mean_cl_boot, geom = "pointrange", position = position_dodge (0.8)) + 
+  facet_grid(. ~ rating_for ) + ylab("Mean Rating") + xlab("Final Sound") + 
+  scale_x_discrete(labels=c("d" ="/d/", "t" = "/t/"))+ theme_cowplot()
+
+
+
+```
+
+
+
+
