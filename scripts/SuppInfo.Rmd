@@ -3,12 +3,10 @@ title: "Supplementary Information"
 author: "Tan, M., Xie, X., Jaeger, T. F."
 date: "28/12/2019"
 output:
-  html_document:
-    number_sections: yes
-    theme: readable
-    toc: yes
-    toc_depth: 4
-    toc_float: yes
+  pdf_document:
+    citation_package: natbib
+    toc_depth: '4'
+    fig_caption: true
 ---
 
 ```{r setup, include=FALSE}
@@ -16,13 +14,14 @@ knitr::opts_chunk$set(echo = TRUE)
 
 ```
 
-**Appendix**
 
 This supplementary information describes the methods of the behavioural studies that were carried out in English and Swedish.
+\newpage
 
-# Methods
+
+# Methods #
 The two experiments were similar and only differed minimally in language, number of participants, and number of test items. These differences are detailed under the respective subheaders of "English" and "Swedish" in the following subsections. 
-The studies employed an exposure-test paradigm. Exposure was manipulated between participants. Both groups were exposed to foreign-accented speech from the same talker. The two groups of participants differed, however, in whether the exposure materials contained the critical phonological contrast (syllable-final \/d-t\/). The control group never heard any instances of syllable-final /d/ or /t/. The \/d\/-exposure group heard words with syllable-final \/d\/ (e.g., "episod"), but no words with syllable-final /t/. Following exposure, both groups went through the exact same test phase, during which they categorized tokens along the /d/-/t/ continuum that were part of minimal pairs (e.g., "sead" or "seat").
+The studies employed an exposure-test paradigm. Exposure was manipulated between participants. Both groups were exposed to foreign-accented speech from the same talker. The two groups of participants differed, however, in whether the exposure materials contained the critical phonological contrast (syllable-final \/d-t\/). The control group never heard any instances of syllable-final /d/ or /t/. The \/d\/-exposure group heard words with syllable-final \/d\/, but no words with syllable-final /t/. Following exposure, both groups went through the exact same test phase, during which they made goodness judgments of /d/-/t/ tokens that were part of minimal pairs (e.g., "seed" or "seat").
 
 ## Participants ##
 ### English ###
@@ -44,22 +43,42 @@ Recordings were made in a sound-attenuated room at the Stockholm University Mult
 ### English ###
 
 ### Swedish ###
+Participants heard a total of 180 words. The d-Exposure group heard 30 critical words with between two and five syllables, ending with \/d\/, and with no competing \/t\/-final word (e.g. \textit{episod}). Apart from final \/d\/, the words had no voiced stops and no \/t\/ segments. Voiceless stops such as \/k\/ and \/p\/ were kept at a minimum but not fully avoidable in order to have a sufficent number of exposure words. In place of the critical words, the Control group heard 30 replacements with no occurences of \/d, t, b, g\/. These words were matched in syllable length and average base form frequency. Both groups also heard and additional 60 filler words and 90 pseudo words that obeyed Swedish phonotactical rules. The words were presented in random order.
+
 
 ##Test stimuli##
-
 ### English ###
 
 ### Swedish ###
+Test stimuli were made up of 32 \/d-\/t\/ minimal pair words, matched by phonological vowel length. The pairs were spread across two lists such that pairs do not appear on the same list. The order in each list was randomised for each participant.
+
 
 ##Procedure##
 
 ### English ###
 
 ### Swedish ###
+Participants first performed a lexical decision task followed by a goodness judgment task. During
+the lexical decision task word lists appropriate to the participant’s assigned group were played in a
+random order over headphones at a comfortable volume. They were instructed to decide whether
+the word they heard was a real Swedish word or not. They pressed the “j” key for
+“ja (yes)” and “n” key for “nej (no)”. The test phase followed immediately after the exposure phase. Participants were given written instructions on the screen which told them to rate the final sound of the words they heard for how good they represented a named category (either /d/ or /t/) on a 1-7 scale. In addition, the experimenter checked that the participant understood the task. The order of the ratings task was counter-balanced.
 
-## Results ##
+
+## Results ##   
 
 ### Swedish ###
+\parindent=5pt\paragraph{Lexical decision}
+Lexical decision accuracy was high across both d-Exposure and control groups (M = 0.96, 0.97; SD = 0.01, 0.03); and for critical exposure words (M = 0.94; SD = 0.06), indicating that the accent did not hinder word recognition.
+
+
+## Acoustic analysis ##
+
+### Swedish ###
+Tokens were annotated for their duration of vowel, closure, and burst. Annotations were completed in Praat (Boersma, 2001) using visual examination of spectrograms, and listening judgments. Cue boundaries were marked following conventions (Flege, Munro, & Skelton, 1992). Vowel duration was measured from the beginning of the first periodic portion of each waveform to the zero-crossing where the amplitude decreased abruptly and the waveform became sinusoidal. Burst was measured from stop release to the first zero crossing point where the amplitude became near zero. Closure was measured as the time between vowel offset and burst onset (for stops following nasals, closure onset was marked by an abrupt decline in amplitude of the nasal).
+
+
+
 ```{r preamble, message=FALSE, warning=FALSE, error=FALSE, echo=FALSE, results='hide'}
 library(tidyverse)
 library(magrittr)
@@ -145,20 +164,20 @@ d.pilot.expoosure.BySubject = d.pilot %>%
     meanRT = mean(key_resp_2.rt)
   ) 
 #View(d.pilot.expoosure.BySubject)
+d.pilot.exposure.ByGroup <- d.pilot.expoosure.BySubject %>% 
+  group_by(Group) %>% 
+  summarise( mean_group = mean(meanAccuracy), mean_critical = mean(meanAccuracy.critical, na.rm=T), SD = sd(meanAccuracy), SD_critical = sd(meanAccuracy.critical, na.rm=T))
 
 levels(d.pilot.expoosure.BySubject$Group) <- c("Control", "/d/-Exposure")
 d.pilot.expoosure.BySubject %>%
   ggplot(
-    aes(x = meanRT, y = meanAccuracy, label = participant, fill = Group)
-  ) + 
-  geom_label() +
-  scale_fill_manual( values = c( "#a6a6a6", "#80d0ff")) + ylab("Mean Accuracy") + xlab("Mean Reaction Time") + theme_cowplot()
+    aes(x = meanRT, y = meanAccuracy, label = participant, fill = Group)) + geom_label() + scale_fill_manual( values = c( "#a6a6a6", "#80d0ff")) + scale_y_continuous(name = "Mean Accuracy", breaks = c(0, 0.25, 0.5, 0.75, 1.0), limits = c(0, 1.0))+ xlab("Mean Reaction Time") + theme_cowplot()
   
 d.pilot.expoosure.BySubject %>%
   filter(Group == "/d/-Exposure") %>% 
   ggplot(aes(x = meanRT, y = meanAccuracy.critical, label = participant, fill = Group) ) + 
-  geom_label() +
-  scale_fill_manual( values = c( "#a6a6a6", "#80d0ff")) + ylab("Mean Accuracy") + xlab("Mean Reaction Time")
+  geom_label() + scale_fill_manual( values = c( "#80d0ff")) + scale_y_continuous(name = "Mean Accuracy", breaks = c(0, 0.25, 0.5, 0.75, 1.0), limits = c(0, 1.0)) + xlab("Mean Reaction Time") + theme_cowplot()
+
 
 ## -------------------------------------------------------------------------------
 # Test ratings
