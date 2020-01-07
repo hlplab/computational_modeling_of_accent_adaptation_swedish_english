@@ -71,6 +71,8 @@ the word they heard was a real Swedish word or not. They pressed the “j” key
 \parindent=5pt\paragraph{Lexical decision}
 Lexical decision accuracy was high across both d-Exposure and control groups (M = 0.96, 0.97; SD = 0.01, 0.03); and for critical exposure words (M = 0.94; SD = 0.06), indicating that the accent did not hinder word recognition.
 
+\parindent=5pt\paragraph{Goodness ratings}
+Participant ratings were modelled using linear mixed-effects regression. Word-final sound type (d:1; t:-1) was contrast coded, as was the sound rated for (d:1; t:-1), and exposure group (control:-1; \/d\/-exposure: 1)
 
 ## Acoustic analysis ##
 
