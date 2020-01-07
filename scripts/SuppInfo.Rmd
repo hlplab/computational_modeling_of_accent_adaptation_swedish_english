@@ -1,9 +1,10 @@
 ---
-title: "Supplementary Information"
+title: "Supplementary Information for PAPER TITLE"
 author: "Tan, M., Xie, X., Jaeger, T. F."
 date: "28/12/2019"
 output:
   pdf_document:
+    toc: true
     citation_package: natbib
     toc_depth: '4'
     fig_caption: true
@@ -14,71 +15,6 @@ knitr::opts_chunk$set(echo = TRUE)
 
 ```
 
-
-This supplementary information describes the methods of the behavioural studies that were carried out in English and Swedish.
-\newpage
-
-
-# Methods #
-The two experiments were similar and only differed minimally in language, number of participants, and number of test items. These differences are detailed under the respective subheaders of "English" and "Swedish" in the following subsections. 
-The studies employed an exposure-test paradigm. Exposure was manipulated between participants. Both groups were exposed to foreign-accented speech from the same talker. The two groups of participants differed, however, in whether the exposure materials contained the critical phonological contrast (syllable-final \/d-t\/). The control group never heard any instances of syllable-final /d/ or /t/. The \/d\/-exposure group heard words with syllable-final \/d\/, but no words with syllable-final /t/. Following exposure, both groups went through the exact same test phase, during which they made goodness judgments of /d/-/t/ tokens that were part of minimal pairs (e.g., "seed" or "seat").
-
-## Participants ##
-### English ###
-48 students 
-
-### Swedish ###
-25 people recruited from the Department of Swedish \& Multilingualism at Stockholm University participated. Two of the participants were excluded from the analysis because they were not native speakers of Swedish. Participants were alternately assigned to the experimental or control group.
-
-## Materials##
-
-### English ###
-
-### Swedish ###
-Recordings were made of a 25-year old, female native speaker of the Brabantish dialect of Central Flanders, with level A1 (CEFR) knowledge of Swedish at the time of recording. As the speaker was very inexperienced with Swedish and therefore unfamiliar with many of the words, recordings of the materials spoken by a female native Swedish speaker were also made which served as native exemplars for the Flemish speaker. 
-Recordings were made in a sound-attenuated room at the Stockholm University Multilingualism Lab. A recording of the native speaker producing the target word was first played to the Flemish speaker over Sony MDR-7506 headphones at a comfortable volume. Simultaneously and throughout the trial, the target word was displayed on a computer screen placed within a comfortable viewing distance. An audible beep was played after 2 seconds from trial onset (after the native recording had finished playing) to cue production of the target. Words were spoken into an Audio-Technica AT3035 microphone, placed directly in front of the speaker. Recordings were sampled at 44.1kHz. The experimenter controlled the presentation of each word which appeared three times in random order in order to give the speaker sufficient time and opportunity to say the words correctly. Recording samples were screened for vowel mispronunciation (e.g. mispronouncing a long vowel as short) and excluded from consideration. The word lists were divided into exposure /d/-final words, filler words, replacement words, and test words. These were recorded in separate sessions. Minimal pair test words were presented in separate lists to avoid deliberate contrastive hyper-articulation.
-
-##Exposure stimuli##
-
-### English ###
-
-### Swedish ###
-Participants heard a total of 180 words. The d-Exposure group heard 30 critical words with between two and five syllables, ending with \/d\/, and with no competing \/t\/-final word (e.g. \textit{episod}). Apart from final \/d\/, the words had no voiced stops and no \/t\/ segments. Voiceless stops such as \/k\/ and \/p\/ were kept at a minimum but not fully avoidable in order to have a sufficent number of exposure words. In place of the critical words, the Control group heard 30 replacements with no occurences of \/d, t, b, g\/. These words were matched in syllable length and average base form frequency. Both groups also heard and additional 60 filler words and 90 pseudo words that obeyed Swedish phonotactical rules. The words were presented in random order.
-
-
-##Test stimuli##
-### English ###
-
-### Swedish ###
-Test stimuli were made up of 32 \/d-\/t\/ minimal pair words, matched by phonological vowel length. The pairs were spread across two lists such that pairs do not appear on the same list. The order in each list was randomised for each participant.
-
-
-##Procedure##
-
-### English ###
-
-### Swedish ###
-Participants first performed a lexical decision task followed by a goodness judgment task. During
-the lexical decision task word lists appropriate to the participant’s assigned group were played in a
-random order over headphones at a comfortable volume. They were instructed to decide whether
-the word they heard was a real Swedish word or not. They pressed the “j” key for
-“ja (yes)” and “n” key for “nej (no)”. The test phase followed immediately after the exposure phase. Participants were given written instructions on the screen which told them to rate the final sound of the words they heard for how good they represented a named category (either /d/ or /t/) on a 1-7 scale. In addition, the experimenter checked that the participant understood the task. The order of the ratings task was counter-balanced.
-
-
-## Results ##   
-
-### Swedish ###
-\parindent=5pt\paragraph{Lexical decision}
-Lexical decision accuracy was high across both d-Exposure and control groups (M = 0.96, 0.97; SD = 0.01, 0.03); and for critical exposure words (M = 0.94; SD = 0.06), indicating that the accent did not hinder word recognition.
-
-
-## Acoustic analysis ##
-
-### Swedish ###
-Tokens were annotated for their duration of vowel, closure, and burst. Annotations were completed in Praat (Boersma, 2001) using visual examination of spectrograms, and listening judgments. Cue boundaries were marked following conventions (Flege, Munro, & Skelton, 1992). Vowel duration was measured from the beginning of the first periodic portion of each waveform to the zero-crossing where the amplitude decreased abruptly and the waveform became sinusoidal. Burst was measured from stop release to the first zero crossing point where the amplitude became near zero. Closure was measured as the time between vowel offset and burst onset (for stops following nasals, closure onset was marked by an abrupt decline in amplitude of the nasal).
-
-
-
 ```{r preamble, message=FALSE, warning=FALSE, error=FALSE, echo=FALSE, results='hide'}
 library(tidyverse)
 library(magrittr)
@@ -87,7 +23,15 @@ library(stringi)
 library(lme4)
 library(lmerTest)
 library(ggplot2)
+```
 
+\newpage
+
+# Results of perception experiment #  
+<!-- Maryann: let's use d.swedish or something transparent, not d.pilot. -->
+
+```{r load data, message=FALSE, warning=FALSE, error=FALSE, echo=FALSE, results='hide'}
+# Swedish data
 d.pilot = read_csv(file = "../data/pilot_test/testrun2.csv")
 d.prod = readRDS("../data/prod.rds")
 
@@ -147,13 +91,20 @@ d.pilot %<>%
               filter(language == "non-native"), 
             by = c("Word" = "word"))
 
-d.pilot %<>% filter(!participant %in% c(100, 111)) #remove participants 100 & 111 because they are nonnative
+# Remove participants 100 & 111 because they are nonnative
+d.pilot %<>% filter(!participant %in% c(100, 111)) 
 summary(d.pilot)
+```
 
-## -------------------------------------------------------------------------------
-# Exposure accuracy
-## -------------------------------------------------------------------------------
 
+We compare the results of the perception experiments on English and Swedish. We first compare lexical decision accuracy during exposure. Then we compare the effect of the exposure manipulation on ratings of /d/-goodness during test.
+
+## Lexical decision accuracy during exposure ##
+Lexical decision accuracy during exposure was high across exposure groups and experiments. 
+
+<!-- Change this so that the code is placed where you want its output. E.g., the means the SDs you mention below should be stored quietly in variables and then be added to the text via in-line R code. I suggest that we consistently make plots for both experiment together, whenever possible plotting them next to each other (e.g., via facet_grid or facet_wrap) -->
+
+```{r}
 # Showing by-subject accuracy and RTs during exposure
 d.pilot.expoosure.BySubject = d.pilot %>%
   filter(Block == "exposure") %>%
@@ -163,7 +114,7 @@ d.pilot.expoosure.BySubject = d.pilot %>%
     meanAccuracy.critical = mean(ifelse(Item.Type == "critical" & Group == "training", key_resp_2.corr, NA), na.rm = T),
     meanRT = mean(key_resp_2.rt)
   ) 
-#View(d.pilot.expoosure.BySubject)
+
 d.pilot.exposure.ByGroup <- d.pilot.expoosure.BySubject %>% 
   group_by(Group) %>% 
   summarise( mean_group = mean(meanAccuracy), mean_critical = mean(meanAccuracy.critical, na.rm=T), SD = sd(meanAccuracy), SD_critical = sd(meanAccuracy.critical, na.rm=T))
@@ -177,11 +128,25 @@ d.pilot.expoosure.BySubject %>%
   filter(Group == "/d/-Exposure") %>% 
   ggplot(aes(x = meanRT, y = meanAccuracy.critical, label = participant, fill = Group) ) + 
   geom_label() + scale_fill_manual( values = c( "#80d0ff")) + scale_y_continuous(name = "Mean Accuracy", breaks = c(0, 0.25, 0.5, 0.75, 1.0), limits = c(0, 1.0)) + xlab("Mean Reaction Time") + theme_cowplot()
+```
+
+### English ###
+
+### Swedish ###
+
+Lexical decision accuracy was high across both the /d/-exposure (M = 0.96; SD = 0.01) and control group (0.97; SD = 0.03). Accuracy was also high for critical words with syllable-final /d/ in the /d/-exposure group (M = 0.94; SD = 0.06), indicating that the accent did not hinder word recognition for these words.
+
+### Swedish vs. English
+<!-- Maryann: let's add an analysis here, follwing the same model logic that you're using for the test stimuli, but use family = binomial. As item effect we will use the exposure (non)word itself [so there should be 210 * 2 unique items] -->
+
+To compare lexical decision accuracy across the two experiments, we conducted a mixed-effects logistic regression (Breslow \&Clayton, 1993; Jaeger, 2008) over the combined data from both experiments. The regression predicted correct (1) vs. incorrect (0) answers based on the exposure group (sum-coded: 1 =  /d/-exposure vs. -1 = control), the experiment (sum-coded: 1 = Swedish vs. -1 = English), and their interaction. The regression contained the maximal random effect structure justified by the design (random by-participant intercepts; random by-item intercepts and slopes for exposure group; item IDs did not overlap between experiments).
+
+XXX-SUMMARIZE RESULTS USING R OUTPUT.
 
 
-## -------------------------------------------------------------------------------
-# Test ratings
-## -------------------------------------------------------------------------------
+## Ratings during test ##
+
+```{r}
 d.pilot.test.BySubject = d.pilot %>%
   filter(Block == "test") %>%
   group_by(participant, Group, rating_for, Sound.Type, Sound.Position) %>%
@@ -199,10 +164,135 @@ d.pilot.test.BySubject %>%
   stat_summary(fun.data = mean_cl_boot, geom = "pointrange", position = position_dodge (0.8)) + 
   facet_grid(. ~ rating_for ) + ylab("Mean Rating") + xlab("Final Sound") + 
   scale_x_discrete(labels=c("d" ="/d/", "t" = "/t/"))+ theme_cowplot()
-
-
-
 ```
+
+
+# Methods of perception experiments #
+<!-- Xin, Maryann: please load both data sets up here, do all variable cleaning and renaming, and combine the data sets into one tibble. This will reduce the burden for others to follow along your R code -->
+
+We describe the methods used to derive the English (Xie, Theodore, \& Myers, 2017) and Swedish data sets. Both experiments employed an exposure-test paradigm. Exposure was manipulated between participants. Both groups were exposed to foreign-accented speech from the same talker (Mandarin-accented English for the English data; Flemish-accented Swedish for the Swedish data). The two groups of participants differed, however, in whether the exposure materials contained information about the critical phonological category (syllable-final \/d\/), for which the foreign accent is known to deviate from native pronunciations. The control group never heard any instances of syllable-final /d/ or /t/. The \/d\/-exposure group heard words with syllable-final \/d\/, but no words with syllable-final /t/. Following exposure, both groups went through the exact same test phase, during which they made goodness judgments of /d/-/t/ tokens that were part of minimal pairs (e.g., "seed" or "seat").
+
+In addition to the L1-L2 language pairs (Mandarin-accented English vs. Flemish-accented Swedish) and participants' L1 (American English vs. Swedish), the two experiments exhibited a number of differences that we detail next. This includes differences in i) the number of participants, ii) the instructions and visual appearance of the experiment, iii) the number of stimuli, and iv) minor differences in the stimuli design. As indicated below, some of these differences were intended, some were not. For each difference, we consider whether it is likely to explain the difference in results, and find this to be unlikely---at least, compared to the possibility explore in this study that it is primarily the phonetic properties of the foreign-accented speech and its relation to native listeners' expectations that causes the difference in results.
+
+## Participants ##
+
+### English ###
+48 students 
+
+### Swedish ###
+25 people recruited from the Department of Swedish \& Multilingualism at Stockholm University participated. Two of the participants were excluded from the analysis because post-experiment surveys found that they were not native speakers of Swedish. Participants were alternately assigned to the /d/-exposure or control group.
+
+### Why the difference?
+
+The decision to recruit a smaller number of participants was made because 1) the Swedish experiment was conceived as pilot experiment for a larger series of experiments still to be conducted, and 2) other previous studies had found significant effects with a similarly small number of participants (XXX participants for each of two conditions in Eisner, Melinger, \& Weber, 2013).
+
+### Are differences in the number of participants likely to explain the results?
+
+<!-- Xin, please check and add R analysis here? Specifically, I'd add invisible R code under the heading and then replace the XXX reply with inline R code. -->
+
+Compared to the English experiment, the Swedish experiment had substantially fewer participants (about 50\% fewer). Since a benefit of /d/-exposure was found for the larger (English), but not the smaller (Swedish), data set one obvious question is whether the difference in results is due to statistical power: the null result for the Swedish data might simply reflect a Type II error.
+
+To address this possibility, we randomly bootstrapped (with replacement) both the English and the Swedish data to the same number of participants included in the analysis of the Swedish data (XXX in the /d/-exposure group and XXX in the control group). We then repeated the analyses reported in the main text, comparing the Swedish and (down-sampled) English test data. This process was repeated XXX times. 
+
+In XXX of the XXX samples, we replicated the critical significant three-way interaction between Language, Exposure group, and Sound category. The simple effect of the two-way interaction between Exposure group and Sound was significant for the English data in XXX samples (all in the predicted direction), whereas it was significant for the Swedish data in XXX samples (all in the *opposite* of the predicted direction).  
+
+In short we reliably replicate the difference between the English and Swedish even when the both data sets only have 23 participants. 
+
+
+## Recording of materials##
+
+### English ###
+
+### Swedish ###
+
+Recordings were made of a 25-year old, female native speaker of the Brabantish dialect of Central Flanders, with level A1 (CEFR) knowledge of Swedish at the time of recording. As the speaker was very inexperienced with Swedish and therefore unfamiliar with many of the words, recordings of the materials spoken by a female native Swedish speaker were also made which served as native exemplars for the Flemish speaker. 
+
+Recordings were made in a sound-attenuated room at the Stockholm University Multilingualism Lab. A recording of the native speaker producing the target word was first played to the Flemish speaker over Sony MDR-7506 headphones at a comfortable volume. Simultaneously and throughout the trial, the target word was displayed on a computer screen placed within a comfortable viewing distance. An audible beep was played after 2 seconds from trial onset (after the native recording had finished playing) to cue production of the target. Words were spoken into an Audio-Technica AT3035 microphone, placed directly in front of the speaker. Recordings were sampled at 44.1kHz. The experimenter controlled the presentation of each word which appeared three times in random order in order to give the speaker sufficient time and opportunity to say the words correctly. Recording samples were screened for vowel mispronunciation (e.g. mispronouncing a long vowel as short) and excluded from consideration. The word lists were divided into exposure /d/-final words, filler words, replacement words, and test words. These were recorded in separate sessions. Minimal pair test words were presented in separate lists to avoid deliberate contrastive hyper-articulation.
+
+### Why the difference?
+
+The two experiments differ by design in the L1-L2 background of the recorded speaker. The central purpose of the Swedish experiment was to replicate the findings of Xie et al. (2017) and Eisner et al. (2013) for another L1-L2 combination. Whether differences between native and non-native accents in the statistics of the cue distributions for /d/ and /t/ could explain the results is the purpose of the present paper (regardless of whether these differences are caused by the L1-L2 pairing, the specific speaker that was recorded, or any other aspect of the recording procedure).
+
+The two experiments differed, however, in the recording procedure. Whereas the English recordings was elicited without playing a native pronunciation (*unassisted*), the Swedish recordings were elicited by first playing a native pronunciation of the target word (*assisted*). This decision was made because the non-native speaker was still in the early stages of L2 acquisition (A1 CEFR). In particular, Swedish has a complex vowel system, with many vowel categories that have no counterparts in the speakers' L1 (Flemish). Furthermore, the mapping from orthography to pronunciation is non-transparent in Swedish. As would be expected, the non-native speaker struggled with vowel pronunciation. After an initial *un*assisted recording session, we therefore decided to re-record the Flemish speaker in the assisted condition. The perception experiment employed the recordings from this latter recording session.
+
+### Are differences in recording procedure likely to explain the results? ###
+
+This is one of the specific possibilities that could drive the results of the IO models. In previous analyses, we have found that the recording procedure indeed had a strong effect on the pronunciations of the non-native speaker (Tan, Xie, \& Jaeger, 2019). Specifically, we found that the category means of /d/ and /t/ in either of the two recording conditions differed significantly from the native pronunciations of the native speaker whose recordings were used in the assisted condition. However, the recordings in the unassisted condition differed significantly more from the native-accented speech, both in terms of the number of cue dimensions along which the non-native speech differed from native speech and in terms of the degree of difference (for details, see Tan et al., 2019 and section XXX).
+
+It is therefore possible that the decision to use stimuli from the assisted recording condition caused the null effect of /d/-exposure. Indeed, this is the prediction our IO approach would make. In section XXX, we report a comparison of the IO's predictions for the foreign-accented stimuli recorded in the unnassisted condition and those recorded in the assisted condition. This comparison predicts that a perception experiment with the recordings from the unassisted condition would be substantially more likely to elicit a benefit of /d/-exposure (see Section XXX). 
+
+### Are potential differences in recording qualitely likely to explain the results? ###
+
+The two recording equipment and environment were similar across the two experiments. Care was taken in both experiments to elicit recording free of noticable background noise. All three cues cues (vowel, closure, and burst duration) are durational and therefore unlikely to suffer from minor differences in recording quality. The materials for both experiments are available via OSF. 
+
+### Are cues not considered in the analyses likely to explain the results? ###
+
+The three cues analyzed in both experiments are considered primary cues to syllable-final voicing (REFS). It is therefore likely, but not guaranteed, that the three cues would explain a substantial part of variation in participants' ratings during test. The results of the ideal observer analyses support this assumption: performance of the non-native IO was high for both experiments, both on the exposure data (English /d/-exposure: XXX\%; Swedish/d/-exposure: XXX\%) and one the test data (English: XXX\%; Swedish: XXX\%). This suggests that /d/ and /t/ in both the English and the Swedish data formed clusters that were separable within the 3D space defined by the three cues.
+
+The predictions of IOs matching the exposure condition (e.g, the native IO for the control group) achieved positive correlations with human ratings (English: $r^2 =$ .XXX; Swedish: $r^2 = $ .XXX). This suggests that a substantial amount of variance participants' ratings could be described by the simple 0-DF linking hypothesis between the three cues and ratings (Bayes theorem \& Luce's choice rule). The IOs fit to the Swedish data did not fail to predict participants' performance. Rather, like the human participants, the IOs fail to find a benefit of /d/-exposure.
+
+
+
+## Exposure stimuli ##
+<!-- Xin, Maryann: let's make sure to first describe commonalities and then only describe deviationns in each subsection? -->
+
+
+### English ###
+
+### Swedish ###
+The full list of stimuli is available in section XXX. Participants in both groups heard a total of 180 words, including the same 60 filler words and 90 non-words that obeyed Swedish phonotactical rules. The remaining 30 words were the critical words, manipulated between exposure groups.
+
+The /d/-exposure group heard 30 critical words with between two and five syllables, ending with \/d\/, and without \/t\/-final minimal pair neighbors (e.g. \textit{episod}). Other than the /d/-final target words, all stimuli were chosen to avoid voiced stops as well as /t/ in any position (i.e., no /d, t, b, g/). The other two voiceless stops (\/k\/ and \/p\/) were kept at a minimum but not fully avoidable in order to have a sufficent number of exposure words. Overall, there were XXX occurrences of /k/ or /p/ in the critical words and XXX occurrences in the filler words.
+
+In place of the critical words, the Control group heard 30 replacements with no occurences of \/d, t, b, g\/. These words were matched in syllable length and average base form frequency. The words were presented in random order.
+
+Unintended by the design, one critical word in the /d/-exposure group contained a medial /d/ (*medellivslangd*---expectancy).
+
+### Why the difference?
+
+
+### Is this difference likely to explain the results?
+
+## Test stimuli ##
+
+### English ###
+
+### Swedish ###
+<!-- Maryann, fill in example word? Also, didn't you have two test blocks? Describe, incl. relative order of test blocks. -->
+
+Test stimuli consisted of 32 \/d-\/t\/ minimal pair words (e.g., *XXX* and *XXX*), matched in phonological vowel length. The pairs were spread across two lists such that the two words of a  pair did not appear on the same list. The order in each list was randomised for each participant.
+
+### Why the difference?
+
+
+### Is this difference likely to explain the results?
+
+
+## Procedure ##
+
+### English ###
+
+### Swedish ###
+Participants first performed a lexical decision task followed by a goodness judgment task. During
+the lexical decision task word lists appropriate to the participant’s assigned group were played in a random order over headphones at a comfortable volume. They were instructed to decide whether
+the word they heard was a real Swedish word or not. They pressed the “j” key for
+“ja (yes)” and “n” key for “nej (no)”. 
+
+The test phase followed immediately after the exposure phase. Participants were given written instructions on the screen which told them to rate the final sound of the words they heard for how good they represented a named category (either /d/ or /t/) on a 1-7 scale. In addition, the experimenter checked that the participant understood the task. The order of the ratings task was counter-balanced.
+
+### Why the difference?
+
+
+### Is this difference likely to explain the results?
+
+
+
+# Acoustic analysis #
+
+### Swedish ###
+Tokens were annotated for their duration of vowel, closure, and burst. Annotations were completed in Praat (Boersma, 2001) using visual examination of spectrograms, and listening judgments. Cue boundaries were marked following conventions (Flege, Munro, & Skelton, 1992). Vowel duration was measured from the beginning of the first periodic portion of each waveform to the zero-crossing where the amplitude decreased abruptly and the waveform became sinusoidal. Burst was measured from stop release to the first zero crossing point where the amplitude became near zero. Closure was measured as the time between vowel offset and burst onset (for stops following nasals, closure onset was marked by an abrupt decline in amplitude of the nasal).
+
+
 
 
 
