@@ -32,7 +32,6 @@ library(ggplot2)
 \newpage
 
 # Results of perception experiment #  
-<!-- Maryann: let's use d.swedish or something transparent, not d.pilot. -->
 
 ```{r load data, message=FALSE, warning=FALSE, error=FALSE, echo=FALSE, results='hide'}
 # Swedish data
@@ -72,8 +71,10 @@ d.swedish %<>%
       ItemTemp %in% c("TI", "DI") ~ "initial",
       T ~ NA_character_
     )),
-  
-    Word = str_replace(stri_trans_general(Filename, "Latin-ASCII"), "^[A-Z]+_[0-9]+_([a-z]+)_.*$", "\\1"),
+    Word = str_replace(stri_trans_general(
+      Filename, 
+      "Latin-ASCII"),
+      "^[A-Z]+_[0-9]+_([a-z]+)_.*$", "\\1"),
     group = NULL,
     ItemTemp = NULL,
     position = NULL,
@@ -167,7 +168,8 @@ d.swedish.test.BySubject = d.swedish %>%
   group_by(participant, Group, rating_for, Sound.Type, Sound.Position) %>%
   summarise(
     meanRating = mean(rating_1.response),
-    meanRT = mean(rating_1.rt)
+    meanRT = mean(rating_1.rt),
+    n = n()
   ) 
 
 levels(d.swedish.test.BySubject$rating_for) <- c("Rating for /d/", "Rating for /t/")
@@ -293,12 +295,13 @@ Since neither the present nor previous work found interaction of the rating ques
 
 ### Swedish ###
 
-The Swedish experiment employed fewer test stimuli (32 \/d-\/t\/-final words from 16 minimal pairs,  e.g., *röd* and *röt*). <!-- Maryann: right? 16 minimal pairs, forming 32 words, or 32 mps forming 64 words? --> Additionally, test words were allwed to have word-initial voiced stops (other than /d/, e.g. *bädd-bett*).
+The Swedish experiment employed fewer test stimuli (64 \/d-\/t\/-final words from 32 minimal pairs,  e.g., *röd* and *röt*). <!-- Maryann: right? or was it 16 pairs? Xin seems to have used 60 *pairs* --> Additionally, test words were allwed to have word-initial voiced stops (other than /d/, e.g. *bädd-bett*).
 
-<!-- Maryann: made an edit here to clarify lack of balancing. let me know if it's correct? -->
+<!-- Maryann: I made an edit here to clarify lack of balancing. let me know if it's correct? -->
 Due to a misunderstanding, the Swedish data did not counter-balance whether a word recording was rated for /d/- or for /t/-goodness (e.g., the word *XXX* was always rated for /d/-goodness; the word *XXX* was always rated for /t/-goodness; across minimal pair words, /d/- and /t/-final words were equally often rated for /d/- and /t/-goodness).
 
-Finally, the Swedish experiment contained a third and fourth test block during which participants rated 32 \/d\/-\/t\/-*initial* minimal pair words (e.g., *dom* and *tom*). The order of these later test blocks was counter-balanced across participants but participants always completed the test block with word-final ratings *before* performing the word-initial ratings. The data from word-initial ratings tasks are not part of the current analysis, though we note that exposure group did not affect the Swedish word-initial ratings either.
+Finally, the Swedish experiment contained a third and fourth test block during which participants rated 54 words from 27 \/d\/-\/t\/-*initial* minimal pairs (e.g., *dom* and *tom*). <!-- Maryann: I changed this to the number of trials I found in the data -->
+The order of these later test blocks was counter-balanced across participants but participants always completed the test block with word-final ratings *before* performing the word-initial ratings. The data from word-initial ratings tasks are not part of the current analysis, though we note that exposure group did not affect the Swedish word-initial ratings either.
 
 ### Why these differences?
 The Swedish experimen employed fewer test tokens because it was difficult to find additional minimal pairs for Swedish. While there are many /d/-/t/-final minimal pairs in Swedish, a large number of them are different forms of the same word and hence semantically identical (e.g., *XXX*---`XXX' and *XXX*---`XXX'). <!-- Maryann: please explain: not sure what you meant here. perhaps the examples and their translations will help -->
@@ -307,7 +310,7 @@ The same reason motivated the decision to allow test stimuli in which voiced sto
 The additional test blocks with \/d-\/t\/-initial minimal pair words were included in the Swedish experiment in order to investigate the question of whether exposure to devoiced /d/-final words might result in higher goodness ratings for \/d-\/t\/-initial words (building on Eisner et al., 2013).  
 
 ### Are these differences likely to explain the results?
-Compared to the English experiment, the Swedish experiment had 50\% fewer items. The resulting reduction in power could explain the null effect for Swedish. This possibility was ruled out by bootstrap analyses reported in Section XXX.
+Compared to the English experiment, the Swedish experiment had about 50\% fewer items. The resulting reduction in power could explain the null effect for Swedish. This possibility was ruled out by bootstrap analyses reported in Section XXX.
 
 It is unclear how the other differences in the materials, or the inclusion of additional (later) test blocks would explain the Swedish data.
 
