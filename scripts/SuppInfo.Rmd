@@ -15,76 +15,10 @@ knitr::opts_chunk$set(echo = TRUE)
 
 ```
 
-<<<<<<< HEAD
-
 This supplementary information describes the methods of the behavioural studies that were carried out in English and Swedish.
 \newpage
 
 
-# Methods #
-The two experiments were similar and only differed minimally in language, number of participants, and number of test items. These differences are detailed under the respective subheaders of "English" and "Swedish" in the following subsections. 
-The studies employed an exposure-test paradigm. Exposure was manipulated between participants. Both groups were exposed to foreign-accented speech from the same talker. The two groups of participants differed, however, in whether the exposure materials contained the critical phonological contrast (syllable-final \/d-t\/). The control group never heard any instances of syllable-final /d/ or /t/. The \/d\/-exposure group heard words with syllable-final \/d\/, but no words with syllable-final /t/. Following exposure, both groups went through the exact same test phase, during which they made goodness judgments of /d/-/t/ tokens that were part of minimal pairs (e.g., "seed" or "seat").
-
-## Participants ##
-### English ###
-48 students 
-
-### Swedish ###
-25 people recruited from the Department of Swedish \& Multilingualism at Stockholm University participated. Two of the participants were excluded from the analysis because they were not native speakers of Swedish. Participants were alternately assigned to the experimental or control group.
-
-## Materials##
-
-### English ###
-
-### Swedish ###
-Recordings were made of a 25-year old, female native speaker of the Brabantish dialect of Central Flanders, with level A1 (CEFR) knowledge of Swedish at the time of recording. As the speaker was very inexperienced with Swedish and therefore unfamiliar with many of the words, recordings of the materials spoken by a female native Swedish speaker were also made which served as native exemplars for the Flemish speaker. 
-Recordings were made in a sound-attenuated room at the Stockholm University Multilingualism Lab. A recording of the native speaker producing the target word was first played to the Flemish speaker over Sony MDR-7506 headphones at a comfortable volume. Simultaneously and throughout the trial, the target word was displayed on a computer screen placed within a comfortable viewing distance. An audible beep was played after 2 seconds from trial onset (after the native recording had finished playing) to cue production of the target. Words were spoken into an Audio-Technica AT3035 microphone, placed directly in front of the speaker. Recordings were sampled at 44.1kHz. The experimenter controlled the presentation of each word which appeared three times in random order in order to give the speaker sufficient time and opportunity to say the words correctly. Recording samples were screened for vowel mispronunciation (e.g. mispronouncing a long vowel as short) and excluded from consideration. The word lists were divided into exposure /d/-final words, filler words, replacement words, and test words. These were recorded in separate sessions. Minimal pair test words were presented in separate lists to avoid deliberate contrastive hyper-articulation.
-
-##Exposure stimuli##
-
-### English ###
-
-### Swedish ###
-Participants heard a total of 180 words. The d-Exposure group heard 30 critical words with between two and five syllables, ending with \/d\/, and with no competing \/t\/-final word (e.g. \textit{episod}). Apart from final \/d\/, the words had no voiced stops and no \/t\/ segments. Voiceless stops such as \/k\/ and \/p\/ were kept at a minimum but not fully avoidable in order to have a sufficent number of exposure words. In place of the critical words, the Control group heard 30 replacements with no occurences of \/d, t, b, g\/. These words were matched in syllable length and average base form frequency according to selected balanced corpora of 25 million words available on the Korp database of Språkbanken (https://spraakbanken.gu.se/korp). Both groups also heard and additional 60 filler words and 90 pseudo words that obeyed Swedish phonotactical rules. The words were presented in random order.
-
-
-##Test stimuli##
-### English ###
-
-### Swedish ###
-Test stimuli were made up of 32 \/d-\/t\/ minimal pair words, matched by phonological vowel length. The pairs were spread across two lists such that pairs do not appear on the same list. The order in each list was randomised for each participant.
-
-
-##Procedure##
-
-### English ###
-
-### Swedish ###
-Participants first performed a lexical decision task followed by a goodness judgment task. During
-the lexical decision task word lists appropriate to the participant’s assigned group were played in a
-random order over headphones at a comfortable volume. They were instructed to decide whether
-the word they heard was a real Swedish word or not. They pressed the “j” key for
-“ja (yes)” and “n” key for “nej (no)”. The test phase followed immediately after the exposure phase. Participants were given written instructions on the screen which told them to rate the final sound of the words they heard for how good they represented a named category (either /d/ or /t/) on a 1-7 scale. In addition, the experimenter checked that the participant understood the task. The order of the ratings task was counter-balanced.
-
-
-## Results ##   
-
-### Swedish ###
-\parindent=5pt\paragraph{Lexical decision}
-Lexical decision accuracy was high across both d-Exposure and control groups (M = 0.96, 0.97; SD = 0.01, 0.03); and for critical exposure words (M = 0.94; SD = 0.06), indicating that the accent did not hinder word recognition.
-
-\parindent=5pt\paragraph{Goodness ratings}
-Participant ratings were modelled using linear mixed-effects regression. Word-final sound type (d:1; t:-1) was contrast coded, as was the sound rated for (d:1; t:-1), and exposure group (control:-1; \/d\/-exposure: 1)
-
-## Acoustic analysis ##
-
-### Swedish ###
-Tokens were annotated for their duration of vowel, closure, and burst. Annotations were completed in Praat (Boersma, 2001) using visual examination of spectrograms, and listening judgments. Cue boundaries were marked following conventions (Flege, Munro, & Skelton, 1992). Vowel duration was measured from the beginning of the first periodic portion of each waveform to the zero-crossing where the amplitude decreased abruptly and the waveform became sinusoidal. Burst was measured from stop release to the first zero crossing point where the amplitude became near zero. Closure was measured as the time between vowel offset and burst onset (for stops following nasals, closure onset was marked by an abrupt decline in amplitude of the nasal).
-
-
-
-=======
->>>>>>> cab6ef28fa35dda46ba263e714c0ec3257d22f31
 ```{r preamble, message=FALSE, warning=FALSE, error=FALSE, echo=FALSE, results='hide'}
 library(tidyverse)
 library(magrittr)
@@ -215,6 +149,17 @@ XXX-SUMMARIZE RESULTS USING R OUTPUT.
 
 
 ## Ratings during test ##
+We focus here on goodness ratings for test words ending in /d,t/ (unlike the English data, the Swedish data also contained ratings for words beginning with /d,t/; these are not analyzed here, though we mention for completeness's sake that this later test block also did not reveal a significant effect of exposure group for the Swedish data).
+
+
+### English
+
+### Swedish
+
+### Swedish vs. English
+<!-- Maryann: let's add an analysis here over the combined data, as discussed -->
+To compare participants' ratings for the /d,t/-final test words across the two experiments, we conducted a linear mixed-effects regression (Baayen et al., 2008) over the combined data from both experiments. The regression predicted /d/-goodness ratings (1-7) based on the sound category (sum-coded: 1 = word recording intended to end in /d/ vs. -1 = word recording intended to end in /t/), exposure group (sum-coded: 1 =  /d/-exposure vs. -1 = control), the experiment (sum-coded: 1 = Swedish vs. -1 = English), and all their interactions. The regression contained the maximal random effect structure justified by the design (random by-participant intercepts and slope for sound; random by-item intercepts and slopes for sound, exposure group, and their interaction; item IDs did not overlap between experiments).
+
 
 ```{r}
 d.swedish.test.BySubject = d.swedish %>%
@@ -258,11 +203,11 @@ The decision to recruit a smaller number of participants was made because 1) the
 
 ### Are differences in the number of participants likely to explain the results?
 
-<!-- Xin, please check and add R analysis here? Specifically, I'd add invisible R code under the heading and then replace the XXX reply with inline R code. -->
+<!-- Xin, please check and add R analysis here? Specifically, I'd add invisible R code under the heading and then replace the XXX reply with inline R code. WE ALSO NEED TO REPEAT THIS TO BE DONE WHILE DOWN-SAMPLING TEST TOKENS (SPECIFICALLY MINIMAL PAIRS --- WE SHOULD ALWAYS KEEP BOTH RATINGS FOR A MINIMAL PAIR IN THE DOWN AND ALL THE SAME MINIMAL PAIRS ACROSS ALL DOWN-SAMPLED PARTICIPANTS )-->
 
-Compared to the English experiment, the Swedish experiment had substantially fewer participants (about 50\% fewer). Since a benefit of /d/-exposure was found for the larger (English), but not the smaller (Swedish), data set one obvious question is whether the difference in results is due to statistical power: the null result for the Swedish data might simply reflect a Type II error.
+Compared to the English experiment, the Swedish experiment had substantially fewer participants (about 50\% fewer). As described in Section XXX, the Swedish experiment also employed fewer test tokens than the English experiment (about 50\% fewer). Since a benefit of /d/-exposure was found for the larger (English), but not the smaller (Swedish), data set one obvious question is whether the difference in results is due to statistical power: the null result for the Swedish data might simply reflect a Type II error.
 
-To address this possibility, we randomly bootstrapped (with replacement) both the English and the Swedish data to the same number of participants included in the analysis of the Swedish data (XXX in the /d/-exposure group and XXX in the control group). We then repeated the analyses reported in the main text, comparing the Swedish and (down-sampled) English test data. This process was repeated XXX times. 
+To address this possibility, we randomly bootstrapped (with replacement) both the English and the Swedish data to the same number of participants and test tokens included in the analysis of the Swedish data (XXX in the /d/-exposure group and XXX in the control group). We then repeated the analyses reported in the main text, comparing the Swedish and (down-sampled) English test data. This process was repeated XXX times. 
 
 In XXX of the XXX samples, we replicated the critical significant three-way interaction between Language, Exposure group, and Sound category. The simple effect of the two-way interaction between Exposure group and Sound was significant for the English data in XXX samples (all in the predicted direction), whereas it was significant for the Swedish data in XXX samples (all in the *opposite* of the predicted direction).  
 
@@ -303,58 +248,69 @@ The predictions of IOs matching the exposure condition (e.g, the native IO for t
 
 
 
-## Exposure stimuli ##
+## Exposure stimuli and procedure ##
 <!-- Xin, Maryann: let's make sure to first describe commonalities and then only describe deviationns in each subsection? -->
-The full list of stimuli is available in section XXX for both Swedish and English. In both experiments participants in both groups heard a total of 180 words, including the same 60 filler words in the respective languages and 90 non-words that obeyed English or Swedish phonotactical rules where applicable. The remaining 30 words were the critical words, manipulated between exposure groups.
+During exposure, participants performed a lexical decision task. Recordings were played over headphones at a comfortable volume. Participants were instructed to decide whether the word they heard was a real word or not. Order of presentation was randomized across participans.
+
+The full list of stimuli is available in section XXX for both Swedish and English. In both experiments participants in both groups heard a total of 180 words, including the same 60 filler words in the respective languages and 90 non-words that obeyed English or Swedish phonotactical rules where applicable. The remaining 30 words were the critical words, manipulated between exposure groups. 
 
 ### English ###
-The /d/-exposure group heard 30 critical words with between three and four syllables, ending with \/d\/, and without \/t\/-final minimal pair neighbors (e.g. \textit{overload}). The replacement words (e.g., animal) were matched to the critical -/d/ words in syllabic length and mean lemma frequency in CELEX (Baayen, Piepenbrock, & Gulikers, 1995). All words or nonwords were multisyllabic and contained three to four syllables. Other than the critical /d/-final words, no other alveolar stops, voiced stops, dental fricatives, and postalveolar affricates occured. The voiceless stops (/k/ and /p/) did not appear in word-final position. 
+<!-- This needs to be made more parallel to the Swedish description. was order randomized? -->
+The /d/-exposure group heard 30 critical words with between three and four syllables, ending with \/d\/, and without \/t\/-final minimal pair neighbors (e.g. \textit{overload}). The 30 words for the control group (e.g., animal) were matched to the critical /d/-words in syllable length and mean lemma frequency (based on CELEX, Baayen, Piepenbrock, & Gulikers, 1995). All words or nonwords were multisyllabic and contained three to four syllables. Other than the critical /d/-final words, no other alveolar stops, voiced stops, dental fricatives, and postalveolar affricates occured. The voiceless stops (/k/ and /p/) did not appear in word-final position. 
+
+### Swedish ###
+<!-- Maryann: fill in XXXs? -->
+Participants indicated their response on each trial by pressing the “j” key for “ja (yes)” and “n” key for “nej (no)”. 
+
+The /d/-exposure group heard 30 critical words with between two and five syllables, ending with /d/, and without /t/-final minimal pair neighbors (e.g. \textit{episod}). Other than the /d/-final target words, all stimuli were chosen to avoid voiced stops as well as /t/ in any position (i.e., no /d, t, b, g/). The other two voiceless stops (\/k\/ and \/p\/) were kept at a minimum but not fully avoidable in order to have a sufficent number of exposure words. Overall, there were XXX occurrences of /k/ or /p/ in the critical words and XXX occurrences in the filler words.
+
+The 30 words for the control group did not contain \/d, t, b, g\/, and were matched in syllable length and average base form frequency (based on the 25 million word database of Språkbanken, https://spraakbanken.gu.se/korp, accessed January 2019). The words were presented in random order.
+
+Unintended by the design, one critical word in the /d/-exposure group contained a word-medial syllable-initial /d/ (*medellivslangd*---`average life span'), one pseudoword contained word-medial syllable-initial /d/ (*mörvinder*---`XXX'), and one pseudoword contained word-final /t/ (*spållrivet*---`XXX').
+
+### Why the difference?
+Other than the three unintended occurences of /d,t/, differences between the English and Swedish exposure stimuli were a result of the constraints imposed by the two languages and the goal to balance word frequency across the two exposure groups. Under those constraints, complete avoidance of all stops other than syllable-final /d/ in the /d/-exposure group was not possible.
+
+### Are these differences likely to explain the results?
+<!-- Maryann: I edited this quite a bit since I did not follow some of your arguments. please check what I wrote and whether it makes sense to you? btw, after comments are addressed, you can delete them.
+
+Please check whether we should use non-word or pseudoword. change it to be uniform
+-->
+The  occurence of word-medial syllable-initial /d/ and word-final /t/ in the pseudoword list are unlikely to explain the null effect for the Swedish data. First off, participants reliably categorized these words as non-words (M = XXX, SD = XXX). This also means that these two exposures were not lexically labeled, meaning that participants did not get information as to whether the tokens they heard were meant to be pronunciations of /d/ or /t/. Even if participants gathered information from these pronunciations, it is unlikely that the two tokens alone (heard by both groups) led to so much adaptation that no further difference between exposure group could be detected.
+
+Finally, the word-medial /d/ in *medellivslängd* was only heard by the /d/-exposure group and thus cannot not have affected adaptation in the control group. It is also unlikely that the occurrence of syllable-initial /d/ strongly affected adaptation in the the /d/-exposure group. On the one hand, only syllable-final stops are devoiced in Flemish, so that the syllable-initial /d/ pronunciation of the Flemish-accented speaker is unlikely to deviate as strongly from native Swedish pronunciation. But participants in the /d/-exposure group heard 30 words with syllable-final /d/, all of which deviated from native pronunciation. Even if both the two pseudowords and the word-medial /d/ in *medellivslängd* somehow affected participants' ratings during test, we would expect that the 30 critical exposure words with syllable-final /d/ would affect participants' ratings over and above that effect.
+
+
+
+
+## Test stimuli and procedure ##
+
+The test phase followed immediately after the exposure phase. In both experiments, the test phases started with two blocks in which participants rated recordings of /d,t/-final minimal pair words. Specifically, participants were asked to rate the final sound of the words on a 1-7 scale for how good an example that sound was for the named category (either /d/ or /t/), with 1 being the worst rating and 7 being the best. In one of these two test blocks, participants rated /d/-goodness. In the other test block, they rated /t/-goodness. The two words of a minimal pair never occurred within the same block. The order of the two blocks was counter-balanced across participants. Within each block, order of presentation was randomized across participans.
+
+Since neither the present nor previous work found interaction of the rating question (whether participants were asked to rate /d/ or /t/-goodness) with any of the predictors of interest, we transformed /t/-goodness ratings into /d/-goodness ratings by subtracting /t/-goodness ratings from 8.  
+
+### English ###
 
 ### Swedish ###
 
-The /d/-exposure group heard 30 critical words with between two and five syllables, ending with \/d\/, and without \/t\/-final minimal pair neighbors (e.g. \textit{episod}). Other than the /d/-final target words, all stimuli were chosen to avoid voiced stops as well as /t/ in any position (i.e., no /d, t, b, g/). The other two voiceless stops (\/k\/ and \/p\/) were kept at a minimum but not fully avoidable in order to have a sufficent number of exposure words. Overall, there were XXX occurrences of /k/ or /p/ in the critical words and XXX occurrences in the filler words.
+The Swedish experiment employed fewer test stimuli (32 \/d-\/t\/-final words from 16 minimal pairs,  e.g., *röd* and *röt*). <!-- Maryann: right? 16 minimal pairs, forming 32 words, or 32 mps forming 64 words? --> Additionally, test words were allwed to have word-initial voiced stops (other than /d/, e.g. *bädd-bett*).
 
-In place of the critical words, the Control group heard 30 replacements with no occurences of \/d, t, b, g\/. These words were matched in syllable length and average base form frequency according to selected balanced corpora of 25 million words available on the Korp database of Språkbanken (https://spraakbanken.gu.se/korp, accessed January 2019). The words were presented in random order.
+<!-- Maryann: made an edit here to clarify lack of balancing. let me know if it's correct? -->
+Due to a misunderstanding, the Swedish data did not counter-balance whether a word recording was rated for /d/- or for /t/-goodness (e.g., the word *XXX* was always rated for /d/-goodness; the word *XXX* was always rated for /t/-goodness; across minimal pair words, /d/- and /t/-final words were equally often rated for /d/- and /t/-goodness).
 
-Unintended by the design, one critical word in the /d/-exposure group contained a medial /d/ (*medellivslangd*--- average life span), one pseudoword contained medial /d/ (*mörvinder*), and one pseudoword contained final /t/ (*spållrivet*).
+Finally, the Swedish experiment contained a third and fourth test block during which participants rated 32 \/d\/-\/t\/-*initial* minimal pair words (e.g., *dom* and *tom*). The order of these later test blocks was counter-balanced across participants but participants always completed the test block with word-final ratings *before* performing the word-initial ratings. The data from word-initial ratings tasks are not part of the current analysis, though we note that exposure group did not affect the Swedish word-initial ratings either.
 
-### Why the difference?
-Other than the unintended occurences of stops, differences in sound exlusion for the Swedish stimuli were dictated by the distribution of these sounds in the language. Excluding them completely would result in fewer exposure words.
+### Why these differences?
+The Swedish experimen employed fewer test tokens because it was difficult to find additional minimal pairs for Swedish. While there are many /d/-/t/-final minimal pairs in Swedish, a large number of them are different forms of the same word and hence semantically identical (e.g., *XXX*---`XXX' and *XXX*---`XXX'). <!-- Maryann: please explain: not sure what you meant here. perhaps the examples and their translations will help -->
+The same reason motivated the decision to allow test stimuli in which voiced stops (other than /d/) occurred at the word onset.
 
-### Is this difference likely to explain the results?
-The medial /d/ in *medellivslängd* occurs as the onset of the second syllable (*me-del*) and thus is unlikely to have provided evidence of a voiced-final /d/. Crucially, the control group did not hear this word. The  occurence of medial /d/ and final /t/ in the pseudoword list are also unlikely to have provided sufficient evidence for perceptual learning as has been shown in prior experiments using this paradigm (cf. Norris, McQueen \& Cutler, 2003). In addition, the fact that the control group had little difficulty judging /d/ from /t/ words even without prior exposure suggests it would not have granted benefit to the /d/-exposure group.
+The additional test blocks with \/d-\/t\/-initial minimal pair words were included in the Swedish experiment in order to investigate the question of whether exposure to devoiced /d/-final words might result in higher goodness ratings for \/d-\/t\/-initial words (building on Eisner et al., 2013).  
 
-## Test stimuli ##
+### Are these differences likely to explain the results?
+Compared to the English experiment, the Swedish experiment had 50\% fewer items. The resulting reduction in power could explain the null effect for Swedish. This possibility was ruled out by bootstrap analyses reported in Section XXX.
 
-### English ###
+It is unclear how the other differences in the materials, or the inclusion of additional (later) test blocks would explain the Swedish data.
 
-### Swedish ###
-<!-- Maryann, fill in example word? Also, didn't you have two test blocks? Describe, incl. relative order of test blocks. -->
-
-Test stimuli consisted of 32 \/d-\/t\/-final minimal pair words (e.g., *röd* and *röt*) as well as 32 \/d-\/t\/-initial minimal pair words (e.g., *dom* and *tom*), matched in phonological vowel length. The pairs were spread across four lists (two for word-final pairs, two for word-initial pairs) such that the two words of a pair did not appear on the same list. The order in each list was randomised for each participant. 
-
-### Why the difference?
-We included the set of \/d-\/t\/-initial minimal pair words to investigate the question of whether exposure to devoiced /d/-final words might result in higher goodness ratings for \/d-\/t\/-initial words. The results were not included in the current analysis.  While there are many /d/-/t/-final minimal pairs in Swedish a large number of them are different forms of the same word and hence semantically identical which we chose to exclude. Additionally, we relaxed the sound restrictions when selecting the minimal pairs, allowing voiced stops to occur word initially (e.g. *bädd-bett*) in order to have a sufficient number of pairs. 
-
-### Is this difference likely to explain the results?
-Compared to the English experiment, the Swedish experiment had 50\% fewer items. 
-## Procedure ##
-
-### English ###
-
-### Swedish ###
-Participants first performed a lexical decision task followed by a goodness judgment task. During
-the lexical decision task word lists appropriate to the participant’s assigned group were played in a random order over headphones at a comfortable volume. They were instructed to decide whether
-the word they heard was a real Swedish word or not. They pressed the “j” key for
-“ja (yes)” and “n” key for “nej (no)”. 
-
-The test phase followed immediately after the exposure phase. Participants were given written instructions on the screen which told them to rate the final sound of the words they heard for how good they represented a named category (either /d/ or /t/) on a 1-7 scale. This was performed in  two blocks which was counter-balanced across participants. The experimenter checked that the participant understood the task. In addition to the two final-sound ratings blocks they were asked to rate the \/d\/-\/t\/-*initial* words for how good the first sound represented a named category. The order of these latter two blocks was counter-balanced but participants always completed the word-final ratings *before* performing the word-initial ratings. The data from word-initial ratings tasks are not part of the current analysis.
-
-### Why the difference?
-
-
-### Is this difference likely to explain the results?
-Because the word initial-ratings were always either the third or fourth block any additional random effects resulting from prolonged testing or changing of task would not have affected the word-final judgments.
 
 
 # Acoustic analysis #
