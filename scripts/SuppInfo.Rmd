@@ -33,11 +33,15 @@ library(ggplot2)
 # Pipes
 get_accuracy = . %>% 
   group_by(Language, Group, Participant) %>% 
-  summarise(Accuracy = mean(LD.Correct)) %>% 
+  summarise(Accuracy = mean(LD.Correct, na.rm = T)) %>% 
   group_by(Language, Group) %>% 
-  summarise(mean = mean(Accuracy), sd = sd(Accuracy))
+  summarise(Accuracy.mean = mean(Accuracy, na.rm = T), 
+            Accuracy.sd = sd(Accuracy, na.rm = T)) %>%
+  ungroup() %>%
+  mutate_at(vars(starts_with("Accuracy")),
+            .funs = function(x) 100 * round(x, 3))
 
-paste_accuracy = function(
+get_accuracy = function(
   d, 
   language = c("English", "Swedish"), 
   group = c("control", "/d/-exposure"), 
@@ -50,9 +54,9 @@ paste_accuracy = function(
       filter(Item.Type == "critical") 
   }
   d %<>% 
-    filter(Language %in% language, Group %in% group) %>% 
+    filter(Language %in% language, Group %in% group, Block.Type == "exposure") %>% 
     droplevels() %>% 
-    get_accuracy()
+    get_accuracy() 
   
   text = ""
   for (l in language) {
@@ -64,9 +68,9 @@ paste_accuracy = function(
         # If more than one group, add group to paste, otherwise not
         if (length(group) > 1) paste0(g, " group: ") else "",
         "M = ", 
-        d[d$Language == l & d$Group == g, "mean"], 
+        d[d$Language == l & d$Group == g, "Accuracy.mean"], 
         ", SD = ",
-        d[d$Language == l & d$Group == g, "sd"])
+        d[d$Language == l & d$Group == g, "Accuracy.sd"])
       if (
         !and(
           l == language[length(language)], 
@@ -74,6 +78,8 @@ paste_accuracy = function(
         text = paste0(text, "; ")
     }
   }
+  
+  text
 } 
 ```
 \newpage
@@ -90,7 +96,7 @@ d.swedish %<>%
     Participant = participant,
     Item.WordID = item,
     Item.Type = item_cond,
-    Filename = sound,
+    Item.Filename = sound,
     LD.Expected = corr_ans,
     LD.Answer = key_resp_2.keys,
     LD.Correct = key_resp_2.corr,
@@ -98,7 +104,7 @@ d.swedish %<>%
     Rating.for = rating_for,
     Rating.Answer = rating_1.response,
     Rating.RT = rating_1.rt,
-    Block = block_id,
+    TestBlock = block_id,
     List = listname) %>%
   mutate(
     Language = "Swedish",
@@ -109,8 +115,8 @@ d.swedish %<>%
       T ~ NA_character_
     )),
     Item.MinimalPair = factor(
-      ifelse(Block == "exposure", NA,
-             tolower(gsub("^[A-Z]+_([0-9]+)_.*$", "\\1", Filename)))),
+      ifelse(Block.Type == "exposure", NA,
+             tolower(gsub("^[A-Z]+_([0-9]+)_.*$", "\\1", Item.Filename)))),
     ItemTemp = gsub("^[A-Z]([A-Z]+)$", "\\1", Item.Type),
     Item.WordStatus = factor(case_when(
       ItemTemp == "NW" ~ "non-word",
@@ -119,7 +125,8 @@ d.swedish %<>%
     )),
     Item.Type = factor(case_when(
       ItemTemp %in% c("NW", "FW") ~ "filler",
-      ItemTemp %in% c("CW", "TW", "TF", "DF", "TI", "DI") ~ "critical",
+      ItemTemp %in% c("CW", "TW") ~ "critical",
+      ItemTemp %in% c("TF", "DF", "TI", "DI") ~ "test",
       T ~ NA_character_
     )),
     Sound.Type = factor(case_when(
@@ -133,24 +140,31 @@ d.swedish %<>%
       T ~ NA_character_
     )),
     Item.Word = str_replace(stri_trans_general(
-      Filename, 
+      Item.Filename, 
       "Latin-ASCII"),
-      "^[A-Z]+_[0-9]+_([a-z]+)_.*$", "\\1"),
+      "^[A-Z]+_[0-9]+_([a-z]+)_.*$", "\\1")
+  ) %>%
+  group_by(Participant) %>%
+  mutate(
+    Group = if(sum(ifelse(ItemTemp == "TW", 1, 0)) == 0) 
+      "control" else "/d/-exposure",
+    Trial = row_number()
+  ) %>%
+  ungroup() %>%
+  # Delete variable no longer necessary
+  mutate(    
     group = NULL,
     ItemTemp = NULL,
     position = NULL,
     X1 = NULL,
     X = NULL
   ) %>%
-  group_by(Participant) %>%
-  mutate(
-    Group = if(sum(ifelse(Item.Type == "ECW", 1, 0)) > 0) 
-      "control" else "/d/-exposure",
-    Trial = row_number()
-  ) %>%
-  ungroup() %>%
+  # Create factors
   mutate_at(
-    c("Item.MinimalPair", "Item.WordID", "Participant", "Group", "Rating.for"),
+    c("List", "Group", "Participant", 
+      "TestBlock", "Item.MinimalPair", "Item.WordID", 
+      "LD.Expected", "LD.Answer",
+      "Rating.for"),
     .funs = factor
   ) %>%
   # Remove participants 100 & 111 because they are nonnative
@@ -158,15 +172,16 @@ d.swedish %<>%
   # Order columns
   select(Language, List, 
          Group, Participant,
-         Block, Block.Type, 
+         Block.Type, TestBlock,
          Trial, 
-         Item.MinimalPair, Item.WordID, Item.Type, Item.Word, Item.WordStatus,
+         Item.MinimalPair, Item.WordID, Item.Type, Item.Word, Item.WordStatus, Item.Filename,
          Sound.Type, Sound.Position,
          LD.Expected, LD.Answer, LD.Correct, LD.RT,
          Rating.for, Rating.Answer, Rating.RT)
 
 # Combine Swedish and English here
-d = d.swedish
+d = d.swedish %>%
+  mutate(Language = factor(Language, levels = c("English", "Swedish")))
 ```
 
 
@@ -184,7 +199,7 @@ Response accuracy indicated that critical /d/-final words were largely judged to
 
 ### Swedish ###
 
-Lexical decision accuracy was high across both the /d/-exposure (`r paste_accuracy(d, "Swedish", "exposure")`) (M = 0.96; SD = 0.01) and control group (0.97; SD = 0.03). Accuracy was also high for critical words with syllable-final /d/ in the /d/-exposure group (M = 0.94; SD = 0.06) and control group (), indicating that the accent did not hinder word recognition for these words.
+Lexical decision accuracy was high across both the /d/-exposure (`r get_accuracy(d, "Swedish", "exposure")`) (M = 0.96; SD = 0.01) and control group (0.97; SD = 0.03). Accuracy was also high for critical words with syllable-final /d/ in the /d/-exposure group (M = 0.94; SD = 0.06) and control group (), indicating that the accent did not hinder word recognition for these words.
 
 ```{r}
 # Showing by-subject accuracy and RTs during exposure
@@ -194,11 +209,11 @@ d.swedish.exposure.BySubject = d.swedish %>%
   summarise(
     meanAccuracy = mean(LD.Correct),
     meanAccuracy.critical.training = mean(ifelse(
-      Item.Type == "critical" & Group == "training", 
+      Item.Type == "critical" & Group == "/d/-exposure", 
       LD.Correct, 
       NA), na.rm = T),
     meanAccuracy.critical.control = mean(ifelse(
-      Item.Type == "critical" & Group == "control", 
+      Item.Type == "critical" & Group == "/d/-exposure", 
       LD.Correct, 
       NA), na.rm = T),
     meanAccuracy.critical = mean(ifelse(
@@ -223,14 +238,14 @@ d.swedish.exposure.ByGroup <- d.swedish.exposure.BySubject %>%
     SD_critical.control = sd(meanAccuracy.critical.control, na.rm=T))
 
 d_exposure.accuracy <- d.swedish %>%
-  filter(Block.Type == "exposure" & Group == "training") %>%
+  filter(Block.Type == "exposure" & Group == "/d/-exposure") %>%
   group_by(Group) %>% 
   summarise(meanAccuracy = mean(LD.Correct))
 
 ```
 
 ```{r}
-levels(d.swedish.exposure.BySubject$Group) <- c("Control", "/d/-Exposure")
+levels(d.swedish.exposure.BySubject$Group) <- c("control", "/d/-exposure")
 d.swedish.exposure.BySubject %>%
   ggplot(
     aes(x = meanRT, 
