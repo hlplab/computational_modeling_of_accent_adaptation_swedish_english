@@ -32,7 +32,7 @@ library(ggplot2)
 ```{r functions and pipes}
 # Pipes
 get_accuracy = . %>% 
-  group_by(Language, Group, Participant.ID) %>% 
+  group_by(Language, Group, Participant) %>% 
   summarise(Accuracy = mean(LD.Correct)) %>% 
   group_by(Language, Group) %>% 
   summarise(mean = mean(Accuracy), sd = sd(Accuracy))
@@ -51,7 +51,7 @@ paste_accuracy = function(
   }
   d %<>% 
     filter(Language %in% language, Group %in% group) %>% 
-    drop.levels() %>% 
+    droplevels() %>% 
     get_accuracy()
   
   text = ""
@@ -64,13 +64,13 @@ paste_accuracy = function(
         # If more than one group, add group to paste, otherwise not
         if (length(group) > 1) paste0(g, " group: ") else "",
         "M = ", 
-        d[Language == l & Group == g, "mean"], 
+        d[d$Language == l & d$Group == g, "mean"], 
         ", SD = ",
-        d[Language == l & Group == g, "sd"])
+        d[d$Language == l & d$Group == g, "sd"])
       if (
         !and(
           l == language[length(language)], 
-          g == group[l.group])) 
+          g == group[length(group)])) 
         text = paste0(text, "; ")
     }
   }
@@ -94,6 +94,7 @@ d.swedish %<>%
     LD.Expected = corr_ans,
     LD.Answer = key_resp_2.keys,
     LD.Correct = key_resp_2.corr,
+    LD.RT = key_resp_2.rt,
     Rating.for = rating_for,
     Rating.Answer = rating_1.response,
     Rating.RT = rating_1.rt,
@@ -144,7 +145,7 @@ d.swedish %<>%
   group_by(Participant) %>%
   mutate(
     Group = if(sum(ifelse(Item.Type == "ECW", 1, 0)) > 0) 
-      "control" else "training",
+      "control" else "/d/-exposure",
     Trial = row_number()
   ) %>%
   ungroup() %>%
@@ -161,7 +162,7 @@ d.swedish %<>%
          Trial, 
          Item.MinimalPair, Item.WordID, Item.Type, Item.Word, Item.WordStatus,
          Sound.Type, Sound.Position,
-         LD.Expected, LD.Answer, LD.Correct,
+         LD.Expected, LD.Answer, LD.Correct, LD.RT,
          Rating.for, Rating.Answer, Rating.RT)
 
 # Combine Swedish and English here
@@ -183,33 +184,32 @@ Response accuracy indicated that critical /d/-final words were largely judged to
 
 ### Swedish ###
 
-Lexical decision accuracy was high across both the /d/-exposure (`r paste_accuracy(d.swedish, )`) (M = 0.96; SD = 0.01) and control group (0.97; SD = 0.03). Accuracy was also high for critical words with syllable-final /d/ in the /d/-exposure group (M = 0.94; SD = 0.06) and control group (), indicating that the accent did not hinder word recognition for these words.
+Lexical decision accuracy was high across both the /d/-exposure (`r paste_accuracy(d, "Swedish", "exposure")`) (M = 0.96; SD = 0.01) and control group (0.97; SD = 0.03). Accuracy was also high for critical words with syllable-final /d/ in the /d/-exposure group (M = 0.94; SD = 0.06) and control group (), indicating that the accent did not hinder word recognition for these words.
 
 ```{r}
 # Showing by-subject accuracy and RTs during exposure
 d.swedish.exposure.BySubject = d.swedish %>%
-  filter(Block == "exposure") %>%
-  group_by(participant, Group) %>%
+  filter(Block.Type == "exposure") %>%
+  group_by(Participant, Group) %>%
   summarise(
-    meanAccuracy = mean(key_resp_2.corr),
+    meanAccuracy = mean(LD.Correct),
     meanAccuracy.critical.training = mean(ifelse(
       Item.Type == "critical" & Group == "training", 
-      key_resp_2.corr, 
+      LD.Correct, 
       NA), na.rm = T),
     meanAccuracy.critical.control = mean(ifelse(
       Item.Type == "critical" & Group == "control", 
-      key_resp_2.corr, 
+      LD.Correct, 
       NA), na.rm = T),
     meanAccuracy.critical = mean(ifelse(
       Item.Type == "critical", 
-      key_resp_2.corr, 
+      LD.Correct, 
       NA), na.rm = T),
-    meanRT = mean(key_resp_2.rt),
     meanAccuracy.nonword = mean(ifelse(
       Item.WordStatus == "non-word", 
-      key_resp_2.corr, 
+      LD.Correct, 
       NA), na.rm = T),
-    meanRT = mean(key_resp_2.rt)
+    meanRT = mean(LD.RT)
   ) 
 
 d.swedish.exposure.ByGroup <- d.swedish.exposure.BySubject %>% 
@@ -223,9 +223,9 @@ d.swedish.exposure.ByGroup <- d.swedish.exposure.BySubject %>%
     SD_critical.control = sd(meanAccuracy.critical.control, na.rm=T))
 
 d_exposure.accuracy <- d.swedish %>%
-  filter(Block == "exposure" & Group == "training") %>%
+  filter(Block.Type == "exposure" & Group == "training") %>%
   group_by(Group) %>% 
-  summarise(meanAccuracy = mean(key_resp_2.corr))
+  summarise(meanAccuracy = mean(LD.Correct))
 
 ```
 
@@ -235,7 +235,7 @@ d.swedish.exposure.BySubject %>%
   ggplot(
     aes(x = meanRT, 
         y = meanAccuracy, 
-        label = participant, fill = Group)) + 
+        label = Participant, fill = Group)) + 
   geom_label() + 
   scale_fill_manual(values = c( "#a6a6a6", "#80d0ff")) + 
   scale_y_continuous(
@@ -249,7 +249,7 @@ d.swedish.exposure.BySubject %>%
   filter(Group == "/d/-Exposure") %>% 
   ggplot(aes(x = meanRT, 
              y = meanAccuracy.critical.training, 
-             label = participant, 
+             label = Participant, 
              fill = Group) ) + 
   geom_label() + 
   scale_fill_manual(values = c( "#80d0ff")) + 
@@ -263,7 +263,7 @@ d.swedish.exposure.BySubject %>%
 d.swedish.exposure.BySubject %>%
   ggplot(aes(x = meanRT, 
              y = meanAccuracy.critical, 
-             label = participant, 
+             label = Participant, 
              fill = Group) ) + 
   geom_label() + 
   scale_fill_manual(values = c( "#a6a6a6","#80d0ff")) + 
@@ -277,7 +277,7 @@ d.swedish.exposure.BySubject %>%
 d.swedish.exposure.BySubject %>%
   ggplot(aes(x = meanRT, 
              y = meanAccuracy.nonword, 
-             label = participant, 
+             label = Participant, 
              fill = Group) ) + 
   geom_label() + 
   scale_fill_manual(values = c( "#a6a6a6","#80d0ff")) + 
@@ -313,15 +313,15 @@ To compare participants' ratings for the /d,t/-final test words across the two e
 
 ```{r}
 d.swedish.test.BySubject = d.swedish %>%
-  filter(Block == "test") %>%
-  group_by(participant, Group, rating_for, Sound.Type, Sound.Position) %>%
+  filter(Block.Type == "test") %>%
+  group_by(Participant, Group, Rating.for, Sound.Type, Sound.Position) %>%
   summarise(
-    meanRating = mean(rating_1.response),
-    meanRT = mean(rating_1.rt),
+    meanRating = mean(Rating.Answer),
+    meanRT = mean(Rating.RT),
     n = n()
   ) 
 
-levels(d.swedish.test.BySubject$rating_for) <- c("Rating for /d/", "Rating for /t/")
+levels(d.swedish.test.BySubject$Rating.for) <- c("Rating for /d/", "Rating for /t/")
 levels(d.swedish.test.BySubject$Group) <- c("Control", "/d/-Exposure")
 d.swedish.test.BySubject %>%
   filter(Sound.Position == "final") %>% 
@@ -334,7 +334,7 @@ d.swedish.test.BySubject %>%
   scale_x_discrete(labels=c("d" ="/d/", "t" = "/t/")) +
   scale_colour_manual(values = c( "#a6a6a6", "#80d0ff")) + 
   xlab("Final Sound") + ylab("Mean Rating") + 
-  facet_grid(. ~ rating_for) + 
+  facet_grid(. ~ Rating.for) + 
   theme_cowplot()
 ```
 
