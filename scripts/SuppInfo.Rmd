@@ -36,7 +36,7 @@ library(ggplot2)
 ```{r load data, message=FALSE, warning=FALSE, error=FALSE, echo=FALSE, results='hide'}
 # Swedish data
 d.swedish = read_csv(file = "../data/pilot_test/testrun2.csv")
-d.prod = readRDS("../data/prod.rds")
+
 
 d.swedish %<>%
   dplyr::rename(Filename = sound) %>%
@@ -90,15 +90,11 @@ d.swedish %<>%
   mutate_at(
     c("item", "participant", "rating_for", "Group"),
     .funs = factor
-  ) %>%
-  left_join(d.prod %>%
-              select(-c("filename")) %>%
-              filter(language == "non-native"), 
-            by = c("Word" = "word"))
+  ) 
 
 # Remove participants 100 & 111 because they are nonnative
 d.swedish %<>% filter(!participant %in% c(100, 111)) 
-summary(d.swedish)
+
 ```
 
 
@@ -107,46 +103,71 @@ We compare the results of the perception experiments on English and Swedish. We 
 ## Lexical decision accuracy during exposure ##
 Lexical decision accuracy during exposure was high across exposure groups and experiments. 
 
+### English ###
+Response accuracy indicated that critical /d/-final words were largely judged to be real words by the experimental group 
+
+
 <!-- Change this so that the code is placed where you want its output. E.g., the means the SDs you mention below should be stored quietly in variables and then be added to the text via in-line R code. I suggest that we consistently make plots for both experiment together, whenever possible plotting them next to each other (e.g., via facet_grid or facet_wrap) -->
 
+
+### Swedish ###
+
+Lexical decision accuracy was high across both the /d/-exposure (M = 0.96; SD = 0.01) and control group (0.97; SD = 0.03). Accuracy was also high for critical words with syllable-final /d/ in the /d/-exposure group (M = 0.94; SD = 0.06) and control group (), indicating that the accent did not hinder word recognition for these words.
 ```{r}
 # Showing by-subject accuracy and RTs during exposure
-d.swedish.expoosure.BySubject = d.swedish %>%
+d.swedish.exposure.BySubject = d.swedish %>%
   filter(Block == "exposure") %>%
   group_by(participant, Group) %>%
   summarise(
     meanAccuracy = mean(key_resp_2.corr),
-    meanAccuracy.critical = mean(ifelse(Item.Type == "critical" & Group == "training", key_resp_2.corr, NA), na.rm = T),
+    meanAccuracy.critical.training = mean(ifelse(Item.Type == "critical" & Group == "training", key_resp_2.corr, NA), na.rm = T),
+    meanAccuracy.critical.control = mean(ifelse(Item.Type == "critical" & Group == "control", key_resp_2.corr, NA), na.rm = T),
+      meanAccuracy.critical = mean(ifelse(Item.Type == "critical", key_resp_2.corr, NA), na.rm = T),
+    meanRT = mean(key_resp_2.rt),
+          meanAccuracy.nonword = mean(ifelse(Item.WordStatus == "non-word", key_resp_2.corr, NA), na.rm = T),
     meanRT = mean(key_resp_2.rt)
   ) 
 
-d.swedish.exposure.ByGroup <- d.swedish.expoosure.BySubject %>% 
+d.swedish.exposure.ByGroup <- d.swedish.exposure.BySubject %>% 
   group_by(Group) %>% 
-  summarise( mean_group = mean(meanAccuracy), mean_critical = mean(meanAccuracy.critical, na.rm=T), SD = sd(meanAccuracy), SD_critical = sd(meanAccuracy.critical, na.rm=T))
+  summarise( mean_group = mean(meanAccuracy), mean_critical.training = mean(meanAccuracy.critical.training, na.rm=T), mean_critical.control = mean(meanAccuracy.critical.control, na.rm=T), SD = sd(meanAccuracy), SD_critical.training = sd(meanAccuracy.critical.training, na.rm=T), SD_critical.control = sd(meanAccuracy.critical.control, na.rm=T))
 
-levels(d.swedish.expoosure.BySubject$Group) <- c("Control", "/d/-Exposure")
-d.swedish.expoosure.BySubject %>%
+d_exposure.accuracy <- d.swedish %>%
+  filter(Block == "exposure" & Group == "training") %>%
+  group_by(Group) %>% 
+  summarise(meanAccuracy = mean(key_resp_2.corr))
+
+```
+
+```{r}
+levels(d.swedish.exposure.BySubject$Group) <- c("Control", "/d/-Exposure")
+d.swedish.exposure.BySubject %>%
   ggplot(
     aes(x = meanRT, y = meanAccuracy, label = participant, fill = Group)) + geom_label() + scale_fill_manual( values = c( "#a6a6a6", "#80d0ff")) + scale_y_continuous(name = "Mean Accuracy", breaks = c(0, 0.25, 0.5, 0.75, 1.0), limits = c(0, 1.0))+ xlab("Mean Reaction Time") + theme_cowplot()
   
-d.swedish.expoosure.BySubject %>%
+d.swedish.exposure.BySubject %>%
   filter(Group == "/d/-Exposure") %>% 
+  ggplot(aes(x = meanRT, y = meanAccuracy.critical.training, label = participant, fill = Group) ) + 
+  geom_label() + scale_fill_manual( values = c( "#80d0ff")) + scale_y_continuous(name = "Mean Accuracy - Critical Words", breaks = c(0, 0.25, 0.5, 0.75, 1.0), limits = c(0, 1.0)) + xlab("Mean Reaction Time") + theme_cowplot()
+
+d.swedish.exposure.BySubject %>%
   ggplot(aes(x = meanRT, y = meanAccuracy.critical, label = participant, fill = Group) ) + 
-  geom_label() + scale_fill_manual( values = c( "#80d0ff")) + scale_y_continuous(name = "Mean Accuracy", breaks = c(0, 0.25, 0.5, 0.75, 1.0), limits = c(0, 1.0)) + xlab("Mean Reaction Time") + theme_cowplot()
+  geom_label() + scale_fill_manual( values = c( "#a6a6a6","#80d0ff")) + scale_y_continuous(name = "Mean Accuracy - Critical Words", breaks = c(0, 0.25, 0.5, 0.75, 1.0), limits = c(0, 1.0)) + xlab("Mean Reaction Time") + theme_cowplot()
+
+d.swedish.exposure.BySubject %>%
+  ggplot(aes(x = meanRT, y = meanAccuracy.nonword, label = participant, fill = Group) ) + 
+  geom_label() + scale_fill_manual( values = c( "#a6a6a6","#80d0ff")) + scale_y_continuous(name = "Mean Accuracy - Pseudowords", breaks = c(0, 0.25, 0.5, 0.75, 1.0), limits = c(0, 1.0)) + xlab("Mean Reaction Time") + theme_cowplot()
 ```
 
-### English ###
 
-### Swedish ###
 
-Lexical decision accuracy was high across both the /d/-exposure (M = 0.96; SD = 0.01) and control group (0.97; SD = 0.03). Accuracy was also high for critical words with syllable-final /d/ in the /d/-exposure group (M = 0.94; SD = 0.06), indicating that the accent did not hinder word recognition for these words.
+
 
 ### Swedish vs. English
 <!-- Maryann: let's add an analysis here, follwing the same model logic that you're using for the test stimuli, but use family = binomial. As item effect we will use the exposure (non)word itself [so there should be 210 * 2 unique items] -->
 
 To compare lexical decision accuracy across the two experiments, we conducted a mixed-effects logistic regression (Breslow \&Clayton, 1993; Jaeger, 2008) over the combined data from both experiments. The regression predicted correct (1) vs. incorrect (0) answers based on the exposure group (sum-coded: 1 =  /d/-exposure vs. -1 = control), the experiment (sum-coded: 1 = Swedish vs. -1 = English), and their interaction. The regression contained the maximal random effect structure justified by the design (random by-participant intercepts; random by-item intercepts and slopes for exposure group; item IDs did not overlap between experiments).
 
-XXX-SUMMARIZE RESULTS USING R OUTPUT.
 
 
 ## Ratings during test ##
