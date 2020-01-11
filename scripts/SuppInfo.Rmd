@@ -29,6 +29,46 @@ library(lmerTest)
 library(ggplot2)
 ```
 
+```{r functions and pipes}
+# Pipes
+get_accuracy = . %>% 
+  group_by(language, group, participant) %>% 
+  summarise(accuracy = mean(correct)) %>% 
+  group_by(language, group) %>% 
+  summarise(mean = mean(accuracy), sd = sd(accuracy))
+
+paste_accuracy = function(
+  d, 
+  language = c("English", "Swedish"), 
+  group = c("control", "/d/-exposure"), 
+  critical = F) {
+  require(magrittr)
+  
+  if (critical) {
+    group = "/d/-exposure"
+    d %<>% filter(item.type == "critical") 
+  }
+  d %<>% filter(language %in% language, group %in% group) %>% drop.levels() %>% get_accuracy()
+  
+  text = ""
+  for (l in language) {
+    text = paste0(text, l, ", ")
+    for (g in group) {
+      text = paste0(
+        text, 
+        g, " group: M = ", 
+        d[language = l & group = g, "mean"], 
+        ", S = ",
+        d[language = l & group = g, "sd"])
+      if (
+        !and(
+          l == language[length(language)], 
+          g == group[length(group)])) 
+        text = paste0(text, "; ")
+    }
+  }
+} 
+```
 \newpage
 
 # Results of perception experiment #  
@@ -129,15 +169,15 @@ d.swedish.exposure.BySubject = d.swedish %>%
       Item.Type == "critical" & Group == "control", 
       key_resp_2.corr, 
       NA), na.rm = T),
-      meanAccuracy.critical = mean(ifelse(
-        Item.Type == "critical", 
-        key_resp_2.corr, 
-        NA), na.rm = T),
+    meanAccuracy.critical = mean(ifelse(
+      Item.Type == "critical", 
+      key_resp_2.corr, 
+      NA), na.rm = T),
     meanRT = mean(key_resp_2.rt),
-          meanAccuracy.nonword = mean(ifelse(
-            Item.WordStatus == "non-word", 
-            key_resp_2.corr, 
-            NA), na.rm = T),
+    meanAccuracy.nonword = mean(ifelse(
+      Item.WordStatus == "non-word", 
+      key_resp_2.corr, 
+      NA), na.rm = T),
     meanRT = mean(key_resp_2.rt)
   ) 
 
