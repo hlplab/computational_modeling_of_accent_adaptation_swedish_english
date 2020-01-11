@@ -37,7 +37,6 @@ library(ggplot2)
 # Swedish data
 d.swedish = read_csv(file = "../data/pilot_test/testrun2.csv")
 
-
 d.swedish %<>%
   dplyr::rename(Filename = sound) %>%
   mutate(
@@ -83,7 +82,8 @@ d.swedish %<>%
   ) %>%
   group_by(participant) %>%
   mutate(
-    Group = if(sum(ifelse(item_cond == "ECW", 1, 0)) > 0) "control" else "training",
+    Group = if(sum(ifelse(item_cond == "ECW", 1, 0)) > 0) 
+      "control" else "training",
     Trial = row_number()
   ) %>%
   ungroup() %>%
@@ -113,6 +113,7 @@ Response accuracy indicated that critical /d/-final words were largely judged to
 ### Swedish ###
 
 Lexical decision accuracy was high across both the /d/-exposure (M = 0.96; SD = 0.01) and control group (0.97; SD = 0.03). Accuracy was also high for critical words with syllable-final /d/ in the /d/-exposure group (M = 0.94; SD = 0.06) and control group (), indicating that the accent did not hinder word recognition for these words.
+
 ```{r}
 # Showing by-subject accuracy and RTs during exposure
 d.swedish.exposure.BySubject = d.swedish %>%
@@ -120,17 +121,35 @@ d.swedish.exposure.BySubject = d.swedish %>%
   group_by(participant, Group) %>%
   summarise(
     meanAccuracy = mean(key_resp_2.corr),
-    meanAccuracy.critical.training = mean(ifelse(Item.Type == "critical" & Group == "training", key_resp_2.corr, NA), na.rm = T),
-    meanAccuracy.critical.control = mean(ifelse(Item.Type == "critical" & Group == "control", key_resp_2.corr, NA), na.rm = T),
-      meanAccuracy.critical = mean(ifelse(Item.Type == "critical", key_resp_2.corr, NA), na.rm = T),
+    meanAccuracy.critical.training = mean(ifelse(
+      Item.Type == "critical" & Group == "training", 
+      key_resp_2.corr, 
+      NA), na.rm = T),
+    meanAccuracy.critical.control = mean(ifelse(
+      Item.Type == "critical" & Group == "control", 
+      key_resp_2.corr, 
+      NA), na.rm = T),
+      meanAccuracy.critical = mean(ifelse(
+        Item.Type == "critical", 
+        key_resp_2.corr, 
+        NA), na.rm = T),
     meanRT = mean(key_resp_2.rt),
-          meanAccuracy.nonword = mean(ifelse(Item.WordStatus == "non-word", key_resp_2.corr, NA), na.rm = T),
+          meanAccuracy.nonword = mean(ifelse(
+            Item.WordStatus == "non-word", 
+            key_resp_2.corr, 
+            NA), na.rm = T),
     meanRT = mean(key_resp_2.rt)
   ) 
 
 d.swedish.exposure.ByGroup <- d.swedish.exposure.BySubject %>% 
   group_by(Group) %>% 
-  summarise( mean_group = mean(meanAccuracy), mean_critical.training = mean(meanAccuracy.critical.training, na.rm=T), mean_critical.control = mean(meanAccuracy.critical.control, na.rm=T), SD = sd(meanAccuracy), SD_critical.training = sd(meanAccuracy.critical.training, na.rm=T), SD_critical.control = sd(meanAccuracy.critical.control, na.rm=T))
+  summarise(
+    mean_group = mean(meanAccuracy), 
+    mean_critical.training = mean(meanAccuracy.critical.training, na.rm=T), 
+    mean_critical.control = mean(meanAccuracy.critical.control, na.rm=T), 
+    SD = sd(meanAccuracy), 
+    SD_critical.training = sd(meanAccuracy.critical.training, na.rm=T), 
+    SD_critical.control = sd(meanAccuracy.critical.control, na.rm=T))
 
 d_exposure.accuracy <- d.swedish %>%
   filter(Block == "exposure" & Group == "training") %>%
@@ -143,23 +162,61 @@ d_exposure.accuracy <- d.swedish %>%
 levels(d.swedish.exposure.BySubject$Group) <- c("Control", "/d/-Exposure")
 d.swedish.exposure.BySubject %>%
   ggplot(
-    aes(x = meanRT, y = meanAccuracy, label = participant, fill = Group)) + geom_label() + scale_fill_manual( values = c( "#a6a6a6", "#80d0ff")) + scale_y_continuous(name = "Mean Accuracy", breaks = c(0, 0.25, 0.5, 0.75, 1.0), limits = c(0, 1.0))+ xlab("Mean Reaction Time") + theme_cowplot()
+    aes(x = meanRT, 
+        y = meanAccuracy, 
+        label = participant, fill = Group)) + 
+  geom_label() + 
+  scale_fill_manual(values = c( "#a6a6a6", "#80d0ff")) + 
+  scale_y_continuous(
+    name = "Mean Accuracy", 
+    breaks = c(0, 0.25, 0.5, 0.75, 1.0), 
+    limits = c(0, 1.0)) + 
+  xlab("Mean Reaction Time") + 
+  theme_cowplot()
   
 d.swedish.exposure.BySubject %>%
   filter(Group == "/d/-Exposure") %>% 
-  ggplot(aes(x = meanRT, y = meanAccuracy.critical.training, label = participant, fill = Group) ) + 
-  geom_label() + scale_fill_manual( values = c( "#80d0ff")) + scale_y_continuous(name = "Mean Accuracy - Critical Words", breaks = c(0, 0.25, 0.5, 0.75, 1.0), limits = c(0, 1.0)) + xlab("Mean Reaction Time") + theme_cowplot()
+  ggplot(aes(x = meanRT, 
+             y = meanAccuracy.critical.training, 
+             label = participant, 
+             fill = Group) ) + 
+  geom_label() + 
+  scale_fill_manual(values = c( "#80d0ff")) + 
+  scale_y_continuous(
+    name = "Mean Accuracy - Critical Words", 
+    breaks = c(0, 0.25, 0.5, 0.75, 1.0), 
+    limits = c(0, 1.0)) + 
+  xlab("Mean Reaction Time") + 
+  theme_cowplot()
 
 d.swedish.exposure.BySubject %>%
-  ggplot(aes(x = meanRT, y = meanAccuracy.critical, label = participant, fill = Group) ) + 
-  geom_label() + scale_fill_manual( values = c( "#a6a6a6","#80d0ff")) + scale_y_continuous(name = "Mean Accuracy - Critical Words", breaks = c(0, 0.25, 0.5, 0.75, 1.0), limits = c(0, 1.0)) + xlab("Mean Reaction Time") + theme_cowplot()
+  ggplot(aes(x = meanRT, 
+             y = meanAccuracy.critical, 
+             label = participant, 
+             fill = Group) ) + 
+  geom_label() + 
+  scale_fill_manual(values = c( "#a6a6a6","#80d0ff")) + 
+  scale_y_continuous(
+    name = "Mean Accuracy - Critical Words", 
+    breaks = c(0, 0.25, 0.5, 0.75, 1.0), 
+    limits = c(0, 1.0)) + 
+  xlab("Mean Reaction Time") + 
+  theme_cowplot()
 
 d.swedish.exposure.BySubject %>%
-  ggplot(aes(x = meanRT, y = meanAccuracy.nonword, label = participant, fill = Group) ) + 
-  geom_label() + scale_fill_manual( values = c( "#a6a6a6","#80d0ff")) + scale_y_continuous(name = "Mean Accuracy - Pseudowords", breaks = c(0, 0.25, 0.5, 0.75, 1.0), limits = c(0, 1.0)) + xlab("Mean Reaction Time") + theme_cowplot()
+  ggplot(aes(x = meanRT, 
+             y = meanAccuracy.nonword, 
+             label = participant, 
+             fill = Group) ) + 
+  geom_label() + 
+  scale_fill_manual(values = c( "#a6a6a6","#80d0ff")) + 
+  scale_y_continuous(
+    name = "Mean Accuracy - Pseudowords", 
+    breaks = c(0, 0.25, 0.5, 0.75, 1.0), 
+    limits = c(0, 1.0)) + 
+  xlab("Mean Reaction Time") + 
+  theme_cowplot()
 ```
-
-
 
 
 
@@ -198,10 +255,16 @@ levels(d.swedish.test.BySubject$Group) <- c("Control", "/d/-Exposure")
 d.swedish.test.BySubject %>%
   filter(Sound.Position == "final") %>% 
   ggplot(aes(x = Sound.Type, y = meanRating, color = Group)) +
-  scale_colour_manual( values = c( "#a6a6a6", "#80d0ff"))  + geom_violin( position = position_dodge (0.8)) + 
-  stat_summary(fun.data = mean_cl_boot, geom = "pointrange", position = position_dodge (0.8)) + 
-  facet_grid(. ~ rating_for ) + ylab("Mean Rating") + xlab("Final Sound") + 
-  scale_x_discrete(labels=c("d" ="/d/", "t" = "/t/"))+ theme_cowplot()
+  geom_violin( position = position_dodge (0.8)) + 
+  stat_summary(
+    fun.data = mean_cl_boot, 
+    geom = "pointrange", 
+    position = position_dodge(0.8)) + 
+  scale_x_discrete(labels=c("d" ="/d/", "t" = "/t/")) +
+  scale_colour_manual(values = c( "#a6a6a6", "#80d0ff")) + 
+  xlab("Final Sound") + ylab("Mean Rating") + 
+  facet_grid(. ~ rating_for) + 
+  theme_cowplot()
 ```
 
 
