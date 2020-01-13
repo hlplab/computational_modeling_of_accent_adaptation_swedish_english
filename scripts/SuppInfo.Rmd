@@ -113,7 +113,7 @@ get_LD_performance = function(
 
 ```{r load data, message=FALSE, warning=FALSE, error=FALSE, echo=FALSE, results='hide'}
 # Load swedish data
-d.swedish = read_csv(file = "../data/pilot_test/testrun2.csv")
+d.swedish = read_csv(file = "../data/Swedish/pilot_test/testrun2.csv")
 
 # Standardize variable names for Swedish
 d.swedish %<>%
