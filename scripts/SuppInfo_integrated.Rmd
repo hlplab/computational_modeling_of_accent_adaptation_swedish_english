@@ -1,13 +1,26 @@
 ---
 title: "Supplementary Information for PAPER TITLE"
 author: "Tan, M., Xie, X., Jaeger, T. F."
-date: "28/12/2019"
+date: \today
+header-includes:
+  - \usepackage{booktabs}
+  - \usepackage{siunitx}
+  - \usepackage{tabto}
+  - \usepackage{soul}
+  - \usepackage{xcolor}
+  - \usepackage{placeins}
+  - \usepackage{lscape}
+  - \newcommand{\blandscape}{\begin{landscape}}
+  - \newcommand{\elandscape}{\end{landscape}}
+  - \makeatletter\renewcommand{\fps@table}{!ht}\makeatother
+  - \setstcolor{red}
+  - \usepackage{sectsty}
+  - \sectionfont{\color{red}} 
+  - \subsectionfont{\color{red}}
+  - \subsubsectionfont{\color{red}}
 output:
-  pdf_document:
-    toc: true
-    citation_package: natbib
-    toc_depth: '4'
-    fig_caption: true
+ html_document:
+    code_folding: hide
 ---
 
 ```{r setup, include=FALSE}
@@ -354,9 +367,6 @@ d.swedish <- d.pilot.swedish %>%
   mutate(
     zrating.simplified_d = as.numeric(scale(rating.simplified_d))
   ) %>%
-  # group_by(participant, rating_for) %>%
-  # mutate(
-  #   zrating.simplified_d_byTask = as.numeric(scale(rating.simplified_d))) %>%
   ungroup()
 
 d.english <- d.xin %>%
@@ -368,9 +378,6 @@ d.english <- d.xin %>%
   mutate(
     zrating.simplified_d = as.numeric(scale(rating.simplified_d))
   ) %>%
-  # group_by(participant, rating_for) %>%
-  # mutate(
-  #   zrating.simplified_d_byTask = as.numeric(scale(rating.simplified_d))) %>%
   ungroup()
   
 
@@ -743,13 +750,13 @@ for(i in 1:n_times){
 SS.downsampled = d.test.all.rating %>%
   distinct(native_language, Group, Participant) %>%
   group_by(native_language, Group) %>%
-  sample_n(., 11) %>%
+  sample_n(., 11, replace = TRUE) %>%
   droplevels()
 
 Item.downsampled = d.test.all.rating %>%
   distinct(native_language, MinimalPairID) %>%
   group_by(native_language) %>%
-  sample_n(., 30) %>%
+  sample_n(., 30, replace = TRUE) %>%
   droplevels()
 
 
@@ -795,6 +802,15 @@ tally1 <- rating.lmer.table.downsampled %>%
   group_by(term, significance, direction) %>%
   summarise(n = n()) %>%
   mutate(effects = "3-way interaction")
+
+tally1.interaction = tally1 %>%
+  filter(term == "native_language1:Group1:Sound1" & direction == "-") %>%
+  select(n) %>%
+  ungroup() %>%
+  summarise(n = sum (n))
+tally1.interaction.sig <- tally1 %>%
+  filter(term == "native_language1:Group1:Sound1" & significance == "yes" & direction == "-") %>%
+  select(n)
   
 tally2 <- rating.lmer.table.downsampled.simple %>%
   filter(term == "native_languageEnglish:Group1:Sound1" | term == "native_languageSwedish:Group1:Sound1") %>%
@@ -809,7 +825,11 @@ print(tally.table)
 tally2.English <- tally2 %>%
   filter(term == "native_languageEnglish:Group1:Sound1" & significance == "yes" & direction == "+")
 tally2.Swedish <- tally2 %>%
-  filter(term == "native_languageSwedish:Group1:Sound1" & significance == "no")
+  filter(term == "native_languageSwedish:Group1:Sound1" & significance == "yes") %>%
+  summarise(n = sum(n))
+tally2.Swedish.negative <- tally2 %>%
+  filter(term == "native_languageSwedish:Group1:Sound1" & significance == "yes" & direction == "-") %>%
+  summarise(n = sum(n))
 
 # how often in these simulations is the (signed) t-value of the English data's two-way interaction at least as high as the actual t-value on the non-bootstrapped swedish data?
 tally3 <- rating.lmer.table.downsampled.simple %>%
@@ -817,8 +837,9 @@ tally3 <- rating.lmer.table.downsampled.simple %>%
   arrange(term) %>%
   mutate(comparison = (estimate > swedish.interaction$estimate)) %>%
   group_by(comparison) %>%
-  summarise(n = n())
-tally3_comparison <- tally3$n[1]
+  summarise(n = n()) %>%
+  filter(comparison == T)
+tally3_comparison <- tally3$n
 
 
 ```
@@ -828,7 +849,7 @@ Compared to the English experiment, the Swedish experiment had substantially few
 
 To address this possibility, we randomly bootstrapped (with replacement) both the English and the Swedish data to the same number of participants and test tokens included in the analysis of the Swedish data (11 in the /d/-exposure group and 11 in the control group). We then repeated the analyses reported in the main text, comparing the Swedish and (down-sampled) English test data. This process was repeated `r n_times` times. 
 
-`r tally1$n[2]` out of `r n_times` times, we replicated the critical significant three-way interaction between Language, Exposure group, and Sound category. The simple effect of the two-way interaction between Exposure group and Sound was significant for the English data in `r tally2.English$n` samples out of `r n_times` times (all in the predicted direction), whereas it was significant for the Swedish data in `r tally2.Swedish$n` samples out of `r n_times` times (all in the *opposite* of the predicted direction). In addition, `r tally3_comparison` out of `r n_times` times, t-value of the English data's two-way interaction is as high as the actual t-value of the Swedish data. 
+`r tally1.interaction$n` out of `r n_times` times we observed a three-way interaction in the predicted direction and `r tally1.interaction.sig$n` out of `r n_times` times, we replicated the critical significant three-way interaction between Language, Exposure group, and Sound category. The simple effect of the two-way interaction between Exposure group and Sound was significant for the English data in `r tally2.English$n` samples out of `r n_times` times (all in the predicted direction), whereas it was significant for the Swedish data in `r tally2.Swedish$n` samples out of `r n_times` times (`r tally2.Swedish.negative$n` in the *opposite* of the predicted direction). In addition, `r tally3_comparison` out of `r n_times` times, t-value of the English data's two-way interaction is as high as the actual t-value of the Swedish data. 
 
 In short we reliably replicate the difference between the English and Swedish even when the both data sets only have 22 participants. 
 
@@ -975,33 +996,33 @@ resid.both <- bind_rows(resid.both.prior, resid.both.post)
 resid.both$residualizationType <- relevel(factor(resid.both$residualizationType), "prior")
 
 
-# 
-# 
-# plot_ly(data = resid.both %>%
-#           filter(native_language == "Swedish"),
-#                x= ~vowel, 
-#                y= ~closure, 
-#                z= ~burst, 
-#                color= ~Sound,
-#                symbol= ~Sound,
-#                symbols = c('circle','square'),
-#               frame= ~residualizationType,
-#                type="scatter3d", mode="markers") %>%
-#    layout(
-#          title = "Acoustic cue distribution for Flemish-accented Swedish\nBefore and After Cue Correction") # This line specifies the axis range
-# 
-# plot_ly(data = resid.both %>%
-#           filter(native_language == "English"),
-#                x= ~vowel, 
-#                y= ~closure, 
-#                z= ~burst, 
-#                color= ~Sound,
-#                symbol= ~Sound,
-#                symbols = c('circle','square'),
-#               frame= ~residualizationType,
-#                type="scatter3d", mode="markers") %>%
-#    layout(
-#          title = "Acoustic cue distribution for Mandarin-accented English\nBefore and After Cue Correction") # This line specifies the axis range
+
+
+plot_ly(data = resid.both %>%
+          filter(native_language == "Swedish"),
+               x= ~vowel,
+               y= ~closure,
+               z= ~burst,
+               color= ~Sound,
+               symbol= ~Sound,
+               symbols = c('circle','square'),
+              frame= ~residualizationType,
+               type="scatter3d", mode="markers") %>%
+   layout(
+         title = "Acoustic cue distribution for Flemish-accented Swedish\nBefore and After Cue Correction") # This line specifies the axis range
+
+plot_ly(data = resid.both %>%
+          filter(native_language == "English"),
+               x= ~vowel,
+               y= ~closure,
+               z= ~burst,
+               color= ~Sound,
+               symbol= ~Sound,
+               symbols = c('circle','square'),
+              frame= ~residualizationType,
+               type="scatter3d", mode="markers") %>%
+   layout(
+         title = "Acoustic cue distribution for Mandarin-accented English\nBefore and After Cue Correction") # This line specifies the axis range
 
 ```
 
@@ -1209,31 +1230,29 @@ d.model.parameter.swedish = model.parameters.swedish.wide %>%
 d.model.parameter.swedish$sound <- relevel(factor(d.model.parameter.swedish$sound), "d")
 
 
-# plot_ly(data = data.both %>%
-#           filter(native_language == "Swedish") %>%
-#           filter(model == Sound),
-#                x= ~rvowel, 
-#                y= ~rclosure, 
-#                z= ~rburst, 
-#                color= ~posterior,
-#              #  colors = "YlOrRd", 
-#              #  colorscale= list(c(0,1), "Viridis"),
-#                symbol= ~Sound,
-#                symbols = c('circle','square'),
-#               frame= ~training_model,
-#                type="scatter3d", mode="markers") %>%
-#   add_trace(type = 'scatter3d', # plot 3d ellipsoid for exposure /d/
-#             data = d.model.parameter.swedish %>% 
-#               mutate(training_model = ifelse(modelType == "TS", "non-native", "native")) %>%
-#               droplevels(),
-#             inherit = F,
-#             size = I(1),
-#             color = ~sound,
-#             frame = ~training_model,
-#             x = ~x, y = ~y, z = ~z,
-#             opacity = .2, showlegend = FALSE) %>% 
-#   layout(scene = list(xaxis=axx,yaxis=axy,zaxis=axz,aspectmode='cube'),
-#          title = "Posterior prediction for Flemish-accented Swedish\nNative model and Non-native model") # This line specifies the axis range 
+plot_ly(data = data.both %>%
+          filter(native_language == "Swedish") %>%
+          filter(model == Sound),
+               x= ~rvowel,
+               y= ~rclosure,
+               z= ~rburst,
+               color= ~posterior,
+               symbol= ~Sound,
+               symbols = c('circle','square'),
+              frame= ~training_model,
+               type="scatter3d", mode="markers") %>%
+  add_trace(type = 'scatter3d', # plot 3d ellipsoid for exposure /d/
+            data = d.model.parameter.swedish %>%
+              mutate(training_model = ifelse(modelType == "TS", "non-native", "native")) %>%
+              droplevels(),
+            inherit = F,
+            size = I(1),
+            color = ~sound,
+            frame = ~training_model,
+            x = ~x, y = ~y, z = ~z,
+            opacity = .2, showlegend = FALSE) %>%
+  layout(scene = list(xaxis=axx,yaxis=axy,zaxis=axz,aspectmode='cube'),
+         title = "Posterior prediction for Flemish-accented Swedish\nNative model and Non-native model") # This line specifies the axis range
 ``` 
 
 
@@ -1269,30 +1288,30 @@ d.model.parameter.english = model.parameter.english %>%
   ungroup()
 
   
-# plot_ly(data = data.both %>%
-#           filter(native_language == "English") %>%
-#           filter(model == Sound),
-#                x= ~rvowel, 
-#                y= ~rclosure, 
-#                z= ~rburst, 
-#                color= ~posterior,
-#                symbol= ~Sound,
-#                symbols = c('circle','square'),
-#               frame= ~training_model,
-#                type="scatter3d", mode="markers") %>%
-#   add_trace(type = 'scatter3d', # plot 3d ellipsoid for exposure /d/
-#             data = d.model.parameter.english %>% 
-#               mutate(training_model = ifelse(modelType == "TS", "non-native", "native")) %>%
-#               droplevels(.),
-#             inherit = F,
-#             size = I(1),
-#              color = ~sound,
-#             frame = ~training_model,
-#             x = ~x, y = ~y, z = ~z,
-#             opacity = .2) %>%
-#   layout(scene = list(xaxis=axx,yaxis=axy,zaxis=axz,
-#                       aspectmode='cube'),
-#          title = "Posterior prediction for Mandarin-accented English\nNative model and Non-native model") # This line specifies the axis range
+plot_ly(data = data.both %>%
+          filter(native_language == "English") %>%
+          filter(model == Sound),
+               x= ~rvowel,
+               y= ~rclosure,
+               z= ~rburst,
+               color= ~posterior,
+               symbol= ~Sound,
+               symbols = c('circle','square'),
+              frame= ~training_model,
+               type="scatter3d", mode="markers") %>%
+  add_trace(type = 'scatter3d', # plot 3d ellipsoid for exposure /d/
+            data = d.model.parameter.english %>%
+              mutate(training_model = ifelse(modelType == "TS", "non-native", "native")) %>%
+              droplevels(.),
+            inherit = F,
+            size = I(1),
+             color = ~sound,
+            frame = ~training_model,
+            x = ~x, y = ~y, z = ~z,
+            opacity = .2) %>%
+  layout(scene = list(xaxis=axx,yaxis=axy,zaxis=axz,
+                      aspectmode='cube'),
+         title = "Posterior prediction for Mandarin-accented English\nNative model and Non-native model") # This line specifies the axis range
 
 
 ```
@@ -1325,41 +1344,41 @@ diff.results.english <- data.english %>%
   dplyr::mutate(TS_over_native = TS - native) 
     
 
-# p.3d.diff.swedish = plot_ly(data = diff.results.swedish %>%
-#                       mutate(min = min(TS_over_native), max = max(TS_over_native), mean = mean(TS_over_native)) %>%
-#                       mutate(NonNative_over_Native = TS_over_native),
-#                x= ~rvowel, 
-#                y= ~rclosure, 
-#                z= ~rburst, 
-#               # color= ~NonNative_over_Native,
-#                marker = list(color = ~NonNative_over_Native, colorscale = 'RdBu', cmin = -1, cmax = 1, showscale = T),
-#               # colors = 'RdBu',
-#               symbol= ~sound,
-#               symbols = c('circle','square'),
-#              #  frame= ~modelType,
-#                type="scatter3d", mode="markers", showlegend = FALSE) %>%
-#     layout(scene = list(xaxis=axx,yaxis=axy,zaxis=axz,aspectmode='cube'),
-#          title = "Posterior prediction for Flemish-accented Swedish\nDifferences between native model and non-native model \n(NonNative-Native)") # This line specifies the axis range 
-# 
-#   
-# p.3d.diff.english = plot_ly(data = diff.results.english %>%
-#                       mutate(min = min(TS_over_native), max = max(TS_over_native), mean = mean(TS_over_native)) %>%
-#                       mutate(NonNative_over_Native = TS_over_native),
-#                x= ~rvowel, 
-#                y= ~rclosure, 
-#                z= ~rburst, 
-#               # color= ~NonNative_over_Native,
-#               marker = list(color = ~NonNative_over_Native, colorscale = 'RdBu', cmin = -1, cmax = 1, showscale = T),
-#               # colors = 'RdBu',
-#               symbol= ~sound,
-#               symbols = c('circle','square'),
-#              #  frame= ~modelType,
-#                type="scatter3d", mode="markers", showlegend = FALSE) %>%
-#     layout(scene = list(xaxis=axx,yaxis=axy,zaxis=axz,aspectmode='cube'),
-#          title = "Posterior prediction for Mandarin-accented English\nDifferences between native model and non-native model \n(NonNative-Native)") # This line specifies the axis range 
+p.3d.diff.swedish = plot_ly(data = diff.results.swedish %>%
+                      mutate(min = min(TS_over_native), max = max(TS_over_native), mean = mean(TS_over_native)) %>%
+                      mutate(NonNative_over_Native = TS_over_native),
+               x= ~rvowel,
+               y= ~rclosure,
+               z= ~rburst,
+              # color= ~NonNative_over_Native,
+               marker = list(color = ~NonNative_over_Native, colorscale = 'RdBu', cmin = -1, cmax = 1, showscale = T),
+              # colors = 'RdBu',
+              symbol= ~sound,
+              symbols = c('circle','square'),
+             #  frame= ~modelType,
+               type="scatter3d", mode="markers", showlegend = FALSE) %>%
+    layout(scene = list(xaxis=axx,yaxis=axy,zaxis=axz,aspectmode='cube'),
+         title = "Posterior prediction for Flemish-accented Swedish\nDifferences between native model and non-native model \n(NonNative-Native)") # This line specifies the axis range
 
-# p.3d.diff.swedish
-# p.3d.diff.english
+
+p.3d.diff.english = plot_ly(data = diff.results.english %>%
+                      mutate(min = min(TS_over_native), max = max(TS_over_native), mean = mean(TS_over_native)) %>%
+                      mutate(NonNative_over_Native = TS_over_native),
+               x= ~rvowel,
+               y= ~rclosure,
+               z= ~rburst,
+              # color= ~NonNative_over_Native,
+              marker = list(color = ~NonNative_over_Native, colorscale = 'RdBu', cmin = -1, cmax = 1, showscale = T),
+              # colors = 'RdBu',
+              symbol= ~sound,
+              symbols = c('circle','square'),
+             #  frame= ~modelType,
+               type="scatter3d", mode="markers", showlegend = FALSE) %>%
+    layout(scene = list(xaxis=axx,yaxis=axy,zaxis=axz,aspectmode='cube'),
+         title = "Posterior prediction for Mandarin-accented English\nDifferences between native model and non-native model \n(NonNative-Native)") # This line specifies the axis range
+
+p.3d.diff.swedish
+p.3d.diff.english
 ```
 
 
