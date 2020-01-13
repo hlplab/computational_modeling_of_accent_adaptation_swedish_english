@@ -23,13 +23,24 @@ output:
     code_folding: hide
 ---
 
-```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = FALSE, warning = FALSE)
 
+# TO BE DELETED LATER (PROJECT INTERNAL NOTES)
+
+This data presented in this report comes from two projects, one conducted in English (Xin's data) and one in Swedish (Maryann's data). Henceforth, we use *native_language* (English vs. Swedish) as a variable to distinguish between the two datasets. In each case, we compare perceptual adaptation effects in two *Group* (/d/-exposure vs. control). Each experiment consists of an exposure phase followed by a test phase. Here we analyze the test phase data in order to compare human responses to predictions of Ideal Observers. 
+
+The Ideal Observers are constructed for each project. Categorization predictions are made on the test data from a) *native* language model (trained on tokens from a native speaker of the target language; English or Swedish); b) *non-native* talker-specific model (trained on tokens from the test speaker; native-Flemish or Mandarin). Henceforth, we use *modelType* (native vs. non-native) to distinguish the two types of models.
+
+In sum, the following data are analyzed and reported:
+1) Xin's perception experiment: Goodness rating task
+2) Maryann's perception experiment: Gooodness rating task
+3) Ideal Observers predictions 
+4) Xin's perception experiment: ID task from the Xie et al.(2017)
+
+
+```{r rmarkdown setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, 
+                      message=FALSE, warning=FALSE, error=TRUE)
 ```
-
-This supplementary information describes the methods of the behavioural studies that were carried out in English and Swedish.
-\newpage
 
 
 ```{r preamble, message=FALSE, warning=FALSE, error=FALSE, echo=FALSE, results='hide'}
@@ -45,20 +56,13 @@ library(ggplot2)
 library(plotly)
 library(gridExtra)
 library(broom.mixed)
-theme_set(theme_bw() + 
-            theme(panel.border = element_blank())
-          )
+theme_set(
+  theme_bw() + 
+    theme(panel.border = element_blank())
+)
 ```
 
 ```{r functions and pipes}
-# functions
-extract_columns <- function(data) {
-  extracted_data <- data %>%
-    select(.dots = common_cols)
-  return(extracted_data)
-}
-
-
 # Pipes
 get_LD_byParticipant = . %>% 
   filter(Block.Type == "exposure") %>%
@@ -85,6 +89,12 @@ get_LD.RT_byGroup = . %>%
   mutate_at(c("mean", "sd"),
             .funs = function(x) round(x, 1))
 
+# functions
+extract_columns <- function(data) {
+  extracted_data <- data %>%
+    select(.dots = common_cols)
+  return(extracted_data)
+}
 
 get_LD_performance = function(
   d, 
@@ -135,58 +145,36 @@ get_LD_performance = function(
 \newpage
 
 
-# Project overview #
+# Overview #
 
-This data presented in this report comes from two projects, one conducted in English (Xin's data) and one in Swedish (Maryann's data). Henceforth, we use *native_language* (English vs. Swedish) as a variable to distinguish between the two datasets. In each case, we compare perceptual adaptation effects in two *Group* (/d/-exposure vs. control). Each experiment consists of an exposure phase followed by a test phase. Here we analyze the test phase data in order to compare human responses to predictions of Ideal Observers. 
-
-The Ideal Observers are constructed for each project. Categorization predictions are made on the test data from a) *native* language model (trained on tokens from a native speaker of the target language; English or Swedish); b) *non-native* talker-specific model (trained on tokens from the test speaker; native-Flemish or Mandarin). Henceforth, we use *modelType* (native vs. non-native) to distinguish the two types of models.
-
-In sum, the following data are analyzed and reported:
-1) Xin's perception experiment: Goodness rating task
-2) Maryann's perception experiment: Gooodness rating task
-3) Ideal Observers predictions 
-4) Xin's perception experiment: ID task from the Xie et al.(2017)
-
-
+This supplementary information describes the methods of the perception experiments on Mandarin-accented English and Flemish-accennted Swedish, as well as the development and evaluation of the ideal observer models. This includes the description of additional data sets containing information about native pronunciations of the same materials used in the perception experiments on foreign-accented speech.
 
 # Results of perception experiment #  
 
-```{r load data, message=FALSE, warning=FALSE, error=FALSE, echo=FALSE, results='hide'}
-
+```{r load rating experiments, results='hide'}
 ##-----------------------
 # load human rating data
 ##-----------------------
 # Swedish rating data
-d.pilot.swedish = read_csv(file = "../data/Swedish/pilot_test/testrun2.csv")
+d.swedish = read_csv(file = "../data/Swedish/pilot_test/testrun2.csv")
 # English rating data
-d.xin <- read.csv("../data/English/d.rating.xin.csv")
-
-
-##-----------------------
-# load human ID task data
-##-----------------------
-# English ID data
-d.xin.ID <- read.csv("../data/English/d.identification.xin.csv")
-d.xin.ID.sleep <- readRDS("../data/English/talker_specific_data_sleepAA.rds")
-
-
+d.english.test <- read.csv("../data/English/d.rating.xin.csv")
 
 # Standardize variable names for Swedish
-d.pilot.swedish %<>%
+d.swedish %<>%
   dplyr::rename(
     Participant = participant,
     Item.WordID = item,
     Item.Type = item_cond,
     Item.Filename = sound,
     LD.Expected = corr_ans,
-    LD.Answer = key_resp_2.keys,
+    LD.Response = key_resp_2.keys,
     LD.Correct = key_resp_2.corr,
     LD.RT = key_resp_2.rt,
     Rating.for = rating_for,
-    Rating.Answer = rating_1.response,
+    Rating.Response = rating_1.response,
     Rating.RT = rating_1.rt,
-    TestBlock = block_id,
-    List = listname) %>%
+    TestBlock = block_id) %>%
   mutate(
     Language = "Swedish",
     Block.Type = gsub("^([A-Z]).*$", "\\1", Item.Type),
@@ -195,8 +183,10 @@ d.pilot.swedish %<>%
       Block.Type == "T" ~ "test",
       T ~ NA_character_
     )),
-    Item.MinimalPair = factor(
-      ifelse(Block.Type == "exposure", NA,
+    Participant = paste0("S", Participant),
+    Item.WordID = paste0("S", Item.WordID),
+    Item.MinimalPair = 
+      ifelse(Block.Type == "exposure", NA, paste0("S",
              tolower(gsub("^[A-Z]+_([0-9]+)_.*$", "\\1", Item.Filename)))),
     ItemTemp = gsub("^[A-Z]([A-Z]+)$", "\\1", Item.Type),
     Item.WordStatus = factor(case_when(
@@ -220,10 +210,6 @@ d.pilot.swedish %<>%
       ItemTemp %in% c("TI", "DI") ~ "initial",
       T ~ NA_character_
     )),
-    Word = str_replace(stri_trans_general(Item.Filename, "Latin-ASCII"), "^[A-Z]+_[0-9]+_([a-z]+)_.*$", "\\1"),
-    MinimalPairID = factor(
-      ifelse(Block.Type == "exposure", NA,
-             tolower(gsub("^[A-Z]+_([0-9]+)_.*$", "\\1", Item.Filename)))),
     Item.Word = str_replace(stri_trans_general(
       Item.Filename, 
       "Latin-ASCII"),
@@ -238,42 +224,88 @@ d.pilot.swedish %<>%
   ungroup() %>%
   # Delete variable no longer necessary
   mutate(    
+    listname = NULL,
     group = NULL,
     ItemTemp = NULL,
     position = NULL,
     X1 = NULL,
     X = NULL
   ) %>%
-  # Create factors
-  mutate_at(
-    c("List", "Group", "Participant", 
-      "TestBlock", "Item.MinimalPair", "Item.WordID", 
-      "LD.Expected", "LD.Answer",
-      "Rating.for"),
-    .funs = factor
-  ) %>%
-  # Remove participants 100 & 111 because they are nonnative
-  filter(!Participant %in% c(100, 111)) %>%
-  # Remove the 4 items because -rd and -rt are pronounced differently in Swedish
-  filter(! Word %in% c("voart", "voard", "hoart", "hoard")) %>%
   # Order columns
-  select(Language, List, 
+  select(Language, 
          Group, Participant,
          Block.Type, TestBlock,
          Trial, 
          Item.MinimalPair, Item.WordID, Item.Type, Item.Word, Item.WordStatus, Item.Filename,
-         Sound.Type, Sound.Position, Word, MinimalPairID,
-         LD.Expected, LD.Answer, LD.Correct, LD.RT,
-         Rating.for, Rating.Answer, Rating.RT)
+         Sound.Type, Sound.Position, 
+         LD.Expected, LD.Response, LD.Correct, LD.RT,
+         Rating.for, Rating.Response, Rating.RT)
 
+# Swedish exclusion
+d.swedish %<>%
+  # Remove participants 100 & 111 because they are nonnative
+  filter(!Participant %in% c(100, 111)) %>%
+  # Remove the 4 items because -rd and -rt are pronounced differently in Swedish
+  filter(! Item.Word %in% c("voart", "voard", "hoart", "hoard")) %>%
+  droplevels()
 
+# Standardize variable names for English
+d.english.test %<>%
+  rename(
+    TestBlock = Session,                          # Xin: is this correct?
+    Item.Word = Word,
+    Item.MinimalPair = MinimalPairID,
+    Rating.Response = Rating.Answer,
+    Rating.RT = RT,
+    Sound.Type = Sound) %>%
+  mutate(
+    Participant = paste0("E", Participant),
+    Language = "English",
+    Group = ifelse(Group == "experimental", "/d/-exposure", "control"),
+    Block.Type = "test",
+    Item.MinimalPair = paste0("E", Item.MinimalPair),
+    Item.WordID = paste0("E", as.numeric(as.factor(Item.Word))),
+    Sound.Position = "final",
+    Subject = NULL)
 
+# Combine Swedish and English test data here 
+d.test = d.swedish %>%
+  filter(Block.Type == "test") %>%
+  select(Language,
+         Group, Participant,
+         Block.Type, TestBlock,
+         Trial, 
+         Item.MinimalPair, Item.WordID, Item.Type, Item.Word, 
+         Sound.Type, Sound.Position, 
+         Rating.for, Rating.Response, Rating.RT) %>%
+  # Bind in English test data about here --- NOT YET DONE !!!!!!!!!
+  full_join(d.english.test) %>%
+  mutate(
+    Language = factor(Language, levels = c("English", "Swedish")),
+    Rating.Response.d = ifelse(Rating.for == "d", Rating.Response, 8 - Rating.Response) 
+  ) %>%
+  group_by(Participant) %>%
+  mutate(
+    Rating.Response.d.zscored = as.numeric(scale(Rating.Response.d))
+  ) %>%
+  ungroup() %>%
+  # Create factors
+  mutate_at(
+    c("Group", "Participant", 
+      "TestBlock", "Item.MinimalPair", "Item.WordID", 
+      "Rating.for"),
+    .funs = factor
+  )
 
-# Combine Swedish and English here -- NOT YET combined here because the Swedish data contains both exposure and test; the English data contains only test
-d = d.pilot.swedish %>%
-  mutate(Language = factor(Language, levels = c("English", "Swedish")))
-
-
+# Create factors for exposure data
+d.swedish %<>%
+  mutate_at(
+    c("Group", "Participant", 
+      "TestBlock", "Item.MinimalPair", "Item.WordID", 
+      "LD.Expected", "LD.Response",
+      "Rating.for"),
+    .funs = factor
+  )
 ```
 
 
@@ -422,6 +454,16 @@ print(t1)
 #### Comparing ID task and Rating task
 
 To understand human responses, below we plot the item-level correlation between human responses from the ID task and the rating task available for the English dataset. For the rating task, the two original ratings (goodness as /d/ and goodness as /t/) were transformed into goodness-as-/d/ and averaged to yield a single metric.
+
+```{r load categorization experiments, results='hide'}
+##-----------------------
+# load human ID task data
+##-----------------------
+# English ID data
+d.xin.ID <- read.csv("../data/English/d.identification.xin.csv")
+d.xin.ID.sleep <- readRDS("../data/English/talker_specific_data_sleepAA.rds")
+```
+
 
 ```{r check-consistence-between-ID-rating-tasks, fig.height = 6, fig.width = 12}
 ##-------------------------------------------------------------------------------------
