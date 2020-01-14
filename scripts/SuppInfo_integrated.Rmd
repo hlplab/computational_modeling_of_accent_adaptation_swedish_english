@@ -24,6 +24,10 @@ output:
 ---
 
 
+# TO DO
+
+1) Check whether warnings are addressed, and then (after) set to silent.
+
 # TO BE DELETED LATER (PROJECT INTERNAL NOTES)
 
 This data presented in this report comes from two projects, one conducted in English (Xin's data) and one in Swedish (Maryann's data). Henceforth, we use *native_language* (English vs. Swedish) as a variable to distinguish between the two datasets. In each case, we compare perceptual adaptation effects in two *Group* (/d/-exposure vs. control). Each experiment consists of an exposure phase followed by a test phase. Here we analyze the test phase data in order to compare human responses to predictions of Ideal Observers. 
@@ -174,9 +178,9 @@ d.swedish %<>%
     Rating.for = rating_for,
     Rating.Response = rating_1.response,
     Rating.RT = rating_1.rt,
-    TestBlock = block_id) %>%
+    Block.Order = block_id) %>%
   mutate(
-    Language = "Swedish",
+    NativeLanguage = "Swedish",
     Block.Type = gsub("^([A-Z]).*$", "\\1", Item.Type),
     Block.Type = factor(case_when(
       Block.Type == "E" ~ "exposure",
@@ -200,7 +204,7 @@ d.swedish %<>%
       ItemTemp %in% c("TF", "DF", "TI", "DI") ~ "test",
       T ~ NA_character_
     )),
-    Sound.Type = factor(case_when(
+    Sound = factor(case_when(
       ItemTemp %in% c("DI", "DF", "TW") ~ "d",
       ItemTemp %in% c("TI", "TF") ~ "t",
       T ~ NA_character_
@@ -232,12 +236,12 @@ d.swedish %<>%
     X = NULL
   ) %>%
   # Order columns
-  select(Language, 
+  select(NativeLanguage, 
          Group, Participant,
-         Block.Type, TestBlock,
+         Block.Type, Block.Order,
          Trial, 
          Item.MinimalPair, Item.WordID, Item.Type, Item.Word, Item.WordStatus, Item.Filename,
-         Sound.Type, Sound.Position, 
+         Sound, Sound.Position, 
          LD.Expected, LD.Response, LD.Correct, LD.RT,
          Rating.for, Rating.Response, Rating.RT)
 
@@ -256,11 +260,10 @@ d.english.test %<>%
     Item.Word = Word,
     Item.MinimalPair = MinimalPairID,
     Rating.Response = Rating.Answer,
-    Rating.RT = RT,
-    Sound.Type = Sound) %>%
+    Rating.RT = RT) %>%
   mutate(
+    NativeLanguage = "English",
     Participant = paste0("E", Participant),
-    Language = "English",
     Group = ifelse(Group == "experimental", "/d/-exposure", "control"),
     Block.Type = "test",
     Item.MinimalPair = paste0("E", Item.MinimalPair),
@@ -271,17 +274,17 @@ d.english.test %<>%
 # Combine Swedish and English test data here 
 d.test = d.swedish %>%
   filter(Block.Type == "test") %>%
-  select(Language,
+  select(NativeLanguage,
          Group, Participant,
-         Block.Type, TestBlock,
+         Block.Type, Block.Order,
          Trial, 
          Item.MinimalPair, Item.WordID, Item.Type, Item.Word, 
-         Sound.Type, Sound.Position, 
+         Sound, Sound.Position, 
          Rating.for, Rating.Response, Rating.RT) %>%
   # Bind in English test data about here --- NOT YET DONE !!!!!!!!!
   full_join(d.english.test) %>%
   mutate(
-    Language = factor(Language, levels = c("English", "Swedish")),
+    NativeLanguage = factor(NativeLanguage, levels = c("English", "Swedish")),
     Rating.Response.d = ifelse(Rating.for == "d", Rating.Response, 8 - Rating.Response) 
   ) %>%
   group_by(Participant) %>%
@@ -292,7 +295,7 @@ d.test = d.swedish %>%
   # Create factors
   mutate_at(
     c("Group", "Participant", 
-      "TestBlock", "Item.MinimalPair", "Item.WordID", 
+      "Block.Order", "Item.MinimalPair", "Item.WordID", 
       "Rating.for"),
     .funs = factor
   )
@@ -301,7 +304,7 @@ d.test = d.swedish %>%
 d.swedish %<>%
   mutate_at(
     c("Group", "Participant", 
-      "TestBlock", "Item.MinimalPair", "Item.WordID", 
+      "Block.Order", "Item.MinimalPair", "Item.WordID", 
       "LD.Expected", "LD.Response",
       "Rating.for"),
     .funs = factor
@@ -338,7 +341,7 @@ last_plot() %+% (d %>%
 
 
 ### English ###
-Response accuracy indicated that critical /d/-final words were largely judged to be real words by the experimental group 
+XIN FILL IN
 
 
 ### Swedish ###
@@ -349,10 +352,7 @@ Reaction times were slower in the /d/-exposure group (`r get_LD_performance(d, "
 This suggests that the syllable-final /d/ of the Flemish-accented speaker was indeed accented, leading to additional difficulty beyond whatever other difficulty participants might have experienced while processing the foreign accent.
 
 ### Swedish vs. English
-
-<!-- Maryann: let's add an analysis here, follwing the same model logic that you're using for the test stimuli, but use family = binomial. As item effect we will use the exposure (non)word itself [so there should be 210 * 2 unique items] -->
-
-To compare lexical decision accuracy across the two experiments, we conducted a mixed-effects logistic regression (Breslow \&Clayton, 1993; Jaeger, 2008) over the combined data from both experiments. The regression predicted correct (1) vs. incorrect (0) answers based on the exposure group (sum-coded: 1 =  /d/-exposure vs. -1 = control), the experiment (sum-coded: 1 = Swedish vs. -1 = English), and their interaction. The regression contained the maximal random effect structure justified by the design (random by-participant intercepts; random by-item intercepts and slopes for exposure group; item IDs did not overlap between experiments).
+Overall, accuracy during exposure was substantially higher in the English data, compared to the Swedish data. This is consistent with the analyses of the test ratings we present below, which suggest that the Flemish-accented Swedish speech was considerably easier to process for native Swedish listeners than the Mandarin-accented English speech was for native English listeners.
 
 
 
@@ -886,14 +886,18 @@ tally3_comparison <- tally3$n
 
 ```
 
+<!-- Florian: edit to be clear what we're doing here -->
 
 Compared to the English experiment, the Swedish experiment had substantially fewer participants (about 50\% fewer). As described in Section XXX, the Swedish experiment also employed fewer test tokens than the English experiment (about 50\% fewer). Since a benefit of /d/-exposure was found for the larger (English), but not the smaller (Swedish), data set one obvious question is whether the difference in results is due to statistical power: the null result for the Swedish data might simply reflect a Type II error.
 
 To address this possibility, we randomly bootstrapped (with replacement) both the English and the Swedish data to the same number of participants and test tokens included in the analysis of the Swedish data (11 in the /d/-exposure group and 11 in the control group). We then repeated the analyses reported in the main text, comparing the Swedish and (down-sampled) English test data. This process was repeated `r n_times` times. 
 
-`r tally1.interaction$n` out of `r n_times` times we observed a three-way interaction in the predicted direction and `r tally1.interaction.sig$n` out of `r n_times` times, we replicated the critical significant three-way interaction between Language, Exposure group, and Sound category. The simple effect of the two-way interaction between Exposure group and Sound was significant for the English data in `r tally2.English$n` samples out of `r n_times` times (all in the predicted direction), whereas it was significant for the Swedish data in `r tally2.Swedish$n` samples out of `r n_times` times (`r tally2.Swedish.negative$n` in the *opposite* of the predicted direction). In addition, `r tally3_comparison` out of `r n_times` times, t-value of the English data's two-way interaction is as high as the actual t-value of the Swedish data. 
+`r tally1.interaction$n` out of `r n_times` times we observed a three-way interaction in the predicted direction and `r tally1.interaction.sig$n` out of `r n_times` times, we replicated the critical significant three-way interaction between Language, Exposure group, and Sound category. The simple effect of the two-way interaction between Exposure group and Sound was significant for the English data in `r tally2.English$n` samples out of `r n_times` times (all in the predicted direction), whereas it was significant for the Swedish data in `r tally2.Swedish$n` samples out of `r n_times` times (`r tally2.Swedish.negative$n` in the *opposite* of the predicted direction). 
 
-In short we reliably replicate the difference between the English and Swedish even when the both data sets only have 22 participants. 
+<!-- Xin: this needs editing to use the actual t-value -->
+In addition, `r tally3_comparison` out of `r n_times` times, $t$-value of the English data's two-way interaction is as high as the actual $t$-value of the Swedish data. In short we reliably replicate the difference between the English and Swedish even when the both data sets only have 22 participants. 
+
+
 
 
 ## Recording of materials##
