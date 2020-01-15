@@ -371,7 +371,7 @@ We note here that the two experiments differed in the number of subject and item
 
 ### Converting /d/- and /t/-goodness ratings for analysis
 
-```{r rating figure of correlations between /d/ and /t/ goodness, }
+```{r rating figure of correlations between /d/ and /t/ goodness, , fig.cap=c("\\label{fig:Ratings.Correlation}/d/-goodness ratings during test (z-scored) by native language and exposure group"), fig.height=3.5, fig.width=5}
 d.test %>%
   filter(NativeLanguage == "English") %>%
   droplevels() %>%
@@ -390,7 +390,7 @@ d.test %>%
 ```
 
 
-The /d/- and /t/-goodness ratings could range from 1 to 7. The two types of ratings were highly inversely correlated (see Figure \ref{fig:Ratings.correlation}). To simplify data analysis, we thus converted  all goodness ratings into /d/-goodness ratings. For /t/-goodness ratings, this means that we subtracted them from 8 (i.e., if a token was given a /t/-goodness of 3, it is tranformed to have a /d/-goodness of 5). This decision does not affect the results: all results remain the same if the original ratings are analyzed while including `rating for` (/d/- vs. /t/-goodness) and all its interactions as a predictor in the analysis. 
+The /d/- and /t/-goodness ratings could range from 1 to 7. The two types of ratings were highly inversely correlated (see Figure \ref{fig:Ratings.Correlation}). To simplify data analysis, we thus converted  all goodness ratings into /d/-goodness ratings. For /t/-goodness ratings, this means that we subtracted them from 8 (i.e., if a token was given a /t/-goodness of 3, it is tranformed to have a /d/-goodness of 5). This decision does not affect the results: all results remain the same if the original ratings are analyzed while including `rating for` (/d/- vs. /t/-goodness) and all its interactions as a predictor in the analysis. 
 Following Xie et al. (2017), we then z-scored /d/-goodness ratings within participants, by subtracting the participant's mean and dividing by the participant's standard deviation. 
 
 ### Results
@@ -663,8 +663,6 @@ Finally, the word-medial /d/ in *medellivslängd* was only heard by the /d/-expo
 
 The test phase followed immediately after the exposure phase. In both experiments, the test phases started with two blocks in which participants rated recordings of /d,t/-final minimal pair words. Specifically, participants were asked to rate the final sound of the words on a 1-7 scale for how good an example that sound was for the named category (either /d/ or /t/), with 1 being the worst rating and 7 being the best. In one of these two test blocks, participants rated /d/-goodness. In the other test block, they rated /t/-goodness. The two words of a minimal pair never occurred within the same block. The order of the two blocks was counter-balanced across participants. Within each block, order of presentation was randomized across participans.
 
-Since neither the present nor previous work found interaction of the rating question (whether participants were asked to rate /d/ or /t/-goodness) with any of the predictors of interest, we transformed /t/-goodness ratings into /d/-goodness ratings by subtracting /t/-goodness ratings from 8.  
-
 ### English ###
 The test stimuli included 60 monosyllabic minimal pairs ending in /d/ or /t/ (e.g., seed–seat). Other than the final stops, the same restrictions on sounds as in the exposure words were applied here. Across participants, all test words were rated both for /d/-goodness and for /t/-goodness (individual participants rated each word only for *either* /d/- *or* /t/-goodness). 
 
@@ -675,7 +673,7 @@ The Swedish experiment employed fewer test stimuli (64 \/d-\/t\/-final words fro
 
 Two pairs, (*vård-vårt* and *hård-hårt*) were excluded from analysis as it was discovered that dental stops preceded by /r/ in Swedish are pronounced differently as retroflexed variations of /d,t/ and therefore would not have been consistent with the rest of the set.
 
-Due to a misunderstanding, the Swedish data did not counter-balance whether a word recording was rated for /d/- or for /t/-goodness (e.g., the word *rid*---'ride' was always rated for /d/-goodness; the word *rit* ---'rite' was always rated for /t/-goodness; across minimal pair words, /d/- and /t/-final words were equally often rated for /d/- and /t/-goodness).
+Due to a misunderstanding, the Swedish data did not counter-balance whether a word recording was rated for /d/- or for /t/-goodness (e.g., the word *rid*---'ride' was always rated for /d/-goodness; the word *rit* ---'rite' was always rated for /t/-goodness; across minimal pair words, /d/- and /t/-final words were equally often rated for /d/- and /t/-goodness). This is unlikely to cause any problems: as shown in Figure \ref{fig:Ratings.Correlation} /d/- and /t/-goodness ratings were almost perfectly inversely correlation, so that the gain in information from having each word rated for both /d/- and /t/-goodness (across participants) is minimal.
 
 Finally, the Swedish experiment contained a third and fourth test block during which participants rated 54 words from 27 \/d\/-\/t\/-*initial* minimal pairs (e.g., *dom* and *tom*) for their /d/- or /t/-goodness. The relative order of these later test blocks (/d/- or /t/-goodness ratings) was counter-balanced across participants but participants always completed the test block with word-final ratings *before* performing the word-initial ratings. The data from word-initial ratings tasks are not part of the current analysis, though we note that exposure group did not affect the Swedish word-initial ratings either.
 
