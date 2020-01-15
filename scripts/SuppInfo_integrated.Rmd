@@ -61,10 +61,15 @@ library(ggplot2)
 library(plotly)
 library(gridExtra)
 library(broom.mixed)
+```
+
+```{r constants and environments}
 theme_set(
   theme_bw() + 
     theme(panel.border = element_blank())
 )
+
+colors.group = c("red", "blue")
 ```
 
 ```{r functions and pipes}
@@ -351,7 +356,7 @@ d.swedish %>%
     name = "Mean accuracy", 
     breaks = c(0, 0.25, 0.5, 0.75, 1.0), 
     limits = c(0, 1.0)) + 
-  scale_fill_manual(values = c( "#a6a6a6", "#80d0ff")) + 
+  scale_fill_manual(values = colors.group) + 
   facet_wrap(~ NativeLanguage) +
   theme_cowplot() + theme(legend.position = "top")
   
@@ -385,13 +390,14 @@ d.test %>%
   ) + 
   geom_label(alpha = .5, aes(fill = Group)) + 
   geom_smooth(method = "lm", color = "black", alpha = .5) +
-  xlab("/d/-goodness rating (z-scored)") +
-  ylab("/t/-goodness rating (z-scored)")
+  scale_x_continuous("/d/-goodness rating (z-scored)") +
+  scale_y_continuous("/t/-goodness rating (z-scored)") +
+  scale_color_manual(values = colors.group) +
+  scale_fill_manual(values = colors.group)
 ```
 
 
-The /d/- and /t/-goodness ratings could range from 1 to 7. The two types of ratings were highly inversely correlated (see Figure \ref{fig:Ratings.Correlation}). To simplify data analysis, we thus converted  all goodness ratings into /d/-goodness ratings. For /t/-goodness ratings, this means that we subtracted them from 8 (i.e., if a token was given a /t/-goodness of 3, it is tranformed to have a /d/-goodness of 5). This decision does not affect the results: all results remain the same if the original ratings are analyzed while including `rating for` (/d/- vs. /t/-goodness) and all its interactions as a predictor in the analysis. 
-Following Xie et al. (2017), we then z-scored /d/-goodness ratings within participants, by subtracting the participant's mean and dividing by the participant's standard deviation. 
+The /d/- and /t/-goodness ratings could range from 1 to 7. The two types of ratings were highly inversely correlated (see Figure \ref{fig:Ratings.Correlation}). To simplify data analysis, we thus converted  all goodness ratings into /d/-goodness ratings. For /t/-goodness ratings, this means that we subtracted them from 8 (i.e., if a token was given a /t/-goodness of 3, it is tranformed to have a /d/-goodness of 5). This decision does not affect the results: all results remain the same if the original ratings are analyzed while including `rating for` (/d/- vs. /t/-goodness) and all its interactions as a predictor in the analysis. Following Xie et al. (2017), we then z-scored /d/-goodness ratings within participants, by subtracting the participant's mean and dividing by the participant's standard deviation. 
 
 ### Results
 
@@ -400,15 +406,24 @@ d.test %>%
   group_by(NativeLanguage, Group, Sound, Participant) %>%
   summarise(Rating.mean = mean(Rating.Response.d.zscored)) %>%
   ggplot(mapping = aes(x = Sound, y = Rating.mean)) + 
-  geom_dotplot(aes(fill = Group), 
-               binaxis = "y", stackdir = "center", color = NA, alpha = .3,  
-               dotsize = 0.5, position = position_dodge(.9)) +
-  stat_summary(aes(color = Group), fun.data = mean_cl_boot, geom = "pointrange", 
-               linetype=1, size = .8, position = position_dodge(.9)) +
+  geom_dotplot(aes(fill = Group), color = NA, 
+               alpha = 1,  dotsize = 0.5, 
+               binaxis = "y", stackdir = "center", 
+               position = position_dodge(.9)) +
+  stat_summary(aes(fill = Group), fun.y = mean, geom = "bar", 
+               alpha = .6,
+               position = position_dodge(.9)) +
+  stat_summary(aes(group = Group), fun.data = mean_cl_boot, geom = "linerange", 
+               alpha = .8, size = .8, 
+               position = position_dodge(.9)) +
   scale_x_discrete("Intended sound category") +
   scale_y_continuous("/d/-goodness rating (z-scored)") +
+  scale_color_manual(values = colors.group) +
+  scale_fill_manual(values = colors.group) +
   facet_grid(. ~ NativeLanguage, scales="free_y") +
-  theme(legend.position = "top")
+  theme(legend.position = "top",
+        panel.grid.major.x = element_blank(),
+        panel.grid.minor.x = element_blank())
 ```
 
 Figure \ref{fig:Ratings} shows the z-scored /d/-goodness ratings from both experiments. To compare participants' ratings for the /d,t/-final test words across the two experiments, we conducted a linear mixed-effects regression (Baayen et al., 2008) over the combined data from both experiments. The regression predicted z-scored /d/-goodness ratings based on the sound category (sum-coded: 1 = word recording intended to end in /d/ vs. -1 = word recording intended to end in /t/), exposure group (sum-coded: 1 =  /d/-exposure vs. -1 = control), the experiment (sum-coded: 1 = Swedish vs. -1 = English), and all their interactions. The regression contained the maximal random effect structure justified by the design (random by-participant intercepts and slope for sound; random by-item intercepts and slopes for sound, exposure group, and their interaction).^[Even this simplified model estimated the variance of the by-participant intercepts to be zero (see below), presumably because the z-scoring of ratings within participant already removed that variance. If all by-participant random effects are excluded, the results reported below do not change. If non-zscored ratings are analyzed instead (unlike in previous work), the three-way interaction is no longer significant ($p = .11$).]
