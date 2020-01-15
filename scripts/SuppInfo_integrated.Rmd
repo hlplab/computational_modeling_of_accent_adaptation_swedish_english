@@ -55,6 +55,7 @@ library(cowplot)
 library(stringi)
 library(lme4)
 library(lmerTest)
+library(sjPlot)
 library(ggpubr)
 library(ggplot2)
 library(plotly)
@@ -153,6 +154,10 @@ get_LD_performance = function(
 
 This supplementary information describes the results an dmethods of the perception experiments on Mandarin-accented English and Flemish-accented Swedish, as well as the development and evaluation of the ideal observer models. This latter part includes the description of additional data sets containing information about native pronunciations of the same materials used in the perception experiments on foreign-accented speech (used as part of the ideal observers models).
 
+The analyses of the perception experiments suggest that the native Swedish listeners had an easier time understanding the Flemish-accented speaker than the American listeners had understanding the Mandarin-accented English speaker. This showed in the lexical decision accuracies during exposure, as well as the goodness ratings during test. 
+
+The ideal observer analyses we present investigate *one* possible explanations for this difference: that the phonetic distribution of syllable-final /d/ in the Flemish-accented recordings deviated less from typical native Swedish than the phonetic distributions of syllable-final /d/ in the Mandarin-accented recordings deviated from typical American English. Such a difference in the `accentedness' between the Flemish- and Mandarin-accented recordings could be particular to the specific recordings used in the experiment, reflect the talker-specific pronunciation of the speaker we recorded (e.g., due differences in L2 proficiency), or reflect more general differences between Flemish-accented Swedish and Mandarin-accented English. Regardless of the specific source for the difference between the Flemish- and Mandarin-accented recordings, the ideal observers provide a way to *quantify* the difficulty native listeners are predicted to experience for a specific set of foreign-accented speech stimuli. Finally, we discuss reasons why the difference is likely at least in part specific to the way the Flemish-accented recordings were elicited (rather than reflecting more general properties of the speaker or accent).
+
 
 
 # Results of perception experiment #  
@@ -213,7 +218,7 @@ d.swedish %<>%
       ItemTemp %in% c("DI", "DF", "TW") ~ "d",
       ItemTemp %in% c("TI", "TF") ~ "t",
       T ~ NA_character_
-    )),  
+    ), levels = c("d", "t")),  
     Sound.Position = factor(case_when(
       ItemTemp %in% c("TF", "DF", "TW") ~ "final",
       ItemTemp %in% c("TI", "DI") ~ "initial",
@@ -253,7 +258,7 @@ d.swedish %<>%
 # Swedish exclusion
 d.swedish %<>%
   # Remove participants 100 & 111 because they are nonnative
-  filter(!Participant %in% c(100, 111)) %>%
+  filter(!Participant %in% c("S100", "S111")) %>%
   # Remove the 4 items because -rd and -rt are pronounced differently in Swedish
   filter(! Item.Word %in% c("voart", "voard", "hoart", "hoard")) %>%
   droplevels()
@@ -273,12 +278,13 @@ d.english.test %<>%
     Block.Type = "test",
     Item.MinimalPair = paste0("E", Item.MinimalPair),
     Item.WordID = paste0("E", as.numeric(as.factor(Item.Word))),
+    Sound = factor(Sound, levels = c("d", "t")),
     Sound.Position = "final",
     Subject = NULL)
 
 # Combine Swedish and English test data here 
 d.test = d.swedish %>%
-  filter(Block.Type == "test") %>%
+  filter(Block.Type == "test", Sound.Position == "final") %>%
   select(NativeLanguage,
          Group, Participant,
          Block.Type, Block.Order,
@@ -286,7 +292,6 @@ d.test = d.swedish %>%
          Item.MinimalPair, Item.WordID, Item.Type, Item.Word, 
          Sound, Sound.Position, 
          Rating.for, Rating.Response, Rating.RT) %>%
-  # Bind in English test data about here --- NOT YET DONE !!!!!!!!!
   full_join(d.english.test) %>%
   mutate(
     NativeLanguage = factor(NativeLanguage, levels = c("English", "Swedish")),
@@ -320,10 +325,10 @@ d.swedish %<>%
 
 The analysis of the exposure data serves to make two points. First, lexical decision accuracy during exposure was high across exposure groups and experiments. In particular, we show that participants in the /d/-exposure group recognized the critical exposure words with syllable-final /d/ (and without minimal pair neighbors). This justifies the assumption of lexically-guided adaptation made by the ideal observer we introduce below. 
 
-Second, lexical decision accuracy was substantially higher in the Swedish data. This is one of several findings that point to the Flemish-accented speaker being easier to process for native Swedish participants than the Mandarin-accented English speaker was for the American participants.
+Second, lexical decision accuracy was substantially higher in the Swedish data. This is one piece of evidence suggesting that the Flemish-accented speaker being easier to process for native Swedish participants than the Mandarin-accented English speaker was for the American participants. 
 
 ### English ###
-Unfortunately, the trial-level exposure data from Xie et al. (2017) was left in a laptop theft in 2018. We do, however, have access to the mean by-participant accuracies and their standard deviation. Lexical decision accuracy for filler response accuracy was high both for filler words (M = .80, SD = .06) and nonwords (M = .77, SD = .16). Accuracy was also high for critical words with syllable-final /d/ in the /d/-exposure group (M = .81, SD = .09). No reaction time data was available.
+Unfortunately, the trial-level exposure data from Xie et al. (2017) was lost in a laptop theft in 2018. We do, however, have access to the mean by-participant accuracies and their standard deviation. Lexical decision accuracy for filler response accuracy was high both for filler words (M = .80, SD = .06) and nonwords (M = .77, SD = .16). Accuracy was also high for critical words with syllable-final /d/ in the /d/-exposure group (M = .81, SD = .09). No reaction time data was available.
 
 ### Swedish ###
 Figures \ref{fig:LD.overall} and \ref{fig:LD.critical} summarize participants' accuracy and reaction time for during exposure. 
@@ -362,148 +367,92 @@ last_plot() %+% (d %>%
 
 We focus here on goodness ratings for test words ending in /d,t/. Unlike the English data, the Swedish data also contained ratings for words beginning with /d,t/. These ratings were always obtained *after* the ratings of /d/-final test words. Ratings of these /d/-intial test words are not analyzed here, though we mention for completeness's sake that /d/-initial test words also did not reveal a significant effect of exposure group for the Swedish data.
 
+We note here that the two experiments differed in the number of subject and items during test. Bootstrap analyses presented later in the SI assess whether this difference in the amount of test data could explain the difference in results. Here we first compare the two data sets using linear mixed-effects models, which do not require data to be balanced. 
 
-#### A note on data transformation
+### Converting /d/- and /t/-goodness ratings for analysis
 
-In the English experiment: for each token, there is one rating from goodness-as-/d/ task *and* one rating as goodness-as-/t/ task. In Maryann's experiment: for each token, there is either a rating from goodness-as-/d/ task *or* a rating from goodness-as-/t/ task. To facilitate comparison and data interpretation, we are doing the following transformation:
-
--1) we transform all goodness ratings for /t/ into goodness-as-/d/ (if a token is rated 3 in goodness-as-/t/ task, it is tranformed as 5 to indicate goodness-as-/d/). This means that for the English data, each token has two goodness-as-/d/ ratings. *Fig1* shows that the two goodness-as-/d/ ratings are correlated. 
-
-As a caveat, *table1* shows that on average, the same goodness-as-/d/ for tokens can be somewhat different between the two tasks. The values show the goodness-as-/d/ after the transformation.
-
--2) With this caveat, for item-based analyses in relating to ideal observer predictions, the mean of the two ratings is used to indicate the /d/ goodness of tokens in the English data. This issue doesn't apply to the Swedish data since there is only one rating per token. This does *NOT* affect analyses on the participant data.
-
--3) Just a sanity check: *Fig2* shows that that item-wise responses from the ID task and the rating tasks are consistent (Xin's data only).
-
-```{r prepare-test-data}
-##--------------------------------
-## Test ratings: tranform ratings for comparison
-##--------------------------------
-
-# tranformation: change all ratings to rating_for_d; if rating for t is 1, then it equates to rating_for_d = 7
-
-d.swedish <- d.pilot.swedish %>%
-  filter(Block.Type == "test") %>%
-  ungroup() %>%
-  filter(Sound.Position == "final") %>%
-  mutate(
-    rating.simplified_d = ifelse(Rating.for == "d", Rating.Answer, 8 - Rating.Answer) 
-  ) %>%
-  group_by(Participant) %>%
-  mutate(
-    zrating.simplified_d = as.numeric(scale(rating.simplified_d))
-  ) %>%
-  ungroup()
-
-d.english <- d.xin %>%
-  mutate(Group = ifelse(Group == "experimental", "/d/-exposure", "control")) %>%
-  mutate(
-    rating.simplified_d = ifelse(Rating.for == "d", Rating.Answer, 8 - Rating.Answer) 
-  ) %>%
-  group_by(Participant) %>%
-  mutate(
-    zrating.simplified_d = as.numeric(scale(rating.simplified_d))
-  ) %>%
-  ungroup()
-  
-
-
-# English ID data
-# recode Identification Accuracy as percent_d response
-d.xin.ID <- d.xin.ID %>%
-  mutate(Group = ifelse(Group == "experimental", "/d/-exposure", "control")) %>%
-  mutate(d_resp = case_when(
-    (Sound == "d" & Spelling1.ACC == 1) | (Sound == "t" & Spelling1.ACC == 0) ~ 1,
-    (Sound == "t" & Spelling1.ACC == 1) | (Sound == "d" & Spelling1.ACC == 0) ~0
-  ))
-
-```
-
-```{r sanity-check-rating}
-# examining by-item rating_for_t and rating_for_d (tranformed into /t/ goodness) for tranformed ratings
-d.english %>%
-  group_by(Group, Rating.for, Sound, Word) %>%
-  summarise(meanRating_z = mean(zrating.simplified_d)) %>%
-  spread(Rating.for, meanRating_z) %>%
-  # mutate(t_trans = 8-d) %>%
+```{r rating figure of correlations between /d/ and /t/ goodness, }
+d.test %>%
+  filter(NativeLanguage == "English") %>%
+  droplevels() %>%
+  group_by(Group, Participant) %>%
+  mutate(Rating.Response.zscored = as.numeric(scale(Rating.Response))) %>%
+  group_by(Group, Item.Word, Rating.for) %>%
+  summarise(Rating.mean = mean(Rating.Response.zscored)) %>%
+  spread(Rating.for, Rating.mean) %>%
   ggplot(
-    aes(x = d, y = t, label = Word, fill = Group)
+    aes(x = d, y = t, label = Item.Word)
   ) + 
-  geom_label() + 
-  xlab("Zrating_as_d (from /d/ goodness)") +
-  ylab("Zrating_as_d_trans (from /t/ goodness)") +
-  ggtitle("Ratings from goodness_as_/d/ and goodness_as_/t/\nXin's data")
-
-# show table of mean ratings by group
-t1<- d.english %>%
-  group_by(Group,Participant,Sound,Rating.for) %>%
-  summarise(meanRating_d = mean(zrating.simplified_d)) %>%
-  group_by(Group, Sound, Rating.for) %>%
-  summarise(mean_d = mean(meanRating_d))
-
-print(t1)
-
+  geom_label(alpha = .5, aes(fill = Group)) + 
+  geom_smooth(method = "lm", color = "black", alpha = .5) +
+  xlab("/d/-goodness rating (z-scored)") +
+  ylab("/t/-goodness rating (z-scored)")
 ```
 
 
-### English
+The /d/- and /t/-goodness ratings could range from 1 to 7. The two types of ratings were highly inversely correlated (see Figure \ref{fig:Ratings.correlation}). To simplify data analysis, we thus converted  all goodness ratings into /d/-goodness ratings. For /t/-goodness ratings, this means that we subtracted them from 8 (i.e., if a token was given a /t/-goodness of 3, it is tranformed to have a /d/-goodness of 5). This decision does not affect the results: all results remain the same if the original ratings are analyzed while including `rating for` (/d/- vs. /t/-goodness) and all its interactions as a predictor in the analysis. 
+Following Xie et al. (2017), we then z-scored /d/-goodness ratings within participants, by subtracting the participant's mean and dividing by the participant's standard deviation. 
 
-### Swedish
+### Results
 
-### Swedish vs. English
-
-Bar graph of human rating results from the two experiments: Swedish and English. It appears that the two experiments yielded different patterns: the English experiment showed a Group difference, whereas the Swedish experiment did not. 
-
-```{r plot-compare-between-experiments}
-
-# bar plots
-ggplot(data = d.test.all.rating %>%
-         mutate(Group = factor(Group, levels = c("control", "/d/-exposure"))) %>%
-         group_by(dataset, native_language, Group, Sound, Participant) %>%
-         summarise(meanRating_d = mean(zrating.simplified_d)),
-aes(x= Sound, y = meanRating_d, color = Group)) + 
-stat_summary(fun.y = "mean", geom = "point", alpha = 1, size= 0.3, stroke=3, position = position_dodge(.9)) +
-  facet_grid(.~dataset, scales="free_y") +
-  geom_dotplot(binaxis = "y", stackdir = "center", alpha = .3,  dotsize = 0.5, position = position_dodge(.9)) +
-  	stat_summary(fun.data = mean_cl_boot, geom = "pointrange", linetype=1, size = 1, position = position_dodge(.9)) +
-  scale_color_discrete(breaks = c("control", "/d/-exposure"), labels = c("control", "/d/-exposure")) +
-  ggtitle("Mean /d/ goodness from rating task (transformed)")
+```{r ratings figure, fig.cap=c("\\label{fig:Ratings}/d/-goodness ratings during test (z-scored) by native language and exposure group"), fig.height=3.5, fig.width=5}
+d.test %>%
+  group_by(NativeLanguage, Group, Sound, Participant) %>%
+  summarise(Rating.mean = mean(Rating.Response.d.zscored)) %>%
+  ggplot(mapping = aes(x = Sound, y = Rating.mean)) + 
+  geom_dotplot(aes(fill = Group), 
+               binaxis = "y", stackdir = "center", color = NA, alpha = .3,  
+               dotsize = 0.5, position = position_dodge(.9)) +
+  stat_summary(aes(color = Group), fun.data = mean_cl_boot, geom = "pointrange", 
+               linetype=1, size = .8, position = position_dodge(.9)) +
+  scale_x_discrete("Intended sound category") +
+  scale_y_continuous("/d/-goodness rating (z-scored)") +
+  facet_grid(. ~ NativeLanguage, scales="free_y") +
+  theme(legend.position = "top")
 ```
 
-<!-- Maryann: let's add an analysis here over the combined data, as discussed -->
+Figure \ref{fig:Ratings} shows the z-scored /d/-goodness ratings from both experiments. To compare participants' ratings for the /d,t/-final test words across the two experiments, we conducted a linear mixed-effects regression (Baayen et al., 2008) over the combined data from both experiments. The regression predicted z-scored /d/-goodness ratings based on the sound category (sum-coded: 1 = word recording intended to end in /d/ vs. -1 = word recording intended to end in /t/), exposure group (sum-coded: 1 =  /d/-exposure vs. -1 = control), the experiment (sum-coded: 1 = Swedish vs. -1 = English), and all their interactions. The regression contained the maximal random effect structure justified by the design (random by-participant intercepts and slope for sound; random by-item intercepts and slopes for sound, exposure group, and their interaction).^[Even this simplified model estimated the variance of the by-participant intercepts to be zero (see below), presumably because the z-scoring of ratings within participant already removed that variance. If all by-participant random effects are excluded, the results reported below do not change. If non-zscored ratings are analyzed instead (unlike in previous work), the three-way interaction is no longer significant ($p = .11$).]
 
-```{r}
-# d.swedish.test.BySubject = d.swedish %>%
-#   filter(Block.Type == "test") %>%
-#   group_by(Participant, Group, Rating.for, Sound.Type, Sound.Position) %>%
-#   summarise(
-#     meanRating = mean(Rating.Answer),
-#     meanRT = mean(Rating.RT),
-#     n = n()
-#   ) 
-# 
-# levels(d.swedish.test.BySubject$Rating.for) <- c("Rating for /d/", "Rating for /t/")
-# levels(d.swedish.test.BySubject$Group) <- c("Control", "/d/-Exposure")
-# d.swedish.test.BySubject %>%
-#   filter(Sound.Position == "final") %>% 
-#   ggplot(aes(x = Sound.Type, y = meanRating, color = Group)) +
-#   geom_violin( position = position_dodge (0.8)) + 
-#   stat_summary(
-#     fun.data = mean_cl_boot, 
-#     geom = "pointrange", 
-#     position = position_dodge(0.8)) + 
-#   scale_x_discrete(labels=c("d" ="/d/", "t" = "/t/")) +
-#   scale_colour_manual(values = c( "#a6a6a6", "#80d0ff")) + 
-#   xlab("Final Sound") + ylab("Mean Rating") + 
-#   facet_grid(. ~ Rating.for) + 
-#   theme_cowplot()
+For the by-participant random effects, we had to remove the random slope for sound in order for the model to converge without perfect correlations. All other random correlations are included in the model. In this analysis, we find a highly significanct main effect of sound, so that foreign-accented productions of /d/ were judged to have higher /d/-goodness than foreign-accented productions of /t/ ($\hat{\beta} = .55, t = 19.3, p < .0001$). The two-way interaction between native language and sound was also higly significant ($\hat{\beta} = .11, t = 3.8, p < .0003$), so that the differences between the /d/-goodness ratings for /d/ and /t/ was larger for the Flemish-accented Swedish speaker than the Mandarin-accented English speaker. One possible interpretation of this is that the Flemish-accented Swedish speaker deviated less from the expectations native Swedish listeners than the Mandarin-accented English speaker deviated from the expectations of American listeners. 
+
+Finally, the three-way interaction between native language, sound, and exposure group was also significant ($\hat{\beta} = -.04, t = -3.3, p < .002$), suggesting that the effect of exposure on /d/-goodness ratings for /d/ and /t/ differed between the Swedish and English experiments. Simple effect analyses revealed that the two-way interaction between exposure group and sound was significant for English, so that /d/-exposure *in*creased the difference in /d/-goodness ratings for /d/ and /t/, compared to the control group ($\hat{\beta} = -.04, t = 4.1, p < .0001$). That is, compared to the English control group, participants in the English /d/-exposure group rated the Mandarin-accented /d/ as a better exemplar of /d/ and the Mandarin-accented /t/ as a better examplar of /t/. This simple effect did not reach significance in the Swedish experiment; in fact, it went in the opposite of the predicted direction (($\hat{\beta} = -.03, t = -1.6, p > .1$).
+
+
+```{r ratings analysis}
+# Variable coding 
+d.test =  within(d.test, {
+  contrasts(NativeLanguage) <- cbind("=Swedish vs. English" = c(-1,1))
+  contrasts(Group) <- cbind("=/d/-exposure vs. control" = c(1,-1))
+  contrasts(Sound) <- cbind("=/d/ vs. /t/" = c(1,-1))
+  })
+
+# contrasts(d.test$NativeLanguage)
+# contrasts(d.test$Group)
+# contrasts(d.test$Sound)
+
+lmer.rating = lmer(Rating.Response.d.zscored ~ NativeLanguage * Group * Sound + 
+         (1 + Sound * Group | Item.MinimalPair) + (1 | Participant), 
+       data = d.test)
+summary(lmer.rating)
+
+lmer.rating.simple = 
+  lmer(Rating.Response.d.zscored ~ NativeLanguage / (Group * Sound) + 
+         (1 + Sound * Group | Item.MinimalPair) + (1 | Participant), 
+       data = d.test)
+summary(lmer.rating.simple)
+
+swedish.table = tidy(lmer.rating.simple, effects = "fixed")
+swedish.interaction = swedish.table %>%
+  filter(term == "native_languageSwedish:Group1:Sound1") %>%
+  select(estimate)
+
 ```
 
 
 
 # Methods of perception experiments #
 
-We describe the methods used to derive the English (Xie, Theodore, \& Myers, 2017) and Swedish data sets. Both experiments employed an exposure-test paradigm. Exposure was manipulated between participants. Both groups were exposed to foreign-accented speech from the same talker (Mandarin-accented English for the English data; Flemish-accented Swedish for the Swedish data). The two groups of participants differed, however, in whether the exposure materials contained information about the critical phonological category (syllable-final \/d\/), for which the foreign accent is known to deviate from native pronunciations. The control group never heard any instances of syllable-final /d/ or /t/. The \/d\/-exposure group heard words with syllable-final \/d\/, but no words with syllable-final /t/. Following exposure, both groups went through the exact same test phase, during which they made goodness judgments of /d/-/t/ tokens that were part of minimal pairs (e.g., "seed" or "seat").
+We describe the methods used to derive the English (Xie, Theodore, \& Myers, 2017) and Swedish data sets. Both experiments employed an exposure-test paradigm. Exposure was manipulated between participants. Both groups were exposed to foreign-accented speech from the same talker (Mandarin-accented English for the English data; Flemish-accented Swedish for the Swedish data). The two groups of participants differed, however, in whether the exposure materials contained information about the critical phonological category (syllable-final /d/), for which the foreign accent is known to deviate from native pronunciations. The control group never heard any instances of syllable-final /d/ or /t/. The /d/-exposure group heard words with syllable-final /d/, but no words with syllable-final /t/. Following exposure, both groups went through the exact same test phase, during which they made goodness judgments of /d/- or /t/ tokens that were part of minimal pairs (e.g., "seed" or "seat").
 
 In addition to the L1-L2 language pairs (Mandarin-accented English vs. Flemish-accented Swedish) and participants' L1 (American English vs. Swedish), the two experiments exhibited a number of differences that we detail next. This includes differences in i) the number of participants, ii) the instructions and visual appearance of the experiment, iii) the number of stimuli, and iv) minor differences in the stimuli design. As indicated below, some of these differences were intended, some were not. For each difference, we consider whether it is likely to explain the difference in results, and find this to be unlikely---at least, compared to the possibility explored in this study that it is primarily the phonetic properties of the foreign-accented speech and its relation to native listeners' expectations that causes the difference in results.
 
@@ -512,12 +461,12 @@ In addition to the L1-L2 language pairs (Mandarin-accented English vs. Flemish-a
 ### English ###
 48 monolingual English speakers participated in the experiment (24 /d/-exposure, 24 control). Each participant rated each word (one of the pair) both for goodness as /d/ and for goodness as /t/, resulting in 30 ratings per sound category (/d/ vs. /t/) per rating type (goodness as /d/ vs. goodness as /t/) and 120 ratings per participant.
 
-Total observations:  48 * 30 * 2 * 2 = 5760 observations
+Total observations:  48 \* 30 \* 2 \* 2 = 5760 observations
 
 ### Swedish ###
 25 Swedish speakers recruited from the Department of Swedish \& Multilingualism at Stockholm University participated. Two of the participants were excluded from the analysis because post-experiment surveys found that they were not native speakers of Swedish. Participants were alternately assigned to the /d/-exposure or control group (11 /d/-exposure, 12 control). Each participant rated each word (one of the pair) either for goodness as /d/ or for goodness as /t/, resulting in 16 ratings per sound category (/d/ vs. /t/) per rating type (goodness as /d/ vs. goodness as /t/) and 64 ratings per participant.
 
-Total observations:  23 * 15 * 2 * 2 = 1380.
+Total observations:  23 \* 15 \* 2 \* 2 = 1380.
 
 ### Why the difference?
 
@@ -525,54 +474,8 @@ The decision to recruit a smaller number of participants was made because 1) the
 
 ### Are differences in the number of participants and test items likely to explain the results?
 
-To compare participants' ratings for the /d,t/-final test words across the two experiments, we conducted a linear mixed-effects regression (Baayen et al., 2008) over the combined data from both experiments. The regression predicted /d/-goodness ratings (1-7) based on the sound category (sum-coded: 1 = word recording intended to end in /d/ vs. -1 = word recording intended to end in /t/), exposure group (sum-coded: 1 =  /d/-exposure vs. -1 = control), the experiment (sum-coded: 1 = Swedish vs. -1 = English), and all their interactions. The regression contained the maximal random effect structure justified by the design (random by-participant intercepts and slope for sound; random by-item intercepts and slopes for sound, exposure group, and their interaction; item IDs did not overlap between experiments).
-
-Examining Swedish (n. obs = 1380) and English (n.obs = 5760) together, with three way interaction *Native Language* (Swedish = 1 vs. English = -1) X *Group* (/d/-exposure = 1 vs. control = -1) X *Sound* (d = 1, t = -1) as fixed effects, and random intercepts for word and participant.
-
-```{r lmer-compare-between-experiments}
-# variable coding for mixed effects models
-
-d.test.all.rating <-  within(d.test.all.rating, {
-  Participant = factor(Participant)
-  Word = factor(Word)
-  native_language = factor(native_language, levels = c("Swedish", "English"))
-  contrasts(native_language) <- contr.sum
-  contrasts(Group) <- contr.sum
-  contrasts(Sound) <- contr.sum
-  })
-
-contrasts(d.test.all.rating$native_language)
-contrasts(d.test.all.rating$Group)
-contrasts(d.test.all.rating$Sound)
-
-
-# The regression contained the maximal random effect structure justified by the design (random by-participant intercepts and slope for sound; random by-item intercepts and slopes for sound, exposure group, and their interaction; item IDs did not overlap between experiments)
-
-# using z-scored ratings
-rating.lmer <- lmer(zrating.simplified_d ~ native_language*Group*Sound + (1 + Sound*Group|MinimalPairID) + (1 + Sound | Participant), data = d.test.all.rating)
-print(summary(rating.lmer))
-
-# using un-z-scored ratings
-# rating.lmer <- lmer(rating.simplified_d ~ native_language*Group*Sound + (1 + Sound*Group|MinimalPairID) + (1 + Sound|Participant), data = d.test.all.rating)
-# print(summary(rating.lmer))
-
-rating.lmer.simple <- lmer(zrating.simplified_d ~ native_language/Group*Sound + (1 + Sound|MinimalPairID) + (1 + Sound|Participant), data = d.test.all.rating)
-# print(summary(rating.lmer.simple))
-swedish.table = tidy(rating.lmer.simple, effects = "fixed")
-swedish.interaction = swedish.table %>%
-  filter(term == "native_languageSwedish:Group1:Sound1") %>%
-  select(estimate)
-
-```
-
-Results: there was a marginal three way interaction. Next, we check if the 3-way interaction still holds if we down-sample English data to match the number of participants in the Swedish dataset. 
-
-```{r lmer-compare-between-experiments-downsampled}
-
+```{r lmer-compare-between-experiments-downsampled, warning=F}
 set.seed(101)
-
-# down-sample the number of participants in Xin's experiment to the size of Maryann's experiment and re-examine the 3-way interaction
-# after the downsampling, models using maximal random effects structure does not converge. So change the RE structure so that they converge.
 
 rating.lmer.table.downsampled = data.frame()
 rating.lmer.table.downsampled.simple = data.frame()
@@ -580,23 +483,23 @@ n_times = 100
 
 
 for(i in 1:n_times){
-SS.downsampled = d.test.all.rating %>%
-  distinct(native_language, Group, Participant) %>%
-  group_by(native_language, Group) %>%
+SS.downsampled = d.test %>%
+  distinct(NativeLanguage, Group, Participant) %>%
+  group_by(NativeLanguage, Group) %>%
   sample_n(., 11, replace = TRUE) %>%
   droplevels()
 
-Item.downsampled = d.test.all.rating %>%
-  distinct(native_language, MinimalPairID) %>%
-  group_by(native_language) %>%
+Item.downsampled = d.test %>%
+  distinct(NativeLanguage, Item.MinimalPair) %>%
+  group_by(NativeLanguage) %>%
   sample_n(., 30, replace = TRUE) %>%
   droplevels()
 
 
 # check 3-way interaction
-rating.lmer.downsampled <- lmer(zrating.simplified_d ~ native_language*Group*Sound + (1 |MinimalPairID) + (1|Participant),
-                    data = d.test.all.rating %>% 
-                      filter(MinimalPairID %in% levels(Item.downsampled$MinimalPairID)) %>%
+rating.lmer.downsampled <- lmer(Rating.Response.d.zscored ~ NativeLanguage*Group*Sound + (1 |Item.MinimalPair) + (1|Participant),
+                    data = d.test %>% 
+                      filter(Item.MinimalPair %in% levels(Item.downsampled$Item.MinimalPair)) %>%
                       filter(Participant %in% levels(SS.downsampled$Participant)))
 summary(rating.lmer.downsampled)
 rating.lmer.table = tidy(rating.lmer.downsampled, effects = "fixed")
@@ -605,9 +508,9 @@ rating.lmer.table <- rating.lmer.table %>%
 rating.lmer.table.downsampled = bind_rows(rating.lmer.table.downsampled, rating.lmer.table)
 
 # check simple effects
-rating.lmer.downsampled.simple <- lmer(zrating.simplified_d ~ native_language/Group*Sound + (1 |MinimalPairID) + (1|Participant),
-                    data = d.test.all.rating %>% 
-                      filter(MinimalPairID %in% levels(Item.downsampled$MinimalPairID)) %>%
+rating.lmer.downsampled.simple <- lmer(Rating.Response.d.zscored ~ NativeLanguage/Group*Sound + (1 |Item.MinimalPair) + (1|Participant),
+                    data = d.test %>% 
+                      filter(Item.MinimalPair %in% levels(Item.downsampled$Item.MinimalPair)) %>%
                       filter(Participant %in% levels(SS.downsampled$Participant)))
 summary(rating.lmer.downsampled.simple)
 rating.lmer.table.simple = tidy(rating.lmer.downsampled.simple, effects = "fixed")
@@ -630,23 +533,23 @@ rating.lmer.table.downsampled.simple <- rating.lmer.table.downsampled.simple %>%
 
 #tally the number of significant effects and their direction
 tally1 <- rating.lmer.table.downsampled %>% 
-  filter(term == "native_language1:Group1:Sound1") %>%
+  filter(term == "NativeLanguage1:Group1:Sound1") %>%
   arrange(term) %>%
   group_by(term, significance, direction) %>%
   summarise(n = n()) %>%
   mutate(effects = "3-way interaction")
 
 tally1.interaction = tally1 %>%
-  filter(term == "native_language1:Group1:Sound1" & direction == "-") %>%
+  filter(term == "NativeLanguage1:Group1:Sound1" & direction == "-") %>%
   select(n) %>%
   ungroup() %>%
   summarise(n = sum (n))
 tally1.interaction.sig <- tally1 %>%
-  filter(term == "native_language1:Group1:Sound1" & significance == "yes" & direction == "-") %>%
+  filter(term == "NativeLanguage1:Group1:Sound1" & significance == "yes" & direction == "-") %>%
   select(n)
   
 tally2 <- rating.lmer.table.downsampled.simple %>%
-  filter(term == "native_languageEnglish:Group1:Sound1" | term == "native_languageSwedish:Group1:Sound1") %>%
+  filter(term == "NativeLanguageEnglish:Group1:Sound1" | term == "NativeLanguageSwedish:Group1:Sound1") %>%
   arrange(term) %>%
   group_by(term, significance, direction) %>%
   summarise(n = n()) %>%
@@ -656,17 +559,17 @@ tally.table <- bind_rows(tally1, tally2)
 print(tally.table)
 
 tally2.English <- tally2 %>%
-  filter(term == "native_languageEnglish:Group1:Sound1" & significance == "yes" & direction == "+")
+  filter(term == "NativeLanguageEnglish:Group1:Sound1" & significance == "yes" & direction == "+")
 tally2.Swedish <- tally2 %>%
-  filter(term == "native_languageSwedish:Group1:Sound1" & significance == "yes") %>%
+  filter(term == "NativeLanguageSwedish:Group1:Sound1" & significance == "yes") %>%
   summarise(n = sum(n))
 tally2.Swedish.negative <- tally2 %>%
-  filter(term == "native_languageSwedish:Group1:Sound1" & significance == "yes" & direction == "-") %>%
+  filter(term == "NativeLanguageSwedish:Group1:Sound1" & significance == "yes" & direction == "-") %>%
   summarise(n = sum(n))
 
 # how often in these simulations is the (signed) t-value of the English data's two-way interaction at least as high as the actual t-value on the non-bootstrapped swedish data?
 tally3 <- rating.lmer.table.downsampled.simple %>%
-  filter(term == "native_languageEnglish:Group1:Sound1") %>%
+  filter(term == "NativeLanguageEnglish:Group1:Sound1") %>%
   arrange(term) %>%
   mutate(comparison = (estimate > swedish.interaction$estimate)) %>%
   group_by(comparison) %>%
@@ -677,17 +580,16 @@ tally3_comparison <- tally3$n
 
 ```
 
-<!-- Florian: edit to be clear what we're doing here -->
-
 Compared to the English experiment, the Swedish experiment had substantially fewer participants (about 50\% fewer). As described in Section XXX, the Swedish experiment also employed fewer test tokens than the English experiment (about 50\% fewer). Since a benefit of /d/-exposure was found for the larger (English), but not the smaller (Swedish), data set one obvious question is whether the difference in results is due to statistical power: the null result for the Swedish data might simply reflect a Type II error.
 
-To address this possibility, we randomly bootstrapped (with replacement) both the English and the Swedish data to the same number of participants and test tokens included in the analysis of the Swedish data (11 in the /d/-exposure group and 11 in the control group). We then repeated the analyses reported in the main text, comparing the Swedish and (down-sampled) English test data. This process was repeated `r n_times` times. 
+To address this possibility, we repeated the linear mixed-effects regression over the combined data from both experiments (reported in the result section above), while down-sampling with replacement both the English and Swedish data to 11 participants per group and 30 minimal pair items during test. This process was repeated `r n_times` times. 
 
-`r tally1.interaction$n` out of `r n_times` times we observed a three-way interaction in the predicted direction and `r tally1.interaction.sig$n` out of `r n_times` times, we replicated the critical significant three-way interaction between Language, Exposure group, and Sound category. The simple effect of the two-way interaction between Exposure group and Sound was significant for the English data in `r tally2.English$n` samples out of `r n_times` times (all in the predicted direction), whereas it was significant for the Swedish data in `r tally2.Swedish$n` samples out of `r n_times` times (`r tally2.Swedish.negative$n` in the *opposite* of the predicted direction). 
+`r tally1.interaction$n` out of `r n_times` times we observed a three-way interaction in the predicted direction and `r tally1.interaction.sig$n` out of `r n_times` times, we replicated the critical significant three-way interaction between native language, exposure group, and sound category. The simple effect of the two-way interaction between exposure group and sound was significant for the English data in `r tally2.English$n` samples out of `r n_times` times (all in the predicted direction), whereas it was significant for the Swedish data in `r tally2.Swedish$n` samples out of `r n_times` times (`r tally2.Swedish.negative$n` in the *opposite* of the predicted direction). 
 
+These results suggest that the Swedish experiment was indeed underpowered (since the two-way interaction in the English data was significant only in `r round(100 * tally2.English$n/n_times, 1)`\% of the bootstrap samples). The results do, however, also show that the Swedish data would be *very* unlikely if the English data presents the ground truth. Indeed, the $t$ value of the two-way interaction between exposure group and sound in the English data was as low or lower as the $t$-value of that interaction in the Swedish data only on `r tally3_comparison` out of the `r n_times` bootstrap samples.
 <!-- Xin: this needs editing to use the actual t-value -->
-In addition, `r tally3_comparison` out of `r n_times` times, $t$-value of the English data's two-way interaction is as high as the actual $t$-value of the Swedish data. In short we reliably replicate the difference between the English and Swedish even when the both data sets only have 22 participants. 
-
+In short, the results of the Swedish perception experiment are unexpected given the effect size observed in the English perception experiment. 
+<!-- something about successful replication of the English effect with same stimuli and about the conceptual replication for dutch by eisner? -->
 
 
 
@@ -705,7 +607,7 @@ Recordings were made in a sound-attenuated room at the Stockholm University Mult
 
 ### Why the difference?
 
-The two experiments differ by design in the L1-L2 background of the recorded speaker. The central purpose of the Swedish experiment was to replicate the findings of Xie et al. (2017) (and Eisner et al. (2013) for another planned experiment) for another L1-L2 combination. Whether differences between native and non-native accents in the statistics of the cue distributions for /d/ and /t/ could explain the results is the purpose of the present paper (regardless of whether these differences are caused by the L1-L2 pairing, the specific speaker that was recorded, or any other aspect of the recording procedure).
+The two experiments differ by design in the L1-L2 background of the recorded speaker. The central purpose of the Swedish experiment was to replicate the findings of Xie et al. (2017) and Eisner et al., 2013 for another L1-L2 combination. Whether differences between native and non-native accents in the statistics of the cue distributions for /d/ and /t/ could explain the results is the purpose of the present paper (regardless of whether these differences are caused by the L1-L2 pairing, the specific speaker that was recorded, or any other aspect of the recording procedure).
 
 The two experiments differed, however, in the recording procedure. Whereas the English recordings was elicited without playing a native pronunciation (*unassisted*), the Swedish recordings were elicited by first playing a native pronunciation of the target word (*assisted*). This decision was made because the non-native speaker was still in the early stages of L2 acquisition (A1 CEFR). In particular, Swedish has a complex vowel system, with many vowel categories that have no counterparts in the speakers' L1 (Flemish). Furthermore, the mapping from orthography to pronunciation is non-transparent in Swedish. As would be expected, the non-native speaker struggled with vowel pronunciation. After an initial *un*assisted recording session, we therefore decided to re-record the Flemish speaker in the assisted condition. The perception experiment employed the recordings from this latter recording session.
 
@@ -764,7 +666,7 @@ The test phase followed immediately after the exposure phase. In both experiment
 Since neither the present nor previous work found interaction of the rating question (whether participants were asked to rate /d/ or /t/-goodness) with any of the predictors of interest, we transformed /t/-goodness ratings into /d/-goodness ratings by subtracting /t/-goodness ratings from 8.  
 
 ### English ###
-The test stimuli included 60 monosyllabic minimal pairs ending in /d/ or /t/ (e.g., seed–seat). Other than the final stops, the same restrictions on sounds as in the exposure words were applied here. 
+The test stimuli included 60 monosyllabic minimal pairs ending in /d/ or /t/ (e.g., seed–seat). Other than the final stops, the same restrictions on sounds as in the exposure words were applied here. Across participants, all test words were rated both for /d/-goodness and for /t/-goodness (individual participants rated each word only for *either* /d/- *or* /t/-goodness). 
 
 
 ### Swedish ###
@@ -775,16 +677,16 @@ Two pairs, (*vård-vårt* and *hård-hårt*) were excluded from analysis as it w
 
 Due to a misunderstanding, the Swedish data did not counter-balance whether a word recording was rated for /d/- or for /t/-goodness (e.g., the word *rid*---'ride' was always rated for /d/-goodness; the word *rit* ---'rite' was always rated for /t/-goodness; across minimal pair words, /d/- and /t/-final words were equally often rated for /d/- and /t/-goodness).
 
-Finally, the Swedish experiment contained a third and fourth test block during which participants rated 54 words from 27 \/d\/-\/t\/-*initial* minimal pairs (e.g., *dom* and *tom*). 
-
-The order of these later test blocks was counter-balanced across participants but participants always completed the test block with word-final ratings *before* performing the word-initial ratings. The data from word-initial ratings tasks are not part of the current analysis, though we note that exposure group did not affect the Swedish word-initial ratings either.
+Finally, the Swedish experiment contained a third and fourth test block during which participants rated 54 words from 27 \/d\/-\/t\/-*initial* minimal pairs (e.g., *dom* and *tom*) for their /d/- or /t/-goodness. The relative order of these later test blocks (/d/- or /t/-goodness ratings) was counter-balanced across participants but participants always completed the test block with word-final ratings *before* performing the word-initial ratings. The data from word-initial ratings tasks are not part of the current analysis, though we note that exposure group did not affect the Swedish word-initial ratings either.
 
 ### Why these differences?
+
 The Swedish experiment employed fewer test tokens because it was difficult to find additional minimal pairs for Swedish. While there are many /d/-/t/-final minimal pairs in Swedish, a large number of them share the same stem (e.g., *hård*---'hard', *comm. gen., adverb'* and *hårt*---'hard', *neut., adj.*). As the materials designed for this pilot was done in conjunction with the planning of a similar study involving priming, materials of this type would have been unsuitable and therefore excluded. The limited options also motivated the decision to allow test stimuli in which voiced stops (other than /d/) occurred at the word onset.
 
-The additional test blocks with \/d-\/t\/-initial minimal pair words were included in the Swedish experiment in order to investigate the question of whether exposure to devoiced /d/-final words might result in higher goodness ratings for \/d-\/t\/-initial words (building on Eisner et al., 2013).  
+The additional test blocks with /d/- or /t/-initial minimal pair words were included in the Swedish experiment in order to investigate the question of whether exposure to devoiced /d/-final words might result in higher goodness ratings for \/d-\/t\/-initial words (building on Eisner et al., 2013).  
 
 ### Are these differences likely to explain the results?
+
 Compared to the English experiment, the Swedish experiment had about 50\% fewer items. The resulting reduction in power could explain the null effect for Swedish. This possibility was ruled out by bootstrap analyses reported in Section XXX. It is unclear how the other differences in the materials, or the inclusion of additional (later) test blocks would explain the Swedish data.
 
 
@@ -816,6 +718,15 @@ To understand human responses, below we plot the item-level correlation between 
 # English ID data
 d.xin.ID <- read.csv("../data/English/d.identification.xin.csv")
 d.xin.ID.sleep <- readRDS("../data/English/talker_specific_data_sleepAA.rds")
+
+# English ID data
+# recode Identification Accuracy as percent_d response
+d.xin.ID <- d.xin.ID %>%
+  mutate(Group = ifelse(Group == "experimental", "/d/-exposure", "control")) %>%
+  mutate(d_resp = case_when(
+    (Sound == "d" & Spelling1.ACC == 1) | (Sound == "t" & Spelling1.ACC == 0) ~ 1,
+    (Sound == "t" & Spelling1.ACC == 1) | (Sound == "d" & Spelling1.ACC == 0) ~0
+  ))
 ```
 
 
