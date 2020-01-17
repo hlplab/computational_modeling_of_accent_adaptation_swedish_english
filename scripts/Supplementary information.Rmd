@@ -55,9 +55,9 @@ library(magrittr)       # Pipes!
 library(stringi)
 library(lme4)           # mixed-effects analyses
 library(lmerTest)       # p-values in LMMs
+library(sjPlot)         # HTML tables of mixed models
 library(emmeans)        # simple effects in LMMs
 library(broom.mixed)    # easy extraction of information from LMMs
-library(sjPlot)
 library(ggplot2)        # plotting
 library(cowplot)        # multi-plot figures
 library(plotly)         # 3D plotting 
@@ -450,7 +450,7 @@ Figure \ref{fig:Ratings} shows the z-scored /d/-goodness ratings from both exper
 
 For the by-participant random effects, we had to remove the random slope for sound in order for the model to converge without perfect correlations. All other random correlations are included in the model. In this analysis, we find a highly significanct main effect of sound, so that foreign-accented productions of /d/ were judged to have higher /d/-goodness than foreign-accented productions of /t/ ($\hat{\beta} = .55, t = 19.3, p < .0001$). The two-way interaction between native language and sound was also higly significant ($\hat{\beta} = .11, t = 3.8, p < .0003$), so that the differences between the /d/-goodness ratings for /d/ and /t/ was larger for the Flemish-accented Swedish speaker than the Mandarin-accented English speaker. One possible interpretation of this is that the Flemish-accented Swedish speaker deviated less from the expectations native Swedish listeners than the Mandarin-accented English speaker deviated from the expectations of American listeners. 
 
-Finally, the three-way interaction between native language, sound, and exposure group was also significant ($\hat{\beta} = -.04, t = -3.3, p < .002$), suggesting that the effect of exposure on /d/-goodness ratings for /d/ and /t/ differed between the Swedish and English experiments. Simple effect analyses revealed that the two-way interaction between exposure group and sound was significant for English, so that /d/-exposure *in*creased the difference in /d/-goodness ratings for /d/ and /t/, compared to the control group ($\hat{\beta} = -.04, t = 4.1, p < .0001$). That is, compared to the English control group, participants in the English /d/-exposure group rated the Mandarin-accented /d/ as a better exemplar of /d/ and the Mandarin-accented /t/ as a better examplar of /t/. This simple effect did not reach significance in the Swedish experiment; in fact, it went in the opposite of the predicted direction (($\hat{\beta} = -.03, t = -1.6, p > .1$).
+Finally, the three-way interaction between native language, sound, and exposure group was also significant ($\hat{\beta} = -.04, t = -3.3, p < .002$), suggesting that the effect of exposure on /d/-goodness ratings for /d/ and /t/ differed between the Swedish and English experiments. Simple effect analyses revealed that the two-way interaction between exposure group and sound was significant for English, so that /d/-exposure *in*creased the difference in /d/-goodness ratings for /d/ and /t/, compared to the control group ($\hat{\beta} = -.04, t = 4.1, p < .0001$). That is, compared to the English control group, participants in the English /d/-exposure group rated the Mandarin-accented /d/ as a better exemplar of /d/ and the Mandarin-accented /t/ as a better examplar of /t/. This simple effect did not reach significance in the Swedish experiment; in fact, it went in the opposite of the predicted direction ($\hat{\beta} = -.03, t = -1.6, p > .1$).
 
 
 ```{r ratings analysis}
@@ -458,13 +458,27 @@ Finally, the three-way interaction between native language, sound, and exposure 
 d.test %<>% 
   applyContrasts()
 
-lmer.rating = lmer(Rating.Response.d.zscored ~ NativeLanguage * Group * Sound + 
+lmer.rating = lmer(Rating.Response.d.zscored ~ 
+                     NativeLanguage * Group * Sound + 
          (1 + Sound * Group | Item.MinimalPair) + (1 | Participant), 
        data = d.test)
-summary(lmer.rating, ddf="Satterthwaite")
 
 # Kenward-Rogers seems to take forever
 # summary(lmer.rating, ddf="Kenward-Roger")
+# summary(lmer.rating, ddf="Satterthwaite")
+order.terms = c(1, 8, 4, 6, 5, 3, 2, 7)
+tab_model(lmer.rating,
+          show.r2 = F,
+          pred.labels = c(
+            "(Intercept)",
+            "Group : Sound", 
+            "Native language : Sound", 
+            "Group (/d/-exposure vs. control)",
+            "Native language : Group", 
+            "Sound (/d/ vs. /t/)",
+            "Native language : Group : Sound",
+            "Native lanugage (Swedish vs. English)"),
+          order.terms = order.terms)
 
 # Get simple effects via emmeans
 emm = emmeans(lmer.rating,  ~ Group : Sound | NativeLanguage,
