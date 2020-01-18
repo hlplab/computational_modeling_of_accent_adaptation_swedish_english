@@ -540,7 +540,7 @@ The decision to recruit a smaller number of participants was made because 1) the
 
 ### Are differences in the number of participants and test items likely to explain the results?
 
-```{r bootstrap-downsampling, warning=F, fig.cap = "(ref:bootstrap-downsampling)", fig.height=4, out.width='50%'}
+```{r bootstrap-downsampling, warning=F, fig.cap = "(ref:bootstrap-downsampling)", fig.height=4, out.width='70%'}
 set.seed(333)
 
 n.participant = 11
