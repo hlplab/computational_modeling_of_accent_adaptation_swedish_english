@@ -19,8 +19,22 @@ header-includes:
   - \subsectionfont{\color{red}}
   - \subsubsectionfont{\color{red}}
 output:
- html_document:
-    code_folding: hide
+  bookdown::pdf_book:
+    keep_tex: false
+    toc: true
+    toc_depth: 3
+    number_section: true
+    latex_engine: xelatex
+  bookdown::gitbook:
+    lib_dir: assets
+    split_by: section
+    config:
+      toolbar:
+        position: static
+  bookdown::html_book:
+    css: toc.css
+documentclass: book
+always_allow_html: true
 ---
 
 
@@ -50,6 +64,7 @@ knitr::opts_chunk$set(echo = FALSE,
 
 ```{r preamble, message=FALSE, warning=FALSE, error=FALSE, echo=FALSE, results='hide'}
 rm(list=ls())
+library(bookdown)       # r markdown references to figures, tables, sections regardless of output format
 library(tidyverse)      # There is only one universe
 library(magrittr)       # Pipes!
 library(stringi)
@@ -356,22 +371,26 @@ Second, lexical decision accuracy was substantially higher in the Swedish data. 
 Unfortunately, the trial-level exposure data from Xie et al. (2017) was lost in a laptop theft in 2018. We do, however, have access to the mean by-participant accuracies and their standard deviation. Lexical decision accuracy for filler response accuracy was high both for filler words (M = .80, SD = .06) and nonwords (M = .77, SD = .16). Accuracy was also high for critical words with syllable-final /d/ in the /d/-exposure group (M = .81, SD = .09). No reaction time data was available.
 
 ### Swedish ###
-Figures \ref{fig:LD.overall} and \ref{fig:LD.critical} summarize participants' accuracy and reaction time for during exposure. 
+Figure \@ref(fig:LD-accuracy) summarizes participants' accuracy and reaction time for during exposure. 
 Lexical decision accuracy was high across both the /d/-exposure (`r get_LD_performance(d, "Swedish", "/d/-exposure")`) and control group (`r get_LD_performance(d, "Swedish", "control")`). Accuracy was also high for critical words with syllable-final /d/ in the /d/-exposure group (`r get_LD_performance(d, "Swedish", critical = T)`). Notably, one participant in the /d/-exposure group was correct on less than 90\% of the critical words, but even that participant categorized most critical words correctly (80\%).
 
 Reaction times were slower in the /d/-exposure group (`r get_LD_performance(d, "Swedish", what = "RT")`). The very high average reaction time for participant 101 in the /d/-exposure group was caused by a single outlier trial, on which the participant took 35 seconds to respond. The difference between exposure conditions does, however, persist if reaction times above 3.5 SDs away from a participant's mean RT are excluded (`r get_LD_performance(d  %>% group_by(Participant) %>% filter(abs(scale(LD.RT)) < 3.5) %>% ungroup(), "Swedish", what = "RT")`).
 
 This suggests that the syllable-final /d/ of the Flemish-accented speaker was indeed accented, leading to additional difficulty beyond whatever other difficulty participants might have experienced while processing the foreign accent.
 
-```{r combined LD accuracy plot, fig.cap=c("\\label{fig:LD.overall}Lexical decision accuracies and RTs in the Swedish experiment by exposure group", "\\label{fig:LD.critical}Lexical decision accuracies and RTs  in the Swedish experiment for the critical words with syllable-final /d/"), fig.height=3.5, fig.width=3.5}
-d.swedish %>%
+(ref:LD-accuracy) Lexical decision accuracies and RTs in the Swedish experiment by exposure group: all words (left) or only critical words (right). For the /d/ exposure group, the latter are the words with syllable-final /d/.
+
+```{r LD-accuracy, fig.cap="(ref:LD-accuracy)", fig.height=3.5, fig.width=3.5, out.width='50%', fig.show = 'hold'}
+p = d.swedish %>%
   get_LD_byParticipant() %>%
   ggplot(
     aes(x = RT, 
         y = Accuracy, 
         label = Participant, fill = Group)) + 
   geom_label(alpha = .5) + 
-  scale_x_continuous("Mean Reaction Time") + 
+  scale_x_continuous(
+    name = "Mean Reaction Time",
+    limits = c(0,2)) + 
   scale_y_continuous(
     name = "Mean accuracy", 
     breaks = c(0, 0.25, 0.5, 0.75, 1.0), 
@@ -379,9 +398,10 @@ d.swedish %>%
   scale_fill_manual(values = colors.group) + 
   facet_wrap(~ NativeLanguage) +
   theme_cowplot() + theme(legend.position = "top")
-  
-last_plot() %+% (d %>% 
-                   filter(Group == "/d/-exposure", Item.Type == "critical") %>%
+
+p  
+p %+% (d.swedish %>% 
+                   filter(Item.Type == "critical") %>%
                    get_LD_byParticipant())
 ```
 
@@ -394,9 +414,11 @@ We focus here on goodness ratings for test words ending in /d,t/. Unlike the Eng
 
 We note here that the two experiments differed in the number of subject and items during test. Bootstrap analyses presented later in the SI assess whether this difference in the amount of test data could explain the difference in results. Here we first compare the two data sets using linear mixed-effects models, which do not require data to be balanced. 
 
-### Converting /d/- and /t/-goodness ratings for analysis
+### Preparing /d/- and /t/-goodness ratings for analysis
 
-```{r rating figure of correlations between /d/ and /t/ goodness, , fig.cap=c("\\label{fig:Ratings.Correlation}/d/-goodness ratings during test (z-scored) by native language and exposure group"), fig.height=3.5, fig.width=5}
+(ref:rating-to-rating-correlation) /d/-goodness ratings during test (z-scored) by native language and exposure group
+
+```{r rating-to-rating-correlation, fig.cap='(ref:rating-to-rating-correlation)', fig.height=4, out.width='75%'}
 d.test %>%
   filter(NativeLanguage == "English") %>%
   droplevels() %>%
@@ -417,11 +439,13 @@ d.test %>%
 ```
 
 
-The /d/- and /t/-goodness ratings could range from 1 to 7. The two types of ratings were highly inversely correlated (see Figure \ref{fig:Ratings.Correlation}). To simplify data analysis, we thus converted  all goodness ratings into /d/-goodness ratings. For /t/-goodness ratings, this means that we subtracted them from 8 (i.e., if a token was given a /t/-goodness of 3, it is tranformed to have a /d/-goodness of 5). This decision does not affect the results: all results remain the same if the original ratings are analyzed while including `rating for` (/d/- vs. /t/-goodness) and all its interactions as a predictor in the analysis. Following Xie et al. (2017), we then z-scored /d/-goodness ratings within participants, by subtracting the participant's mean and dividing by the participant's standard deviation. 
+The /d/- and /t/-goodness ratings could range from 1 to 7. The two types of ratings were highly inversely correlated (see Figure \@ref(fig:rating-to-rating-correlation)). To simplify data analysis, we thus converted  all goodness ratings into /d/-goodness ratings. For /t/-goodness ratings, this means that we subtracted them from 8 (i.e., if a token was given a /t/-goodness of 3, it is tranformed to have a /d/-goodness of 5). This decision does not affect the results: all results remain the same if the original ratings are analyzed while including `rating.for` (/d/- vs. /t/-goodness) and all its interactions as a predictor in the analysis. Following Xie et al. (2017), we then z-scored /d/-goodness ratings within participants, by subtracting the participant's mean and dividing by the participant's standard deviation. 
 
 ### Results
 
-```{r ratings figure, fig.cap=c("\\label{fig:Ratings}/d/-goodness ratings during test (z-scored) by native language and exposure group"), fig.height=3.5, fig.width=5}
+(ref:ratings-results) /d/-goodness ratings during test (z-scored) by native language and exposure group
+
+```{r ratings-results, fig.cap="(ref:ratings-results)", fig.height=4, out.width='75%'}
 d.test %>%
   group_by(NativeLanguage, Group, Sound, Participant) %>%
   summarise(Rating.mean = mean(Rating.Response.d.zscored)) %>%
@@ -446,14 +470,14 @@ d.test %>%
         panel.grid.minor.x = element_blank())
 ```
 
-Figure \ref{fig:Ratings} shows the z-scored /d/-goodness ratings from both experiments. To compare participants' ratings for the /d,t/-final test words across the two experiments, we conducted a linear mixed-effects regression (Baayen et al., 2008) over the combined data from both experiments. The regression predicted z-scored /d/-goodness ratings based on the sound category (sum-coded: 1 = word recording intended to end in /d/ vs. -1 = word recording intended to end in /t/), exposure group (sum-coded: 1 =  /d/-exposure vs. -1 = control), the experiment (sum-coded: 1 = Swedish vs. -1 = English), and all their interactions. The regression contained the maximal random effect structure justified by the design (random by-participant intercepts and slope for sound; random by-item intercepts and slopes for sound, exposure group, and their interaction).^[Even this simplified model estimated the variance of the by-participant intercepts to be zero (see below), presumably because the z-scoring of ratings within participant already removed that variance. If all by-participant random effects are excluded, the results reported below do not change. If non-zscored ratings are analyzed instead (unlike in previous work), the three-way interaction is no longer significant ($p = .11$).]
+Figure \@ref(fig:ratings-results) shows the z-scored /d/-goodness ratings from both experiments. To compare participants' ratings for the /d,t/-final test words across the two experiments, we conducted a linear mixed-effects regression (Baayen et al., 2008) over the combined data from both experiments. The regression predicted z-scored /d/-goodness ratings based on the sound category (sum-coded: 1 = word recording intended to end in /d/ vs. -1 = word recording intended to end in /t/), exposure group (sum-coded: 1 =  /d/-exposure vs. -1 = control), the experiment (sum-coded: 1 = Swedish vs. -1 = English), and all their interactions. The regression contained the maximal random effect structure justified by the design (random by-participant intercepts and slope for sound; random by-item intercepts and slopes for sound, exposure group, and their interaction).^[Even this simplified model estimated the variance of the by-participant intercepts to be zero (see below), presumably because the z-scoring of ratings within participant already removed that variance. If all by-participant random effects are excluded, the results reported below do not change. If non-zscored ratings are analyzed instead (unlike in previous work), the three-way interaction is no longer significant ($p = .11$).]
 
-For the by-participant random effects, we had to remove the random slope for sound in order for the model to converge without perfect correlations. All other random correlations are included in the model. In this analysis, we find a highly significanct main effect of sound, so that foreign-accented productions of /d/ were judged to have higher /d/-goodness than foreign-accented productions of /t/ ($\hat{\beta} = .55, t = 19.3, p < .0001$). The two-way interaction between native language and sound was also higly significant ($\hat{\beta} = .11, t = 3.8, p < .0003$), so that the differences between the /d/-goodness ratings for /d/ and /t/ was larger for the Flemish-accented Swedish speaker than the Mandarin-accented English speaker. One possible interpretation of this is that the Flemish-accented Swedish speaker deviated less from the expectations native Swedish listeners than the Mandarin-accented English speaker deviated from the expectations of American listeners. 
+For the by-participant random effects, we had to remove the random slope for sound in order for the model to converge without perfect correlations. All other random correlations are included in the model. Table \@ref(tab:ratings-analysis) summarizes the results. We find a highly significanct main effect of sound, so that foreign-accented productions of /d/ were judged to have higher /d/-goodness than foreign-accented productions of /t/ ($\hat{\beta} = .55, t = 19.3, p < .0001$). The two-way interaction between native language and sound was also higly significant ($\hat{\beta} = .11, t = 3.8, p < .0003$), so that the differences between the /d/-goodness ratings for /d/ and /t/ was larger for the Flemish-accented Swedish speaker than the Mandarin-accented English speaker. One possible interpretation of this is that the Flemish-accented Swedish speaker deviated less from the expectations native Swedish listeners than the Mandarin-accented English speaker deviated from the expectations of American listeners. 
 
 Finally, the three-way interaction between native language, sound, and exposure group was also significant ($\hat{\beta} = -.04, t = -3.3, p < .002$), suggesting that the effect of exposure on /d/-goodness ratings for /d/ and /t/ differed between the Swedish and English experiments. Simple effect analyses revealed that the two-way interaction between exposure group and sound was significant for English, so that /d/-exposure *in*creased the difference in /d/-goodness ratings for /d/ and /t/, compared to the control group ($\hat{\beta} = -.04, t = 4.1, p < .0001$). That is, compared to the English control group, participants in the English /d/-exposure group rated the Mandarin-accented /d/ as a better exemplar of /d/ and the Mandarin-accented /t/ as a better examplar of /t/. This simple effect did not reach significance in the Swedish experiment; in fact, it went in the opposite of the predicted direction ($\hat{\beta} = -.03, t = -1.6, p > .1$).
 
 
-```{r ratings analysis}
+```{r ratings-analysis}
 # Variable coding 
 d.test %<>% 
   applyContrasts()
@@ -469,6 +493,8 @@ lmer.rating = lmer(Rating.Response.d.zscored ~
 order.terms = c(1, 8, 4, 6, 5, 3, 2, 7)
 tab_model(lmer.rating,
           show.r2 = F,
+          title = "(\\#tab:ratings-analysis) Results of linear mixed-effects regression of /d/-goodness ratings.",
+          dv.labels = "/d/-goodness rating (z-scored)",
           pred.labels = c(
             "(Intercept)",
             "Group : Sound", 
@@ -502,12 +528,12 @@ Compared to the English experiment, the Swedish experiment had substantially few
 ### English ###
 48 monolingual English speakers participated in the experiment (24 /d/-exposure, 24 control). Each participant rated each word (one of the pair) both for goodness as /d/ and for goodness as /t/, resulting in 30 ratings per sound category (/d/ vs. /t/) per rating type (goodness as /d/ vs. goodness as /t/) and 120 ratings per participant.
 
-Total observations:  48 \* 30 \* 2 \* 2 = 5760 observations
+*Total observations:*  48 \* 30 \* 2 \* 2 = 5760 observations
 
 ### Swedish ###
 25 Swedish speakers recruited from the Department of Swedish \& Multilingualism at Stockholm University participated. Two of the participants were excluded from the analysis because post-experiment surveys found that they were not native speakers of Swedish. Participants were alternately assigned to the /d/-exposure or control group (11 /d/-exposure, 12 control). Each participant rated each word (one of the pair) either for goodness as /d/ or for goodness as /t/, resulting in 16 ratings per sound category (/d/ vs. /t/) per rating type (goodness as /d/ vs. goodness as /t/) and 64 ratings per participant.
 
-Total observations:  23 \* 15 \* 2 \* 2 = 1380.
+*Total observations:*  23 \* 15 \* 2 \* 2 = 1380.
 
 ### Why the difference?
 
@@ -726,7 +752,7 @@ The Swedish experiment employed fewer test stimuli (64 \/d-\/t\/-final words fro
 
 Two pairs, (*vård-vårt* and *hård-hårt*) were excluded from analysis as it was discovered that dental stops preceded by /r/ in Swedish are pronounced differently as retroflexed variations of /d,t/ and therefore would not have been consistent with the rest of the set.
 
-Due to a misunderstanding, the Swedish data did not counter-balance whether a word recording was rated for /d/- or for /t/-goodness (e.g., the word *rid*---'ride' was always rated for /d/-goodness; the word *rit* ---'rite' was always rated for /t/-goodness; across minimal pair words, /d/- and /t/-final words were equally often rated for /d/- and /t/-goodness). This is unlikely to cause any problems: as shown in Figure \ref{fig:Ratings.Correlation} /d/- and /t/-goodness ratings were almost perfectly inversely correlation, so that the gain in information from having each word rated for both /d/- and /t/-goodness (across participants) is minimal.
+Due to a misunderstanding, the Swedish data did not counter-balance whether a word recording was rated for /d/- or for /t/-goodness (e.g., the word *rid*---'ride' was always rated for /d/-goodness; the word *rit* ---'rite' was always rated for /t/-goodness; across minimal pair words, /d/- and /t/-final words were equally often rated for /d/- and /t/-goodness). This is unlikely to cause any problems: as shown in Figure \@ref(fig:ratings-to-ratings-correlation) /d/- and /t/-goodness ratings were almost perfectly inversely correlation, so that the gain in information from having each word rated for both /d/- and /t/-goodness (across participants) is minimal.
 
 Finally, the Swedish experiment contained a third and fourth test block during which participants rated 54 words from 27 \/d\/-\/t\/-*initial* minimal pairs (e.g., *dom* and *tom*) for their /d/- or /t/-goodness. The relative order of these later test blocks (/d/- or /t/-goodness ratings) was counter-balanced across participants but participants always completed the test block with word-final ratings *before* performing the word-initial ratings. The data from word-initial ratings tasks are not part of the current analysis, though we note that exposure group did not affect the Swedish word-initial ratings either.
 
