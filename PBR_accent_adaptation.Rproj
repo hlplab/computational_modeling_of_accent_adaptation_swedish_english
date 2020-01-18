@@ -1,12 +1,7 @@
 Version: 1.0
 
-<<<<<<< HEAD
-RestoreWorkspace: Default
-SaveWorkspace: Default
-=======
 RestoreWorkspace: No
 SaveWorkspace: No
->>>>>>> cc71ae2a9dc8af266e25a6d0df582376632dcef6
 AlwaysSaveHistory: Default
 
 EnableCodeIndexing: Yes
@@ -14,11 +9,6 @@ UseSpacesForTab: Yes
 NumSpacesForTab: 2
 Encoding: UTF-8
 
-<<<<<<< HEAD
-RnwWeave: Sweave
-LaTeX: pdfLaTeX
-=======
 RnwWeave: knitr
 LaTeX: pdfLaTeX
 DisableExecuteRprofile: Yes
->>>>>>> cc71ae2a9dc8af266e25a6d0df582376632dcef6
