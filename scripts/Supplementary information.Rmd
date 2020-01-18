@@ -266,7 +266,9 @@ d.swedish %<>%
     Item.Word = str_replace(stri_trans_general(
       Item.Filename, 
       "Latin-ASCII"),
-      "^[A-Z]+_[0-9]+_([a-z]+)_.*$", "\\1")
+      "^[A-Z]+_[0-9]+_([a-z]+)_.*$", "\\1"),
+    Item.Word = ifelse(Item.WordID == "S15" & Item.Word == "nod", 
+                       "nod15", as.character(Item.Word))
   ) %>%
   group_by(Participant) %>%
   mutate(
