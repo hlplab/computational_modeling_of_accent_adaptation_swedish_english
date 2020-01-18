@@ -1444,3 +1444,22 @@ plot_ly(data = d.IO.diff,
     layout(scene = list(xaxis=axx,yaxis=axy,zaxis=axz,aspectmode='cube')) 
 
 ```
+
+
+
+
+
+# Appendix: List of stimuli {#sec:stimuli}
+<!-- Maryann: could you fill in as a table or bulleted list? -->
+
+## Exposure
+
+### English
+
+### Swedish
+
+## Test
+
+### English
+
+### Swedish
