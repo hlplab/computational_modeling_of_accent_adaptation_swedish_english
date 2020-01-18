@@ -20,5 +20,8 @@ LaTeX: pdfLaTeX
 =======
 RnwWeave: knitr
 LaTeX: pdfLaTeX
+<<<<<<< HEAD
+=======
 DisableExecuteRprofile: Yes
 >>>>>>> cc71ae2a9dc8af266e25a6d0df582376632dcef6
+>>>>>>> 79177272f01f7cc1efddc16d3b86892f5ee14f60

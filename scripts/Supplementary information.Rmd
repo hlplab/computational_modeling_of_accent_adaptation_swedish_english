@@ -250,7 +250,8 @@ d.swedish %<>%
     Item.Word = str_replace(stri_trans_general(
       Item.Filename, 
       "Latin-ASCII"),
-      "^[A-Z]+_[0-9]+_([a-z]+)_.*$", "\\1")
+      "^[A-Z]+_[0-9]+_([a-z]+)_.*$", "\\1"),
+   Item.Word = ifelse(Item.WordID == "S15" & Item.Word == "nod", "nod15", as.character(Item.Word))
   ) %>%
   group_by(Participant) %>%
   mutate(
@@ -289,7 +290,6 @@ d.swedish %<>%
 # Standardize variable names for English
 d.english.test %<>%
   rename(
-    TestBlock = Session,                          # Xin: is this correct?
     Item.Word = Word,
     Item.MinimalPair = MinimalPairID,
     Rating.Response = Rating.Answer,
@@ -303,7 +303,8 @@ d.english.test %<>%
     Item.WordID = paste0("E", as.numeric(as.factor(Item.Word))),
     Sound = factor(Sound, levels = c("d", "t")),
     Sound.Position = "final",
-    Subject = NULL)
+    Subject = NULL,
+    Session = NULL)
 
 # Combine Swedish and English test data here 
 d.test = d.swedish %>%
@@ -328,7 +329,7 @@ d.test = d.swedish %>%
   # Create factors
   mutate_at(
     c("Group", "Participant", 
-      "Block.Order", "Item.MinimalPair", "Item.WordID", 
+      "Block.Order", "Item.MinimalPair", "Item.WordID", "Item.Word",
       "Rating.for"),
     .funs = factor
   )
@@ -342,9 +343,8 @@ d.swedish %<>%
       "Rating.for"),
     .funs = factor
   )
-
-d = d.swedish
 ```
+
 
 ## Lexical decision accuracy during exposure ##
 
@@ -380,7 +380,7 @@ d.swedish %>%
   facet_wrap(~ NativeLanguage) +
   theme_cowplot() + theme(legend.position = "top")
   
-last_plot() %+% (d %>% 
+last_plot() %+% (d.swedish %>% 
                    filter(Group == "/d/-exposure", Item.Type == "critical") %>%
                    get_LD_byParticipant())
 ```
@@ -748,295 +748,7 @@ Compared to the English experiment, the Swedish experiment had about 50\% fewer 
 Tokens were annotated for their duration of vowel, closure, and burst. Annotations were completed in Praat (Boersma, 2001) using visual examination of spectrograms, and listening judgments. Cue boundaries were marked following conventions (Flege, Munro, & Skelton, 1992). Vowel duration was measured from the beginning of the first periodic portion of each waveform to the zero-crossing where the amplitude decreased abruptly and the waveform became sinusoidal. Burst was measured from stop release to the first zero crossing point where the amplitude became near zero. Closure was measured as the time between vowel offset and burst onset (for stops following nasals, closure onset was marked by an abrupt decline in amplitude of the nasal).
 
 
-
-
-
-
-
-
-
 # Description of Ideal Observer Framework #
-
-
-#### Comparing ID task and Rating task
-
-To understand human responses, below we plot the item-level correlation between human responses from the ID task and the rating task available for the English dataset. For the rating task, the two original ratings (goodness as /d/ and goodness as /t/) were transformed into goodness-as-/d/ and averaged to yield a single metric.
-
-```{r load categorization experiments, results='hide'}
-##-----------------------
-# load human ID task data
-##-----------------------
-# English ID data
-d.xin.ID <- read.csv("../data/English/d.identification.xin.csv")
-d.xin.ID.sleep <- readRDS("../data/English/talker_specific_data_sleepAA.rds")
-
-# English ID data
-# recode Identification Accuracy as percent_d response
-d.xin.ID <- d.xin.ID %>%
-  mutate(Group = ifelse(Group == "experimental", "/d/-exposure", "control")) %>%
-  mutate(d_resp = case_when(
-    (Sound == "d" & Spelling1.ACC == 1) | (Sound == "t" & Spelling1.ACC == 0) ~ 1,
-    (Sound == "t" & Spelling1.ACC == 1) | (Sound == "d" & Spelling1.ACC == 0) ~0
-  ))
-```
-
-
-```{r check-consistence-between-ID-rating-tasks, fig.height = 6, fig.width = 12}
-##-------------------------------------------------------------------------------------
-# check whether responses are consistent between rating and identification tasks -- yes
-##-------------------------------------------------------------------------------------
-d.test.xin.2tasks <- plyr::rbind.fill(d.english %>% mutate(Task = "rating"), d.xin.ID %>% mutate(Task = "ID"))
-
-d.test.xin.byItem <- d.test.xin.2tasks %>%
-  group_by(Task, Group, Sound, Word) %>%
-  summarise(zRating_d = mean(zrating.simplified_d),
-            meanPercent_d = mean(d_resp) *100) %>%
-  ungroup() %>%
-  select(-Task) %>%
-  gather(resp, value, zRating_d:meanPercent_d) %>%
-  filter(!is.na(value)) %>%
-  spread(resp,value) %>%
-  mutate(logodds_d = qlogis(meanPercent_d/100))
-
-# correlation between ratings and percent /d/ responses
-ggscatter(d.test.xin.byItem, x = "meanPercent_d", y = "zRating_d", 
-         # color = "Sound", 
-          add = "reg.line", conf.int = TRUE, 
-          palette = "jco",  cor.method = "pearson",
-          xlab = "Percent /d/ from ID task", ylab = "/d/ goodness from rating task") + 
- # stat_cor(aes(color = sound)) + 
-  facet_grid(~ Group) + ggtitle("Item-wise correlation between ID and rating task (English data)") +
- # stat_cor(aes(color = sound), label.x.npc = "middle", label.y.npc = "top") +
-  stat_cor(label.x.npc = "middle", label.y.npc = "top") + 
-  geom_smooth(color = "red", method = "lm") + 
-  geom_smooth(color = "black", method = "gam", formula = y~s(x))
- 
-
-```
-
-  
-```{r load-data-for-ideal-observers}
-##-------------------------------
-# load data from modeling results 
-##-------------------------------
-# -- this is not needed now, but just loading all data in early on to facilitate the formating of datasets; detailed descriptions of ideal observers are given in the sections below
-
-
-# Swedish data
-results.swedish <- readRDS("../data/ideal_observer_results_Swedish.rds") # ideal observer prediction results
-# load model parameters
-model.parameter.swedish <- readRDS("../data/ideal_observer_models_Swedish.rds")
-results.swedish$sound <- relevel(factor(results.swedish$sound), "d")
-
-# filter out the two items with -r
-results.swedish <- results.swedish %>%
- filter(! word %in% c("voart", "voard", "hoart", "hoard")) %>%
-  droplevels()
-
-# English data
-results.english <- readRDS("../data/ideal_observer_results_English_raw.rds")
-
-# load model parameters
-model.parameter.english <- readRDS("../data/ideal_observer_models_English.rds")
-
-
-# combine the modeling results together
-data.swedish = results.swedish %>%
-  mutate(native_language = "Swedish", dataset = "Flemish-accented Swedish") %>%
-  mutate(accuracy = posterior) %>%
-  #get_accuracy('sound', method=acc_method) %>%
-  group_by(Talker,Talker_train, modelType, sound) %>%
-  # dplyr::summarise(accuracy = mean(accuracy)) %>%
-  droplevels(.)
-
-data.english = results.english %>%
-  mutate(native_language = "English", dataset = "Mandarin-accented English") %>%
-  filter(method == "multidimensional") %>%
-  filter(cues == "raw") %>%
-  filter(modelType != "TS_no_feature") %>%
-  mutate(modelType = ifelse(modelType == "TS_feature", "TS", "native English")) %>%
-  filter(combo == "prototypical_M5") %>%
-  mutate(accuracy = posterior) %>%
- # get_accuracy('sound', method=acc_method) %>%
-  group_by(Talker,Talker_train, modelType, sound) %>%
-  # dplyr::summarise(accuracy = mean(accuracy)) %>%
-  select(modelType:Talker_train, model:accuracy, -set) %>%
-  droplevels(.)
-
-common_cols <- intersect(colnames(data.swedish), colnames(data.english))
-
-data.both <- rbind(extract_columns(data.swedish), extract_columns(data.english)) # there are a total of 180 words across the two datasets; each word has 2 modelType (TS or native) and 2 category_model (d or t)
-
-colnames(data.both) = common_cols 
-
-data.both <- as.data.frame(data.both) %>%
-  mutate(training_model = ifelse(modelType == "TS", "non-native", "native"),
-         Sound = factor(sound, levels = c("d", "t")),
-         sound = NULL) 
-
-
-
-```
-  
-
-
-```{r integrate-test-data-with-modeling-results}
-
-##--------------------------------------------------------------------
-# integrate Ideal Observer results with human participants' ratings
-##--------------------------------------------------------------------
-
-# Swedish data
-d.test.swedish <- left_join(d.swedish, 
-                              data.swedish %>%
-                              ungroup() %>%
-                                dplyr::select(-filename) %>%
-                                mutate(Word = word, word = NULL,
-                                       Sound = sound, sound = NULL), by = c("MinimalPairID", "Word"))
-
-# Mandarin data
-d.test.english <- left_join(d.english, data.english %>% 
-                              ungroup() %>%
-                              mutate(Word = word, word = NULL,
-                                     Sound = sound, sound = NULL), by = c("Word", "Sound"))
-
-d.test.xin.ID <- left_join(d.xin.ID, data.english %>% 
-                             ungroup() %>%
-                             mutate(Word = word, word = NULL,
-                                    Sound = sound, sound = NULL), by = c("Word", "Sound"))
-#xtabs(~modelType +sound + posterior_choice, d.test.xin.ID)
-
-
-```
-
-
-
-```{r combine-English-Swedish-datasets}
-## -------------------------------------------------------------------------------
-# combine the two datasets from rating tasks for English and Swedish -- modeling results integrated with rating results
-## -------------------------------------------------------------------------------
-d.test.swedish <- d.test.swedish %>%
-  mutate(modelType = ifelse(modelType == "native Swedish", "native", modelType)) %>%
-  mutate(native_language = "Swedish") %>%
-  mutate(Word = ifelse(MinimalPairID == 15 & Word == "nod", "nod15", as.character(Word))) %>% 
-  mutate(MinimalPairID = paste(MinimalPairID, native_language, sep = "_")) %>%
-  droplevels(.)
-  
-
-d.test.english <- d.test.english %>%
-  mutate(modelType = ifelse(modelType == "native English", "native", modelType)) %>%
-  mutate(native_language = "English") %>%
-  mutate(MinimalPairID = paste(MinimalPairID, native_language, sep = "_")) %>%
-  droplevels(.)
-
-
-common_cols <- intersect(colnames(d.test.swedish), colnames(d.test.english))
-
-d.test.all <- rbind(extract_columns(d.test.english), extract_columns(d.test.swedish))
-
-colnames(d.test.all) = common_cols
-
-d.test.all <- as.data.frame(d.test.all) %>%
-  mutate(Participant = case_when(
-    native_language == "English" ~ 1000 + as.numeric(Participant),
-    native_language == "Swedish" ~ 2000 + as.numeric(Participant),
-  )) %>%
-  mutate_if(is.character,as.factor) %>%
-  mutate(Group = factor(Group, levels = c("/d/-exposure", "control")))
-
-
-# there are 4 common words between the two datasets, rename them so that they are identified as different words
-d.test.all <- d.test.all %>%
-  mutate(Word = ifelse(Word %in% intersect(levels(factor(d.test.swedish$Word)), levels(factor(d.test.english$Word))), paste(Word, native_language, sep = "_"), as.character(Word))) %>%
-  mutate(Word = as.factor(Word))
-
-#str(d.test.all)
-
-
-## -------------------------------------------------------------------------------
-# select rating results for the two datasets
-## -------------------------------------------------------------------------------
-d.test.all.rating <- d.test.all %>%
-  select(Group:rburst, Sound, dataset, native_language, Participant, -combo) %>%
-  distinct(.)
-
-d.test.tally <- d.test.all.rating %>% 
-  group_by(dataset, native_language, Participant, Group, Rating.for, Sound) %>%
-  summarise(n = n())
-
-
-###combined datasets###
-
-# data.both contains the item-level model predictions
-# d.test.all.rating contains the item-level human ratings from each participant
-# d.test.all are the integrated version of the two above
-```
-
-
-
-### Data preparation ###
-1) *Extraction of acoustic cues*. We obtained the measurements of three durational cues that are cruciually for coda voicing: the preceding vowel, closure interval and burst release. 
-2) *Cue measurement Correction*. The purpose of correation (or residualization) is to control for phonological context effects, without losing the difference between accents within each language. This procedure was conducted because a) Exposure words contain only /d/ words, but test words have /d/-/t/ minimal pairs; b) The presence of phonological contexts (e.g., l, r, nasals) varies between exposure and test words; c) Exposure words (multisyllabic) are longer than test words (monosyllabic). For these reasons, we do the following for residualization. 
-  + STEP 1: y ~ 1 + (phon_ctxt_vl + phon_ctxt_r + phon_ctxt_n), data = test /d/ and /t/ words only -- here we get the predicted effects of phonological contexts, and apply that to exposure words
-  + STEP 2: y ~ 1 + syllable, data = exposure /d/ and test /d/ words only -- here we get the predicted effects of syllable length, and apply that to the test /t/ words
-  + STEP 3: then take the between-talker difference (Native-Non-native) for t category, and add it to the cue values of all tokens of the non-native talker -- here the aim is to make sure /t/-category is entirely aligned between the native and non-native speakers.
-
-Visualize test tokens in 3d space before and after cue correction (residualization) procedure.
-
-```{r visualize-for-residualization}
-
-resid.both <- d.test.all %>%
-  distinct(Word, Sound, modelType, model, native_language, dataset, .keep_all = T) %>%
-  select(-Group, -Participant, -Rating.for, -Rating.Answer, -rating.simplified_d,-zrating.simplified_d) %>%
-  mutate(modelType = ifelse(modelType == "TS", "non-native", "native")) %>%
-  filter(model == Sound) 
-
-resid.both.prior <- resid.both %>%
-  select(-rvowel, -rclosure, -rburst) %>%
-  mutate(residualizationType = "prior")
-
-resid.both.post <- resid.both %>%
-  select(-vowel, -closure, -burst) %>%
-  mutate(vowel = rvowel,
-         closure = rclosure,
-         burst = rburst) %>%
-  select(-rvowel, -rclosure, -rburst) %>%
-  mutate(residualizationType = "post") 
-
-resid.both <- bind_rows(resid.both.prior, resid.both.post)
-resid.both$residualizationType <- relevel(factor(resid.both$residualizationType), "prior")
-
-
-
-
-plot_ly(data = resid.both %>%
-          filter(native_language == "Swedish"),
-               x= ~vowel,
-               y= ~closure,
-               z= ~burst,
-               color= ~Sound,
-               symbol= ~Sound,
-               symbols = c('circle','square'),
-              frame= ~residualizationType,
-               type="scatter3d", mode="markers") %>%
-   layout(
-         title = "Acoustic cue distribution for Flemish-accented Swedish\nBefore and After Cue Correction") # This line specifies the axis range
-
-plot_ly(data = resid.both %>%
-          filter(native_language == "English"),
-               x= ~vowel,
-               y= ~closure,
-               z= ~burst,
-               color= ~Sound,
-               symbol= ~Sound,
-               symbols = c('circle','square'),
-              frame= ~residualizationType,
-               type="scatter3d", mode="markers") %>%
-   layout(
-         title = "Acoustic cue distribution for Mandarin-accented English\nBefore and After Cue Correction") # This line specifies the axis range
-
-```
-
 
 ### Structure of Ideal Observers
 Within each language, we compare the predictions of two ideal observers: a native model and a non-native model. The only difference between native and non-native models lies in the /d/ tokens used for training. Since exposure items and test items are difference, there is no overlapping between the training and test data used for the Ideal Observers.
@@ -1050,6 +762,62 @@ Within each language, we compare the predictions of two ideal observers: a nativ
   + Exposure /t/ comes from the native talker's test /t/ (downsampled to 30 tokens)
   + Test /d/ and /t/ comes from the non-native talker's test /d/ and /t/
 
+
+```{r load-data-for-ideal-observers}
+
+# load Swedish data
+results.swedish <- readRDS("../data/ideal_observer_results_Swedish.rds") # ideal observer prediction results
+# load model parameters for Swedish data
+model.parameter.swedish <- readRDS("../data/ideal_observer_models_Swedish.rds")
+
+
+# load English data
+results.english <- readRDS("../data/ideal_observer_results_English_raw.rds")
+# load model parameters for English data
+model.parameter.english <- readRDS("../data/ideal_observer_models_English.rds")
+
+
+# select the appropriate subset (matching what are available for Swedish data) from English modeling results
+results.english = results.english %>%
+  mutate(NativeLanguage = "English", Dataset = "Mandarin-accented English") %>%
+  filter(method == "multidimensional", 
+         cues == "raw",
+         modelType != "TS_no_feature",
+         combo == "prototypical_M5") %>%
+  mutate(modelType = ifelse(modelType == "TS_feature", "Non-native", "Native"),
+         vowel = vowel/1000,
+         closure = closure/1000,
+         burst = burst/1000) 
+  
+
+# combine the modeling results together
+common_cols <- intersect(colnames(results.swedish), colnames(results.english))
+
+d.IO = results.swedish %>%
+  filter(! word %in% c("voart", "voard", "hoart", "hoard")) %>%
+  mutate(word = ifelse(filename == "TDF_15_nod" & word == "nod", "nod15", as.character(word))) %>%
+  mutate(NativeLanguage = "Swedish", Dataset = "Flemish-accented Swedish",
+         modelType = ifelse(modelType == "TS", "Non-native", "Native")) %>%
+  full_join(results.english) %>%
+  select(one_of(common_cols), NativeLanguage, Dataset, -model, -phon_ctxt_stress, -block) %>%
+  rename(ModelType = modelType,
+         CategoryModel = category_model,
+         Part = part,
+         Combo = combo,
+         Item.Word = word,
+         Sound = sound,
+         Lhood = lhood,
+         Posterior = posterior,
+         Posterior.Choice = posterior_choice) %>%
+  mutate_if(is.character, as.factor) # there are a total of 180 words across the two datasets; each word has 2 ModelType (TS or native) and 2 category_model (d or t)
+   
+d.IO <- left_join(d.IO, d.test %>%
+                    select(Item.MinimalPair, Item.WordID, Item.Word, NativeLanguage) %>%
+                    distinct(.), by = c("NativeLanguage", "Item.Word")
+                    )
+
+```
+  
 ### Visualize Ideal Observer predictions
 
 ```{r prepare-ideal-observers}
@@ -1060,336 +828,37 @@ selected_cues <- c('rvowel','rclosure','rburst')
 
 ```
 
-Plot bar graphs.
-
 ```{r plot-ideal-observers-bar-graph}
 
-# plot bar graph: swedish and english datasets together
-
-cue_label <- c("all cues")
-
-ggplot(data = data.both %>%
-         filter(model == Sound),
-            aes(x= Sound, y = accuracy, color = training_model, fill = training_model)) + 
-  geom_bar(aes(y=accuracy),stat = "summary", fun.y = mean, position=position_dodge(0.7), width = 0.7) +
+ggplot(data = d.IO %>%
+         filter(CategoryModel == Sound) %>%
+         mutate(Accuracy = Posterior),
+            aes(x= Sound, y = Accuracy, color = ModelType, fill = ModelType)) + 
+  geom_bar(aes(y=Accuracy),stat = "summary", fun.y = mean, position=position_dodge(0.7), width = 0.7) +
 # coord_cartesian(ylim=c(0.4, 1)) +
-  geom_errorbar(aes(y=accuracy), stat = "summary", fun.data = "mean_cl_boot",size = 0.5,position=position_dodge(0.7), width=0.1) +
+  geom_errorbar(aes(y=Accuracy), stat = "summary", fun.data = "mean_cl_boot",size = 0.5,position=position_dodge(0.7), width=0.1) +
   scale_color_manual(values = c("black", "black")) +
   scale_fill_manual(values = c("black", "white")) +
-  facet_grid(~dataset) + 
+  facet_grid(~Dataset) + 
   # facet_grid(cues~., labeller = "label_both") + 
-  ggtitle(paste("Predicted accuracy for accented speech\n\nusing: ", cue_label)) + 
+  ggtitle(paste("Predicted accuracy for accented speech")) + 
   #guides(fill = FALSE) + 
   geom_hline(yintercept = 1/2) 
 
 ```
 
 
-Extract model parameters for the Swedish dataset.
+```{r integrate-test-data-with-modeling-results}
 
-```{r extract-parameters-ideal-observers-Swedish-TS}
+d.test.IO <- left_join(d.test, d.IO, by = c("NativeLanguage", "Sound", "Item.Word", "Item.MinimalPair", "Item.WordID"))
 
-model.parameter.swedish.TS <- model.parameter.swedish %>%
-  filter(modelType == "TS") %>%
-  droplevels()
-##--------------------------
-# extract model parameters
-##--------------------------
-
-model.parameter.swedish.TS.model <- model.parameter.swedish.TS$models_trained
-res1.TS <- model.parameter.swedish.TS.model %>%
- # magrittr::extract(., c(1:(length(model.parameter.swedish.TS$part)))) %>%
-  bind_rows(.id = "part")  %>% #name the splitted sets as 'split_cues'
-  mutate(part = model.parameter.swedish.TS$part[as.numeric(part)])
-res2.TS.mu <- purrr::map(res1.TS$model, magrittr::extract, c('mu'))
-res2.TS.Sigma <- purrr::map(res1.TS$model, magrittr::extract, c('Sigma'))
-
-res2.TS.mu.df <- res2.TS.mu %>%
-  map_dfr(., magrittr::extract, c('mu'))
-res2.TS.mu.df = as.data.frame(matrix(t(res2.TS.mu.df), ncol=length(selected_cues), 
-          byrow=TRUE), stringsAsFactors=FALSE)
-colnames(res2.TS.mu.df) <- c('C1','C2','C3')[1:length(selected_cues)]
-
-res2.TS.Sigma.df <- res2.TS.Sigma %>%
-  map_dfr(., magrittr::extract, c('Sigma'))
-res2.TS.Sigma.df = as.data.frame(matrix(t(res2.TS.Sigma.df), ncol=length(selected_cues)^2, 
-          byrow=TRUE), stringsAsFactors=FALSE)
-colnames(res2.TS.Sigma.df) <-  c('C1_C1','C1_C2','C1_C3','C2_C1','C2_C2','C2_C3', 'C3_C1','C3_C2', 'C3_C3') #if length(selected_cues) == 3
-# colnames(res2.TS.Sigma.df) <- c('C1_C1','C1_C2','C2_C1','C2_C2') #if length(selected_cues) == 2
-
-res2.TS <- cbind(res2.TS.mu.df,res2.TS.Sigma.df)
-res.TS <- cbind(as.data.frame(res1.TS), as.data.frame(res2.TS))
-
-res.TS.parameter <- res.TS %>%
-  filter(part == "test") %>%
-  dplyr::select(part, sound, C1:C3_C3) %>%
-  gather(parameter, value, C1:C3_C3) %>%
-  dplyr::mutate(parameter_category = paste(parameter, sound, sep = "_")) %>%
-  dplyr::select(-c(parameter, sound)) %>%
-  spread(parameter_category, value)
-```
- 
- 
-```{r extract-parameters-ideal-observers-Swedish-native}
-
-model.parameter.swedish.native <- model.parameter.swedish %>%
-  filter(modelType == "native swedish") %>%
-  droplevels()
-
-##--------------------------
-# extract model parameters
-##--------------------------
-
-model.parameter.swedish.native.model <- model.parameter.swedish.native$models_trained
-res1.native <- model.parameter.swedish.native.model %>%
- # magrittr::extract(., c(1:(length(model.parameter.swedish.native$part)))) %>%
-  bind_rows(.id = "part")  %>% #name the splitted senative as 'split_cues'
-  mutate(part = model.parameter.swedish.native$part[as.numeric(part)])
-res2.native.mu <- purrr::map(res1.native$model, magrittr::extract, c('mu'))
-res2.native.Sigma <- purrr::map(res1.native$model, magrittr::extract, c('Sigma'))
-
-res2.native.mu.df <- res2.native.mu %>%
-  map_dfr(., magrittr::extract, c('mu'))
-res2.native.mu.df = as.data.frame(matrix(t(res2.native.mu.df), ncol=length(selected_cues), 
-          byrow=TRUE), stringsAsFactors=FALSE)
-colnames(res2.native.mu.df) <- c('C1','C2','C3')[1:length(selected_cues)]
-
-res2.native.Sigma.df <- res2.native.Sigma %>%
-  map_dfr(., magrittr::extract, c('Sigma'))
-res2.native.Sigma.df = as.data.frame(matrix(t(res2.native.Sigma.df), ncol=length(selected_cues)^2, 
-          byrow=TRUE), stringsAsFactors=FALSE)
-colnames(res2.native.Sigma.df) <-  c('C1_C1','C1_C2','C1_C3','C2_C1','C2_C2','C2_C3', 'C3_C1','C3_C2', 'C3_C3') #if length(selected_cues) == 3
-# colnames(res2.native.Sigma.df) <- c('C1_C1','C1_C2','C2_C1','C2_C2') #if length(selected_cues) == 2
-
-res2.native <- cbind(res2.native.mu.df,res2.native.Sigma.df)
-res.native <- cbind(as.data.frame(res1.native), as.data.frame(res2.native))
-
-res.native.parameter <- res.native %>%
-  filter(part == "test") %>%
-  dplyr::select(part, sound, C1:C3_C3) %>%
-  gather(parameter, value, C1:C3_C3) %>%
-  dplyr::mutate(parameter_category = paste(parameter, sound, sep = "_")) %>%
-  dplyr::select(-c(parameter, sound)) %>%
-  spread(parameter_category, value)
-``` 
- 
- 
-Plot results for the Swedish dataset in 3d space.
-
-```{r plot-ideal-observers-Swedish-results-3d}
-
-# combine swedish model parameters
-
-model.parameters.swedish <- bind_rows(res.native.parameter %>%
-                                        mutate(modelType = "native Swedish"), 
-                                      res.TS.parameter %>%
-                                        mutate(modelType = "TS"))
-
-
-model.parameters.swedish.long <- model.parameters.swedish %>%
-  gather(key, value, -part, -modelType) %>%
-  mutate(sound = ifelse(grepl("d", key), "d", "t")) %>%
-  mutate(key = gsub("_d", "", key)) %>%
-  mutate(key = gsub("_t", "", key))
-  
-model.parameters.swedish.wide <- model.parameters.swedish.long %>%
-  spread(key, value)
-
-# change this axis setting if necessary
-axx <- list(
-  nticks = 4,
-  range = c(-0.2,0.2),
-  gridwidth = 2
-)
-
-axy <- list(
-  nticks = 4,
-  range = c(-0.2,0.2),
-  gridwidth = 2
-)
-
-axz <- list(
-  nticks = 4,
-  range =  c(-0.2,0.2),
-  gridwidth = 2
-)
-
-
-# plot in 3d space
-
-
-# create training ellipses
-
-d.model.parameter.swedish = model.parameters.swedish.wide %>%
-  group_by(modelType, part, sound) %>%
-  do(
-    {
-    #  cat_cov = cov(cbind(.$rvowel, .$rclosure, .$rburst))
-      cat_cov = matrix(c(.$C1_C1, .$C1_C2, .$C1_C3, .$C2_C1, .$C2_C2, .$C2_C3, .$C3_C1, .$C3_C2, .$C3_C3), 3, 3)
-   #   cat_mean = c(mean(.$rvowel), mean(.$rclosure), mean(.$rburst))
-      cat_mean = c(.$C1, .$C2, .$C3)
-      ellipse = rgl::ellipse3d(cat_cov, subdivide = 5)
-      x = ellipse$vb[1,] + cat_mean[1]
-      y = ellipse$vb[2,] + cat_mean[2]
-      z = ellipse$vb[3,] + cat_mean[3]
-      data.frame(x = x, y = y, z = z)
-    }
-  ) %>%
-  ungroup()
-
-
-d.model.parameter.swedish$sound <- relevel(factor(d.model.parameter.swedish$sound), "d")
-
-
-plot_ly(data = data.both %>%
-          filter(native_language == "Swedish") %>%
-          filter(model == Sound),
-               x= ~rvowel,
-               y= ~rclosure,
-               z= ~rburst,
-               color= ~posterior,
-               symbol= ~Sound,
-               symbols = c('circle','square'),
-              frame= ~training_model,
-               type="scatter3d", mode="markers") %>%
-  add_trace(type = 'scatter3d', # plot 3d ellipsoid for exposure /d/
-            data = d.model.parameter.swedish %>%
-              mutate(training_model = ifelse(modelType == "TS", "non-native", "native")) %>%
-              droplevels(),
-            inherit = F,
-            size = I(1),
-            color = ~sound,
-            frame = ~training_model,
-            x = ~x, y = ~y, z = ~z,
-            opacity = .2, showlegend = FALSE) %>%
-  layout(scene = list(xaxis=axx,yaxis=axy,zaxis=axz,aspectmode='cube'),
-         title = "Posterior prediction for Flemish-accented Swedish\nNative model and Non-native model") # This line specifies the axis range
-``` 
-
-
-Extract model parameters for the English dataset.
-
-```{r plot-ideal-observers-English-results-3d}
-##------------------------------------------------
-## add results from Xin's dataset for a comparison
-##------------------------------------------------
-
-
-# create training ellipses
-
-d.model.parameter.english = model.parameter.english %>%
-  filter(cues == "raw") %>%
-  filter(combo == "prototypical_M5") %>% # select just one training talker model to make it a fair comparison to Maryann's data
-  filter(part == "test") %>%
-  filter(modelType != "TS_no_feature") %>%
-  group_by(modelType, part, combo, sound) %>%
-  do(
-    {
-    #  cat_cov = cov(cbind(.$rvowel, .$rclosure, .$rburst))
-      cat_cov = matrix(c(.$C1_C1, .$C1_C2, .$C1_C3, .$C2_C1, .$C2_C2, .$C2_C3, .$C3_C1, .$C3_C2, .$C3_C3), 3, 3)
-   #   cat_mean = c(mean(.$rvowel), mean(.$rclosure), mean(.$rburst))
-      cat_mean = c(.$C1, .$C2, .$C3)
-      ellipse = rgl::ellipse3d(cat_cov, subdivide = 5)
-      x = ellipse$vb[1,] + cat_mean[1]
-      y = ellipse$vb[2,] + cat_mean[2]
-      z = ellipse$vb[3,] + cat_mean[3]
-      data.frame(x = x, y = y, z = z)
-    }
-  ) %>%
-  ungroup()
-
-  
-plot_ly(data = data.both %>%
-          filter(native_language == "English") %>%
-          filter(model == Sound),
-               x= ~rvowel,
-               y= ~rclosure,
-               z= ~rburst,
-               color= ~posterior,
-               symbol= ~Sound,
-               symbols = c('circle','square'),
-              frame= ~training_model,
-               type="scatter3d", mode="markers") %>%
-  add_trace(type = 'scatter3d', # plot 3d ellipsoid for exposure /d/
-            data = d.model.parameter.english %>%
-              mutate(training_model = ifelse(modelType == "TS", "non-native", "native")) %>%
-              droplevels(.),
-            inherit = F,
-            size = I(1),
-             color = ~sound,
-            frame = ~training_model,
-            x = ~x, y = ~y, z = ~z,
-            opacity = .2) %>%
-  layout(scene = list(xaxis=axx,yaxis=axy,zaxis=axz,
-                      aspectmode='cube'),
-         title = "Posterior prediction for Mandarin-accented English\nNative model and Non-native model") # This line specifies the axis range
-
-
-```
-
-
-Plot the differences between the native and non-native models.
-
-
-```{r plot-differences-between-ideal-observers-3d}
-
-# check differences in predicted results in a 3d space
-diff.results.swedish <- data.swedish %>%
-  ungroup() %>%
- # get_accuracy('sound', method=acc_method) %>%
-  filter(sound == model) %>%
-#  mutate(log_posterior = qlogis(posterior)) %>%
-#  dplyr::select(c(filename, word, sound,log_posterior, modelType, rvowel:rburst)) %>%
-  dplyr::select(c(filename, word, sound, posterior, modelType, rvowel:rburst)) %>%
-  dplyr::mutate(modelType = ifelse(modelType == "native Swedish", "native", modelType)) %>%
-#  tidyr::spread(modelType, log_posterior) %>%
-  tidyr::spread(modelType, posterior) %>%
-  dplyr::mutate(TS_over_native = TS - native) 
-
-diff.results.english <- data.english %>%
-  filter(sound == model) %>%
-  ungroup() %>%
-  dplyr::select(c(word, sound, posterior, modelType, rvowel:rburst)) %>%
-  dplyr::mutate(modelType = ifelse(modelType == "native English", "native", modelType)) %>%
-  tidyr::spread(modelType, posterior) %>%
-  dplyr::mutate(TS_over_native = TS - native) 
-    
-
-p.3d.diff.swedish = plot_ly(data = diff.results.swedish %>%
-                      mutate(min = min(TS_over_native), max = max(TS_over_native), mean = mean(TS_over_native)) %>%
-                      mutate(NonNative_over_Native = TS_over_native),
-               x= ~rvowel,
-               y= ~rclosure,
-               z= ~rburst,
-              # color= ~NonNative_over_Native,
-               marker = list(color = ~NonNative_over_Native, colorscale = 'RdBu', cmin = -1, cmax = 1, showscale = T),
-              # colors = 'RdBu',
-              symbol= ~sound,
-              symbols = c('circle','square'),
-             #  frame= ~modelType,
-               type="scatter3d", mode="markers", showlegend = FALSE) %>%
-    layout(scene = list(xaxis=axx,yaxis=axy,zaxis=axz,aspectmode='cube'),
-         title = "Posterior prediction for Flemish-accented Swedish\nDifferences between native model and non-native model \n(NonNative-Native)") # This line specifies the axis range
-
-
-p.3d.diff.english = plot_ly(data = diff.results.english %>%
-                      mutate(min = min(TS_over_native), max = max(TS_over_native), mean = mean(TS_over_native)) %>%
-                      mutate(NonNative_over_Native = TS_over_native),
-               x= ~rvowel,
-               y= ~rclosure,
-               z= ~rburst,
-              # color= ~NonNative_over_Native,
-              marker = list(color = ~NonNative_over_Native, colorscale = 'RdBu', cmin = -1, cmax = 1, showscale = T),
-              # colors = 'RdBu',
-              symbol= ~sound,
-              symbols = c('circle','square'),
-             #  frame= ~modelType,
-               type="scatter3d", mode="markers", showlegend = FALSE) %>%
-    layout(scene = list(xaxis=axx,yaxis=axy,zaxis=axz,aspectmode='cube'),
-         title = "Posterior prediction for Mandarin-accented English\nDifferences between native model and non-native model \n(NonNative-Native)") # This line specifies the axis range
-
-p.3d.diff.swedish
-p.3d.diff.english
+d.test.IO %<>%
+   mutate(Consistence = case_when(
+    Group == "control" & ModelType == "Native" ~"yes",
+    Group == "control" & ModelType == "Non-native" ~"no",
+    Group == "/d/-exposure" & ModelType == "Non-native" ~"yes",
+    Group == "/d/-exposure" & ModelType == "Native" ~"no",
+  ))
 ```
 
 
@@ -1410,6 +879,122 @@ Second, at the item level, we hope to predict human responses from the posterior
   5. the link function between the IO prediction and human response is correct.
 
 
+#### Linking functions: ID task, rating task and Ideal Observer predictions
+
+To understand human responses, below we plot the item-level correlation between human responses from the ID task and the rating task available for the English dataset. For the rating task, the two original ratings (goodness as /d/ and goodness as /t/) were transformed into goodness-as-/d/ and averaged to yield a single metric.
+
+```{r load categorization experiments, results='hide'}
+
+# load English ID data
+d.english.ID <- read.csv("../data/English/d.identification.xin.csv")
+
+# recode identification response as proportion of /d/ response
+d.english.ID <- d.english.ID %>%
+  rename(
+    Participant = participant,
+    ID.Response = Spelling1.ACC,
+    ID.RT = Spelling1.RT,
+    Item.Word = Word,
+    Block.Order = Block,
+  ) %>%
+ mutate(
+   ID.Response.d = case_when(
+    (Sound == "d" & ID.Response == 1) | (Sound == "t" & ID.Response == 0) ~ 1,
+    (Sound == "t" & ID.Response == 1) | (Sound == "d" & ID.Response == 0) ~ 0),
+   NativeLanguage = "English",
+   Participant = paste0("E", Participant),
+   Group = ifelse(Group == "experimental", "/d/-exposure", "control"),
+   Block.Type = "test",
+   Sound = factor(Sound, levels = c("d", "t")),
+   Sound.Position = "final",
+   Subject = NULL,
+   Session = NULL,
+) 
+                    
+# Merge English ID data with IdealObserver results
+d.test.IO.english.ID <- left_join(d.english.ID, d.IO %>%
+                            filter(NativeLanguage == "English") %>%
+                              ungroup(), by = c("NativeLanguage", "Item.Word", "Sound"))
+
+
+```
+
+
+```{r item-level-consistence-between-ID-rating-tasks, fig.height = 6, fig.width = 12}
+##-------------------------------------------------------------------------------------
+# check whether responses are consistent between rating and identification tasks -- yes
+##-------------------------------------------------------------------------------------
+d.english.test.2tasks <- plyr::rbind.fill(d.test %>%
+                                            filter(NativeLanguage == "English") %>%
+                                            droplevels() %>%
+                                            mutate(Task = "rating"), 
+                                          d.english.ID %>% mutate(Task = "ID"))
+
+d.english.test.byItem <- d.english.test.2tasks %>%
+  group_by(Task, Group, Sound, Item.Word) %>%
+  summarise(zRating.d = mean(Rating.Response.d.zscored),
+            Proportion.d = mean(ID.Response.d)) %>%
+  ungroup() %>%
+  select(-Task) %>%
+  gather(resp, value, `zRating.d`,`Proportion.d`) %>%
+  filter(!is.na(value)) %>%
+  spread(resp,value) %>%
+  mutate(Logodds.d = qlogis(Proportion.d)) %>%
+  mutate_if(is.character, as.factor)
+
+d.english.test.byItem <- left_join(d.english.test.byItem, 
+                                   d.IO %>%
+                                     filter(NativeLanguage == "English") %>%
+                                     select(Item.Word, Item.MinimalPair, Sound) %>%
+                              distinct(), by = c("Item.Word", "Sound"))
+                                   
+
+# correlation between ratings and percent /d/ responses
+ggscatter(d.english.test.byItem, x = "Proportion.d", y = "zRating.d", 
+         # color = "Sound", 
+          add = "reg.line", conf.int = TRUE, 
+          palette = "jco",  cor.method = "pearson",
+          xlab = "Proportion of /d/ from ID task", ylab = "/d/ goodness from rating task") + 
+  stat_cor(label.x.npc = "middle", label.y.npc = "top") + 
+ # stat_cor(aes(color = sound), label.x.npc = "middle", label.y.npc = "top") +
+  facet_grid(~ Group) + 
+  ggtitle("Item-wise correlation between ID and rating task (English data)") +
+  geom_smooth(color = "red", method = "lm") + 
+  geom_smooth(color = "black", method = "gam", formula = y~s(x))
+ 
+
+```
+
+We considered a linear (smoother = "lm") and a non-linear (smoother = "gam") relationship between human responses from the two tasks (Proportiona of /d/ in ID task and zscored-Goodness-as-/d/ in rating task). It appears that there was a perfectly linear relationship between the two tasks at the item level. We thus assume that we can use the same regression model to obtain PredictedAccuracy from the posterior of /d/ in Ideal Observers.
+
+```{r item-level-regression-between-ID-rating-tasks}
+
+d.english.test.byItem <-  within(d.english.test.byItem, {
+  contrasts(Group) <- contr.sum
+  contrasts(Sound) <- contr.sum
+  })
+
+ratingID.lmer <- lmer(zRating.d ~ Proportion.d + (1 + Group|Item.MinimalPair), 
+                     data = d.english.test.byItem)
+print(ratingID.lmer)
+
+```
+
+```{r get-predicted-ratings-from-IO}
+
+# get predicted ratings of /d/ from Ideal observers
+d.test.IO.rating <- d.test.IO %>%
+  filter(CategoryModel == "d") %>%
+  select(NativeLanguage, Dataset, Group, Participant, ModelType, Consistence, Sound, Item.MinimalPair, Item.Word,  rvowel, rclosure, rburst, Posterior, Rating.Response.d.zscored) %>%
+  mutate(zRating.d = Rating.Response.d.zscored,
+         Proportion.d = Posterior)
+
+d.test.IO.rating %<>%
+  mutate(PredictedRating.d = predict(ratingID.lmer, newdata= d.test.IO.rating, allow.new.levels = TRUE)) %>%
+  select(-zRating.d, -Proportion.d) %>%
+  mutate_if(is.character, as.factor)
+```
+
 #### Group-level performance
 
 Is there consistence between human experimental conditions and ideal observers?
@@ -1420,35 +1005,33 @@ We compare the transformed /d/ goodness ratings from rating tasks and the poster
 
 ```{r fig-ratings-IO-group-level, fig.height = 9, fig.width = 12}
 
-p.IO = ggplot(data = data.both %>%
-                filter(model == Sound),
-            aes(x=Sound, y = accuracy, color = training_model, fill = training_model)) + 
-  geom_bar(aes(y=accuracy),stat = "summary", fun.y = mean, position=position_dodge(0.7), width = 0.7) +
-# coord_cartesian(ylim=c(0.4, 1)) +
-  geom_errorbar(aes(y=accuracy), stat = "summary", fun.data = "mean_cl_boot",size = 0.5,position=position_dodge(0.7), width=0.1) +
+p.model <- ggplot(data = d.test.IO.rating %>%
+                    mutate(ModelType = factor(ModelType, levels = c("Non-native", "Native"))),
+            aes(x=Sound, y = PredictedRating.d, color = ModelType, fill = ModelType)) + 
+  geom_bar(aes(y=PredictedRating.d),stat = "summary", fun.y = mean, position=position_dodge(0.7), width = 0.7) +
+  geom_errorbar(aes(y=PredictedRating.d), stat = "summary", fun.data = "mean_cl_boot",size = 0.5,position=position_dodge(0.7), width=0.1) +
+   coord_cartesian(ylim=c(-1, 1)) +
   scale_color_manual(values = c("black", "black")) +
   scale_fill_manual(values = c("black", "white")) +
-  facet_grid(~dataset) + 
+  facet_grid(~Dataset) + 
   # facet_grid(cues~., labeller = "label_both") + 
-  ggtitle(paste("Model predictions\nPredicted accuracy for accented speech")) + 
-  #guides(fill = FALSE) + 
-  geom_hline(yintercept = 1/2) 
+  ggtitle(paste("Model predictions\nPredicted ratings as /d/ for accented speech")) 
 
-
-p.human = ggplot(data = d.test.all.rating %>%
-                   mutate(Group = factor(Group, levels = c("control", "/d/-exposure"))) %>%
-                         group_by(dataset, Group, Sound, Participant) %>%
-                         summarise(meanRating_d = mean(zrating.simplified_d)),
-aes(x= Sound, y = meanRating_d, color = Group, fill = Group)) + 
-  geom_bar(aes(y=meanRating_d),stat = "summary", fun.y = mean, position=position_dodge(0.7), width = 0.7) +
-  geom_errorbar(aes(y=meanRating_d), stat = "summary", fun.data = "mean_cl_boot",size = 0.5,position=position_dodge(0.7), width=0.1) +
-  scale_color_manual(breaks = c("control", "/d/-exposure"), labels = c("control", "/d/-exposure"), values = c("black", "black")) +
-  scale_fill_manual(breaks = c("control", "/d/-exposure"), labels = c("control", "/d/-exposure"), values = c("black", "white")) +
-  facet_grid(~dataset) + 
+p.human = ggplot(data = d.test.IO.rating %>%
+                   distinct(NativeLanguage, Dataset, Group, Participant, Sound, Item.MinimalPair, Item.Word, .keep_all = T) %>%
+                   group_by(Dataset, NativeLanguage, Group, Sound, Participant) %>%
+                   summarise(Rating.Response.d.zscored = mean(Rating.Response.d.zscored)),
+aes(x= Sound, y = Rating.Response.d.zscored, color = Group, fill = Group)) + 
+  geom_bar(aes(y=Rating.Response.d.zscored),stat = "summary", fun.y = mean, position=position_dodge(0.7), width = 0.7) +
+  geom_errorbar(aes(y=Rating.Response.d.zscored), stat = "summary", fun.data = "mean_cl_boot",size = 0.5,position=position_dodge(0.7), width=0.1) +
+   coord_cartesian(ylim=c(-1, 1)) +
+  scale_color_manual(values = c("black", "black")) +
+  scale_fill_manual(values = c("black", "white")) +
+  facet_grid(~Dataset) + 
   # facet_grid(cues~., labeller = "label_both") + 
   ggtitle("Human responses\nMean /d/ goodness from rating task (transformed)")
   
-grid.arrange(p.IO, p.human, nrow = 1)
+grid.arrange(p.model, p.human, nrow = 1)
 ```
 
 
@@ -1457,102 +1040,46 @@ grid.arrange(p.IO, p.human, nrow = 1)
 1. Are there correlations between human ratings and ideal observers predictions? 
 2. Are the correlations stronger for the consistent pairing (consistence coded as "yes": /d/-exposure and non-native model; control and native model)? 
 
-```{r fig-ratings-IO, fig.height = 9, fig.width = 12}
-
-# data.both contains the item-level model predictions
-# d.test.all.rating contains the item-level human ratings from each participant
-# d.test.all are the integrated version of the two above
-
-d.test.all <- d.test.all %>%
-  mutate(modelType = ifelse(modelType == "TS", "non-native", "native")) %>%
-  mutate(consistence = case_when(
-    Group == "control" & modelType == "native" ~"yes",
-    Group == "control" & modelType == "non-native" ~"no",
-    Group == "/d/-exposure" & modelType == "non-native" ~"yes",
-    Group == "/d/-exposure" & modelType == "native" ~"no",
-  ))
-
-# xtabs(~consistence + Group + modelType, d.test.all)
-
+```{r fig-ratings-IO-item-level, fig.height = 9, fig.width = 12}
 
 ## -------------------------------------------------------------------------------
 # Visualizing the correlation between ratings and posteriors from ideal observers
 ## -------------------------------------------------------------------------------
 
-# 1) correlate posterior of intended category with raw ratings by rated category (rating_for) -- this plot is difficult to read
-p_corr1 = ggscatter(d.test.all %>%
-                      filter(model == Sound) %>% # look at the posterior of the intended category
-                      group_by(Rating.for, dataset, native_language, Word, Sound, Group, modelType) %>%
-                      summarise(meanPosterior = mean(posterior),
-                                meanRating = mean(Rating.Answer)), x = "meanPosterior", y = "meanRating", 
-                      color = "Sound", 
-                    add = "reg.line", conf.int = TRUE, 
-                    palette = "jco",  cor.method = "pearson",
-                    xlab = "posterior of intended category from IO", ylab = "raw rating") + 
-  stat_cor(aes(color = Sound)) + 
-  facet_grid(Rating.for + modelType~native_language + Group) 
+# correlate Predicted Rating of /d/ with transformed human ratings (/d/ goodness) 
 
-
-# 2) correlate posterior of /d/ with transformed ratings (/d/ goodness) 
-
-p.corr2 <- ggscatter(d.test.all %>%
-            filter(model == "d") %>% 
-            group_by(dataset, native_language, Word, Sound, Group, modelType, consistence) %>%
-            summarise(meanPosterior_d = mean(posterior),
-                                meanRating_d = mean(zrating.simplified_d)), 
-          x = "meanPosterior_d", y = "meanRating_d", 
-          color = "Sound", 
+ggscatter(d.test.IO.rating %>%
+                       group_by(Dataset, NativeLanguage, Group, ModelType, Consistence, Item.Word, Sound) %>%
+                       summarise(PredictedRating.d = mean(PredictedRating.d),
+                                Rating.Response.d.zscored = mean(Rating.Response.d.zscored)), 
+          x = "PredictedRating.d", y = "Rating.Response.d.zscored", 
+        #  color = "Sound", 
           add = "reg.line", conf.int = TRUE, 
           palette = "jco",  cor.method = "pearson",
-          xlab = "posterior of /d/ from IO", ylab = "mean rating \n/d/ goodness") + 
-  stat_cor(aes(color = Sound), label.x.npc = "middle", label.y.npc = "top") +
+          xlab = "Predicted rating of /d/ from IO", ylab = "mean rating \n/d/ goodness") + 
+ # stat_cor(aes(color = Sound), label.x.npc = "middle", label.y.npc = "top") +
   stat_cor() + 
   geom_smooth(color = "black", method = "lm") + 
-  facet_grid(consistence~native_language, labeller = "label_both") +
-  ggtitle("Correlations between model predictions (posterior) and human ratings\nas a function of consistence") 
-
-p.corr2
-
-
-# 3) correlate logodds of posterior of /d/ with transformed ratings (/d/ goodness) 
-
-p.corr3 <- ggscatter(d.test.all %>%
-          #  filter(!Word %in% c("Swede", "charred", "plod")) %>%
-            filter(model == "d") %>% 
-            group_by(dataset, native_language, Word, Sound, Group, modelType, consistence) %>%
-            mutate(posterior_logodds = ifelse(posterior != 1, qlogis(posterior), 34.6573590)) %>%
-            summarise(meanLogOddsPosterior_d = mean(posterior_logodds),
-                                meanRating_d = mean(zrating.simplified_d)), 
-          x = "meanLogOddsPosterior_d", y = "meanRating_d", 
-          color = "Sound", 
-          add = "reg.line", conf.int = TRUE, 
-          palette = "jco",  cor.method = "pearson",
-          xlab = "log odds of posterior of /d/ from IO", ylab = "mean rating \n/d/ goodness") + 
-  stat_cor(aes(color = Sound), label.x.npc = "middle", label.y.npc = "top") +
-  stat_cor() + 
-  geom_smooth(color = "black", method = "lm") + 
-  facet_grid(consistence~native_language, labeller = "label_both") +
-  ggtitle("Correlations between model predictions (log odds) and human ratings\nas a function of consistence")
-
-p.corr3
+  facet_grid(Consistence~NativeLanguage, labeller = "label_both") +
+  ggtitle("Correlations between model predicted ratings and human ratings\nas a function of consistence") 
 
 
 # for English data, plot the correlations separately for rating_d and rating_t task
-p.corr4 <- ggscatter(d.test.all %>%
-            filter(native_language == "English") %>% 
-            filter(model == "d") %>% 
-            group_by(Rating.for, Word, Sound, Group, modelType, consistence) %>%
-            summarise(meanPosterior_d = mean(posterior),
-                      meanRating_d = mean(zrating.simplified_d)),
-          x = "meanPosterior_d", y = "meanRating_d", 
-          color = "Sound", 
+p.corr2 <- ggscatter(d.test.IO %>%
+            filter(NativeLanguage == "English") %>% 
+            filter(CategoryModel == "d") %>% 
+            group_by(Rating.for, Item.Word, Sound, Group, ModelType, Consistence) %>%
+            summarise(meanPosterior.d = mean(Posterior),
+                      meanRating.d = mean(Rating.Response.d.zscored)),
+          x = "meanPosterior.d", y = "meanRating.d", 
+        #  color = "Sound", 
           add = "reg.line", conf.int = TRUE, 
           palette = "jco",  cor.method = "pearson",
           xlab = "posterior of /d/ from IO", ylab = "mean rating \n/d/ goodness") + 
-  stat_cor(aes(color = Sound), label.x.npc = "middle", label.y.npc = "top") + 
+ # stat_cor(aes(color = Sound), label.x.npc = "middle", label.y.npc = "top") + 
   stat_cor() +
   geom_smooth(color = "black", method = "lm") + 
-  facet_grid(consistence~Rating.for, labeller= labeller(Rating.for = label_both)) + 
+  facet_grid(Consistence~Rating.for, labeller= labeller(Rating.for = label_both)) + 
   ggtitle("Correlations separately for rating_d and rating_t tasks- English data")
 
 ```
@@ -1560,7 +1087,6 @@ p.corr4 <- ggscatter(d.test.all %>%
 
 Run mixed-effects model to see if human responses (rated /d/ goodness) are predicted by the model predictions (some function of posterior of /d/) and we expect to see an **interaction between consistence (/d/-exposure matching non-native model; control matching native model) and model predicted /d/ goodness**.
 
-  + *Note*: for now we do not yet have a linking function from the posterior of /d/ to the human /d/ goodness ratings. We check the posterior of /d/ and its logodds to see if they are related to human /d/ goodness ratings.
 
 ```{r lmer-IO-group-level}
 
@@ -1568,44 +1094,259 @@ Run mixed-effects model to see if human responses (rated /d/ goodness) are predi
 
 # variable coding for mixed effects models
 
-d.test.all <- d.test.all %>%
-  mutate_if(is.character, as.factor)
-  
-
-d.test.all <-  within(d.test.all, {
-  native_language = factor(native_language, levels = c("Swedish", "English"))
-  modelType <- factor(modelType, levels = c("non-native", "native"))
-  consistence <- factor(consistence, levels = c("yes", "no"))
-  contrasts(native_language) <- contr.sum
+d.test.IO.rating <-  within(d.test.IO.rating, {
+  NativeLanguage = factor(NativeLanguage, levels = c("Swedish", "English"))
+  ModelType <- factor(ModelType, levels = c("Non-native", "Native"))
+  Consistence <- factor(Consistence, levels = c("yes", "no"))
+  contrasts(NativeLanguage) <- contr.sum
   contrasts(Group) <- contr.sum
   contrasts(Sound) <- contr.sum
-  contrasts(modelType) <- contr.sum
-  contrasts(consistence) <- contr.sum
+  contrasts(ModelType) <- contr.sum
+  contrasts(Consistence) <- contr.sum
   })
 
-contrasts(d.test.all$native_language)
-contrasts(d.test.all$Group)
-contrasts(d.test.all$Sound)
-contrasts(d.test.all$modelType)
-contrasts(d.test.all$consistence)
+prediction.lmer <- lmer(Rating.Response.d.zscored ~ NativeLanguage*PredictedRating.d.c*Consistence*Sound + (1|Item.MinimalPair) + (1|Participant),
+                    data = d.test.IO.rating %>%
+                      mutate(PredictedRating.d.c = scale(PredictedRating.d, center = T, scale = F)))
 
-prediction.lmer <- lmer(zrating.simplified_d ~ native_language*posterior.c*consistence*Sound + (1|MinimalPairID) + (1|Participant),
-                    data = d.test.all %>%
-                      filter(model == "d")%>%
-                      mutate(posterior.c = scale(posterior, center = T, scale = F)))
 print(summary(prediction.lmer))
 
-prediction.lmer2 <- lmer(zrating.simplified_d ~ native_language*posterior.c*consistence + (1|MinimalPairID) + (1 + Sound|Participant),
-                    data = d.test.all %>%
-                      filter(model == "d") %>%
-                      mutate(posterior.c = scale(posterior, center = T, scale = F)))
+prediction.lmer2 <- lmer(Rating.Response.d.zscored ~ NativeLanguage*PredictedRating.d.c*Consistence + (1|Item.MinimalPair) + (1 + Sound|Participant),
+                    data = d.test.IO.rating %>%
+                      mutate(PredictedRating.d.c = scale(PredictedRating.d, center = T, scale = F)))
 print(summary(prediction.lmer2))
 
 
-prediction.lmer2.simple <- lmer(zrating.simplified_d ~ native_language/posterior.c*consistence + (1|MinimalPairID) + (1 + Sound|Participant),
-                    data = d.test.all %>%
-                      filter(model == "d") %>%
-                      mutate(posterior.c = scale(posterior, center = T, scale = F)))
+prediction.lmer2.simple <- lmer(Rating.Response.d.zscored ~ NativeLanguage/PredictedRating.d.c*Consistence + (1|Item.MinimalPair) + (1 + Sound|Participant),
+                    data = d.test.IO.rating %>%
+                      mutate(PredictedRating.d.c = scale(PredictedRating.d, center = T, scale = F)))
 print(summary(prediction.lmer2.simple))
+```
+
+
+
+### Data preparation ###
+1) *Extraction of acoustic cues*. We obtained the measurements of three durational cues that are cruciually for coda voicing: the preceding vowel, closure interval and burst release. 
+2) *Cue measurement Correction*. The purpose of correation (or residualization) is to control for phonological context effects, without losing the difference between accents within each language. This procedure was conducted because a) Exposure words contain only /d/ words, but test words have /d/-/t/ minimal pairs; b) The presence of phonological contexts (e.g., l, r, nasals) varies between exposure and test words; c) Exposure words (multisyllabic) are longer than test words (monosyllabic). For these reasons, we do the following for residualization. 
+  + STEP 1: y ~ 1 + (phon_ctxt_vl + phon_ctxt_r + phon_ctxt_n), data = test /d/ and /t/ words only -- here we get the predicted effects of phonological contexts, and apply that to exposure words
+  + STEP 2: y ~ 1 + syllable, data = exposure /d/ and test /d/ words only -- here we get the predicted effects of syllable length, and apply that to the test /t/ words
+  + STEP 3: then take the between-talker difference (Native-Non-native) for t category, and add it to the cue values of all tokens of the non-native talker -- here the aim is to make sure /t/-category is entirely aligned between the native and non-native speakers.
+
+Visualize test tokens in 3d space before and after cue correction (residualization) procedure.
+
+```{r visualize-cue-before-and-after-residualization}
+
+d.resid <- bind_rows(
+  d.IO %>%
+    select(-rvowel, -rclosure, -rburst) %>%
+    mutate(ResidualizationType = "Prior"),
+  d.IO %>%
+    select(-vowel, -closure, -burst) %>%
+    mutate(vowel = rvowel,
+         closure = rclosure,
+         burst = rburst) %>%
+  select(-rvowel, -rclosure, -rburst) %>%
+  mutate(ResidualizationType = "Post")
+) %>%
+  select(-CategoryModel, -Lhood, -Posterior, -Posterior.Choice) %>%
+  mutate(ResidualizationType = factor(ResidualizationType, levels = c("Prior", "Post"))) %>%
+  distinct() %>%
+  mutate(Metric = factor(paste0(NativeLanguage, ResidualizationType), 
+                         levels = c("EnglishPrior", "EnglishPost", "SwedishPrior", "SwedishPost"))
+        ) 
+
+
+plot_ly(data = d.resid,
+               x= ~vowel,
+               y= ~closure,
+               z= ~burst,
+               color= ~Sound,
+               symbol= ~Sound,
+               symbols = c('circle','square'),
+              frame= ~Metric,
+               type="scatter3d", mode="markers")
+
+
+
+
+```
+
+
+
+```{r extract-parameters-ideal-observers-Swedish}
+
+model.parameter.swedish <- model.parameter.swedish
+model.parameter.swedish %<>%
+  mutate(modelType = ifelse(modelType == "TS", "Non-native", "Native")) %>%
+  mutate(modelType.part = paste(modelType, part, sep = "_"))
+
+model.parameter.swedish.train <- model.parameter.swedish$models_trained
+
+
+res1 <- model.parameter.swedish.train %>%
+  bind_rows(.id = "modelType.part")  %>% 
+  mutate(modelType.part = model.parameter.swedish$modelType.part[as.numeric(modelType.part)])
+
+res2.mu <- purrr::map(res1$model, magrittr::extract, c('mu'))
+res2.Sigma <- purrr::map(res1$model, magrittr::extract, c('Sigma'))
+
+
+res2.mu.df <- res2.mu %>%
+  map_dfr(., magrittr::extract, c('mu'))
+res2.mu.df = as.data.frame(matrix(t(res2.mu.df), ncol=length(selected_cues), 
+          byrow=TRUE), stringsAsFactors=FALSE)
+colnames(res2.mu.df) <- c('C1','C2','C3')[1:length(selected_cues)]
+
+res2.Sigma.df <- res2.Sigma %>%
+  map_dfr(., magrittr::extract, c('Sigma'))
+res2.Sigma.df = as.data.frame(matrix(t(res2.Sigma.df), ncol=length(selected_cues)^2, 
+          byrow=TRUE), stringsAsFactors=FALSE)
+colnames(res2.Sigma.df) <-  c('C1_C1','C1_C2','C1_C3','C2_C1','C2_C2','C2_C3', 'C3_C1','C3_C2', 'C3_C3') #if length(selected_cues) == 3
+
+res2 <- cbind(res2.mu.df,res2.Sigma.df)
+res <- cbind(as.data.frame(res1), as.data.frame(res2))
+
+
+res.parameter <- data.frame(res) %>%
+  separate(modelType.part, into = c('modelType', 'part'), "_") %>%
+ # filter(part == "test") %>%
+  dplyr::select(modelType, part, sound, C1:C3_C3) %>%
+  gather(parameter, value, C1:C3_C3) %>%
+  dplyr::mutate(parameter_category = paste(parameter, sound, sep = "_")) %>%
+  dplyr::select(-c(parameter, sound)) %>%
+  group_by(modelType, part) %>%
+  spread(parameter_category, value)
+
+model.parameter.swedish <- res.parameter %>%
+  rename(ModelType = modelType,
+         Part = part) %>%
+  gather(key, value, -Part, -ModelType) %>%
+  mutate(Sound = ifelse(grepl("d", key), "d", "t")) %>%
+  mutate(key = gsub("_d", "", key)) %>%
+  mutate(key = gsub("_t", "", key)) %>%
+  spread(key, value) %>%
+  mutate(NativeLanguage = "Swedish")
+
+
+```
+ 
+
+```{r combine-ideal-observers-model-parameters}
+
+d.model.parameter <- model.parameter.english %>%
+  filter(cues == "raw",
+         combo == "prototypical_M5",
+         modelType != "TS_no_feature") %>%
+  mutate(modelType = ifelse(modelType == "TS", "Non-native", "Native")) %>%
+  rename(ModelType = modelType,
+         Part = part,
+         Sound = sound) %>%
+  select(-combo, -cues) %>%
+  mutate(NativeLanguage = "English") %>%
+  full_join(model.parameter.swedish) %>%
+  filter(Part == "test")
+  
+
+```
+ 
+Plot Ideal Observer modeling results in 3d space.
+
+```{r plot-ideal-observers-results-3d}
+
+# axis setting 
+axx <- list(
+  nticks = 4,
+  range = c(-0.2,0.2),
+  gridwidth = 2
+)
+
+axy <- list(
+  nticks = 4,
+  range = c(-0.2,0.2),
+  gridwidth = 2
+)
+
+axz <- list(
+  nticks = 4,
+  range =  c(-0.2,0.2),
+  gridwidth = 2
+)
+
+
+# create ellipses of the training data
+
+d.model.parameter.ellipse = d.model.parameter %>%
+  group_by(NativeLanguage, ModelType, Part, Sound) %>%
+  do(
+    {
+    #  cat_cov = cov(cbind(.$rvowel, .$rclosure, .$rburst))
+      cat_cov = matrix(c(.$C1_C1, .$C1_C2, .$C1_C3, .$C2_C1, .$C2_C2, .$C2_C3, .$C3_C1, .$C3_C2, .$C3_C3), 3, 3)
+   #   cat_mean = c(mean(.$rvowel), mean(.$rclosure), mean(.$rburst))
+      cat_mean = c(.$C1, .$C2, .$C3)
+      ellipse = rgl::ellipse3d(cat_cov, subdivide = 5)
+      x = ellipse$vb[1,] + cat_mean[1]
+      y = ellipse$vb[2,] + cat_mean[2]
+      z = ellipse$vb[3,] + cat_mean[3]
+      data.frame(x = x, y = y, z = z)
+    }
+  ) %>%
+  ungroup() %>%
+  mutate(Sound = factor(Sound, levels = c("d", "t")))
+
+
+
+plot_ly(data = d.IO %>%
+          filter(CategoryModel == Sound) %>%
+          mutate_if(is.factor, as.character) %>%
+          mutate(PredictedAccuracy = Posterior,
+                 NativeLanguage.ModelType = paste(NativeLanguage, ModelType, sep = ".")),
+               x= ~rvowel,
+               y= ~rclosure,
+               z= ~rburst,
+               color= ~PredictedAccuracy,
+               symbol= ~Sound,
+               symbols = c('circle','square'),
+              frame= ~NativeLanguage.ModelType,
+               type="scatter3d", mode="markers") %>%
+  add_trace(type = 'scatter3d', # plot 3d ellipsoid for exposure /d/
+            data = d.model.parameter.ellipse %>%
+              mutate(
+                NativeLanguage.ModelType = paste(NativeLanguage, ModelType, sep = ".")
+                ),
+            inherit = F,
+            size = I(1),
+            color = ~Sound,
+            frame = ~NativeLanguage.ModelType,
+            x = ~x, y = ~y, z = ~z,
+            opacity = .2, showlegend = FALSE, mode="markers") %>%
+  layout(scene = list(xaxis=axx,yaxis=axy,zaxis=axz,aspectmode='cube')) # This line specifies the axis range
+``` 
+
+
+Plot the differences between the native and non-native models.
+<!--colorscale is weird when plotting both NativeLanguage together and use frame to separate.!-->
+
+```{r plot-differences-between-ideal-observers-3d}
+
+d.IO.diff <- d.IO %>%
+  ungroup() %>%
+  filter(CategoryModel == Sound) %>%
+  select(NativeLanguage, ModelType, Item.Word, Sound, Posterior, rvowel, rclosure, rburst) %>%
+  spread(ModelType, Posterior) %>%
+  mutate(NonNative_over_Native = `Non-native` - Native)
+
+
+plot_ly(data = d.IO.diff,
+               x= ~rvowel,
+               y= ~rclosure,
+               z= ~rburst,
+              # color= ~NonNative_over_Native,
+               marker = list(color = ~NonNative_over_Native, colorscale = 'RdBu', cmin = -1, cmax = 1, showscale = T),
+              # colors = 'RdBu',
+              symbol= ~Sound,
+              symbols = c('circle','square'),
+              frame= ~NativeLanguage,
+               type="scatter3d", mode="markers", showlegend = FALSE) %>%
+    layout(scene = list(xaxis=axx,yaxis=axy,zaxis=axz,aspectmode='cube')) 
 
 ```
