@@ -1,8 +1,14 @@
----
-output:
-  pdf_document: default
-  html_document: default
----
+# Notes on cloning this rep
+
+Before knitting the document, you might have to download and install git lfs from https://git-lfs.github.com/. 
+
+Then run:
+
+git lfs install
+
+in the directory with the .git repository. You can do so from the R terminal.
+
+
 # PBR_adaptation_accented_swedish
 Data, R scripts, drafts for prep of manuscript on modelling perceptual adaptation to accented speech
 
