@@ -19,18 +19,18 @@ header-includes:
   - \subsectionfont{\color{red}}
   - \subsubsectionfont{\color{red}}
 output:
-  bookdown::pdf_book:
-    keep_tex: false
-    toc: true
-    toc_depth: 3
-    number_section: true
-    latex_engine: xelatex
   bookdown::gitbook:
     lib_dir: assets
     split_by: section
     config:
       toolbar:
         position: static
+  bookdown::pdf_book:
+    keep_tex: false
+    toc: true
+    toc_depth: 3
+    number_section: true
+    latex_engine: xelatex
   bookdown::html_book:
     css: toc.css
 documentclass: book
@@ -372,7 +372,7 @@ Unfortunately, the trial-level exposure data from Xie et al. (2017) was lost in 
 
 ### Swedish ###
 Figure \@ref(fig:LD-accuracy) summarizes participants' accuracy and reaction time for during exposure. 
-Lexical decision accuracy was high across both the /d/-exposure (`r get_LD_performance(d, "Swedish", "/d/-exposure")`) and control group (`r get_LD_performance(d, "Swedish", "control")`). Accuracy was also high for critical words with syllable-final /d/ in the /d/-exposure group (`r get_LD_performance(d, "Swedish", critical = T)`). Notably, one participant in the /d/-exposure group was correct on less than 90\% of the critical words, but even that participant categorized most critical words correctly (80\%).
+Lexical decision accuracy was high across both the /d/-exposure (`r get_LD_performance(d, "Swedish", "/d/-exposure")`) and control group (`r get_LD_performance(d, "Swedish", "control")`). Accuracy was also high for critical words with syllable-final /d/ in the /d/-exposure group (`r get_LD_performance(d, "Swedish", critical = T)`). 
 
 Reaction times were slower in the /d/-exposure group (`r get_LD_performance(d, "Swedish", what = "RT")`). The very high average reaction time for participant 101 in the /d/-exposure group was caused by a single outlier trial, on which the participant took 35 seconds to respond. The difference between exposure conditions does, however, persist if reaction times above 3.5 SDs away from a participant's mean RT are excluded (`r get_LD_performance(d  %>% group_by(Participant) %>% filter(abs(scale(LD.RT)) < 3.5) %>% ungroup(), "Swedish", what = "RT")`).
 
@@ -672,7 +672,7 @@ Finally, we can ask how often the bootstrapped English data returned $t$-values 
 
 
 
-## Recording of materials##
+## Recording of materials ##
 
 ### English ###
 Recordings were made of a male native-Mandarin speaker who was a late second language learner of English and had resided in the United States for 18 months at the time of recording. Recordings were made in a soundproof room using a microphone onto a digital recorder, digitally sampled at 44.1 kHz and normalized for root mean square amplitude to 70 dB sound pressure level.
@@ -699,6 +699,14 @@ It is therefore possible that the decision to use stimuli from the assisted reco
 ### Are potential differences in recording quality likely to explain the results? ###
 
 The two recording equipment and environments were similar across the two experiments. Care was taken in both experiments to elicit recording free of noticable background noise. All three cues (vowel, closure, and burst duration) are durational and therefore unlikely to suffer from minor differences in recording quality. The materials for both experiments are available via OSF. 
+
+## Acoustic annotation ##
+
+### English ### 
+<!-- Xin: can you describe your annotation procedure and move things that are shared across the experiments to right under the Acoustic annotation header? -->
+
+### Swedish ###
+Tokens were annotated for their duration of vowel, closure, and burst. Annotations were completed in Praat (Boersma, 2001) using visual examination of spectrograms, and listening judgments. Cue boundaries were marked following conventions (Flege, Munro, & Skelton, 1992). Vowel duration was measured from the beginning of the first periodic portion of each waveform to the zero-crossing where the amplitude decreased abruptly and the waveform became sinusoidal. Burst was measured from stop release to the first zero crossing point where the amplitude became near zero. Closure was measured as the time between vowel offset and burst onset (for stops following nasals, closure onset was marked by an abrupt decline in amplitude of the nasal).
 
 ### Are cues not considered in the analyses likely to explain the results? ###
 
@@ -768,10 +776,6 @@ Compared to the English experiment, the Swedish experiment had about 50\% fewer 
 
 
 
-# Acoustic analysis #
-
-### Swedish ###
-Tokens were annotated for their duration of vowel, closure, and burst. Annotations were completed in Praat (Boersma, 2001) using visual examination of spectrograms, and listening judgments. Cue boundaries were marked following conventions (Flege, Munro, & Skelton, 1992). Vowel duration was measured from the beginning of the first periodic portion of each waveform to the zero-crossing where the amplitude decreased abruptly and the waveform became sinusoidal. Burst was measured from stop release to the first zero crossing point where the amplitude became near zero. Closure was measured as the time between vowel offset and burst onset (for stops following nasals, closure onset was marked by an abrupt decline in amplitude of the nasal).
 
 
 
