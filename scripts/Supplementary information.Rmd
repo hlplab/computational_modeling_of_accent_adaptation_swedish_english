@@ -440,7 +440,7 @@ d.test %>%
 
 The /d/- and /t/-goodness ratings could range from 1 to 7. The two types of ratings were highly inversely correlated (see Figure \@ref(fig:rating-to-rating-correlation)). To simplify data analysis, we thus converted  all goodness ratings into /d/-goodness ratings. For /t/-goodness ratings, this means that we subtracted them from 8 (i.e., if a token was given a /t/-goodness of 3, it is tranformed to have a /d/-goodness of 5). This decision does not affect the results: all results remain the same if the original ratings are analyzed while including `rating.for` (/d/- vs. /t/-goodness) and all its interactions as a predictor in the analysis. Following Xie et al. (2017), we then z-scored /d/-goodness ratings within participants, by subtracting the participant's mean and dividing by the participant's standard deviation. 
 
-### Results
+### Results {#sec:results}
 
 (ref:ratings-results) /d/-goodness ratings during test (z-scored) by native language and exposure group
 
@@ -527,18 +527,18 @@ Compared to the English experiment, the Swedish experiment had substantially few
 ### English ###
 48 monolingual English speakers participated in the experiment (24 /d/-exposure, 24 control). Each participant rated each word (one of the pair) both for goodness as /d/ and for goodness as /t/, resulting in 30 ratings per sound category (/d/ vs. /t/) per rating type (goodness as /d/ vs. goodness as /t/) and 120 ratings per participant.
 
-*Total observations:*  48 \* 30 \* 2 \* 2 = 5760 observations
+**Total observations:**  48 \* 30 \* 2 \* 2 = 5760 observations
 
 ### Swedish ###
 25 Swedish speakers recruited from the Department of Swedish \& Multilingualism at Stockholm University participated. Two of the participants were excluded from the analysis because post-experiment surveys found that they were not native speakers of Swedish. Participants were alternately assigned to the /d/-exposure or control group (11 /d/-exposure, 12 control). Each participant rated each word (one of the pair) either for goodness as /d/ or for goodness as /t/, resulting in 16 ratings per sound category (/d/ vs. /t/) per rating type (goodness as /d/ vs. goodness as /t/) and 64 ratings per participant.
 
-*Total observations:*  23 \* 15 \* 2 \* 2 = 1380.
+**Total observations:**  23 \* 15 \* 2 \* 2 = 1380.
 
 ### Why the difference?
 
 The decision to recruit a smaller number of participants was made because 1) the Swedish experiment was conceived as pilot experiment for a larger series of experiments still to be conducted, and 2) other previous studies had found significant effects with a similarly small number of participants (12 participants for each of two conditions in Eisner, Melinger, \& Weber, 2013).
 
-### Are differences in the number of participants and test items likely to explain the results?
+### Are differences in the number of participants and test items likely to explain the results? {#sec:bootstrap}
 
 ```{r bootstrap-downsampling, warning=F, fig.cap = "(ref:bootstrap-downsampling)", fig.height=4, out.width='70%'}
 set.seed(333)
@@ -672,7 +672,7 @@ d.bootstrap %<>%
 
 Since a benefit of /d/-exposure was found for the larger (English), but not the smaller (Swedish), data set one obvious question is whether the difference in results is due to statistical power: the null result for the Swedish data might simply reflect a Type II error.
 
-To address this possibility, we repeated the linear mixed-effects regression over the combined data from both experiments (reported in the result section above), while down-sampling with replacement both the English and Swedish data to 11 participants per group and 30 minimal pair items during test. This process was repeated `r n.bootstrap` times. 
+To address this possibility, we repeated the linear mixed-effects regression over the combined data from both experiments (reported in \@ref(sec:results)), while down-sampling with replacement both the English and Swedish data to 11 participants per group and 30 minimal pair items during test. This process was repeated `r n.bootstrap` times. 
 
 These bootstrap analyses yielded two important findings. First, the analyses suggest that the Swedish experiment was indeed underpowered: the two-way interaction between exposure group and sound present in the original English data does not reliably replicate once the English data is downsampled to (a little less than) thge size of the Swedish data. Specifically, the simple effect of the two-way interaction was significant in the predicted direction---i.e., a bigger difference between the /d/-goodness of /d/-final and /t/-final words in the /d/-exposure condition, compared to the control---in `r d.bootstrap$p.simple.English.significant.direction.expected`\% of all bootstrap samples. 
 
@@ -706,9 +706,9 @@ The two experiments differed, however, in the recording procedure. Whereas the E
 
 ### Are differences in recording procedure likely to explain the results? ###
 
-This is one of the specific possibilities that could drive the results of the IO models. In previous analyses, we have found that the recording procedure indeed had a strong effect on the pronunciations of the non-native speaker (Tan, Xie, \& Jaeger, 2019). Specifically, we found that the category means of /d/ and /t/ in either of the two recording conditions differed significantly from the native pronunciations of the native speaker whose recordings were used in the assisted condition. However, the recordings in the unassisted condition differed significantly more from the native-accented speech, both in terms of the number of cue dimensions along which the non-native speech differed from native speech and in terms of the degree of difference (for details, see Tan et al., 2019 and section XXX).
+This is one of the specific possibilities that could drive the results of the IO models. In previous analyses, we have found that the recording procedure indeed had a strong effect on the pronunciations of the non-native speaker (Tan, Xie, \& Jaeger, 2019). Specifically, we found that the category means of /d/ and /t/ in either of the two recording conditions differed significantly from the native pronunciations of the native speaker whose recordings were used in the assisted condition. However, the recordings in the unassisted condition differed significantly more from the native-accented speech, both in terms of the number of cue dimensions along which the non-native speech differed from native speech and in terms of the degree of difference (for details, see Tan et al., 2019).
 
-It is therefore possible that the decision to use stimuli from the assisted recording condition caused the null effect of /d/-exposure. Indeed, this is the prediction our IO approach would make. In section XXX, we report a comparison of the IO's predictions for the foreign-accented stimuli recorded in the unnassisted condition and those recorded in the assisted condition. This comparison predicts that a perception experiment with the recordings from the unassisted condition would be substantially more likely to elicit a benefit of /d/-exposure (see Section XXX). 
+It is therefore possible that the decision to use stimuli from the assisted recording condition caused the null effect of /d/-exposure. Indeed, this is the prediction our IO approach would make. In Section \@ref(sec:unassisted), we report a comparison of the IO's predictions for the foreign-accented stimuli recorded in the unnassisted condition and those recorded in the assisted condition. This comparison predicts that a perception experiment with the recordings from the unassisted condition would be substantially more likely to elicit a benefit of /d/-exposure. 
 
 ### Are potential differences in recording quality likely to explain the results? ###
 
@@ -734,7 +734,7 @@ The predictions of IOs matching the exposure condition (e.g, the native IO for t
 
 During exposure, participants performed a lexical decision task. Recordings were played over headphones at a comfortable volume. Participants were instructed to decide whether the word they heard was a real word or not. Order of presentation was randomized across participans.
 
-The full list of stimuli is available in section XXX for both Swedish and English. In both experiments participants in both groups heard a total of 180 words, including the same 60 filler words in the respective languages and 90 pseudowords that obeyed English or Swedish phonotactical rules. The remaining 30 words were the critical words, manipulated between exposure groups. 
+The full list of stimuli is available in Section \@ref(sec:stimuli) for both Swedish and English. In both experiments participants in both groups heard a total of 180 words, including the same 60 filler words in the respective languages and 90 pseudowords that obeyed English or Swedish phonotactical rules. The remaining 30 words were the critical words, manipulated between exposure groups. 
 
 ### English ###
 The /d/-exposure group heard 30 critical words ending with \/d\/, and without \/t\/-final minimal pair neighbors (e.g. \textit{overload}). The 30 replacement words for the control group (e.g., animal) were matched to the critical /d/-words in syllable length and mean lemma frequency (based on CELEX, Baayen, Piepenbrock, & Gulikers, 1995). 
@@ -786,7 +786,7 @@ The additional test blocks with /d/- or /t/-initial minimal pair words were incl
 
 ### Are these differences likely to explain the results?
 
-Compared to the English experiment, the Swedish experiment had about 50\% fewer items. The resulting reduction in power could explain the null effect for Swedish. This possibility was ruled out by bootstrap analyses reported in Section XXX. It is unclear how the other differences in the materials, or the inclusion of additional (later) test blocks would explain the Swedish data.
+Compared to the English experiment, the Swedish experiment had about 50\% fewer items. The resulting reduction in power could explain the null effect for Swedish. This possibility was ruled out by bootstrap analyses reported in Section \@ref(sec:bootstrap). It is unclear how the other differences in the materials, or the inclusion of additional (later) test blocks would explain the Swedish data.
 
 
 
@@ -1653,3 +1653,19 @@ prediction.lmer2.simple <- lmer(zrating.simplified_d ~ native_language/posterior
 print(summary(prediction.lmer2.simple))
 
 ```
+
+
+# Appendix: List of stimuli {sec:stimuli}
+<!-- Maryann: could you fill in as a table or bulleted list? -->
+
+## Exposure
+
+### English
+
+### Swedish
+
+## Test
+
+### English
+
+### Swedish
