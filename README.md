@@ -4,7 +4,7 @@ Before knitting the document, you might have to download and install git lfs fro
 
 Then run:
 
-git lfs install
+`git lfs install`
 
 in the directory with the .git repository. You can do so from the R terminal.
 
