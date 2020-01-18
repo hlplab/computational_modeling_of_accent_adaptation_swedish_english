@@ -352,17 +352,43 @@ d.test = d.swedish %>%
     .funs = factor
   )
 
-# Create factors for exposure data
-d.swedish %<>%
-  mutate_at(
-    c("Group", "Participant", 
-      "Block.Order", "Item.MinimalPair", "Item.WordID", 
-      "LD.Expected", "LD.Response",
-      "Rating.for"),
+d.exposure = 
+  d.swedish %>%
+  filter(Block.Type == "exposure") %>%
+  select(NativeLanguage, Group, Participant, Block.Type, Item.Type, LD.Correct, LD.RT) %>%
+  # Expand the English data so that we can have a combined tibble
+  full_join(d.english.exposure %>%
+              pivot_longer(
+                cols = filler:Accuracy,
+                names_to = "Item.Type",
+                values_to = "accuracy"
+              ) %>%
+              filter(Item.Type != "Accuracy") %>%
+              crossing(LD.Correct = c(0,1)) %>%
+              mutate(
+                NativeLanguage = "English",
+                Participant = paste0("E", Participant + 100),
+                Item.Type = ifelse(Item.Type == "non.word", "non-word", Item.Type),
+                Block.Type = "exposure",
+                LD.RT = NA,
+                Count = case_when(
+                  Item.Type == "non-word" ~ 90,
+                  Item.Type == "filler" ~ 60,
+                  Item.Type == "critical" ~ 30
+                ),
+                Count = case_when(
+                  LD.Correct == 1 ~ round(Count * accuracy, 0),
+                  LD.Correct == 0 ~ Count - round(Count * accuracy, 0)
+                ),
+                accuracy = NULL) %>%
+              group_by(NativeLanguage, Group, Participant, Block.Type, Item.Type, LD.Correct) %>%
+              tidyr::expand(Count = 1:Count) %>%
+              mutate(Count = NULL),
+            by = c("NativeLanguage", "Group", "Participant", "Block.Type", "Item.Type", "LD.Correct")) %>%
+    mutate_at(
+    c("NativeLanguage", "Group", "Participant", "Block.Type", "Item.Type"),
     .funs = factor
   )
-
-d = d.swedish
 ```
 
 ## Lexical decision accuracy during exposure ##
@@ -372,20 +398,21 @@ The analysis of the exposure data serves to make two points. First, lexical deci
 Second, lexical decision accuracy was substantially higher in the Swedish data. This is one piece of evidence suggesting that the Flemish-accented speaker being easier to process for native Swedish participants than the Mandarin-accented English speaker was for the American participants. 
 
 ### English ###
-Unfortunately, the trial-level exposure data from Xie et al. (2017) was lost in a laptop theft in 2018. We do, however, have access to the mean by-participant accuracies and their standard deviation. Lexical decision accuracy for filler response accuracy was high (M = `r round((80 * 60 + 77 * 90 + 81 * 30) / 180, 0)`\%), and did not differ much between filler words (M = 80\%, SD = 6\%) and nonwords (M = 77\%, SD = 16\%). Accuracy was also high for critical words with syllable-final /d/ in the /d/-exposure group (M = 81\%, SD = .09\%). No reaction time data was available.
+Lexical decision accuracy was high across both the /d/-exposure (`r get_LD_performance(d.exposure, "English", "/d/-exposure")`) and control group (`r get_LD_performance(d.exposure, "English", "control")`). Accuracy was also high for critical words with syllable-final /d/ in the /d/-exposure group (`r get_LD_performance(d.exposure, "English", critical = T)`). No reaction time data was available.
 
 ### Swedish ###
 Figure \@ref(fig:LD-accuracy) summarizes participants' accuracy and reaction time for during exposure. 
-Lexical decision accuracy was high across both the /d/-exposure (`r get_LD_performance(d, "Swedish", "/d/-exposure")`) and control group (`r get_LD_performance(d, "Swedish", "control")`). Accuracy was also high for critical words with syllable-final /d/ in the /d/-exposure group (`r get_LD_performance(d, "Swedish", critical = T)`). 
+Lexical decision accuracy was high across both the /d/-exposure (`r get_LD_performance(d.exposure, "Swedish", "/d/-exposure")`) and control group (`r get_LD_performance(d.exposure, "Swedish", "control")`). Accuracy was also high for critical words with syllable-final /d/ in the /d/-exposure group (`r get_LD_performance(d.exposure, "Swedish", critical = T)`). 
 
-Reaction times were slower in the /d/-exposure group (`r get_LD_performance(d, "Swedish", what = "RT")`). The very high average reaction time for participant 101 in the /d/-exposure group was caused by a single outlier trial, on which the participant took 35 seconds to respond. The difference between exposure conditions does, however, persist if reaction times above 3.5 SDs away from a participant's mean RT are excluded (`r get_LD_performance(d  %>% group_by(Participant) %>% filter(abs(scale(LD.RT)) < 3.5) %>% ungroup(), "Swedish", what = "RT")`).
+Reaction times were slower in the /d/-exposure group (`r get_LD_performance(d.exposure, "Swedish", what = "RT")`). The very high average reaction time for participant 101 in the /d/-exposure group was caused by a single outlier trial, on which the participant took 35 seconds to respond. The difference between exposure conditions does, however, persist if reaction times above 3.5 SDs away from a participant's mean RT are excluded (`r get_LD_performance(d.exposure %>% group_by(Participant) %>% filter(abs(scale(LD.RT)) < 3.5) %>% ungroup(), "Swedish", what = "RT")`).
 
 This suggests that the syllable-final /d/ of the Flemish-accented speaker was indeed accented, leading to additional difficulty beyond whatever other difficulty participants might have experienced while processing the foreign accent.
 
 (ref:LD-accuracy) Lexical decision accuracies and RTs in the Swedish experiment by exposure group: all words (left) or only critical words (right). For the /d/ exposure group, critical words have syllable-final /d/. For the control group, critical words are matched in average length and frequency, but do not contain /d/ (or /t/).
 
 ```{r LD-accuracy, fig.cap="(ref:LD-accuracy)", fig.height=3.5, fig.width=3.5, out.width='50%', fig.show = 'hold'}
-p = d.swedish %>%
+p = d.exposure %>%
+  filter(NativeLanguage == "Swedish") %>%
   get_LD_byParticipant() %>%
   ggplot(
     aes(x = RT, 
@@ -404,8 +431,8 @@ p = d.swedish %>%
   theme_cowplot() + theme(legend.position = "top")
 
 p  
-p %+% (d.swedish %>% 
-                   filter(Item.Type == "critical") %>%
+p %+% (d.exposure %>% 
+                   filter(NativeLanguage == "Swedish" & Item.Type == "critical") %>%
                    get_LD_byParticipant())
 ```
 
