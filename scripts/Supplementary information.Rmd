@@ -37,23 +37,6 @@ always_allow_html: true
 ---
 
 
-# TO DO
-
-1) Check whether warnings are addressed, and then (after) set to silent.
-2) Run final compilation with echo = F.
-
-# TO BE DELETED LATER (PROJECT INTERNAL NOTES)
-
-This data presented in this report comes from two projects, one conducted in English (Xin's data) and one in Swedish (Maryann's data). Henceforth, we use *native_language* (English vs. Swedish) as a variable to distinguish between the two datasets. In each case, we compare perceptual adaptation effects in two *Group* (/d/-exposure vs. control). Each experiment consists of an exposure phase followed by a test phase. Here we analyze the test phase data in order to compare human responses to predictions of Ideal Observers. 
-
-The Ideal Observers are constructed for each project. Categorization predictions are made on the test data from a) *native* language model (trained on tokens from a native speaker of the target language; English or Swedish); b) *non-native* talker-specific model (trained on tokens from the test speaker; native-Flemish or Mandarin). Henceforth, we use *modelType* (native vs. non-native) to distinguish the two types of models.
-
-In sum, the following data are analyzed and reported:
-1) Xin's perception experiment: Goodness rating task
-2) Maryann's perception experiment: Gooodness rating task
-3) Ideal Observers predictions 
-4) Xin's perception experiment: ID task from the Xie et al.(2017)
-
 
 ```{r rmarkdown setup, include=FALSE}
 knitr::opts_chunk$set(echo = FALSE, 
@@ -184,6 +167,25 @@ applyContrasts = function(d) {
 
 
 # Overview #
+
+**TO DO**
+
+1) Check whether warnings are addressed, and then (after) set to silent.
+2) Run final compilation with echo = F.
+
+**TO BE DELETED LATER (PROJECT INTERNAL NOTES)**
+
+This data presented in this report comes from two projects, one conducted in English (Xin's data) and one in Swedish (Maryann's data). Henceforth, we use *native_language* (English vs. Swedish) as a variable to distinguish between the two datasets. In each case, we compare perceptual adaptation effects in two *Group* (/d/-exposure vs. control). Each experiment consists of an exposure phase followed by a test phase. Here we analyze the test phase data in order to compare human responses to predictions of Ideal Observers. 
+
+The Ideal Observers are constructed for each project. Categorization predictions are made on the test data from a) *native* language model (trained on tokens from a native speaker of the target language; English or Swedish); b) *non-native* talker-specific model (trained on tokens from the test speaker; native-Flemish or Mandarin). Henceforth, we use *modelType* (native vs. non-native) to distinguish the two types of models.
+
+In sum, the following data are analyzed and reported:
+1) Xin's perception experiment: Goodness rating task
+2) Maryann's perception experiment: Gooodness rating task
+3) Ideal Observers predictions 
+4) Xin's perception experiment: ID task from the Xie et al.(2017)
+
+**Start of paper**
 
 This supplementary information describes the results and methods of the perception experiments on Mandarin-accented English and Flemish-accented Swedish, as well as the development and evaluation of the ideal observer models. The experiment on Mandarin-accented English (Xie et al., 2017) found an effect of exposure to the foreign-accented sound (syllable-final /d/) on subsequent /d/- and /t/-goodness ratings. This effect has been replicated in two other paradigms (categorization and priming) using the same stimuli (Xie et al., 2017). <!-- Xin: is this summary correct? --> Additionally, an earlier priming study found the same type of benefit for exposure to syllable-final /d/ in Dutch-accented English (Dutch, like Flemish, exhibits final devoicing, partially or completely neutralizing stop voicing in the syllable final position). In contrast to these previous studies, the experiment on Flemish-accented Swedish did *not* find a significant effect of exposure on subsequent /d/ and /t/-goodness ratings.
 
@@ -527,12 +529,12 @@ Compared to the English experiment, the Swedish experiment had substantially few
 ### English ###
 48 monolingual English speakers participated in the experiment (24 /d/-exposure, 24 control). Each participant rated each word (one of the pair) both for goodness as /d/ and for goodness as /t/, resulting in 30 ratings per sound category (/d/ vs. /t/) per rating type (goodness as /d/ vs. goodness as /t/) and 120 ratings per participant.
 
-**Total observations:**  48 \* 30 \* 2 \* 2 = 5760 observations
+**Total observations:**  48 \* 30 \* 2 \* 2 = 5760 
 
 ### Swedish ###
 25 Swedish speakers recruited from the Department of Swedish \& Multilingualism at Stockholm University participated. Two of the participants were excluded from the analysis because post-experiment surveys found that they were not native speakers of Swedish. Participants were alternately assigned to the /d/-exposure or control group (11 /d/-exposure, 12 control). Each participant rated each word (one of the pair) either for goodness as /d/ or for goodness as /t/, resulting in 16 ratings per sound category (/d/ vs. /t/) per rating type (goodness as /d/ vs. goodness as /t/) and 64 ratings per participant.
 
-**Total observations:**  23 \* 15 \* 2 \* 2 = 1380.
+**Total observations:**  23 \* 15 \* 2 \* 2 = 1380
 
 ### Why the difference?
 
