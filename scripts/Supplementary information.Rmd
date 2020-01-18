@@ -208,9 +208,10 @@ We compare the results of the perception experiments on English and Swedish. We 
 # load human rating data
 ##-----------------------
 # Swedish rating data
-d.swedish = read_csv(file = "../data/Swedish/pilot_test/testrun2.csv")
+d.swedish = read_csv(file = "../data/Swedish/d.exposure+test.csv")
 # English rating data
-d.english.test <- read.csv("../data/English/d.rating.xin.csv")
+d.english.exposure <- read.csv("../data/English/d.exposure.csv")
+d.english.test <- read.csv("../data/English/d.test.csv")
 
 # Standardize variable names for Swedish
 d.swedish %<>%
@@ -952,7 +953,7 @@ To understand human responses, below we plot the item-level correlation between 
 ```{r load categorization experiments, results='hide'}
 
 # load English ID data
-d.english.ID <- read.csv("../data/English/d.identification.xin.csv")
+d.english.ID <- read.csv("../data/English/d.identification.xie_etal2017.csv")
 
 # recode identification response as proportion of /d/ response
 d.english.ID <- d.english.ID %>%
