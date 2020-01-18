@@ -11,11 +11,4 @@ Encoding: UTF-8
 
 RnwWeave: knitr
 LaTeX: pdfLaTeX
-<<<<<<< HEAD
-=======
 DisableExecuteRprofile: Yes
-<<<<<<< HEAD
->>>>>>> cc71ae2a9dc8af266e25a6d0df582376632dcef6
->>>>>>> 79177272f01f7cc1efddc16d3b86892f5ee14f60
-=======
->>>>>>> 2be4165abe8ffe78536a14a8c9b12c4295b1538a
