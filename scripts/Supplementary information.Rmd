@@ -36,8 +36,6 @@ documentclass: book
 always_allow_html: true
 ---
 
-
-
 ```{r rmarkdown setup, include=FALSE}
 knitr::opts_chunk$set(echo = FALSE, 
                       message=FALSE, warning=FALSE, error=TRUE)
@@ -137,8 +135,9 @@ get_LD_performance = function(
         if (length(group) > 1) paste0(g, " group: ") else "",
         "M = ", 
         d[d$NativeLanguage == l & d$Group == g, "mean"], 
-        ", SD = ",
-        d[d$NativeLanguage == l & d$Group == g, "sd"])
+        "\\%, SD = ",
+        d[d$NativeLanguage == l & d$Group == g, "sd"],
+        "\\%")
       if (
         !and(
           l == language[length(language)], 
@@ -231,11 +230,11 @@ d.swedish %<>%
   mutate(
     NativeLanguage = "Swedish",
     Block.Type = gsub("^([A-Z]).*$", "\\1", Item.Type),
-    Block.Type = factor(case_when(
+    Block.Type = case_when(
       Block.Type == "E" ~ "exposure",
       Block.Type == "T" ~ "test",
       T ~ NA_character_
-    )),
+    ),
     Participant = paste0("S", Participant),
     Item.WordID = paste0("S", Item.WordID),
     Item.MinimalPair = 
@@ -258,11 +257,11 @@ d.swedish %<>%
       ItemTemp %in% c("TI", "TF") ~ "t",
       T ~ NA_character_
     ), levels = c("d", "t")),  
-    Sound.Position = factor(case_when(
+    Sound.Position = case_when(
       ItemTemp %in% c("TF", "DF", "TW") ~ "final",
       ItemTemp %in% c("TI", "DI") ~ "initial",
       T ~ NA_character_
-    )),
+    ),
     Item.Word = str_replace(stri_trans_general(
       Item.Filename, 
       "Latin-ASCII"),
@@ -317,6 +316,7 @@ d.english.test %<>%
     Block.Type = "test",
     Item.MinimalPair = paste0("E", Item.MinimalPair),
     Item.WordID = paste0("E", as.numeric(as.factor(Item.Word))),
+    Item.Word = as.character(Item.Word),
     Sound = factor(Sound, levels = c("d", "t")),
     Sound.Position = "final",
     Subject = NULL)
@@ -344,7 +344,9 @@ d.test = d.swedish %>%
   # Create factors
   mutate_at(
     c("Group", "Participant", 
-      "Block.Order", "Item.MinimalPair", "Item.WordID", 
+      "Block.Order", "Block.Type", 
+      "Item.MinimalPair", "Item.WordID", "Item.Word",
+      "Sound.Position",
       "Rating.for"),
     .funs = factor
   )
@@ -369,7 +371,7 @@ The analysis of the exposure data serves to make two points. First, lexical deci
 Second, lexical decision accuracy was substantially higher in the Swedish data. This is one piece of evidence suggesting that the Flemish-accented speaker being easier to process for native Swedish participants than the Mandarin-accented English speaker was for the American participants. 
 
 ### English ###
-Unfortunately, the trial-level exposure data from Xie et al. (2017) was lost in a laptop theft in 2018. We do, however, have access to the mean by-participant accuracies and their standard deviation. Lexical decision accuracy for filler response accuracy was high both for filler words (M = .80, SD = .06) and nonwords (M = .77, SD = .16). Accuracy was also high for critical words with syllable-final /d/ in the /d/-exposure group (M = .81, SD = .09). No reaction time data was available.
+Unfortunately, the trial-level exposure data from Xie et al. (2017) was lost in a laptop theft in 2018. We do, however, have access to the mean by-participant accuracies and their standard deviation. Lexical decision accuracy for filler response accuracy was high (M = `r round((80 * 60 + 77 * 90 + 81 * 30) / 180, 0)`\%), and did not differ much between filler words (M = 80\%, SD = 6\%) and nonwords (M = 77\%, SD = 16\%). Accuracy was also high for critical words with syllable-final /d/ in the /d/-exposure group (M = 81\%, SD = .09\%). No reaction time data was available.
 
 ### Swedish ###
 Figure \@ref(fig:LD-accuracy) summarizes participants' accuracy and reaction time for during exposure. 
@@ -599,38 +601,48 @@ bootstrap = function(replacement = T) {
   return(d)
 }
 
-# Check if bootstrap file exists. If not run bootstrap and store results
+# Check if bootstrap file or summary file exists. If summary exists load that.
+# If not, if bootstrap exists load that. If neither file exists run bootstrap 
+# and store results. 
 filename.bootstrap = "../models/bootstrap.RData"
-if (file.exists(filename.bootstrap)) 
-  load(filename.bootstrap) else {
-    d.bootstrap = plyr::rdply(n.bootstrap,
-                              bootstrap, .progress = "text") 
-    save(d.bootstrap, file = filename.bootstrap)
-  }
+filename.bootstrap.summary = "../models/bootstrap-summary.RData"
+if (file.exists(filename.bootstrap.summary)) { 
+    load(filename.bootstrap.summary) 
+  } else {
+    # Summary doesn't exist. Create it.
+    if (file.exists(filename.bootstrap)) 
+      load(filename.bootstrap) else {
+        # Bootstrap doesn't exist. Create it.
+        d.bootstrap = plyr::rdply(n.bootstrap,
+                                  bootstrap, .progress = "text") 
+        save(d.bootstrap, file = filename.bootstrap)
+      }
 
-d.bootstrap %<>% 
-  # Extract the model coefficients
-  mutate(
-    coefs = map(lmer.rating, tidy, effects = "fixed"),
-    coefs.simple = map(lmer.rating.simple, tidy)) %>%
-  # Get the signficance and direction of 3-way interaction
-  unnest(coefs) %>%
-  filter(term == "NativeLanguage=Swedish vs. English:Group=/d/-exposure vs. control:Sound=/d/ vs. /t/") %>%
-  group_by(.n) %>%
-  transmute(
-    interaction.significance = ifelse(p.value < 0.05, T, F),
-    interaction.direction = ifelse(estimate >= 0, "+", "-"),
-    coefs.simple = coefs.simple) %>%
-  # Get the significance and direction of simple effects
-  unnest(coefs.simple) %>%
-  group_by(.n, 
-           interaction.significance, interaction.direction, 
-           NativeLanguage) %>%
-  transmute(
-    simple.significance = ifelse(p.value < 0.05, T, F),
-    simple.direction = ifelse(estimate >= 0, "+", "-"),
-    simple.tvalue = statistic
-  ) 
+    d.bootstrap %<>% 
+      # Extract the model coefficients
+      mutate(
+        coefs = map(lmer.rating, tidy, effects = "fixed"),
+        coefs.simple = map(lmer.rating.simple, tidy)) %>%
+      # Get the signficance and direction of 3-way interaction
+      unnest(coefs) %>%
+      filter(term == "NativeLanguage=Swedish vs. English:Group=/d/-exposure vs. control:Sound=/d/ vs. /t/") %>%
+      group_by(.n) %>%
+      transmute(
+        interaction.significance = ifelse(p.value < 0.05, T, F),
+        interaction.direction = ifelse(estimate >= 0, "+", "-"),
+        coefs.simple = coefs.simple) %>%
+      # Get the significance and direction of simple effects
+      unnest(coefs.simple) %>%
+      group_by(.n, 
+               interaction.significance, interaction.direction, 
+               NativeLanguage) %>%
+      transmute(
+        simple.significance = ifelse(p.value < 0.05, T, F),
+        simple.direction = ifelse(estimate >= 0, "+", "-"),
+        simple.tvalue = statistic
+      ) 
+    save(d.bootstrap, file = filename.bootstrap.summary)
+  }
 
 d.bootstrap %>%
   ggplot(aes(x = simple.tvalue, fill = NativeLanguage)) +
