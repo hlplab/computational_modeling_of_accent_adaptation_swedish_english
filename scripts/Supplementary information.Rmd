@@ -634,7 +634,7 @@ d.bootstrap %>%
   ggplot(aes(x = simple.tvalue, fill = NativeLanguage)) +
   geom_vline(xintercept = 0, color = "darkgray") +
   geom_density(alpha = .5, color = NA) +
-  geom_vline(xintercept = original.tvalue, color = "black") +
+  geom_vline(xintercept = original.tvalue, color = "blue") +
   scale_x_continuous("t-value") +
   scale_fill_discrete("Native language")
   
@@ -678,7 +678,7 @@ These bootstrap analyses yielded two important findings. First, the analyses sug
 
 This result does not, however, entail that power explains the null results we observed for Swedish. Indeed, other aspects of the bootstrap results argue *against* this conclusion: even though the downsampled data did not provide high power, the bootstrapped samples reliably showed a clear difference between the English and Swedish data. For instance, even in the downsampled English data, the simple effect went in the predicted direction (regardless of significance) in `r d.bootstrap$p.simple.English.direction.expected`\% of the samples. Significant two-way interactions in the *opposite* of the originally observed direction occurred in only `r d.bootstrap$p.simple.English.significant - d.bootstrap$p.simple.English.significant.direction.expected`\% of all samples (`r 1-(d.bootstrap$p.simple.English.significant.direction.expected/d.bootstrap$p.simple.English.significant)`\% of the samples with significant effects). For the downsampled Swedish data, the simple effect of the two-way interaction between exposure group and sound was significant in the predicted direction in `r d.bootstrap$p.simple.Swedish.significant.direction.expected`\% of all bootstrap samples (overall, the effect went in the predicted direction `r d.bootstrap$p.simple.Swedish.direction.expected`\% of the time). 
 
-(ref:bootstrap-downsampling) Distribution of $t$-values for the (simple effects) two-way interactions between exposure group (/d/-exposure vs. control) and sound (/d/ vs. /t/) across the `r n.bootstrap` bootstrap samples. The $t$-value of the two-way interaction in the original English data from Xie et al. (2017) is indicated by the black vertical line.
+(ref:bootstrap-downsampling) Distribution of $t$-values for the (simple effects) two-way interactions between exposure group (/d/-exposure vs. control) and sound (/d/ vs. /t/) across the `r n.bootstrap` bootstrap samples. The $t$-value of the two-way interaction in the original Swedish data is indicated by the blue vertical line.
 
 In line with our main analysis, this bootstrap result suggests that the effect of exposure on goodness ratings---i.e., the two-way interaction between exposure group and sound---differs between the Swedish and English data. This is also visible in Figure \@ref(fig:bootstrap-downsampling), which summarizes the distribution of the two-way interactions between exposure group and sound for both the English and Swedish bootstrap samples. In light of these differences, it is not surprising that the three-way interaction between native language, exposure group, and sound went in the same direction as in the original data for `r d.bootstrap$p.interaction.significance`\% of the bootstrap samples. This interaction was significant in `r d.bootstrap$p.interaction.significant.direction.expected`\% of the bootstrap samples. Significant interactions in the opposite direction occurred in only `r d.bootstrap$p.interaction.significant-d.bootstrap$p.interaction.significant.direction.expected`\%. 
 
@@ -1655,7 +1655,7 @@ print(summary(prediction.lmer2.simple))
 ```
 
 
-# Appendix: List of stimuli {sec:stimuli}
+# Appendix: List of stimuli {#sec:stimuli}
 <!-- Maryann: could you fill in as a table or bulleted list? -->
 
 ## Exposure
