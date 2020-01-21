@@ -1479,7 +1479,10 @@ wordlist.english.test %<>% distinct(Word, MinimalPairID, Sound) %>%
   arrange(MinimalPairID, Sound) %>% 
   transmute(`/d/-final` = ifelse(Sound == "d", Word, NA),
          `/t/-final` = ifelse(Sound == "t", Word, NA)) 
+
 #wordlist.english.test %<>% filter(!is.na(`/d/-final`) & !is.na(`/t/-final`))
+
+knitr::kable(wordlist.english.test, booktabs = TRUE, caption = 'English - Test')
                                     
                                      
 ```
