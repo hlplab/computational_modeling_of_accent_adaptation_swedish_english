@@ -1457,7 +1457,7 @@ plot_ly(data = d.IO.diff,
 ## Exposure
 
 ### English
-```{r wordlist-Swedish}
+```{r wordlist-English}
 wordlist.english.exposure <- read_csv("../data/English/English_exposure_wordlist.csv")
 wordlist.english.exposure %>% replace_na(list(`Critical (/d/-Exposure)` = "-", `Critical (Control)` = "-" , `Filler` = "-" )) %>%
 knitr::kable(booktabs = TRUE, caption = 'English - Exposure')
