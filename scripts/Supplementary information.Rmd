@@ -768,7 +768,7 @@ Tokens were annotated for their duration of vowel, closure, and burst. Annotatio
 
 ### Are cues not considered in the analyses likely to explain the results? ###
 
-The three cues analyzed in both experiments are considered primary cues to syllable-final voicing (REFS). It is therefore likely, but not guaranteed, that the three cues would explain a substantial part of variation in participants' ratings during test. The results of the ideal observer analyses reported in Section \@ref(sec:IO) support this assumption: performance of the non-native IO was high for both experiments, both on the exposure data (English /d/-exposure: XXX\%; Swedish/d/-exposure: XXX\%) and one the test data (English: XXX\%; Swedish: XXX\%). This suggests that /d/ and /t/ in both the English and the Swedish data formed clusters that were separable within the 3D space defined by the three cues.
+The three cues analyzed in both experiments are considered primary cues to syllable-final voicing (Hogan \& Rozsypal, 1980). It is therefore likely, but not guaranteed, that the three cues would explain a substantial part of variation in participants' ratings during test. The results of the ideal observer analyses reported in Section \@ref(sec:IO) support this assumption: performance of the non-native IO was high for both experiments, both on the exposure data (English /d/-exposure: XXX\%; Swedish/d/-exposure: XXX\%) and one the test data (English: XXX\%; Swedish: XXX\%). This suggests that /d/ and /t/ in both the English and the Swedish data formed clusters that were separable within the 3D space defined by the three cues.
 
 The predictions of IOs matching the exposure condition (e.g, the native IO for the control group) achieved positive correlations with human ratings (English: $r^2 =$ .XXX; Swedish: $r^2 =$ .XXX). This suggests that a substantial amount of variance participants' ratings could be described by the simple 0-DF linking hypothesis between the three cues and ratings (Bayes theorem \& Luce's choice rule). The IOs fit to the Swedish data did not fail to predict participants' performance. Rather, like the human participants, the IOs fail to find a benefit of /d/-exposure.
 
@@ -1222,8 +1222,8 @@ print(summary(prediction.lmer2.simple))
 
 
 ### Data preparation ###
-1) *Extraction of acoustic cues*. We obtained the measurements of three durational cues that are cruciually for coda voicing: the preceding vowel, closure interval and burst release. 
-2) *Cue measurement Correction*. The purpose of correation (or residualization) is to control for phonological context effects, without losing the difference between accents within each language. This procedure was conducted because a) Exposure words contain only /d/ words, but test words have /d/-/t/ minimal pairs; b) The presence of phonological contexts (e.g., l, r, nasals) varies between exposure and test words; c) Exposure words (multisyllabic) are longer than test words (monosyllabic). For these reasons, we do the following for residualization. 
+1) *Extraction of acoustic cues*. We obtained the measurements of three durational cues that are cruciual for coda voicing: the preceding vowel, closure interval, and burst release. 
+2) *Cue measurement Correction*. The purpose of correlation (or residualization) is to control for phonological context effects, without losing the difference between accents within each language. This procedure was conducted because a) Exposure words contain only /d/ words, but test words have /d/-/t/ minimal pairs; b) The presence of phonological contexts (e.g., l, r, nasals) varies between exposure and test words; c) Exposure words (multisyllabic) are longer than test words (monosyllabic). For these reasons, we do the following for residualization. 
   + STEP 1: y ~ 1 + (phon_ctxt_vl + phon_ctxt_r + phon_ctxt_n), data = test /d/ and /t/ words only -- here we get the predicted effects of phonological contexts, and apply that to exposure words
   + STEP 2: y ~ 1 + syllable, data = exposure /d/ and test /d/ words only -- here we get the predicted effects of syllable length, and apply that to the test /t/ words
   + STEP 3: then take the between-talker difference (Native-Non-native) for t category, and add it to the cue values of all tokens of the non-native talker -- here the aim is to make sure /t/-category is entirely aligned between the native and non-native speakers.
@@ -1452,7 +1452,6 @@ plot_ly(data = d.IO.diff,
 
 
 # Appendix: List of stimuli {#sec:stimuli}
-<!-- Maryann: could you fill in as a table or bulleted list? -->
 
 ## Exposure
 
