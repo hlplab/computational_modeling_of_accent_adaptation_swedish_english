@@ -1092,23 +1092,19 @@ p.post %+% (
                alpha = .6, color = NA,
                position = position_dodge(.9)) +
   stat_summary(aes(group = ModelType), fun.data = mean_cl_boot, geom = "linerange", 
-               alpha = .8, size = .8, 
+               alpha = .8, size = .8, color = "black",
                position = position_dodge(.9)) +
   scale_y_continuous("Accuracy") +
   geom_hline(yintercept = 1/2)
-
-   
-   
-#    scale_y_continuous("/d/-goodness rating (z-scored)") 
-
 ```
 
 
 ### Linking hypothesis for goodness ratings
 
-Here we assume a linear link with 0 degrees of freedom between the posterior probability of /d/ and the predicted rating of /d/-goodness. Specifically, we simply scale the predicted proportion of /d/ responses (the same as in Figure \@ref(fig:ideal-observers-posterior) to have the same range as the human ratings across the two experiments: <!-- Xin: can you fill in? -->
+Here we assume a linear link with 0 degrees of freedom between the posterior probability of /d/ and the predicted rating of /d/-goodness. Specifically, we simply scale the predicted proportion of /d/ responses (the same as in Figure \@ref(fig:ideal-observers-posterior)) to have the same range as the human ratings across the two experiments: 
+<!-- Xin: can you fill in? -->
 
-$\rm{/d/-goodness\_rating} = p(/d/ | cue) - $
+<!-- $\rm{/d/-goodness\_rating} = p(/d/ | cue) - $ -->
 
 This scaling solely serves the purpose of visualization. Since it is a linear transformation, it does not affect the correlation between the ideal observers' predictions and human goodness ratings.
 
@@ -1151,7 +1147,7 @@ d.test.IO.english.ID <-
     by = c("NativeLanguage", "Item.Word", "Sound"))
 ```
 
-(ref:ID-to-ratings) Item-level correlation of human categorization and rating responses from two experiments in Xie et al. (2017). The two experiments used the same exposure and test stimuli, and differed only in the task during test (categorization vs. rating). The trend line shows a generalized linear model fit with a non-parametric smoother. That is, the fit would in principle allow non-linearity in the relation between categorization and rating responses. The fact that no non-linearity is detected suggests that the relation is largely linear. Shaded areas show 95\% confidence intervals.
+(ref:ID-to-ratings) Item-level correlation of human identification and rating responses from two experiments in Xie et al. (2017). The two experiments used the same exposure and test stimuli, and differed only in the task during test (categorization vs. rating). The trend line shows a generalized linear model fit with a non-parametric smoother. That is, the fit would in principle allow non-linearity in the relation between categorization and rating responses. The fact that no non-linearity is detected suggests that the relation is largely linear. Shaded areas show 95\% confidence intervals.
 
 ```{r ID-to-ratings, fig.height = 6, fig.width = 12, fig.cap="(ref:ID-to-ratings)"}
 ##-------------------------------------------------------------------------------------
@@ -1187,7 +1183,7 @@ ggscatter(d.english.test.byItem, x = "Proportion.d", y = "zRating.d",
          # color = "Sound", 
           add = "reg.line", conf.int = TRUE, 
           palette = "jco",  cor.method = "pearson",
-          xlab = "Proportion of /d/ from ID task", ylab = "/d/ goodness from rating task") + 
+          xlab = "Proportion of /d/-responses from identification task", ylab = "/d/-goodness from rating task") + 
   stat_cor(label.x.npc = "middle", label.y.npc = "top") + 
   facet_grid(~ Group) + 
   ggtitle("Item-wise correlation between ID and rating task (English data)") +
