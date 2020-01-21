@@ -1460,9 +1460,9 @@ plot_ly(data = d.IO.diff,
 
 ### Swedish
 ```{r wordlist-Swedish}
-wordlist.exposure <- read_csv("../data/Swedish/Swedish_Exposure_wordlist.csv")
-wordlist.exposure %>% replace_na(list(`Critical (/d/-Exposure)` = "-", `Critical (Control)` = "-" , `Filler` = "-" )) %>%
-knitr::kable(booktabs = TRUE, caption = 'Swedish - Exposure')
+# wordlist.exposure <- read_csv("../data/Swedish/Swedish_Exposure_wordlist.csv")
+# wordlist.exposure %>% replace_na(list(`Critical (/d/-Exposure)` = "-", `Critical (Control)` = "-" , `Filler` = "-" )) %>%
+# knitr::kable(booktabs = TRUE, caption = 'Swedish - Exposure')
 ```
 
 ## Test
@@ -1471,6 +1471,6 @@ knitr::kable(booktabs = TRUE, caption = 'Swedish - Exposure')
 
 ### Swedish
 ```{r test-wordlist-Swedish}
-wordlist.test <- read_csv("../data/Swedish/Swedish_test_wordlist.csv")
-knitr::kable(wordlist.test, booktabs = TRUE, caption = 'Swedish - Test')
+# wordlist.test <- read_csv("../data/Swedish/Swedish_test_wordlist.csv")
+# knitr::kable(wordlist.test, booktabs = TRUE, caption = 'Swedish - Test')
 ```
