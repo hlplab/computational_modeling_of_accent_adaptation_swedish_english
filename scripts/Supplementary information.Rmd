@@ -1473,6 +1473,17 @@ knitr::kable(booktabs = TRUE, caption = 'Swedish - Exposure')
 ## Test
 
 ### English
+```{r test-wordlist-English}
+  wordlist.english.test <- read_csv("../data/English/d.test.csv")
+wordlist.english.test %<>% distinct(Word, MinimalPairID, Sound) %>% 
+  arrange(MinimalPairID, Sound) %>% 
+  transmute(`/d/-final` = ifelse(Sound == "d", Word, NA),
+         `/t/-final` = ifelse(Sound == "t", Word, NA)) 
+#wordlist.english.test %<>% filter(!is.na(`/d/-final`) & !is.na(`/t/-final`))
+                                    
+                                     
+```
+
 
 ### Swedish
 ```{r test-wordlist-Swedish}
