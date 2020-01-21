@@ -1458,38 +1458,35 @@ plot_ly(data = d.IO.diff,
 
 ### English
 ```{r wordlist-English}
-wordlist.english.exposure <- read_csv("../data/English/English_exposure_wordlist.csv")
-wordlist.english.exposure %>% replace_na(list(`Critical (/d/-Exposure)` = "-", `Critical (Control)` = "-" , `Filler` = "-" )) %>%
-knitr::kable(booktabs = TRUE, caption = 'English - Exposure')
+read_csv("../data/English/English.exposure.wordlist.csv") %>% 
+  replace_na(list(`Critical (/d/-Exposure)` = "-", `Critical (Control)` = "-" , `Filler` = "-" )) %>%
+  knitr::kable(booktabs = TRUE, caption = 'English - Exposure')
 ```
 
 ### Swedish
 ```{r wordlist-Swedish}
-wordlist.exposure <- read_csv("../data/Swedish/Swedish_Exposure_wordlist.csv")
-wordlist.exposure %>% replace_na(list(`Critical (/d/-Exposure)` = "-", `Critical (Control)` = "-" , `Filler` = "-" )) %>%
-knitr::kable(booktabs = TRUE, caption = 'Swedish - Exposure')
+read_csv("../data/Swedish/Swedish.exposure.wordlist.csv") %>% 
+  replace_na(list(`Critical (/d/-Exposure)` = "-", `Critical (Control)` = "-" , `Filler` = "-" )) %>%
+  knitr::kable(booktabs = TRUE, caption = 'Swedish - Exposure')
 ```
 
 ## Test
 
 ### English
 ```{r test-wordlist-English}
-  wordlist.english.test <- read_csv("../data/English/d.test.csv")
-wordlist.english.test %<>% distinct(Word, MinimalPairID, Sound) %>% 
-  arrange(MinimalPairID, Sound) %>% 
-  transmute(`/d/-final` = ifelse(Sound == "d", Word, NA),
-         `/t/-final` = ifelse(Sound == "t", Word, NA)) 
-
-#wordlist.english.test %<>% filter(!is.na(`/d/-final`) & !is.na(`/t/-final`))
-
-knitr::kable(wordlist.english.test, booktabs = TRUE, caption = 'English - Test')
-                                    
-                                     
+read_csv("../data/English/d.test.csv") %>% 
+  distinct(Word, MinimalPairID, Sound) %>%
+  pivot_wider(
+    names_from = Sound,
+    values_from = Word) %>%
+  select(-MinimalPairID) %>%
+  rename_all(.funs = function(x) paste0("/", x, "/-final")) %>%
+  knitr::kable(booktabs = TRUE, caption = 'English - Test')
 ```
 
 
 ### Swedish
 ```{r test-wordlist-Swedish}
-wordlist.test <- read_csv("../data/Swedish/Swedish_test_wordlist.csv")
-knitr::kable(wordlist.test, booktabs = TRUE, caption = 'Swedish - Test')
+read_csv("../data/Swedish/Swedish.test.wordlist.csv") %>%
+  knitr::kable(booktabs = TRUE, caption = 'Swedish - Test')
 ```
