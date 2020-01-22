@@ -4,4 +4,8 @@
 .Ruserdata
 .DS_Store
 *.html
+*.js
+*.css
 *.pdf
+scripts/Supplementary-information_files/*
+scripts/bookdown_assets/

@@ -120,9 +120,13 @@ get_LD_performance = function(
     filter(NativeLanguage %in% language, Group %in% group) %>% 
     droplevels()
   
-  if (what == "accuracy")
-    d %<>% get_LD.Accuracy_byGroup() else if (what == "RT") 
+  if (what == "accuracy") {
+    d %<>% get_LD.Accuracy_byGroup() 
+    suffix = "\\%"
+  } else if (what == "RT") {
     d %<>% get_LD.RT_byGroup()
+    suffix = "sec"
+  }
   
   text = ""
   for (l in language) {
@@ -135,9 +139,9 @@ get_LD_performance = function(
         if (length(group) > 1) paste0(g, " group: ") else "",
         "M = ", 
         d[d$NativeLanguage == l & d$Group == g, "mean"], 
-        "\\%, SD = ",
+        suffix, ", SD = ",
         d[d$NativeLanguage == l & d$Group == g, "sd"],
-        "\\%")
+        suffix)
       if (
         !and(
           l == language[length(language)], 
