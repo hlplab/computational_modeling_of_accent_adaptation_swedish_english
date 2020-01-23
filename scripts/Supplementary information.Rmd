@@ -247,7 +247,7 @@ d.swedish %<>%
              tolower(gsub("^[A-Z]+_([0-9]+)_.*$", "\\1", Item.Filename)))),
     ItemTemp = gsub("^[A-Z]([A-Z]+)$", "\\1", Item.Type),
     Item.WordStatus = factor(case_when(
-      ItemTemp == "NW" ~ "non-word",
+      ItemTemp == "NW" ~ "pseudoword",
       ItemTemp %in% c("FW", "CW", "TW", "TF", "DF", "TI", "DI") ~ "word",
       T ~ NA_character_
     )),
@@ -374,11 +374,11 @@ d.exposure =
               mutate(
                 NativeLanguage = "English",
                 Participant = paste0("E", Participant + 100),
-                Item.Type = ifelse(Item.Type == "non.word", "non-word", Item.Type),
+                Item.Type = ifelse(Item.Type == "non.word", "pseudoword", Item.Type),
                 Block.Type = "exposure",
                 LD.RT = NA,
                 Count = case_when(
-                  Item.Type == "non-word" ~ 90,
+                  Item.Type == "pseudoword" ~ 90,
                   Item.Type == "filler" ~ 60,
                   Item.Type == "critical" ~ 30
                 ),
@@ -775,13 +775,13 @@ The full list of stimuli is available in Section \@ref(sec:stimuli) for both Swe
 ### English
 The /d/-exposure group heard 30 critical words ending with \/d\/, and without \/t\/-final minimal pair neighbors (e.g. \textit{overload}). The 30 replacement words for the control group (e.g., animal) were matched to the critical /d/-words in syllable length and mean lemma frequency (based on CELEX, Baayen, Piepenbrock, & Gulikers, 1995). 
 
-All words or nonwords were multisyllabic and contained three to four syllables. Other than the critical /d/-final words, no other alveolar stops, voiced stops, dental fricatives, and postalveolar affricates occured. The voiceless stops (/k/ and /p/) did not appear in word-final position. 
+All words or pseudowords were multisyllabic and contained three to four syllables. Other than the critical /d/-final words, no other alveolar stops, voiced stops, dental fricatives, and postalveolar affricates occured. The voiceless stops (/k/ and /p/) did not appear in word-final position. 
 
 ### Swedish
 
 The /d/-exposure group heard 30 critical words ending with /d/, and without /t/-final minimal pair neighbors (e.g. \textit{episod}). The 30 replacement words for the control group did not contain \/d, t, b, g\/, and were matched in syllable length and average base form frequency (based on a 25 million word database from selected corpora from Språkbanken, https://spraakbanken.gu.se/korp, accessed January 2019). <!--I consulted the local comp. linguist and he suggested which corpus to select since there is no standard to follow. I did not use all available corpora-->. 
 
-All words or pseudowords were multisyllabic and contained two to five syllables. Other than the /d/-final critical words, all stimuli were chosen to avoid voiced stops as well as /t/ in any position (i.e., no /d, t, b, g/). The other two voiceless stops (\/k\/ and \/p\/) were kept at a minimum but not fully avoidable in order to have a sufficent number of exposure words. Overall, there were 28 occurrences of /k/ or /p/ in the exposure words for both groups (14 each), and 1 occurrence in the filler words. 
+All words or pseudowords were multisyllabic and contained two to five syllables. Other than the /d/-final critical words, all stimuli were chosen to avoid voiced stops as well as /t/ in any position (i.e., no /d, t, b, g/). The other two voiceless stops (/k/ and /p/) were kept at a minimum but not fully avoidable in order to have a sufficent number of exposure words. Overall, there were 28 occurrences of /k/ or /p/ in the exposure words for both groups (14 each), and 1 occurrence in the filler words. 
 
 Unintended by the design, one critical word in the /d/-exposure group contained a word-medial syllable-initial /d/ (*medellivslangd*---'average life span'), one pseudoword contained word-medial syllable-initial /d/ (*mörvinder*---'meaningless'), and one pseudoword contained word-final /t/ (*spållrivet*---'meaningless'). 
 
@@ -790,7 +790,7 @@ Other than the three unintended occurences of /d,t/, differences between the Eng
 
 ### Are these differences likely to explain the results?
 
-The  occurence of word-medial syllable-initial /d/ and word-final /t/ in the pseudoword list are unlikely to explain the null effect for the Swedish data. First off, participants reliably categorized these words as non-words (M = XXX, SD = XXX). This also means that these two exposures were not lexically labeled, meaning that participants did not get information as to whether the tokens they heard were meant to be pronunciations of /d/ or /t/. Even if participants gathered information from these pronunciations, it is unlikely that the two tokens alone (heard by both groups) led to so much adaptation that no further difference between exposure group could be detected.
+The  occurence of word-medial syllable-initial /d/ and word-final /t/ in the pseudoword list are unlikely to explain the null effect for the Swedish data. First off, participants reliably categorized these words as pseudowords (M = XXX, SD = XXX). This also means that these two exposures were not lexically labeled, meaning that participants did not get information as to whether the tokens they heard were meant to be pronunciations of /d/ or /t/. Even if participants gathered information from these pronunciations, it is unlikely that the two tokens alone (heard by both groups) led to so much adaptation that no further difference between exposure group could be detected.
 
 Finally, the word-medial /d/ in *medellivslängd* was only heard by the /d/-exposure group and thus cannot not have affected adaptation in the control group. It is also unlikely that the occurrence of syllable-initial /d/ strongly affected adaptation in the the /d/-exposure group. On the one hand, only syllable-final stops are devoiced in Flemish, so that the syllable-initial /d/ pronunciation of the Flemish-accented speaker is unlikely to deviate as strongly from native Swedish pronunciation. But participants in the /d/-exposure group heard 30 words with syllable-final /d/, all of which deviated from native pronunciation. Even if both the two pseudowords and the word-medial /d/ in *medellivslängd* somehow affected participants' ratings during test, we would expect that the 30 critical exposure words with syllable-final /d/ would affect participants' ratings over and above that effect.
 
