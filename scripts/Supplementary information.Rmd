@@ -112,7 +112,6 @@ get_LD_performance = function(
   require(magrittr)
   
   if (critical) {
-    group = "/d/-exposure"
     d %<>% 
       filter(Item.Type == "critical") 
   }
@@ -125,7 +124,7 @@ get_LD_performance = function(
     suffix = "\\%"
   } else if (what == "RT") {
     d %<>% get_LD.RT_byGroup()
-    suffix = "sec"
+    suffix = " sec"
   }
   
   text = ""
@@ -328,7 +327,7 @@ d.english.test %<>%
     Sound.Position = "final",
     Subject = NULL)
 
-# Combine Swedish and English test data here 
+# Combine Swedish and English *test* data
 d.test = d.swedish %>%
   filter(Block.Type == "test", Sound.Position == "final") %>%
   select(NativeLanguage,
@@ -343,7 +342,7 @@ d.test = d.swedish %>%
     NativeLanguage = factor(NativeLanguage, levels = c("English", "Swedish")),
     Rating.Response.d = ifelse(Rating.for == "d", Rating.Response, 8 - Rating.Response) 
   ) %>%
-  group_by(Participant) %>%
+  group_by(Group, Participant) %>%
   mutate(
     Rating.Response.d.zscored = as.numeric(scale(Rating.Response.d))
   ) %>%
@@ -358,10 +357,13 @@ d.test = d.swedish %>%
     .funs = factor
   )
 
+# Combine English and Swedish *exposure* data 
 d.exposure = 
   d.swedish %>%
   filter(Block.Type == "exposure") %>%
-  select(NativeLanguage, Group, Participant, Block.Type, Item.Type, LD.Correct, LD.RT) %>%
+  select(NativeLanguage, Group, Participant, 
+         Block.Type, Item.Type, Item.WordStatus,
+         LD.Correct, LD.RT) %>%
   # Expand the English data so that we can have a combined tibble
   full_join(d.english.exposure %>%
               pivot_longer(
@@ -373,8 +375,13 @@ d.exposure =
               crossing(LD.Correct = c(0,1)) %>%
               mutate(
                 NativeLanguage = "English",
-                Participant = paste0("E", Participant + 100),
-                Item.Type = ifelse(Item.Type == "non.word", "pseudoword", Item.Type),
+                # Participants were renumbered in the English test-data. 
+                # Making sure that IDs match across exposure and test data.
+                Participant = ifelse(Group == "/d/-exposure",
+                                     paste0("E", Participant + 100),
+                                     paste0("E", Participant + 200)),
+                Item.WordStatus = ifelse(Item.Type == "non.word", "pseudoword", "word"),
+                Item.Type = ifelse(Item.Type == "non.word", "filler", Item.Type),
                 Block.Type = "exposure",
                 LD.RT = NA,
                 Count = case_when(
@@ -387,12 +394,16 @@ d.exposure =
                   LD.Correct == 0 ~ Count - round(Count * accuracy, 0)
                 ),
                 accuracy = NULL) %>%
-              group_by(NativeLanguage, Group, Participant, Block.Type, Item.Type, LD.Correct) %>%
+              group_by(NativeLanguage, Group, Participant, 
+                       Block.Type, Item.Type, Item.WordStatus, 
+                       LD.Correct) %>%
               tidyr::expand(Count = 1:Count) %>%
               mutate(Count = NULL),
-            by = c("NativeLanguage", "Group", "Participant", "Block.Type", "Item.Type", "LD.Correct")) %>%
+            by = c("NativeLanguage", "Group", "Participant", 
+                   "Block.Type", "Item.Type", "Item.WordStatus", 
+                   "LD.Correct")) %>%
     mutate_at(
-    c("NativeLanguage", "Group", "Participant", "Block.Type", "Item.Type"),
+    c("NativeLanguage", "Group", "Participant", "Block.Type", "Item.Type", "Item.WordStatus"),
     .funs = factor
   )
 ```
@@ -404,11 +415,11 @@ The analysis of the exposure data serves to make two points. First, lexical deci
 Second, lexical decision accuracy was substantially higher in the Swedish data. This is one piece of evidence suggesting that the Flemish-accented speaker being easier to process for native Swedish participants than the Mandarin-accented English speaker was for the American participants. 
 
 ### English ###
-Lexical decision accuracy was high across both the /d/-exposure (`r get_LD_performance(d.exposure, "English", "/d/-exposure")`) and control group (`r get_LD_performance(d.exposure, "English", "control")`). Accuracy was also high for critical words with syllable-final /d/ in the /d/-exposure group (`r get_LD_performance(d.exposure, "English", critical = T)`). No reaction time data was available.
+Lexical decision accuracy was high across both the /d/-exposure (`r get_LD_performance(d.exposure, "English", "/d/-exposure")`) and control group (`r get_LD_performance(d.exposure, "English", "control")`). Accuracy was also high for critical words, including words with syllable-final /d/ in the /d/-exposure group (`r get_LD_performance(d.exposure, "English", critical = T)`). No reaction time data was available.
 
 ### Swedish ###
 Figure \@ref(fig:LD-accuracy) summarizes participants' accuracy and reaction time for during exposure. 
-Lexical decision accuracy was high across both the /d/-exposure (`r get_LD_performance(d.exposure, "Swedish", "/d/-exposure")`) and control group (`r get_LD_performance(d.exposure, "Swedish", "control")`). Accuracy was also high for critical words with syllable-final /d/ in the /d/-exposure group (`r get_LD_performance(d.exposure, "Swedish", critical = T)`). 
+Lexical decision accuracy was high across both the /d/-exposure (`r get_LD_performance(d.exposure, "Swedish", "/d/-exposure")`) and control group (`r get_LD_performance(d.exposure, "Swedish", "control")`). Accuracy was also high for critical words, including words with syllable-final /d/ in the /d/-exposure group (`r get_LD_performance(d.exposure, "Swedish", critical = T)`). 
 
 Reaction times were slower in the /d/-exposure group (`r get_LD_performance(d.exposure, "Swedish", what = "RT")`). The very high average reaction time for participant 101 in the /d/-exposure group was caused by a single outlier trial, on which the participant took 35 seconds to respond. The difference between exposure conditions does, however, persist if reaction times above 3.5 SDs away from a participant's mean RT are excluded (`r get_LD_performance(d.exposure %>% group_by(Participant) %>% filter(abs(scale(LD.RT)) < 3.5) %>% ungroup(), "Swedish", what = "RT")`).
 
@@ -427,7 +438,7 @@ p = d.exposure %>%
   geom_label(alpha = .5) + 
   scale_x_continuous(
     name = "Mean Reaction Time",
-    limits = c(0,2)) + 
+    limits = c(0,3)) + 
   scale_y_continuous(
     name = "Mean accuracy", 
     breaks = c(0, 0.25, 0.5, 0.75, 1.0), 
@@ -505,6 +516,9 @@ d.test %>%
   theme(legend.position = "top",
         panel.grid.major.x = element_blank(),
         panel.grid.minor.x = element_blank())
+
+ggsave(filename = "../figures/Result-ratings.png",
+       width = 7, height = 4)
 ```
 
 Figure \@ref(fig:ratings-results) shows the z-scored /d/-goodness ratings from both experiments. To compare participants' ratings for the /d,t/-final test words across the two experiments, we conducted a linear mixed-effects regression (Baayen et al., 2008) over the combined data from both experiments. The regression predicted z-scored /d/-goodness ratings based on the sound category (sum-coded: 1 = word recording intended to end in /d/ vs. -1 = word recording intended to end in /t/), exposure group (sum-coded: 1 =  /d/-exposure vs. -1 = control), the experiment (sum-coded: 1 = Swedish vs. -1 = English), and all their interactions. The regression contained the maximal random effect structure justified by the design (random by-participant intercepts and slope for sound; random by-item intercepts and slopes for sound, exposure group, and their interaction).^[Even this simplified model estimated the variance of the by-participant intercepts to be zero (see below), presumably because the z-scoring of ratings within participant already removed that variance. If all by-participant random effects are excluded, the results reported below do not change. If non-zscored ratings are analyzed instead (unlike in previous work), the three-way interaction is no longer significant ($p = .11$).]
@@ -527,21 +541,20 @@ lmer.rating = lmer(Rating.Response.d.zscored ~
 # Kenward-Rogers seems to take forever
 # summary(lmer.rating, ddf="Kenward-Roger")
 # summary(lmer.rating, ddf="Satterthwaite")
-order.terms = c(1, 8, 4, 6, 5, 3, 2, 7)
+pred.labels = c(
+            "(Intercept)",
+            "Native language (Swedish vs. English)", 
+            "Group (/d/-exposure vs. control)",
+            "Sound (/d/ vs. /t/)",
+            "Native language : Group", 
+            "Native language : Sound",
+            "Group : Sound", 
+            "Native language : Group : Sound")
 tab_model(lmer.rating,
           show.r2 = F,
           title = "(\\#tab:ratings-analysis) Results of linear mixed-effects regression of /d/-goodness ratings.",
-          dv.labels = "/d/-goodness rating (z-scored)",
-          pred.labels = c(
-            "(Intercept)",
-            "Group : Sound", 
-            "Native language : Sound", 
-            "Group (/d/-exposure vs. control)",
-            "Native language : Group", 
-            "Sound (/d/ vs. /t/)",
-            "Native language : Group : Sound",
-            "Native lanugage (Swedish vs. English)"),
-          order.terms = order.terms)
+          pred.labels = pred.labels,
+          dv.labels = "/d/-goodness rating (z-scored)")
 
 # Get simple effects via emmeans
 emm = emmeans(lmer.rating,  ~ Group : Sound | NativeLanguage,
@@ -552,6 +565,52 @@ lmer.rating.simple = contrast(emm, interaction = c("consec", "consec"))
 ```
 
 
+### Are outliers driving these results?
+
+For the Swedish data it seems that both the /d/-exposure and the control group had two participants each who had ratings that were overall much closer to 0 than was the case for other participants (it is worth pointing out that, these ratings of these participants are not necessarily unexpected compared to the *English* data). To address potential concerns that the difference in the English and Swedish results is driven by these four Swedish participants, we repeated the analysis without these participants. Table \@ref(tab:ratings-analysis) summarizes the results. All effects---including the three-way interaction---remain significant.
+
+```{r ratings-analysis-noOutliers}
+lmer.rating.noOutliers = lmer(Rating.Response.d.zscored ~ 
+                     NativeLanguage * Group * Sound + 
+         (1 + Sound * Group | Item.MinimalPair) + (1 | Participant), 
+       data = d.test %>%
+         filter(!(Participant %in% c("S105", "S108", "S113", "S122"))))
+
+tab_model(lmer.rating.noOutliers,
+          show.r2 = F,
+          title = "(\\#tab:ratings-analysis-noOutliers) Results of linear mixed-effects regression of /d/-goodness ratings after exclusion of the four participants in the Swedish data that have /d/-goodness ratings close to zero.",
+          dv.labels = "/d/-goodness rating (z-scored)",
+          pred.labels = pred.labels)
+```
+### Relating ratings to performance during exposure
+
+Another common concern is that participants who do not correctly recognize the critical words with syllable-final /d/ during exposure might not exhibit accent adaptation (e.g, because the input they experienced during exposure is not lexically labeled from the perspective of these participants). We therefore related participants' ratings during test to their accuracy on the critical words during exposure (for the /d/-exposure group, those are the foreign-accented words with syllable-final /d/). For this purpose, we transformed goodness ratings into the goodness rating for the *intended* category, so that higher ratings indicate that listeners perceived the recording to be typical for the sound category it was intended to represent (i.e., /d/-goodness ratings if the recorded word ended in /d/, /t/-goodness ratings if the recorded word ended in /t/). The result is shown in Figure \@ref(fig:ratings-and-accuracy). Although the direction of the trend is in the expected direction for the Swedish data, this trend was not significant (see confidence intervals in Figure \@ref(fig:ratings-and-accuracy)).
+
+(ref:ratings-and-accuracy) Relation between the accuracy on critical exposure items and ratings during test.
+
+```{r ratings-and-accuracy, height = 4, out.width="75%", fig.cap="(ref:ratings-and-accuracy)"}
+d.test %>%
+  group_by(NativeLanguage, Group, Participant) %>%
+  # Collapse into overall goodness ratings
+  summarise(Rating.mean = mean(ifelse(Sound == "d", 
+                                      Rating.Response.d.zscored,
+                                      -Rating.Response.d.zscored))) %>%
+  left_join(d.exposure %>% 
+              filter(Item.Type == "critical") %>%
+              get_LD_byParticipant(),
+            by = c("NativeLanguage", "Group", "Participant")) %>%
+  ggplot(aes(x = Accuracy * 100, y = Rating.mean, color = Group)) +
+  geom_label(aes(label = Participant), alpha = .5) +
+  geom_smooth(method = "lm") +
+  scale_x_continuous("Percent correct on critical exposure items") +
+  scale_y_continuous("goodness rating for the intended category (z-scored)") +
+  scale_color_manual(values = colors.group) +
+  scale_fill_manual(values = colors.group) +
+  facet_grid(. ~ NativeLanguage, scales="free_y") +
+  theme(legend.position = "top",
+        panel.grid.major.x = element_blank(),
+        panel.grid.minor.x = element_blank())
+```
 
 # Methods of perception experiments #
 
