@@ -494,20 +494,16 @@ The /d/- and /t/-goodness ratings could range from 1 to 7. The two types of rati
 (ref:ratings-results) /d/-goodness ratings during test (z-scored) by native language and exposure group
 
 ```{r ratings-results, fig.cap="(ref:ratings-results)", fig.height=4, out.width='75%'}
-d.test %>%
+p = d.test %>%
   group_by(NativeLanguage, Group, Sound, Participant) %>%
   summarise(Rating.mean = mean(Rating.Response.d.zscored)) %>%
   ggplot(mapping = aes(x = Sound, y = Rating.mean)) + 
-  geom_dotplot(aes(fill = Group), color = NA, 
-               alpha = 1,  dotsize = 0.5, 
-               binaxis = "y", stackdir = "center", 
-               position = position_dodge(.9)) +
   stat_summary(aes(fill = Group), fun.y = mean, geom = "bar", 
                alpha = .6,
-               position = position_dodge(.9)) +
+               position = position_dodge(.93)) +
   stat_summary(aes(group = Group), fun.data = mean_cl_boot, geom = "linerange", 
                alpha = .8, size = .8, 
-               position = position_dodge(.9)) +
+               position = position_dodge(.93)) +
   scale_x_discrete("Intended sound category") +
   scale_y_continuous("/d/-goodness rating (z-scored)") +
   scale_color_manual(values = colors.group) +
@@ -516,9 +512,14 @@ d.test %>%
   theme(legend.position = "top",
         panel.grid.major.x = element_blank(),
         panel.grid.minor.x = element_blank())
-
-ggsave(filename = "../figures/Result-ratings.png",
+ggsave(p, filename = "../figures/Result-ratings.png",
        width = 7, height = 4)
+
+p + 
+  geom_dotplot(aes(fill = Group), color = NA, 
+               alpha = 1,  dotsize = 0.5, 
+               binaxis = "y", stackdir = "center", 
+               position = position_dodge(.9)) 
 ```
 
 Figure \@ref(fig:ratings-results) shows the z-scored /d/-goodness ratings from both experiments. To compare participants' ratings for the /d,t/-final test words across the two experiments, we conducted a linear mixed-effects regression (Baayen et al., 2008) over the combined data from both experiments. The regression predicted z-scored /d/-goodness ratings based on the sound category (sum-coded: 1 = word recording intended to end in /d/ vs. -1 = word recording intended to end in /t/), exposure group (sum-coded: 1 =  /d/-exposure vs. -1 = control), the experiment (sum-coded: 1 = Swedish vs. -1 = English), and all their interactions. The regression contained the maximal random effect structure justified by the design (random by-participant intercepts and slope for sound; random by-item intercepts and slopes for sound, exposure group, and their interaction).^[Even this simplified model estimated the variance of the by-participant intercepts to be zero (see below), presumably because the z-scoring of ratings within participant already removed that variance. If all by-participant random effects are excluded, the results reported below do not change. If non-zscored ratings are analyzed instead (unlike in previous work), the three-way interaction is no longer significant ($p = .11$).]
@@ -1151,12 +1152,12 @@ Figure \@ref(fig:ideal-observers-accuracy) shows the predicted accuracy for a hy
 p.post %+% (
   d.IO %>%
          filter(CategoryModel == Sound)) +
-  stat_summary(aes(fill = ModelType), fun.y = mean, geom = "bar",
-               alpha = .6, color = NA,
-               position = position_dodge(.9)) +
+  stat_summary(aes(color = ModelType), fun.y = mean, geom = "bar",
+               alpha = .6, fill = NA,
+               position = position_dodge(.93)) +
   stat_summary(aes(group = ModelType), fun.data = mean_cl_boot, geom = "linerange", 
                alpha = .8, size = .8, color = "black",
-               position = position_dodge(.9)) +
+               position = position_dodge(.93)) +
   scale_y_continuous("Accuracy") +
   geom_hline(yintercept = 1/2)
 ```
@@ -1243,7 +1244,6 @@ d.english.test.byItem <- left_join(d.english.test.byItem,
 
 # correlation between ratings and percent /d/ responses
 ggscatter(d.english.test.byItem, x = "Proportion.d", y = "zRating.d", 
-         # color = "Sound", 
           add = "reg.line", conf.int = TRUE, 
           palette = "jco",  cor.method = "pearson",
           xlab = "Proportion of /d/-responses from identification task", ylab = "/d/-goodness from rating task") + 
@@ -1252,8 +1252,6 @@ ggscatter(d.english.test.byItem, x = "Proportion.d", y = "zRating.d",
   ggtitle("Item-wise correlation between ID and rating task (English data)") +
   geom_smooth(color = "red", method = "lm") + 
   geom_smooth(color = "black", method = "gam", formula = y~s(x))
- 
-
 ```
 
 ## Results 
