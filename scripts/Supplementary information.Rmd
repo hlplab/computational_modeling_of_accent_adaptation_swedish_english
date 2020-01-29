@@ -1287,14 +1287,13 @@ d.english.test.byItem <-  within(d.english.test.byItem, {
 
 ratingID.lmer <- lmer(zRating.d ~ Proportion.d + (1 + Group|Item.MinimalPair), 
                      data = d.english.test.byItem)
-print(ratingID.lmer)
+summary(ratingID.lmer)
 ```
 
 ```{r get-predicted-ratings-from-IO}
-
 # get predicted ratings of /d/ from Ideal observers
 d.test.IO.rating <- d.test.IO %>%
-  filter(CategoryModel == "d") %>%
+  filter(CategoryModel == "/d/") %>%
   select(NativeLanguage, Dataset, Group, Participant, ModelType, Consistence, Sound, Item.MinimalPair, Item.Word,  rvowel, rclosure, rburst, Posterior, Rating.Response.d.zscored) %>%
   mutate(zRating.d = Rating.Response.d.zscored,
          Proportion.d = Posterior)
@@ -1314,7 +1313,6 @@ We compare the transformed /d/ goodness ratings from rating tasks and the poster
   + For the English data, the Ideal Observers predict significantly bettter performance from the non-native model over the native model for both /d/ and /t/; this pattern was also reflected in the higher ratings for the intended category (for both /d/ and /t/) in the human ratings.
 
 ```{r fig-ratings-IO-group-level, fig.height = 9, fig.width = 12}
-
 p.model <- ggplot(data = d.test.IO.rating %>%
                     mutate(ModelType = factor(ModelType, levels = c("Non-native", "Native"))),
             aes(x=Sound, y = PredictedRating.d, color = ModelType, fill = ModelType)) + 
@@ -1491,13 +1489,10 @@ model.parameter.swedish <- res.parameter %>%
   mutate(key = gsub("_t", "", key)) %>%
   spread(key, value) %>%
   mutate(NativeLanguage = "Swedish")
-
-
 ```
  
 
 ```{r combine-ideal-observers-model-parameters}
-
 d.model.parameter <- model.parameter.english %>%
   filter(cues == "raw",
          combo == "prototypical_M5",
@@ -1510,8 +1505,6 @@ d.model.parameter <- model.parameter.english %>%
   mutate(NativeLanguage = "English") %>%
   full_join(model.parameter.swedish) %>%
   filter(Part == "test")
-  
-
 ```
  
 Plot Ideal Observer modeling results in 3d space.
