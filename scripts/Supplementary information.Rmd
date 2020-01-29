@@ -67,20 +67,21 @@ theme_set(
 )
 
 colors.group = c("red", "blue")
+levels.sound = c("/d/", "/t/")
 ```
 
 ```{r functions and pipes}
 # Pipes
 get_LD_byParticipant = . %>% 
   filter(Block.Type == "exposure") %>%
-  group_by(NativeLanguage, Group, Participant) %>% 
+  group_by(Language, NativeLanguage, Group, Participant) %>% 
   summarise(
     Accuracy = mean(LD.Correct, na.rm = T),
     RT = mean(LD.RT, na.rm = T)) 
 
 get_LD.Accuracy_byGroup = . %>% 
   get_LD_byParticipant() %>% 
-  group_by(NativeLanguage, Group) %>% 
+  group_by(Language, NativeLanguage, Group) %>% 
   summarise(mean = mean(Accuracy, na.rm = T), 
             sd = sd(Accuracy, na.rm = T)) %>%
   ungroup() %>%
@@ -89,7 +90,7 @@ get_LD.Accuracy_byGroup = . %>%
 
 get_LD.RT_byGroup = . %>% 
   get_LD_byParticipant() %>% 
-  group_by(NativeLanguage, Group) %>% 
+  group_by(Language, NativeLanguage, Group) %>% 
   summarise(mean = mean(RT, na.rm = T), 
             sd = sd(RT, na.rm = T)) %>%
   ungroup() %>%
@@ -232,6 +233,7 @@ d.swedish %<>%
     Rating.RT = rating_1.rt,
     Block.Order = block_id) %>%
   mutate(
+    Language = "Flemish-accented Swedish",
     NativeLanguage = "Swedish",
     Block.Type = gsub("^([A-Z]).*$", "\\1", Item.Type),
     Block.Type = case_when(
@@ -257,10 +259,10 @@ d.swedish %<>%
       T ~ NA_character_
     )),
     Sound = factor(case_when(
-      ItemTemp %in% c("DI", "DF", "TW") ~ "d",
-      ItemTemp %in% c("TI", "TF") ~ "t",
+      ItemTemp %in% c("DI", "DF", "TW") ~ "/d/",
+      ItemTemp %in% c("TI", "TF") ~ "/t/",
       T ~ NA_character_
-    ), levels = c("d", "t")),  
+    ), levels = levels.sound),  
     Sound.Position = case_when(
       ItemTemp %in% c("TF", "DF", "TW") ~ "final",
       ItemTemp %in% c("TI", "DI") ~ "initial",
@@ -290,7 +292,8 @@ d.swedish %<>%
     X = NULL
   ) %>%
   # Order columns
-  select(NativeLanguage, 
+  select(Language, 
+         NativeLanguage, 
          Group, Participant,
          Block.Type, Block.Order,
          Trial, 
@@ -316,6 +319,7 @@ d.english.test %<>%
     Rating.Response = Rating.Answer,
     Rating.RT = RT) %>%
   mutate(
+    Language = "Mandarin-accented English",
     NativeLanguage = "English",
     Participant = paste0("E", Participant),
     Group = ifelse(Group == "experimental", "/d/-exposure", "control"),
@@ -323,14 +327,16 @@ d.english.test %<>%
     Item.MinimalPair = paste0("E", Item.MinimalPair),
     Item.WordID = paste0("E", as.numeric(as.factor(Item.Word))),
     Item.Word = as.character(Item.Word),
-    Sound = factor(Sound, levels = c("d", "t")),
+    Sound = factor(paste0("/", Sound, "/"), 
+                   levels = levels.sound),
     Sound.Position = "final",
     Subject = NULL)
 
 # Combine Swedish and English *test* data
 d.test = d.swedish %>%
   filter(Block.Type == "test", Sound.Position == "final") %>%
-  select(NativeLanguage,
+  select(Language,
+         NativeLanguage,
          Group, Participant,
          Block.Type, Block.Order,
          Trial, 
@@ -339,6 +345,7 @@ d.test = d.swedish %>%
          Rating.for, Rating.Response, Rating.RT) %>%
   full_join(d.english.test) %>%
   mutate(
+    Language = factor(Language, levels = c("Mandarin-accented English", "Flemish-accented Swedish")),
     NativeLanguage = factor(NativeLanguage, levels = c("English", "Swedish")),
     Rating.Response.d = ifelse(Rating.for == "d", Rating.Response, 8 - Rating.Response) 
   ) %>%
@@ -361,7 +368,7 @@ d.test = d.swedish %>%
 d.exposure = 
   d.swedish %>%
   filter(Block.Type == "exposure") %>%
-  select(NativeLanguage, Group, Participant, 
+  select(Language, NativeLanguage, Group, Participant, 
          Block.Type, Item.Type, Item.WordStatus,
          LD.Correct, LD.RT) %>%
   # Expand the English data so that we can have a combined tibble
@@ -374,6 +381,7 @@ d.exposure =
               filter(Item.Type != "Accuracy") %>%
               crossing(LD.Correct = c(0,1)) %>%
               mutate(
+                Language = "Mandarin-accented English",
                 NativeLanguage = "English",
                 # Participants were renumbered in the English test-data. 
                 # Making sure that IDs match across exposure and test data.
@@ -394,16 +402,20 @@ d.exposure =
                   LD.Correct == 0 ~ Count - round(Count * accuracy, 0)
                 ),
                 accuracy = NULL) %>%
-              group_by(NativeLanguage, Group, Participant, 
+              group_by(Language, NativeLanguage, Group, Participant, 
                        Block.Type, Item.Type, Item.WordStatus, 
                        LD.Correct) %>%
               tidyr::expand(Count = 1:Count) %>%
               mutate(Count = NULL),
-            by = c("NativeLanguage", "Group", "Participant", 
+            by = c("Language", "NativeLanguage", "Group", "Participant", 
                    "Block.Type", "Item.Type", "Item.WordStatus", 
                    "LD.Correct")) %>%
-    mutate_at(
-    c("NativeLanguage", "Group", "Participant", "Block.Type", "Item.Type", "Item.WordStatus"),
+  mutate(    
+    Language = factor(Language, levels = c("Mandarin-accented English", "Flemish-accented Swedish")),
+    NativeLanguage = factor(NativeLanguage, levels = c("English", "Swedish"))
+  ) %>%
+  mutate_at(
+    c("Group", "Participant", "Block.Type", "Item.Type", "Item.WordStatus"),
     .funs = factor
   )
 ```
@@ -427,7 +439,7 @@ This suggests that the syllable-final /d/ of the Flemish-accented speaker was in
 
 (ref:LD-accuracy) Lexical decision accuracies and RTs in the Swedish experiment by exposure group: all words (left) or only critical words (right). For the /d/ exposure group, critical words have syllable-final /d/. For the control group, critical words are matched in average length and frequency, but do not contain /d/ (or /t/).
 
-```{r LD-accuracy, fig.cap="(ref:LD-accuracy)", fig.height=3.5, fig.width=3.5, out.width='50%', fig.show = 'hold'}
+```{r LD-accuracy, fig.cap="(ref:LD-accuracy)", fig.height=3.5, out.width='75%', fig.show = 'hold'}
 p = d.exposure %>%
   filter(NativeLanguage == "Swedish") %>%
   get_LD_byParticipant() %>%
@@ -444,13 +456,17 @@ p = d.exposure %>%
     breaks = c(0, 0.25, 0.5, 0.75, 1.0), 
     limits = c(0, 1.0)) + 
   scale_fill_manual(values = colors.group) + 
-  facet_wrap(~ NativeLanguage) +
-  theme_cowplot() + theme(legend.position = "top")
+  facet_wrap(~ Language) +
+  theme(legend.position = "right")
 
-p  
-p %+% (d.exposure %>% 
+l = get_legend(p)
+p = p + theme(legend.position = "none")
+plot_grid(
+  plotlist = list(p, 
+                  p %+% (d.exposure %>% 
                    filter(NativeLanguage == "Swedish" & Item.Type == "critical") %>%
-                   get_LD_byParticipant())
+                   get_LD_byParticipant())),
+  nrow = 1, rel_widths = c(.45, .45, .1))
 ```
 
 
@@ -472,7 +488,7 @@ d.test %>%
   droplevels() %>%
   group_by(Group, Participant) %>%
   mutate(Rating.Response.zscored = as.numeric(scale(Rating.Response))) %>%
-  group_by(Group, Item.Word, Rating.for) %>%
+  group_by(Language, Group, Item.Word, Rating.for) %>%
   summarise(Rating.mean = mean(Rating.Response.zscored)) %>%
   spread(Rating.for, Rating.mean) %>%
   ggplot(
@@ -483,7 +499,9 @@ d.test %>%
   scale_x_continuous("/d/-goodness rating (z-scored)") +
   scale_y_continuous("/t/-goodness rating (z-scored)") +
   scale_color_manual(values = colors.group) +
-  scale_fill_manual(values = colors.group)
+  scale_fill_manual(values = colors.group) +
+  facet_wrap(~ Language) +
+  theme(legend.position = "right")
 ```
 
 
@@ -495,7 +513,7 @@ The /d/- and /t/-goodness ratings could range from 1 to 7. The two types of rati
 
 ```{r ratings-results, fig.cap="(ref:ratings-results)", fig.height=4, out.width='75%'}
 p = d.test %>%
-  group_by(NativeLanguage, Group, Sound, Participant) %>%
+  group_by(Language, NativeLanguage, Group, Sound, Participant) %>%
   summarise(Rating.mean = mean(Rating.Response.d.zscored)) %>%
   ggplot(mapping = aes(x = Sound, y = Rating.mean)) + 
   stat_summary(aes(fill = Group), fun.y = mean, geom = "bar", 
@@ -508,7 +526,7 @@ p = d.test %>%
   scale_y_continuous("/d/-goodness rating (z-scored)") +
   scale_color_manual(values = colors.group) +
   scale_fill_manual(values = colors.group) +
-  facet_grid(. ~ NativeLanguage, scales="free_y") +
+  facet_grid(. ~ Language, scales="free_y") +
   theme(legend.position = "top",
         panel.grid.major.x = element_blank(),
         panel.grid.minor.x = element_blank())
@@ -530,14 +548,11 @@ Finally, the three-way interaction between native language, sound, and exposure 
 
 
 ```{r ratings-analysis}
-# Variable coding 
-d.test %<>% 
-  applyContrasts()
-
 lmer.rating = lmer(Rating.Response.d.zscored ~ 
                      NativeLanguage * Group * Sound + 
          (1 + Sound * Group | Item.MinimalPair) + (1 | Participant), 
-       data = d.test)
+       data = d.test %>% 
+         applyContrasts())
 
 # Kenward-Rogers seems to take forever
 # summary(lmer.rating, ddf="Kenward-Roger")
@@ -575,7 +590,8 @@ lmer.rating.noOutliers = lmer(Rating.Response.d.zscored ~
                      NativeLanguage * Group * Sound + 
          (1 + Sound * Group | Item.MinimalPair) + (1 | Participant), 
        data = d.test %>%
-         filter(!(Participant %in% c("S105", "S108", "S113", "S122"))))
+         filter(!(Participant %in% c("S105", "S108", "S113", "S122"))) %>% 
+         applyContrasts())
 
 tab_model(lmer.rating.noOutliers,
           show.r2 = F,
@@ -591,15 +607,15 @@ Another common concern is that participants who do not correctly recognize the c
 
 ```{r ratings-and-accuracy, height = 4, out.width="75%", fig.cap="(ref:ratings-and-accuracy)"}
 d.test %>%
-  group_by(NativeLanguage, Group, Participant) %>%
+  group_by(Language, NativeLanguage, Group, Participant) %>%
   # Collapse into overall goodness ratings
-  summarise(Rating.mean = mean(ifelse(Sound == "d", 
+  summarise(Rating.mean = mean(ifelse(Sound == "/d/", 
                                       Rating.Response.d.zscored,
                                       -Rating.Response.d.zscored))) %>%
   left_join(d.exposure %>% 
               filter(Item.Type == "critical") %>%
               get_LD_byParticipant(),
-            by = c("NativeLanguage", "Group", "Participant")) %>%
+            by = c("Language", "NativeLanguage", "Group", "Participant")) %>%
   ggplot(aes(x = Accuracy * 100, y = Rating.mean, color = Group)) +
   geom_label(aes(label = Participant), alpha = .5) +
   geom_smooth(method = "lm") +
@@ -607,7 +623,7 @@ d.test %>%
   scale_y_continuous("goodness rating for the intended category (z-scored)") +
   scale_color_manual(values = colors.group) +
   scale_fill_manual(values = colors.group) +
-  facet_grid(. ~ NativeLanguage, scales="free_y") +
+  facet_grid(. ~ Language, scales="free_y") +
   theme(legend.position = "top",
         panel.grid.major.x = element_blank(),
         panel.grid.minor.x = element_blank())
@@ -911,7 +927,6 @@ results.english <- readRDS("../data/ideal_observer_results_English_raw.rds")
 # load model parameters for English data
 model.parameter.english <- readRDS("../data/ideal_observer_models_English.rds")
 
-
 # select the appropriate subset (matching what are available for Swedish data) 
 # from English modeling results
 results.english = results.english %>%
@@ -945,6 +960,10 @@ d.IO = results.swedish %>%
          Posterior = posterior,
          Posterior.Choice = posterior_choice) %>%
   mutate_if(is.character, as.factor) %>%
+  # Make sure the category model and sound variables have the same levels.
+  mutate_at(c("CategoryModel", "Sound"),
+            function (x) factor(paste0("/", x, "/"), 
+                        levels = levels.sound)) %>%
   left_join(d.test %>%
               select(Item.MinimalPair, Item.WordID, Item.Word, NativeLanguage) %>%
               distinct(.), by = c("NativeLanguage", "Item.Word")
@@ -956,9 +975,12 @@ d.IO = results.swedish %>%
 
 ## Structure of Ideal Observers
 
-Within each language, we compare the predictions of two ideal observers: a native model and a non-native model. The only difference between native and non-native models lies in the /d/ tokens used for training---paralleling the difference between the /d/- and control exposure in the experiments. Both the native and non-native ideal observer are evaluated on the same foreign-accented minimal pair stimuli from the test phase of the experiments. 
+Within each language, we compare the predictions of a native model and a non-native model, for a total of four ideal observers. The only difference between native and non-native models lies in the /d/ tokens used for training---paralleling the difference between the /d/- and control exposure in the experiments. Both the native and non-native ideal observer are evaluated on the same foreign-accented minimal pair stimuli from the test phase of the experiments. Figure \@ref(fig:ideal-observer-and-data) summarizes what speech databases we used  to estimate the mean $\mu$ and covariance matrix $\Sigma$ of the multivariate Gaussian distributions for the /d/ and /t/ categories in each of the four ideal observers.
 
-
+```{r ideal-observer-and-data, fig.cap="(ref:ideal-observer-and-data)", out.width="100%"}
+knitr::include_graphics("../figures/ideal observers and data.png")
+```
+(ref:ideal-observer-and-data) Four ideal observer models---a *native* and *non-native* ideal observer each for the English and the Swedish data---were fit and cross-validated<!--Xin: correct?--> against production data from native- and foreign-accented English and Swedish. 
 
 - **Native** model: 
   + Exposure /d/ comes from the *native* talker's exposure /d/ (30 tokens)
@@ -1061,7 +1083,8 @@ plot_ly(data = d.resid,
 
 
 ## Fitting procedure 
-We note that this entails that there is no overlap between the training and test data for the Ideal Observers, so that concerns about bias due to overfitting to the data is *not* a concern. <!-- Xin: could motive use of bootstrap here: However, overfitting to the training data could unfairly bias *against* the ideal observer. This is turn could mask differences between the native and non-native ideal observers, or difference between those observer for English and Swedish. While this is not the case for the present data (as confirmed in additional analyses), the analyses we present here employ cross-validation. EXPLAIN. This has the additional benefit that we obtain confidence intervals ... EXPLAIN -->
+We note that this entails that there is no overlap between the training and test data for the Ideal Observers, so that concerns about bias due to overfitting to the data is *not* a concern. 
+<!-- Xin: could motive use of bootstrap here: However, overfitting to the training data could unfairly bias *against* the ideal observer. This is turn could mask differences between the native and non-native ideal observers, or difference between those observer for English and Swedish. While this is not the case for the present data (as confirmed in additional analyses), the analyses we present here employ cross-validation. EXPLAIN. This has the additional benefit that we obtain confidence intervals ... EXPLAIN -->
 
 
 
@@ -1072,14 +1095,12 @@ acc_method <- 'posterior'
 
 # assign selected cues
 selected_cues <- c('rvowel','rclosure','rburst')
-
 ```
 
 
 
 
 ```{r integrate-test-data-with-modeling-results}
-
 d.test.IO <- left_join(d.test, d.IO, by = c("NativeLanguage", "Sound", "Item.Word", "Item.MinimalPair", "Item.WordID"))
 
 d.test.IO %<>%
@@ -1114,7 +1135,7 @@ Second, at the item level, we hope to predict human responses from the posterior
 ```{r ideal-observers-posterior, fig.cap="(ref:ideal-observers-posterior)"}
 p.post = d.IO %>%
          filter(CategoryModel == Sound) %>%
-         mutate(Posterior = ifelse(Sound == "d", Posterior, 1 - Posterior)) %>%
+         mutate(Posterior = ifelse(Sound == levels.sound[1], Posterior, 1 - Posterior)) %>%
   ggplot(aes(x= Sound, 
            y = Posterior, 
            color = ModelType, 
@@ -1149,17 +1170,17 @@ Figure \@ref(fig:ideal-observers-accuracy) shows the predicted accuracy for a hy
 (ref:ideal-observers-accuracy) Predicted accuracy of native and non-native ideal observers for the foreign-accented /d/- and /t/ words during test.
 
 ```{r ideal-observers-accuracy, fig.cap="(ref:ideal-observers-accuracy)"}
-p.post %+% (
-  d.IO %>%
+p.post %+% 
+  (d.IO %>%
          filter(CategoryModel == Sound)) +
+  geom_hline(yintercept = 1/2, color = "gray") +
   stat_summary(aes(color = ModelType), fun.y = mean, geom = "bar",
                alpha = .6, fill = NA,
                position = position_dodge(.93)) +
   stat_summary(aes(group = ModelType), fun.data = mean_cl_boot, geom = "linerange", 
                alpha = .8, size = .8, color = "black",
                position = position_dodge(.93)) +
-  scale_y_continuous("Accuracy") +
-  geom_hline(yintercept = 1/2)
+  scale_y_continuous("Accuracy") 
 ```
 
 
@@ -1189,15 +1210,16 @@ d.english.ID <- d.english.ID %>%
     Item.Word = Word,
     Block.Order = Block) %>%
  mutate(
-   ID.Response.d = case_when(
-    (Sound == "d" & ID.Response == 1) | (Sound == "t" & ID.Response == 0) ~ 1,
-    (Sound == "t" & ID.Response == 1) | (Sound == "d" & ID.Response == 0) ~ 0),
    NativeLanguage = "English",
    Participant = paste0("E", Participant),
    Group = ifelse(Group == "experimental", "/d/-exposure", "control"),
    Block.Type = "test",
-   Sound = factor(Sound, levels = c("d", "t")),
+   Sound = factor(paste0("/", Sound, "/"),
+                  levels = levels.sound),
    Sound.Position = "final",
+   ID.Response.d = case_when(
+    (Sound == levels.sound[1] & ID.Response == 1) | (Sound == levels.sound[2] & ID.Response == 0) ~ 1,
+    (Sound == levels.sound[2] & ID.Response == 1) | (Sound == levels.sound[1] & ID.Response == 0) ~ 0),
    Subject = NULL,
    Session = NULL
 ) 
@@ -1418,7 +1440,6 @@ print(summary(prediction.lmer2.simple))
 
 
 ```{r extract-parameters-ideal-observers-Swedish}
-
 model.parameter.swedish <- model.parameter.swedish
 model.parameter.swedish %<>%
   mutate(modelType = ifelse(modelType == "TS", "Non-native", "Native")) %>%
@@ -1465,7 +1486,7 @@ model.parameter.swedish <- res.parameter %>%
   rename(ModelType = modelType,
          Part = part) %>%
   gather(key, value, -Part, -ModelType) %>%
-  mutate(Sound = ifelse(grepl("d", key), "d", "t")) %>%
+  mutate(Sound = ifelse(grepl("d", key), "/d/", "/t/")) %>%
   mutate(key = gsub("_d", "", key)) %>%
   mutate(key = gsub("_t", "", key)) %>%
   spread(key, value) %>%
@@ -1535,7 +1556,7 @@ d.model.parameter.ellipse = d.model.parameter %>%
     }
   ) %>%
   ungroup() %>%
-  mutate(Sound = factor(Sound, levels = c("d", "t")))
+  mutate(Sound = factor(Sound, levels = levels.sound))
 
 
 
