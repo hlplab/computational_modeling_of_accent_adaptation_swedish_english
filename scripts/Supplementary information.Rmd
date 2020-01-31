@@ -67,6 +67,9 @@ theme_set(
 )
 
 colors.group = c("red", "blue")
+colors.category = c("lightblue", "orange")
+colors.language = c("cyan", "pink")
+shapes.category = c("circle","square")
 levels.sound = c("/d/", "/t/")
 ```
 
@@ -163,6 +166,21 @@ applyContrasts = function(d) {
   # contrasts(d.test$NativeLanguage)
   # contrasts(d.test$Group)
   # contrasts(d.test$Sound)
+}
+
+insertLayer <- function(P, after=0, ...) {
+  #  P     : Plot object
+  # after  : Position where to insert new layers, relative to existing layers
+  #  ...   : additional layers, separated by commas (,) instead of plus sign (+)
+  if (after < 0)
+    after <- after + length(P$layers)
+  
+  if (!length(P$layers))
+    P$layers <- list(...)
+  else 
+    P$layers <- append(P$layers, list(...), after)
+  
+  return(P)
 }
 ```
 
@@ -520,7 +538,7 @@ p = d.test %>%
                alpha = .6,
                position = position_dodge(.93)) +
   stat_summary(aes(group = Group), fun.data = mean_cl_boot, geom = "linerange", 
-               alpha = .8, size = .8, 
+               size = .8, 
                position = position_dodge(.93)) +
   scale_x_discrete("Intended sound category") +
   scale_y_continuous("/d/-goodness rating (z-scored)") +
@@ -533,11 +551,11 @@ p = d.test %>%
 ggsave(p, filename = "../figures/Result-ratings.png",
        width = 7, height = 4)
 
-p + 
-  geom_dotplot(aes(fill = Group), color = NA, 
+insertLayer(p, after = 0,
+            geom_dotplot(aes(fill = Group), color = NA, 
                alpha = 1,  dotsize = 0.5, 
                binaxis = "y", stackdir = "center", 
-               position = position_dodge(.9)) 
+               position = position_dodge(.9)))
 ```
 
 Figure \@ref(fig:ratings-results) shows the z-scored /d/-goodness ratings from both experiments. To compare participants' ratings for the /d,t/-final test words across the two experiments, we conducted a linear mixed-effects regression (Baayen et al., 2008) over the combined data from both experiments. The regression predicted z-scored /d/-goodness ratings based on the sound category (sum-coded: 1 = word recording intended to end in /d/ vs. -1 = word recording intended to end in /t/), exposure group (sum-coded: 1 =  /d/-exposure vs. -1 = control), the experiment (sum-coded: 1 = Swedish vs. -1 = English), and all their interactions. The regression contained the maximal random effect structure justified by the design (random by-participant intercepts and slope for sound; random by-item intercepts and slopes for sound, exposure group, and their interaction).^[Even this simplified model estimated the variance of the by-participant intercepts to be zero (see below), presumably because the z-scoring of ratings within participant already removed that variance. If all by-participant random effects are excluded, the results reported below do not change. If non-zscored ratings are analyzed instead (unlike in previous work), the three-way interaction is no longer significant ($p = .11$).]
@@ -760,7 +778,8 @@ d.bootstrap %>%
   geom_density(alpha = .5, color = NA) +
   geom_vline(xintercept = original.tvalue, color = "blue") +
   scale_x_continuous("t-value") +
-  scale_fill_discrete("Native language")
+  scale_fill_manual("Native language",
+                    values = colors.language)
   
 d.bootstrap %<>%
   pivot_wider(names_from = NativeLanguage,
@@ -915,6 +934,10 @@ Compared to the English experiment, the Swedish experiment had about 50\% fewer 
 ## ------------------------------------------------------------------------------------------------------
 # This part will change once we important the code for the IO analyses.
 # We might then move the IO code down to where it is first used
+# 
+# To do: 
+# 1)rename Dataset to Language, which currently leads to errors down the road.
+# 2) add plots for cue correction for exposure tokens?
 ## ------------------------------------------------------------------------------------------------------
 
 # load Swedish results
@@ -967,6 +990,10 @@ d.IO = results.swedish %>%
   left_join(d.test %>%
               select(Item.MinimalPair, Item.WordID, Item.Word, NativeLanguage) %>%
               distinct(.), by = c("NativeLanguage", "Item.Word")
+  ) %>%
+  mutate(    
+    Dataset = factor(Dataset, levels = c("Mandarin-accented English", "Flemish-accented Swedish")),
+    NativeLanguage = factor(NativeLanguage, levels = c("English", "Swedish"))
   )
 # there should be a total of 180 words across the two datasets; 
 # each word has 2 levels for ModelType (non-native or native) and 2 levels for category_model (d or t)
@@ -1039,7 +1066,7 @@ To develop and evaluate a model of human perception, it is thus necessary to eit
 <!--   + Step 2: cue ~ 1 + syllable, data = exposure /d/ and test /d/ words only -- here we get the predicted effects of syllable length, and apply that to the test /t/ words -->
 
 
-Figure \@ref(fig:cue-before-and-after-residualization) shows the distribution of test tokens before and after correction for phonological context.
+Figures \@ref(fig:english-cue-before-and-after-residualization) and \@ref(fig:swedish-cue-before-and-after-residualization) show the distribution of test tokens before and after correction for phonological context for the English and Swedish experiment, respectively.
 
 <!-- Xin: 
 
@@ -1049,38 +1076,70 @@ Figure \@ref(fig:cue-before-and-after-residualization) shows the distribution of
 
 -->
 
-(ref:cue-before-and-after-residualization) Foreign-accented /d/- and /t/-final minimal pair test tokens from the English and Swedish experiment before and after correction for phonological context.
+(ref:english-cue-before-and-after-residualization) Mandarin-accented English /d/- and /t/-final minimal pair test tokens from the English experiment before and after correction for phonological context.
 
-```{r cue-before-and-after-residualization, fig.cap="(ref:cue-before-and-after-residualization)", out.width="70%"}
-d.resid <- bind_rows(
-  d.IO %>%
-    select(-rvowel, -rclosure, -rburst) %>%
-    mutate(ResidualizationType = "Prior"),
-  d.IO %>%
-    select(-vowel, -closure, -burst) %>%
-    mutate(vowel = rvowel,
-           closure = rclosure,
-           burst = rburst) %>%
-    select(-rvowel, -rclosure, -rburst) %>%
-    mutate(ResidualizationType = "Post")
-) %>%
-  select(-CategoryModel, -Lhood, -Posterior, -Posterior.Choice) %>%
-  mutate(ResidualizationType = factor(ResidualizationType, levels = c("Prior", "Post"))) %>%
+(ref:swedish-cue-before-and-after-residualization) Flemish-accented Swedish /d/- and /t/-final minimal pair test tokens from the Swedish experiment before and after correction for phonological context.
+
+```{r english-cue-before-and-after-residualization, fig.cap="(ref:english-cue-before-and-after-residualization)", out.width="75%", fig.show='hold'}
+d.corrected = d.IO %>%
+  select(-ModelType, -CategoryModel, -Lhood, -Posterior, -Posterior.Choice) %>%
   distinct() %>%
-  mutate(Metric = factor(paste0(NativeLanguage, ResidualizationType), 
-                         levels = c("EnglishPrior", "EnglishPost", "SwedishPrior", "SwedishPost"))) 
+  pivot_longer(
+    cols = c("vowel", "closure", "burst", "rvowel", "rclosure", "rburst"),
+    names_to = c("ContextCorrected", ".value"),
+    names_pattern = "(r{0,1})(.*)"
+  ) %>%
+  mutate(
+    ContextCorrected = ifelse(ContextCorrected == "r", "yes", "no")
+  )
 
-plot_ly(data = d.resid,
+plot_ly(data = d.corrected %>% 
+          filter(NativeLanguage == "English") %>%
+          na.omit() %>%
+          droplevels(),
+        frame= ~ContextCorrected,
+        ids= ~Item.Word, 
         x= ~vowel,
         y= ~closure,
         z= ~burst,
+        text= ~Item.Word,
         color= ~Sound,
+        colors = colors.category,
         symbol= ~Sound,
-        symbols = c('circle','square'),
-        frame= ~Metric,
-        type="scatter3d", mode="markers")
+        symbols = shapes.category,
+        hoverinfo = "text", showlegend = T,
+        type="scatter3d", mode="markers") %>%
+  animation_slider(
+    currentvalue = list(prefix = "Corrected for phonological context: ", 
+                        font = list(color="black"))
+  ) %>%
+  animation_opts(easing = "linear", 
+                 redraw = FALSE)
 ```
-
+```{r swedish-cue-before-and-after-residualization, fig.cap="(ref:swedish-cue-before-and-after-residualization)", out.width="75%", fig.show='hold'}
+plot_ly(data = d.corrected %>% 
+          filter(NativeLanguage == "Swedish") %>%
+          na.omit() %>%
+          droplevels(),
+        frame= ~ContextCorrected,
+        ids= ~Item.Word, 
+        x= ~vowel,
+        y= ~closure,
+        z= ~burst,
+        text= ~Item.Word,
+        color= ~Sound,
+        colors = colors.category,
+        symbol= ~Sound,
+        symbols = shapes.category,
+        hoverinfo = "text", showlegend = T,
+        type="scatter3d", mode="markers") %>%
+  animation_slider(
+    currentvalue = list(prefix = "Corrected for phonological context: ", 
+                        font = list(color="black"))
+  ) %>%
+  animation_opts(easing = "linear",
+                 redraw = FALSE)
+```
 
 ## Fitting procedure 
 We note that this entails that there is no overlap between the training and test data for the Ideal Observers, so that concerns about bias due to overfitting to the data is *not* a concern. 
@@ -1108,7 +1167,7 @@ d.test.IO %<>%
     Group == "control" & ModelType == "Native" ~"yes",
     Group == "control" & ModelType == "Non-native" ~"no",
     Group == "/d/-exposure" & ModelType == "Non-native" ~"yes",
-    Group == "/d/-exposure" & ModelType == "Native" ~"no",
+    Group == "/d/-exposure" & ModelType == "Native" ~"no"
   ))
 ```
 
