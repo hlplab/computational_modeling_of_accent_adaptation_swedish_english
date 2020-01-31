@@ -1093,6 +1093,8 @@ d.corrected = d.IO %>%
     ContextCorrected = ifelse(ContextCorrected == "r", "yes", "no")
   )
 
+# Animations can be manipulated via animation_opts() but it seems that 
+# scatter3d (and other 3D options) are currently not animatable (see schema()).
 plot_ly(data = d.corrected %>% 
           filter(NativeLanguage == "English") %>%
           na.omit() %>%
@@ -1112,9 +1114,7 @@ plot_ly(data = d.corrected %>%
   animation_slider(
     currentvalue = list(prefix = "Corrected for phonological context: ", 
                         font = list(color="black"))
-  ) %>%
-  animation_opts(easing = "linear", 
-                 redraw = FALSE)
+  ) 
 ```
 ```{r swedish-cue-before-and-after-residualization, fig.cap="(ref:swedish-cue-before-and-after-residualization)", out.width="75%", fig.show='hold'}
 plot_ly(data = d.corrected %>% 
@@ -1136,9 +1136,7 @@ plot_ly(data = d.corrected %>%
   animation_slider(
     currentvalue = list(prefix = "Corrected for phonological context: ", 
                         font = list(color="black"))
-  ) %>%
-  animation_opts(easing = "linear",
-                 redraw = FALSE)
+  ) 
 ```
 
 ## Fitting procedure 
