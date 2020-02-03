@@ -67,6 +67,9 @@ theme_set(
 )
 
 colors.group = c("red", "blue")
+colors.category = c("lightblue", "orange")
+colors.language = c("cyan", "pink")
+shapes.category = c("circle","square")
 levels.sound = c("/d/", "/t/")
 ```
 
@@ -163,6 +166,21 @@ applyContrasts = function(d) {
   # contrasts(d.test$NativeLanguage)
   # contrasts(d.test$Group)
   # contrasts(d.test$Sound)
+}
+
+insertLayer <- function(P, after=0, ...) {
+  #  P     : Plot object
+  # after  : Position where to insert new layers, relative to existing layers
+  #  ...   : additional layers, separated by commas (,) instead of plus sign (+)
+  if (after < 0)
+    after <- after + length(P$layers)
+  
+  if (!length(P$layers))
+    P$layers <- list(...)
+  else 
+    P$layers <- append(P$layers, list(...), after)
+  
+  return(P)
 }
 ```
 
@@ -520,7 +538,7 @@ p = d.test %>%
                alpha = .6,
                position = position_dodge(.93)) +
   stat_summary(aes(group = Group), fun.data = mean_cl_boot, geom = "linerange", 
-               alpha = .8, size = .8, 
+               size = .8, 
                position = position_dodge(.93)) +
   scale_x_discrete("Intended sound category") +
   scale_y_continuous("/d/-goodness rating (z-scored)") +
@@ -533,11 +551,11 @@ p = d.test %>%
 ggsave(p, filename = "../figures/Result-ratings.png",
        width = 7, height = 4)
 
-p + 
-  geom_dotplot(aes(fill = Group), color = NA, 
+insertLayer(p, after = 0,
+            geom_dotplot(aes(fill = Group), color = NA, 
                alpha = 1,  dotsize = 0.5, 
                binaxis = "y", stackdir = "center", 
-               position = position_dodge(.9)) 
+               position = position_dodge(.9)))
 ```
 
 Figure \@ref(fig:ratings-results) shows the z-scored /d/-goodness ratings from both experiments. To compare participants' ratings for the /d,t/-final test words across the two experiments, we conducted a linear mixed-effects regression (Baayen et al., 2008) over the combined data from both experiments. The regression predicted z-scored /d/-goodness ratings based on the sound category (sum-coded: 1 = word recording intended to end in /d/ vs. -1 = word recording intended to end in /t/), exposure group (sum-coded: 1 =  /d/-exposure vs. -1 = control), the experiment (sum-coded: 1 = Swedish vs. -1 = English), and all their interactions. The regression contained the maximal random effect structure justified by the design (random by-participant intercepts and slope for sound; random by-item intercepts and slopes for sound, exposure group, and their interaction).^[Even this simplified model estimated the variance of the by-participant intercepts to be zero (see below), presumably because the z-scoring of ratings within participant already removed that variance. If all by-participant random effects are excluded, the results reported below do not change. If non-zscored ratings are analyzed instead (unlike in previous work), the three-way interaction is no longer significant ($p = .11$).]
@@ -760,7 +778,8 @@ d.bootstrap %>%
   geom_density(alpha = .5, color = NA) +
   geom_vline(xintercept = original.tvalue, color = "blue") +
   scale_x_continuous("t-value") +
-  scale_fill_discrete("Native language")
+  scale_fill_manual("Native language",
+                    values = colors.language)
   
 d.bootstrap %<>%
   pivot_wider(names_from = NativeLanguage,
@@ -884,7 +903,7 @@ The Swedish experiment employed fewer test stimuli (64 \/d-\/t\/-final words fro
 
 Two pairs, (*vård-vårt* and *hård-hårt*) were excluded from analysis as it was discovered that dental stops preceded by /r/ in Swedish are pronounced differently as retroflexed variations of /d,t/ and therefore would not have been consistent with the rest of the set.
 
-Due to a misunderstanding, the Swedish data did not counter-balance whether a word recording was rated for /d/- or for /t/-goodness (e.g., the word *rid*---'ride' was always rated for /d/-goodness; the word *rit* ---'rite' was always rated for /t/-goodness; across minimal pair words, /d/- and /t/-final words were equally often rated for /d/- and /t/-goodness). This is unlikely to cause any problems: as shown in Figure \@ref(fig:ratings-to-ratings-correlation) /d/- and /t/-goodness ratings were almost perfectly inversely correlation, so that the gain in information from having each word rated for both /d/- and /t/-goodness (across participants) is minimal.
+Due to a misunderstanding, the Swedish data did not counter-balance whether a word recording was rated for /d/- or for /t/-goodness (e.g., the word *rid*---'ride' was always rated for /d/-goodness; the word *rit* ---'rite' was always rated for /t/-goodness; across minimal pair words, /d/- and /t/-final words were equally often rated for /d/- and /t/-goodness). This is unlikely to cause any problems: as shown in Figure \@ref(fig:rating-to-rating-correlation) /d/- and /t/-goodness ratings were almost perfectly inversely correlation, so that the gain in information from having each word rated for both /d/- and /t/-goodness (across participants) is minimal.
 
 Finally, the Swedish experiment contained a third and fourth test block during which participants rated 54 words from 27 \/d\/-\/t\/-*initial* minimal pairs (e.g., *dom* and *tom*) for their /d/- or /t/-goodness. The relative order of these later test blocks (/d/- or /t/-goodness ratings) was counter-balanced across participants but participants always completed the test block with word-final ratings *before* performing the word-initial ratings. The data from word-initial ratings tasks are not part of the current analysis, though we note that exposure group did not affect the Swedish word-initial ratings either.
 
@@ -915,6 +934,10 @@ Compared to the English experiment, the Swedish experiment had about 50\% fewer 
 ## ------------------------------------------------------------------------------------------------------
 # This part will change once we important the code for the IO analyses.
 # We might then move the IO code down to where it is first used
+# 
+# To do: 
+# 1)rename Dataset to Language, which currently leads to errors down the road.
+# 2) add plots for cue correction for exposure tokens?
 ## ------------------------------------------------------------------------------------------------------
 
 # load Swedish results
@@ -967,6 +990,10 @@ d.IO = results.swedish %>%
   left_join(d.test %>%
               select(Item.MinimalPair, Item.WordID, Item.Word, NativeLanguage) %>%
               distinct(.), by = c("NativeLanguage", "Item.Word")
+  ) %>%
+  mutate(    
+    Dataset = factor(Dataset, levels = c("Mandarin-accented English", "Flemish-accented Swedish")),
+    NativeLanguage = factor(NativeLanguage, levels = c("English", "Swedish"))
   )
 # there should be a total of 180 words across the two datasets; 
 # each word has 2 levels for ModelType (non-native or native) and 2 levels for category_model (d or t)
@@ -978,7 +1005,7 @@ d.IO = results.swedish %>%
 Within each language, we compare the predictions of a native model and a non-native model, for a total of four ideal observers. The only difference between native and non-native models lies in the /d/ tokens used for training---paralleling the difference between the /d/- and control exposure in the experiments. Both the native and non-native ideal observer are evaluated on the same foreign-accented minimal pair stimuli from the test phase of the experiments. Figure \@ref(fig:ideal-observer-and-data) summarizes what speech databases we used  to estimate the mean $\mu$ and covariance matrix $\Sigma$ of the multivariate Gaussian distributions for the /d/ and /t/ categories in each of the four ideal observers.
 
 ```{r ideal-observer-and-data, fig.cap="(ref:ideal-observer-and-data)", out.width="100%"}
-knitr::include_graphics("../figures/ideal observers and data.png")
+knitr::include_graphics("../figures/ideal-observer-and-data.png")
 ```
 (ref:ideal-observer-and-data) Four ideal observer models---a *native* and *non-native* ideal observer each for the English and the Swedish data---were fit and cross-validated<!--Xin: correct?--> against production data from native- and foreign-accented English and Swedish. 
 
@@ -1015,7 +1042,7 @@ Annotations were completed in Praat (Boersma, 2001) using visual examination of 
 
 ### Correction for phonological context
 
-The realization of phonetic cues is known to be strongly influenced by phonological context (REF), and human listeners are known to effectively discount these effects (REF). Additionally, some of the cues to syllable-final /d/ voicing are simultaneously used to signal other contrast. This is most obviously the case for vowel duration in Swedish. Swedish has a phonological contrast between long and short vowels (e.g., *XXX*---'XXX' vs. *XXX*---'XXX'). Vowel duration is an important cue to this contrast. 
+The realization of phonetic cues is known to be strongly influenced by phonological context (REF), and human listeners are known to effectively discount these effects (REF). Additionally, some of the cues to syllable-final /d/ voicing are simultaneously used to signal other contrast. This is most obviously the case for vowel duration in Swedish. Swedish has a phonological contrast between long and short vowels (e.g., *vit*---'white, comm. gend.' vs. *vitt*---'white, neuter'). Vowel duration is an important cue to this contrast. 
 
 To develop and evaluate a model of human perception, it is thus necessary to either model or discount effects of context. Here we do the latter. We obtain ``corrected'' phonetic cues by estimating (via linear regression) and removing (via residualization) the effects of phonological context from vowel, closure, and burst duration. This also includes corrections of word length (in syllables), as word length affects the realization of durational cues. By using the corrected cue values in the ideal observers, we ensure that we are comparing likes with likes. 
 <!-- Additionally, the annotation of segment or feature boundaries---in the present case, the boundaries between the vowel, onset of closure, and onset of the bust---often relies on visual inspection of spectograms in ways that can be affected phonological context. -->
@@ -1039,7 +1066,7 @@ To develop and evaluate a model of human perception, it is thus necessary to eit
 <!--   + Step 2: cue ~ 1 + syllable, data = exposure /d/ and test /d/ words only -- here we get the predicted effects of syllable length, and apply that to the test /t/ words -->
 
 
-Figure \@ref(fig:cue-before-and-after-residualization) shows the distribution of test tokens before and after correction for phonological context.
+Figures \@ref(fig:english-cue-before-and-after-residualization) and \@ref(fig:swedish-cue-before-and-after-residualization) show the distribution of test tokens before and after correction for phonological context for the English and Swedish experiment, respectively.
 
 <!-- Xin: 
 
@@ -1049,38 +1076,68 @@ Figure \@ref(fig:cue-before-and-after-residualization) shows the distribution of
 
 -->
 
-(ref:cue-before-and-after-residualization) Foreign-accented /d/- and /t/-final minimal pair test tokens from the English and Swedish experiment before and after correction for phonological context.
+(ref:english-cue-before-and-after-residualization) Mandarin-accented English /d/- and /t/-final minimal pair test tokens from the English experiment before and after correction for phonological context.
 
-```{r cue-before-and-after-residualization, fig.cap="(ref:cue-before-and-after-residualization)", out.width="70%"}
-d.resid <- bind_rows(
-  d.IO %>%
-    select(-rvowel, -rclosure, -rburst) %>%
-    mutate(ResidualizationType = "Prior"),
-  d.IO %>%
-    select(-vowel, -closure, -burst) %>%
-    mutate(vowel = rvowel,
-           closure = rclosure,
-           burst = rburst) %>%
-    select(-rvowel, -rclosure, -rburst) %>%
-    mutate(ResidualizationType = "Post")
-) %>%
-  select(-CategoryModel, -Lhood, -Posterior, -Posterior.Choice) %>%
-  mutate(ResidualizationType = factor(ResidualizationType, levels = c("Prior", "Post"))) %>%
+(ref:swedish-cue-before-and-after-residualization) Flemish-accented Swedish /d/- and /t/-final minimal pair test tokens from the Swedish experiment before and after correction for phonological context.
+
+```{r english-cue-before-and-after-residualization, fig.cap="(ref:english-cue-before-and-after-residualization)", out.width="75%", fig.show='hold'}
+d.corrected = d.IO %>%
+  select(-ModelType, -CategoryModel, -Lhood, -Posterior, -Posterior.Choice) %>%
   distinct() %>%
-  mutate(Metric = factor(paste0(NativeLanguage, ResidualizationType), 
-                         levels = c("EnglishPrior", "EnglishPost", "SwedishPrior", "SwedishPost"))) 
+  pivot_longer(
+    cols = c("vowel", "closure", "burst", "rvowel", "rclosure", "rburst"),
+    names_to = c("ContextCorrected", ".value"),
+    names_pattern = "(r{0,1})(.*)"
+  ) %>%
+  mutate(
+    ContextCorrected = ifelse(ContextCorrected == "r", "yes", "no")
+  )
 
-plot_ly(data = d.resid,
+# Animations can be manipulated via animation_opts() but it seems that 
+# scatter3d (and other 3D options) are currently not animatable (see schema()).
+plot_ly(data = d.corrected %>% 
+          filter(NativeLanguage == "English") %>%
+          na.omit() %>%
+          droplevels(),
+        frame= ~ContextCorrected,
+        ids= ~Item.Word, 
         x= ~vowel,
         y= ~closure,
         z= ~burst,
+        text= ~Item.Word,
         color= ~Sound,
+        colors = colors.category,
         symbol= ~Sound,
-        symbols = c('circle','square'),
-        frame= ~Metric,
-        type="scatter3d", mode="markers")
+        symbols = shapes.category,
+        hoverinfo = "text", showlegend = T,
+        type="scatter3d", mode="markers") %>%
+  animation_slider(
+    currentvalue = list(prefix = "Corrected for phonological context: ", 
+                        font = list(color="black"))
+  ) 
 ```
-
+```{r swedish-cue-before-and-after-residualization, fig.cap="(ref:swedish-cue-before-and-after-residualization)", out.width="75%", fig.show='hold'}
+plot_ly(data = d.corrected %>% 
+          filter(NativeLanguage == "Swedish") %>%
+          na.omit() %>%
+          droplevels(),
+        frame= ~ContextCorrected,
+        ids= ~Item.Word, 
+        x= ~vowel,
+        y= ~closure,
+        z= ~burst,
+        text= ~Item.Word,
+        color= ~Sound,
+        colors = colors.category,
+        symbol= ~Sound,
+        symbols = shapes.category,
+        hoverinfo = "text", showlegend = T,
+        type="scatter3d", mode="markers") %>%
+  animation_slider(
+    currentvalue = list(prefix = "Corrected for phonological context: ", 
+                        font = list(color="black"))
+  ) 
+```
 
 ## Fitting procedure 
 We note that this entails that there is no overlap between the training and test data for the Ideal Observers, so that concerns about bias due to overfitting to the data is *not* a concern. 
@@ -1108,7 +1165,7 @@ d.test.IO %<>%
     Group == "control" & ModelType == "Native" ~"yes",
     Group == "control" & ModelType == "Non-native" ~"no",
     Group == "/d/-exposure" & ModelType == "Non-native" ~"yes",
-    Group == "/d/-exposure" & ModelType == "Native" ~"no",
+    Group == "/d/-exposure" & ModelType == "Native" ~"no"
   ))
 ```
 
