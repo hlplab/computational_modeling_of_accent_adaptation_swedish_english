@@ -66,8 +66,8 @@ theme_set(
     theme(panel.border = element_blank())
 )
 
-colors.Group = c("red", "blue")
-colors.Category = c("lightblue", "orange")
+colors.Group = c("red", "gray")
+colors.Category = c("orange", "lightblue")
 colors.Language = c("cyan", "pink")
 shapes.Category = c("circle","square")
 levels.Sound = c("/d/", "/t/")
