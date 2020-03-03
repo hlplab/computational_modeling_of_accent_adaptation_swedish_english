@@ -58,6 +58,10 @@ library(cowplot)        # multi-plot figures
 library(plotly)         # 3D plotting 
 library(ggpubr)
 library(gridExtra)
+## devtools::install_github('kleinschmidt/daver')
+library(daver)
+## devtools::install_github('xinxie-cogsci/nspvowels', auth_token = "46ca462721b1d6fe506b14bee12753a11ec4cb37")
+library(nspvowels)
 ```
 
 ```{r constants and environments}
@@ -66,9 +70,8 @@ theme_set(
     theme(panel.border = element_blank())
 )
 
-colors.Group = c("#C33329", "#BFBFBF")
-colors.Model = colors.Group
-colors.Category = c("#62BFFF", "#FFA401")
+colors.Group = c("red", "gray")
+colors.Category = c("orange", "lightblue")
 colors.Language = c("cyan", "pink")
 shapes.Category = c("circle","square")
 levels.Sound = c("/d/", "/t/")
@@ -336,7 +339,6 @@ d.swedish %<>%
 # Standardize variable names for English
 d.english.test %<>%
   rename(
-    TestBlock = Session,                          # Xin: is this correct?
     Item.Word = Word,
     Item.MinimalPair = MinimalPairID,
     Rating.Response = Rating.Answer,
@@ -353,6 +355,7 @@ d.english.test %<>%
     Sound = factor(paste0("/", Sound, "/"), 
                    levels = levels.Sound),
     Sound.Position = "final",
+    Session = NULL,
     Subject = NULL)
 
 # Combine Swedish and English *test* data
@@ -838,7 +841,7 @@ Finally, we can ask how often the bootstrapped English data returned $t$-values 
 
 ## Recording of materials {#sec:recording}
 
-By design, the two experiments differ by design in the L1-L2 background of the recorded speaker. Additioanlly, the two experiments differed in the recording procedure. Whereas the English recordings was elicited without playing a native pronunciation (*unassisted*), the Swedish recordings were elicited by first playing a native pronunciation of the target word (*assisted*). 
+By design, the two experiments differ by design in the L1-L2 background of the recorded speaker. Additionally, the two experiments differed in the recording procedure. Whereas the English recordings was elicited without playing a native pronunciation (*unassisted*), the Swedish recordings were elicited by first playing a native pronunciation of the target word (*assisted*). 
 
 ### English
 <!-- Xin, Maryann: please state the gender and age of the English speaker -->
@@ -937,87 +940,15 @@ Compared to the English experiment, the Swedish experiment had about 50\% fewer 
 
 # Ideal observer analyses {#sec:IO}
 
-```{r load-data-for-ideal-observers}
-## ------------------------------------------------------------------------------------------------------
-# This part will change once we important the code for the IO analyses.
-# We might then move the IO code down to where it is first used
-# 
-# To do: 
-# 1)rename Dataset to Language, which currently leads to errors down the road.
-# 2) add plots for cue correction for exposure tokens?
-## ------------------------------------------------------------------------------------------------------
-
-# load Swedish results
-results.swedish <- readRDS("../data/ideal_observer_results_Swedish.rds") 
-# load model parameters for Swedish data
-model.parameter.swedish <- readRDS("../data/ideal_observer_models_Swedish.rds")
-
-# load English results
-results.english <- readRDS("../data/ideal_observer_results_English_raw.rds")
-# load model parameters for English data
-model.parameter.english <- readRDS("../data/ideal_observer_models_English.rds")
-
-# select the appropriate subset (matching what are available for Swedish data) 
-# from English modeling results
-results.english = results.english %>%
-  mutate(NativeLanguage = "English", Dataset = "Mandarin-accented English") %>%
-  filter(method == "multidimensional", 
-         cues == "raw",
-         modelType != "TS_no_feature",
-         combo == "prototypical_M5") %>%
-  mutate(modelType = ifelse(modelType == "TS_feature", "Non-native", "Native"),
-         vowel = vowel/1000,
-         closure = closure/1000,
-         burst = burst/1000) 
-  
-# combine the modeling results together
-common_cols <- intersect(colnames(results.swedish), colnames(results.english))
-
-d.IO = results.swedish %>%
-  filter(! word %in% c("voart", "voard", "hoart", "hoard")) %>%
-  mutate(word = ifelse(filename == "TDF_15_nod" & word == "nod", "nod15", as.character(word))) %>%
-  mutate(NativeLanguage = "Swedish", Dataset = "Flemish-accented Swedish",
-         modelType = ifelse(modelType == "TS", "Non-native", "Native")) %>%
-  full_join(results.english) %>%
-  select(one_of(common_cols), NativeLanguage, Dataset, -model, -phon_ctxt_stress, -block) %>%
-  rename(ModelType = modelType,
-         CategoryModel = category_model,
-         Part = part,
-         Combo = combo,
-         Item.Word = word,
-         Sound = sound,
-         Lhood = lhood,
-         Posterior = posterior,
-         Posterior.Choice = posterior_choice) %>%
-  mutate_if(is.character, as.factor) %>%
-  # Make sure the category model and sound variables have the same levels.
-  mutate_at(c("CategoryModel", "Sound"),
-            function (x) factor(paste0("/", x, "/"), 
-                        levels = levels.Sound)) %>%
-  left_join(d.test %>%
-              select(Item.MinimalPair, Item.WordID, Item.Word, NativeLanguage) %>%
-              distinct(.), by = c("NativeLanguage", "Item.Word")
-  ) %>%
-  mutate(
-    ModelType = factor(ModelType, levels = levels.Model),
-    Dataset = factor(Dataset, levels = levels.Language),
-#    Language = factor(Language, levels = levels.Language),
-    NativeLanguage = factor(NativeLanguage, levels = levels.NativeLanguage)
-  )
-# there should be a total of 180 words across the two datasets; 
-# each word has 2 levels for ModelType (non-native or native) and 2 levels for category_model (d or t)
-```
-  
-
 ## Structure of Ideal Observers
 
-Within each language, we compare the predictions of a native model and a non-native model, for a total of four ideal observers. The only difference between native and non-native models lies in the /d/ tokens used for training---paralleling the difference between the /d/- and control exposure in the experiments. Both the native and non-native ideal observer are evaluated on the same foreign-accented minimal pair stimuli from the test phase of the experiments. Figure \@ref(fig:ideal-observer-and-data) summarizes what speech databases we used  to estimate the mean $\mu$ and covariance matrix $\Sigma$ of the multivariate Gaussian distributions for the /d/ and /t/ categories in each of the four ideal observers.
+Within each language, we compare the predictions of a native model and a non-native model, for a total of four ideal observers. The only difference between native and non-native models lies in the /d/ tokens used for training---paralleling the difference between the /d/- and control exposure in the experiments. Both the native and non-native ideal observer are evaluated on the same foreign-accented minimal pair stimuli from the test phase of the experiments. Figure \@ref(fig:ideal-observer-and-data) summarizes what speech databases we used to estimate the mean $\mu$ and covariance matrix $\Sigma$ of the multivariate Gaussian distributions for the /d/ and /t/ categories in each of the four ideal observers.
 
 ```{r ideal-observer-and-data, fig.cap="(ref:ideal-observer-and-data)", out.width="100%"}
 knitr::include_graphics("../figures/IdealObserverAndData.png")
 ```
 
-(ref:ideal-observer-and-data) Four ideal observer models---a *native* and *non-native* ideal observer each for the English and the Swedish data---were fit and cross-validated<!--Xin: correct?--> against production data from native- and foreign-accented English and Swedish. 
+(ref:ideal-observer-and-data) Four ideal observer models---a *native* and *non-native* ideal observer each for the English and the Swedish data---were fit and cross-validated against production data from native- and foreign-accented English and Swedish. 
 
 - **Native** model: 
   + Exposure /d/ comes from the *native* talker's exposure /d/ (30 tokens)
@@ -1034,8 +965,9 @@ knitr::include_graphics("../figures/IdealObserverAndData.png")
 The ideal observers require estimates of the distribution of the relevant phonetic cues for the syllable-final contrast between /d/ and /t/. Specifically, we need to estimate these distributions for `typical' native-accented productions of /t/ (for both the native and non-native IOs), the native-accented production of /d/ (for the native IO), and the foreign-accented production of /d/ (for the non-native IO). Additionally, all *test* tokens must be annotated for the same cues. Next, we describe the databases, annotation procedure, and additional steps taken to obtain these estimates.
 
 ### Databases
-The data for the non-native /d/ comes from the 30 critical words with syllable-final /d/ used during the foreign-accented exposure in the experiments. For the English data, native /d/ and /t/ distributions are estimated from a database of 10 male native speakers of American English (Li, Jaeger, & Xie, 2020). This is the same database that also includes the Mandarin-accented speaker used in Xie et al. (2017). Native-accented talkers had the same sex and spanned a similar age range (XXX-XXX) as the Mandarin-accented talker in Xie et al. (2017). The recording procedure was the same. 
-<!-- please clarify whether the words from the native speaker were the same as those from the non-native. explain why --> 
+The data for the non-native /d/ comes from the 30 critical words with syllable-final /d/ used during the foreign-accented exposure in the experiments. For the English data, native /d/ and /t/ distributions are estimated from a database of 10 male native speakers of American English (Li, Jaeger, & Xie, 2020). This is the same database that also includes the Mandarin-accented speaker used in Xie et al. (2017). Native-accented talkers had the same sex and spanned a similar age range (18-35) as the Mandarin-accented talker in Xie et al. (2017). The recording procedure was the same. 
+
+Of note, the words that were used to estimate native-English /d/ and /t/ distributions were not the same as those used for estimating non-native /d/; however, they were all monosyllabic words with word-final /d/s or /t/s and therefore shared the phonological properties of the minimal pairs /d/-/t/ test words used in Xie et al. (2017). We used this dataset instead of tokens from a particular talker for the following two reasons: 1) recordings from native-English speakers producing the same stimuli as used in Xie et al. (2017) were not available; 2) for the purpose of estimating `typical' native-English productions of /d/ and /t/, this dataset was adequate, and perhaps better than data from just a single speaker. Given the sample size of this database of native English, we were able to construct ideal observers that simulate a *prototypical* native-English speaker. We use this *prototypical* speaker as the native IO, instead of any single native-English speaker, as a comparison to our non-native speaker.
 
 For the Swedish data, we had access to only one gender and age-matched native-accented speaker. This was the speaker recorded to provide the native pronunciations for the foreign-accented talker (see \@ref(sec:recording)).
 
@@ -1044,11 +976,9 @@ Tokens were annotated for their duration of vowel, closure, and burst. These thr
 
 ### Annotation and extraction of cues
 
-#### English
-<!-- Xin: can you describe your annotation procedure and move things that are shared across the experiments to right under the Acoustic annotation header? -->
+Annotations were completed in Praat (Boersma, 2001) using visual examination of spectrograms, and listening judgments. Cue boundaries were marked following conventions (Flege, Munro, & Skelton, 1992). Vowel duration was measured from the beginning of the first periodic portion of each waveform to the zero-crossing where the amplitude decreased abruptly and the waveform became sinusoidal. Burst was measured from stop release to the first zero crossing point where the amplitude became near zero. Closure was measured as the time between vowel offset and burst onset (for stops following nasals, closure onset was marked by an abrupt decline in amplitude of the nasal). Annotations for both English and Swedish datasets were conducted separately by phonetically trained experimenters, following the same procedure and applied the same decision criteria. Based on a subset of tokens, the cross-experimenter reliability of annotations was XXX. 
+<!-- Maryann: I rememeber that I annotated your tokens at the beginning of your annotation to make sure that we adopted similar criteria. Do you recall? -->
 
-#### Swedish
-Annotations were completed in Praat (Boersma, 2001) using visual examination of spectrograms, and listening judgments. Cue boundaries were marked following conventions (Flege, Munro, & Skelton, 1992). Vowel duration was measured from the beginning of the first periodic portion of each waveform to the zero-crossing where the amplitude decreased abruptly and the waveform became sinusoidal. Burst was measured from stop release to the first zero crossing point where the amplitude became near zero. Closure was measured as the time between vowel offset and burst onset (for stops following nasals, closure onset was marked by an abrupt decline in amplitude of the nasal).
 
 ### Correction for phonological context
 
@@ -1059,21 +989,840 @@ To develop and evaluate a model of human perception, it is thus necessary to eit
 
 <!-- Maryann: we might want to show the output of the linear models here. Have a look at how i summarized models using tab_model in the behavioral section -->
 
-<!-- Xin how was "long vowel" coded for the english data? or was it excluded? Were there differences between english and swedish? how was this model then USED? also MARYANN POINTED OUT THAT WE MIGHT NOT NEED THE R-CONTROL ANYMORE, UNLESS WE NEED IT FOR THE ENGLISH DATA?-->
- + **Step 1:** We used the foreign-accented /d/- and /t/-final words from the test phase to estimate the effects of three phonological contexts (phonologically long vs. short vowel; preceding /r/, e.g. *XXX*---'XXX' vs. *XXX*---'XXX'; preceding nasal, e.g., *XXX*---'XXX' vs. *XXX*---'XXX'). This was achieved by fitting a separate linear regression to each of the three cues and each language, resulting in six linear regressions: `lm(cue ~ 1 + has_long_vowel + preceded_by_rhotic + preceded_by_nasal)`
 
-<!-- Xin, Maryann: what about lexical stress? I guess words like lemonade do have secondary stress on the d-syllable. was d or t ever at the end of an unstressed syllable? --> 
-<!-- Xin: please check what I wrote. And please add how the models were then USED -->
+<!-- Xin how was "long vowel" coded for the english data? or was it excluded? REPLY: we didn't encode long vs short vowel for English as it was not a phonological contrast.-----Were there differences between english and swedish? how was this model then USED? also MARYANN POINTED OUT THAT WE MIGHT NOT NEED THE R-CONTROL ANYMORE, UNLESS WE NEED IT FOR THE ENGLISH DATA? REPLY: Okay, removed the R-control below-->
 
- + **Step 2:** The /d/- and /t/-final words from the test phase words were always monosyllabic, so that the /d/-final syllable always received primary lexical stress. This contrasted with both the foreign-accented exposure words and the native-accented words used to estimate the 'typical' language experience of native listeners, which were multisyllabic. Inspection of the cue distributions confirmed that, in particular, vowel durations were strongly affected by word length: vowel durations were substantially shorter in longer words). We thus used the foreign-accented exposure and test words with syllable-final /d/ to estimate the effect of word length on the duration of each cue (all native-accented words were multi-syllabic). This again resulted in six linear regressions: `lm(cue ~ 1 + number_of_syllables)`
+ + **Step 1:** We used the foreign-accented /d/- and /t/-final words from the test phase to estimate the effects of phonological contexts. The specific contexts considerd differ for the Swedish and English datasets, based on previous findings on context effects in the two languages as well as the type of context variation in each dataset. For the English data, we considered the effect of preceding nasals and following nasals. This was achieved by fitting a separate linear regression to each of the three cues `lm(cue ~ 1 + has_long_vowel + preceded_by_nasal + followed_by_nasal)`. For the Swedish data, we considered two phonological contexts (phonologically long vs. short vowel; following nasal, e.g., *XXX*---'XXX' vs. *XXX*---'XXX'). This was achieved by fitting a separate linear regression to each of the three cues: `lm(cue ~ 1 + has_long_vowel + preceded_by_rhotic + preceded_by_nasal)`. Across the two languages, there were a total of six linear regressions. 
+ 
+<!-- Xin and Maryann had a talk. Maryann mentioned that for Swedish data, we actually only considered /r/ and nasals before the vowels, i.e., we considered the effect of following /r/ and following nasals only. I've edited the text above-->
+
+<!-- Xin, Maryann: what about lexical stress? I guess words like lemonade do have secondary stress on the d-syllable. was d or t ever at the end of an unstressed syllable? Reply here: in the English dataset, most exposure words had a lexical stress on the syllable of /d/, but there were a few instances where the words ended in an unstressed syllable, e.g. "haphazard". We did not model lexical stress. All /t/ words were stressed as they were all monosyllabic.--> 
+
+
+ + **Step 2:** The /d/- and /t/-final words from the test phase words were always monosyllabic, so that the /d/-final and /t/-final syllable always received primary lexical stress. This contrasted with both the foreign-accented exposure words and the native-accented words (Swedish data only) used to estimate the 'typical' language experience of native listeners, which were multisyllabic. Inspection of the cue distributions confirmed that, in particular, vowel durations were strongly affected by word length: vowel durations were substantially shorter in longer words). We thus used the foreign-accented exposure and test words with syllable-final /d/ to estimate the effect of word length on the duration of each cue (all native-accented words were multi-syllabic). This again resulted in six linear regressions: `lm(cue ~ 1 + number_of_syllables)`
 
 <!-- Xin, Maryann: can we add a plot showing the effect of syllable length? Just a density plot showing the three cue distributions for different numbers of syllables.  We should show a before and after correction plot.-->
 
-  + **Step 3:** EXPLAIN THIS BETTER then take the between-talker difference (Native-Non-native) for t category, and add it to the cue values of all tokens of the non-native talker -- here the aim is to make sure /t/-category is entirely aligned between the native and non-native speakers.
+  + **Step 3:** EXPLAIN THIS BETTER then take the between-talker difference (Native-Non-native) for t category, and add it to the cue values of all tokens of the non-native talker -- here the aim is to make sure /t/-category is entirely aligned between the native and non-native speakers. 
+  
+<!-- ATTENTION: Step 3 was previously applied only to the Swedish data. -->
 
 <!-- The purpose of correation (or residualization) is to control for phonological context effects, without losing the difference between accents within each language. This procedure was conducted because a) Exposure words contain only /d/ words, but test words have /d/-/t/ minimal pairs; b) The presence of phonological contexts (e.g., l, r, nasals) varies between exposure and test words; c) Exposure words (multisyllabic) are longer than test words (monosyllabic). For these reasons, we do the following for residualization.  -->
 <!--   + Step 1: cue ~ 1 + has_long_vowel + preceded_by_rhotic + preceded_by_nasal, data = test /d/ and /t/ words only -- here we get the predicted effects of phonological contexts, and apply that to exposure words -->
 <!--   + Step 2: cue ~ 1 + syllable, data = exposure /d/ and test /d/ words only -- here we get the predicted effects of syllable length, and apply that to the test /t/ words -->
+
+
+<!-- Maryann: The number of stimuli from the native speaker (23 exposure /d/ items, 25 test /t/ items, after excluding the 4 -r words) was fewer than that from the non-native speaker. Was it because some bursts were not released? Can you double-check? -->
+
+
+```{r load data for correcting for phonological context}
+
+# load stimuli
+d.stims.swedish <- readRDS("../data/Swedish/test_stimuli_analysis/d.stims.swedish.rds") %>%
+  filter(mimic == "irrelevant" | mimic == "yes") %>%
+  filter(! Item.Word %in% c("voart", "voard", "hoart", "hoard")) %>%
+  select(-mimic) %>%
+  rename(Talker = language) %>%
+  droplevels()
+
+# xtabs(~Talker + Block.Type + Sound, d.stims.swedish)
+
+d.stims.english <- readRDS("../data/English/d.stims.english.rds")
+  
+
+d.stims.database <- readRDS("../data/English/d.stims.database.rds")
+ 
+```
+
+```{r functions-residualize-data}
+
+# Correct for phonological context for English data
+
+my.resids.phon.english = function(var.name, data.fit, data.pred) {
+  # data.fit should be test /d/ and /t/ words only
+  # data.pre should be all words: exposure /d/ + test /d/ + test /t/
+  if (is.null(data.pred)) data.pred = data.fit
+  
+  data.fit$y = data.fit[,var.name]
+
+  # phon_ctxt_stress and phon_post_fricative are not excluded because it does not vary within test
+  l = lm(y ~ 1 + (phon_pre_nasal + phon_post_nasal), data = data.fit)
+  print(summary(l))
+  return(data.pred[,var.name] - predict(l, newdata = data.pred))
+}
+
+# Correct for phonological context for Swedish data
+
+my.resids.phon.swedish = function(var.name, data.fit, data.pred) {
+  # data.fit should be test /d/ and /t/ words only
+  # data.pred should be all words: exposure /d/ + test /d/ + test /t/
+  if (is.null(data.pred)) data.pred = data.fit
+  
+  data.fit$y = data.fit[,var.name]
+
+  # phon_ctxt_l is excluded because it does not vary within test
+  l = lm(y ~ 1 + (phon_ctxt_vl + phon_ctxt_n), data = data.fit)
+  print(summary(l))
+  
+  return(data.pred[,var.name] - predict(l, newdata = data.pred))
+}
+
+# Correct for syllable length
+
+my.resids.length = function(var.name, data.fit, data.pred) {
+  # data.fit should be exposure /d/ and test /d/ words only
+  # data.pre should be all words: exposure /d/ + test /d/ + test /t/
+  if (is.null(data.pred)) data.pred = data.fit
+  
+  data.fit$y = data.fit[,var.name]
+  
+  l = lm(y ~ 1 + syllable, data = data.fit)
+  print(summary(l))
+  
+  return(data.pred[,var.name] - predict(l, newdata = data.pred))
+}
+
+```
+
+```{r residualize-English-data-Xieetal}
+
+# step 1: correct for phonological contexts effect
+d.stims.english.step1 <- 
+  d.stims.english %>%
+  mutate(rvowel = my.resids.phon.english("vowel", data.fit = d.stims.english %>%
+                          filter(Block.Type == "test"), data.pred = .),
+         rclosure = my.resids.phon.english("closure", data.fit = d.stims.english %>%
+                                   filter(Block.Type == "test"), data.pred = .),
+         rburst = my.resids.phon.english("burst", data.fit = d.stims.english %>%
+                                   filter(Block.Type == "test"), data.pred = .)
+  )
+
+# step 2: correct for syllable length effect, on the corrected measures from step 1
+
+d.stims.english.step2 <- d.stims.english.step1 %>%
+  mutate(rvowel = my.resids.length("rvowel", data.fit = d.stims.english.step1  %>%
+                                   filter(Sound == "/d/"), data.pred = .),
+         rclosure = my.resids.length("rclosure", data.fit = d.stims.english.step1  %>%
+                                     filter(Sound == "/d/"), data.pred = .),
+         rburst = my.resids.length("rburst", data.fit = d.stims.english.step1  %>%
+                                     filter(Sound == "/d/"), data.pred = .)
+  )
+
+d.stims.english.corrected <- d.stims.english.step2
+
+```
+```{r residualize-Swedish-data}
+
+d.stims.swedish.corrected = data.frame()
+
+
+# STEP 1: correct for phonological contexts effect
+levels.Talker = c("native", "non-native")
+
+for (i in 1:length(levels.Talker)){
+  
+data.step1 = d.stims.swedish %>%
+    filter(Talker == levels.Talker[i]) %>%
+    filter(Block.Type == "test")
+  
+print(
+  paste0("Current talker is ", levels.Talker[i])
+)
+
+d.stims.swedish.step1 <- d.stims.swedish %>%
+  filter(Talker == levels.Talker[i]) %>%
+  mutate(rvowel = my.resids.phon.swedish("vowel", data.fit = data.step1, data.pred = .),
+         rclosure = my.resids.phon.swedish("closure", data.fit = data.step1, data.pred = .),
+         rburst = my.resids.phon.swedish("burst", data.fit = data.step1, data.pred = .)
+  )
+
+# STEP 2: correct for syllable length effect, on the corrected measures from step 1
+d.stims.swedish.step2 <- d.stims.swedish.step1 %>%
+  filter(Talker == levels.Talker[i]) %>%
+  mutate(rvowel = my.resids.length("rvowel", data.fit = d.stims.swedish.step1 %>%
+                                     filter(Sound == "/d/"), data.pred = .),
+         rclosure = my.resids.length("rclosure", data.fit = d.stims.swedish.step1 %>%
+                                       filter(Sound == "/d/"), data.pred = .),
+         rburst = my.resids.length("rburst", data.fit = d.stims.swedish.step1 %>%
+                                     filter(Sound == "/d/"), data.pred = .)
+  ) %>%
+  mutate(CorrectionType = levels.Talker[i])
+
+d.stims.swedish.corrected <- bind_rows(d.stims.swedish.corrected, d.stims.swedish.step2)
+}
+
+# STEP 3: align the /t/ tokens from the native speaker and the non-native speaker
+
+t_mean_diff <- d.stims.swedish.corrected %>%
+  mutate(CorrectionType = ifelse(Talker == "non-native", "nonnative", CorrectionType)) %>%
+  filter(Sound == "/t/") %>%
+  group_by(CorrectionType) %>%
+  summarise_at(c("rvowel", "rclosure", "rburst"), mean, na.rm = TRUE) %>%
+  ungroup() %>%
+  gather(cue, value, rvowel:rburst) %>%
+  spread(CorrectionType, value) %>%
+  mutate(diff = native-nonnative) %>%
+  select(cue, diff) %>%
+  mutate(type = "native_over_nonnative")
+  
+d.stims.swedish.corrected.aligned <- d.stims.swedish.corrected %>%
+  mutate(rvowel = case_when(
+    CorrectionType == "non-native" ~ rvowel + t_mean_diff[t_mean_diff$cue %in% "rvowel", ]$diff,
+    CorrectionType == "native" ~ rvowel
+  ),
+  rclosure = case_when(
+    CorrectionType == "non-native" ~ rclosure + t_mean_diff[t_mean_diff$cue %in% "rclosure",]$diff,
+    CorrectionType == "native" ~ rclosure
+  ),
+  rburst = case_when(
+    CorrectionType == "non-native" ~ rburst + t_mean_diff[t_mean_diff$cue %in% "rburst",]$diff,
+    CorrectionType == "native" ~ rburst
+  )
+)
+
+# saveRDS(d.stims.swedish.corrected.aligned, "../data/Swedish/d.stims.swedish.corrected.rds")
+
+```
+
+
+
+```{r prepare-native-English-data-stims, cache=TRUE, dependson=c('classification-helpers')}
+
+# prepare functions to run for all speakers
+my.resids.phon = function(var.name, data.fit, data.pred) {
+  # data.fit should be test /d/ and /t/ words only
+  # data.pre should be all words: exposure /d/ + test /d/ + test /t/
+  if (is.null(data.pred)) data.pred = data.fit
+  
+  data.fit.df = as.data.frame(data.fit)
+  y = data.fit.df[,var.name]
+  l = lm(y ~ 1 + (phon_pre_nasal + phon_post_nasal), data = data.fit)
+  print(summary(l))
+  return(as.data.frame(data.pred[,var.name] - predict(l, newdata = data.pred)))
+}
+
+
+my.resids.length = function(var.name, data.fit, data.pred) {
+  # data.fit should be exposure /d/ and test /d/ words only
+  # data.pre should be all words: exposure /d/ + test /d/ + test /t/
+  if (is.null(data.pred)) data.pred = data.fit
+  
+  data.fit.df = as.data.frame(data.fit)
+  y = data.fit.df[,var.name]
+  
+  l = lm(y ~ 1 + syllable, data = data.fit)
+  print(summary(l))
+  return(as.data.frame(data.pred[,var.name] - predict(l, newdata = data.pred)))
+}
+
+
+# correct for phonological contexts effect -- do this by speaker so that the estimates are comparable to those of the single non-native talker and those of the Swedish data
+
+d.stims.database.step1 <- d.stims.database %>%
+  nest(-c(Speaker)) %>%
+  group_by(Speaker) %>%
+  mutate(rvowel = purrr::map(data, ~my.resids.phon("vowel", data.fit = ., data.pred = .)),   # create rvowel as a list element
+         rclosure = purrr::map(data, ~my.resids.phon("closure", data.fit = ., data.pred = .)),
+         rburst = purrr::map(data, ~my.resids.phon("burst", data.fit = ., data.pred = .))
+  ) %>%
+  unnest() %>%
+  mutate(current_speaker = Speaker,
+    rvowel = vowel1,
+         rclosure = closure1,
+         rburst = burst1,
+         vowel1 = NULL,
+         closure1 = NULL,
+         burst1 = NULL)
+
+
+d.stims.database.step2 <- d.stims.database.step1 %>%  # Caveat: because the stimuli from the English speaker are all monosyllabic, here the effect of syllable length was estimated using the Mandarin talker's data and applied to the English talker
+  nest(-c(Speaker)) %>%
+  group_by(Speaker) %>%
+  mutate(rvowel = purrr::map(data, ~my.resids.length("rvowel", data.fit = d.stims.english.step1 %>% 
+                                   filter(Sound == "/d/"), data.pred = .)),
+         rclosure = purrr::map(data, ~my.resids.length("rclosure", data.fit = d.stims.english.step1 %>%
+                                     filter(Sound == "/d/"), data.pred = .)),
+         rburst = purrr::map(data, ~my.resids.length("rburst", data.fit = d.stims.english.step1 %>%
+                                     filter(Sound == "/d/"), data.pred = .))
+  ) %>%
+  unnest() %>%
+  mutate(rvowel = rvowel1,
+         rclosure = rclosure1,
+         rburst = rburst1,
+         rvowel1 = NULL,
+         rclosure1 = NULL,
+         rburst1 = NULL)
+
+
+# combine the data from the native English database and the non-native talker in Xie et al
+
+d.stims.english.corrected <- plyr::rbind.fill(d.stims.database.step2 %>% 
+                            mutate(Accent = "English"), 
+                          d.stims.english.step2 %>% mutate(Accent = "Mandarin",
+                                                           Speaker = "M5")) %>%
+  mutate(Talker = Speaker, Speaker = NULL) %>%
+  mutate(Block.Type = ifelse(Accent == "English", "exposure", as.character(Block.Type))) %>%
+  droplevels(.)
+
+#saveRDS(d.stims.english.corrected, "../data/English/d.stims.english.corrected.rds")
+```
+
+
+# run ideal observers
+
+```{r prepare-ideal-observers}
+acc_method <- 'posterior'
+
+# assign selected cues
+selected_cues <- c('rvowel','rclosure','rburst')
+
+d.stims.swedish <- d.stims.swedish.corrected.aligned
+
+d.stims.english <- d.stims.english.corrected
+```
+
+
+# train ideal observers for Swedish data
+
+```{r train-ideal-observers-Swedish-stims, cache=TRUE, dependson=c('classification-helpers')}
+
+Talker1 <- c("native")
+Talker2 <- c("non-native")
+      
+# Exposure /d/ comes from the non-native talker's exposure /d/, exposure /t/ comes from the native talker's test /t/; 
+# Test /d/ and /t/ comes from the non-native talker's test /d/ and /t/
+
+
+# TS model: Exposure /d/ comes from the non-native talker's exposure /d/, exposure /t/ comes from the native talker's test /t/;      
+
+      temp1.TS.d <- d.stims.swedish %>%
+      filter(Talker == Talker2 & Block.Type == "exposure") %>% 
+      droplevels(.) %>% mutate(part = "train") %>% 
+      group_by(Talker, Word) %>%
+      sample_n(., 1)
+      
+      temp1.TS.t <- d.stims.swedish %>% 
+      filter(Talker == Talker1 & Sound == "/t/") %>% 
+      droplevels(.) %>% mutate(part = "train") %>% 
+      sample_n(., 30)
+      
+      temp1.TS <- plyr::rbind.fill(temp1.TS.d,temp1.TS.t)
+      
+# Native model: # Exposure /d/ comes from the native talker's exposure /d/ and test /t/; 
+      temp1.native.d <- d.stims.swedish %>% 
+      filter(Talker == Talker1 & Block.Type == "exposure") %>%
+      droplevels(.) %>% mutate(part = "train") %>% 
+      group_by(Talker, Word) %>%
+      sample_n(., 1)
+      
+      temp1.native.t <- d.stims.swedish %>%
+      filter(Talker == Talker1 & Sound == "/t/") %>% 
+      droplevels(.) %>% 
+      mutate(part = "train") %>% sample_n(., 30)
+      
+      temp1.native <- plyr::rbind.fill(temp1.native.d,temp1.native.t)
+      
+      
+# Test /d/ and /t/ comes from the non-native talker's test /d/ and /t/   
+      
+      temp2 <- d.stims.swedish %>% 
+        filter(Talker == Talker2 & Block.Type == "test") %>% 
+        droplevels(.) %>% 
+        mutate(part = "test") # test tokens come from the non-native talker's test tokens
+      
+# Combine the training and test data for TS and Native models      
+      temp_total.swedish <- rbind(plyr::rbind.fill(temp1.TS,temp2) %>%
+        mutate(ModelType = "Non-native"), 
+        plyr::rbind.fill(temp1.native,temp2) %>%
+        mutate(ModelType = "Native"))
+
+
+xtabs(~ModelType + part + Sound, temp_total.swedish)    
+      
+
+stims.swedish <-
+    temp_total.swedish %>%
+    ungroup() %>%
+    droplevels(.) %>%
+    group_by(ModelType) %>%
+    nest()
+
+temp.swedish <- stims.swedish %>%
+  unnest(purrr::map(data, . %>% 
+               group_by(Sound) %>% 
+               droplevels(.) %>%
+               phondisttools::train_test_split(holdout='part') %>% ##here trains on the exposure tokens (assigned as 'data_train') and test on test tokens (assigned as 'data_test'); yields the posterior based on each category model
+                     mutate(models_trained = purrr::map(data_train,
+                                . %>% 
+                               phondisttools::train_models(grouping = "Sound", cues=selected_cues, add_groups = TRUE)),
+                            models_tested = purrr::map2(data_test, models_trained, classify, category="Sound")) 
+              )
+    )
+
+
+##get TS modeling results
+results.swedish <- temp.swedish %>%
+  mutate(models_tested = map2(data_test, models_trained, classify, category="Sound")) %>%
+  unnest(models_tested) %>%
+  filter(part=="test") %>%
+  mutate(CategoryModel = model) 
+#  get_accuracy('sound', method=acc_method)
+
+#xtabs(~ModelType + model, results.swedish)
+
+# saveRDS(results.swedish, "../data/ideal_observer_results_Swedish.rds")
+# saveRDS(temp.swedish, "../data/ideal_observer_models_Swedish.rds")
+```
+
+
+
+# train ideal observers for English data
+
+```{r train-ideal-observers-English-stims}
+
+English_talkers <- levels(as.factor(d.english$Speaker))
+talker_num <- length(English_talkers)
+
+
+temp_total.english <- data.frame() 
+  
+for (i in 1:talker_num) {
+#    #   for (s in 1:split_num) {
+      Talker1 <- English_talkers[i]
+      Talker2 <- c("M5")
+
+# TS model: Exposure /d/ comes from the non-native talker's exposure /d/, exposure /t/ comes from the native talker's test /t/;     
+      temp1.TS.d <- d.stims.english %>% 
+        filter(Accent == "Mandarin") %>% 
+        filter(Talker == Talker2 & Block.Type == "exposure") %>% 
+        droplevels(.) %>% 
+        mutate(part = "train")
+      
+      temp1.TS.t <- d.stims.english %>% 
+        filter(Accent == "English") %>%
+        filter(Talker == Talker1 & Sound == "/t/") %>% 
+        droplevels(.) %>% 
+        mutate(part = "train") %>%
+        mutate(num = n()) %>% 
+        mutate(sample_num = min(num, 30)) %>% # if the talker has fewer than 30 tokens, take all, otherwise sample 30 /t/ tokens
+        sample_n(., sample_num) %>%
+        dplyr::select(-c(num, sample_num))
+      
+      temp1.TS <- rbind(temp1.TS.d,temp1.TS.t)
+      
+# Native model: # Exposure /d/ comes from the native talker's exposure /d/ and test /t/; 
+      temp1.native.d <- d.stims.english %>% 
+        filter(Accent == "English") %>% 
+        filter(Talker == Talker1 & Sound == "/d/") %>% 
+        droplevels(.) %>%
+        mutate(part = "train") %>%
+        mutate(num = n()) %>% 
+        mutate(sample_num = min(num, 30)) %>% # if the talker has fewer than 30 tokens, take all, otherwise sample 30 /t/ tokens
+        sample_n(., sample_num) %>%
+        dplyr::select(-c(num, sample_num))
+      
+      temp1.native.t <- d.stims.english %>% 
+        filter(Accent == "English") %>% 
+        filter(Talker == Talker1 & Sound == "/t/") %>% 
+        droplevels(.) %>%
+        mutate(part = "train") %>%
+        mutate(num = n()) %>% 
+        mutate(sample_num = min(num, 30)) %>% # if the talker has fewer than 30 tokens, take all, otherwise sample 30 /t/ tokens
+        sample_n(., sample_num) %>%
+        dplyr::select(-c(num, sample_num))
+      
+      temp1.native <- rbind(temp1.native.d,temp1.native.t)
+      
+
+# Test /d/ and /t/ comes from the non-native talker's test /d/ and /t/     
+      temp2 <- d.stims.english %>% 
+        filter(Accent == "Mandarin") %>% 
+        filter(Talker == Talker2 & Block.Type == "test") %>% 
+        droplevels(.) %>% mutate(part = "test")
+      
+# Combine the training and test data for TS and Native models      
+      temp <- rbind(plyr::rbind.fill(temp1.TS,temp2) %>%
+        mutate(ModelType = "Non-native"), 
+        plyr::rbind.fill(temp1.native,temp2) %>%
+        mutate(ModelType = "Native")) 
+      
+      temp %<>%
+        mutate(combo = paste(Talker1,Talker2, sep = "_"), Talker_test = Talker2, Talker_train = Talker1)
+      
+      
+      temp_total.english <- rbind(temp_total.english, temp)
+#   #  }
+  }
+      
+xtabs(~ModelType + combo + part + Sound, temp_total.english)  
+      
+stims.english <-
+    temp_total.english %>%
+    ungroup() %>%
+    droplevels(.) %>%
+    group_by(ModelType) %>%
+    nest()
+
+temp.english <- stims.english %>%
+  unnest(purrr::map(data, . %>% 
+               group_by(combo, Sound) %>% 
+               droplevels(.) %>%
+               phondisttools::train_test_split(holdout= 'part') %>% ##here trains on the exposure tokens (assigned as 'data_train') and test on test tokens (assigned as 'data_test'); yields the posterior based on each category model
+                     mutate(models_trained = purrr::map(data_train,
+                                . %>% 
+                               group_by(combo) %>% 
+                               phondisttools::train_models(grouping = "Sound", cues=selected_cues, add_groups = TRUE)),
+                            models_tested = purrr::map2(data_test, models_trained, classify, category="Sound")) 
+              )
+    )
+
+
+##get modeling results
+results.english <- temp.english %>%
+  mutate(models_tested = map2(data_test, models_trained, classify, category="Sound")) %>%
+  unnest(models_tested) %>%
+  filter(part=="test") %>%
+  mutate(CategoryModel = model) 
+#  get_accuracy('sound', method=acc_method)
+
+xtabs(~Talker_train + Talker_test + model + ModelType, results.english)
+
+
+
+```
+
+
+For the English data, create a prototypical talker for the IO.
+
+```{r extract-parameters-ideal-observers-English-native}
+##--------------------------
+# extract model parameters
+##--------------------------
+temp.native <- temp.english %>%
+  filter(ModelType == "Native")
+
+
+temp.native.model <- temp.native$models_trained
+res1.native <- temp.native.model %>%
+ # magrittr::extract(., c(1:(length(temp.native$part)))) %>%
+  bind_rows(.id = "part")  %>% 
+  mutate(part = temp.native$part[as.numeric(part)])
+res2.native.mu <- purrr::map(res1.native$model, magrittr::extract, c('mu'))
+res2.native.Sigma <- purrr::map(res1.native$model, magrittr::extract, c('Sigma'))
+
+res2.native.mu.df <- res2.native.mu %>%
+  map_dfr(., magrittr::extract, c('mu'))
+res2.native.mu.df = as.data.frame(matrix(t(res2.native.mu.df), ncol=length(selected_cues), 
+          byrow=TRUE), stringsAsFactors=FALSE)
+colnames(res2.native.mu.df) <- c('C1','C2','C3')[1:length(selected_cues)]
+
+res2.native.Sigma.df <- res2.native.Sigma %>%
+  map_dfr(., magrittr::extract, c('Sigma'))
+res2.native.Sigma.df = as.data.frame(matrix(t(res2.native.Sigma.df), ncol=length(selected_cues)^2, 
+          byrow=TRUE), stringsAsFactors=FALSE)
+colnames(res2.native.Sigma.df) <-  c('C1_C1','C1_C2','C1_C3','C2_C1','C2_C2','C2_C3', 'C3_C1','C3_C2', 'C3_C3') #if length(selected_cues) == 3
+# colnames(res2.native.Sigma.df) <- c('C1_C1','C1_C2','C2_C1','C2_C2') #if length(selected_cues) == 2
+
+res2.native <- cbind(res2.native.mu.df,res2.native.Sigma.df)
+res.native <- cbind(as.data.frame(res1.native), as.data.frame(res2.native))
+
+res.native.parameter <- res.native %>%
+  filter(part == "test") %>%
+  dplyr::select(part, combo, Sound, C1:C3_C3) %>%
+  gather(parameter, value, C1:C3_C3) %>%
+  dplyr::mutate(parameter_category = paste(parameter, Sound, sep = "_")) %>%
+  dplyr::select(-c(parameter, Sound)) %>%
+  spread(parameter_category, value)
+``` 
+
+
+```{r extract-parameters-ideal-observers-English-TS}
+##--------------------------
+# extract model parameters
+##--------------------------
+temp.TS <- temp.english %>%
+  filter(ModelType == "Non-native")
+
+
+temp.TS.model <- temp.TS$models_trained
+res1.TS <- temp.TS.model %>%
+ # magrittr::extract(., c(1:(length(temp.TS$part)))) %>%
+  bind_rows(.id = "part")  %>% 
+  mutate(part = temp.TS$part[as.numeric(part)])
+res2.TS.mu <- purrr::map(res1.TS$model, magrittr::extract, c('mu'))
+res2.TS.Sigma <- purrr::map(res1.TS$model, magrittr::extract, c('Sigma'))
+
+res2.TS.mu.df <- res2.TS.mu %>%
+  map_dfr(., magrittr::extract, c('mu'))
+res2.TS.mu.df = as.data.frame(matrix(t(res2.TS.mu.df), ncol=length(selected_cues), 
+          byrow=TRUE), stringsAsFactors=FALSE)
+colnames(res2.TS.mu.df) <- c('C1','C2','C3')[1:length(selected_cues)]
+
+res2.TS.Sigma.df <- res2.TS.Sigma %>%
+  map_dfr(., magrittr::extract, c('Sigma'))
+res2.TS.Sigma.df = as.data.frame(matrix(t(res2.TS.Sigma.df), ncol=length(selected_cues)^2, 
+          byrow=TRUE), stringsAsFactors=FALSE)
+colnames(res2.TS.Sigma.df) <-  c('C1_C1','C1_C2','C1_C3','C2_C1','C2_C2','C2_C3', 'C3_C1','C3_C2', 'C3_C3') #if length(selected_cues) == 3
+# colnames(res2.TS.Sigma.df) <- c('C1_C1','C1_C2','C2_C1','C2_C2') #if length(selected_cues) == 2
+
+res2.TS <- cbind(res2.TS.mu.df,res2.TS.Sigma.df)
+res.TS <- cbind(as.data.frame(res1.TS), as.data.frame(res2.TS))
+
+res.TS.parameter <- res.TS %>%
+  filter(part == "test") %>%
+  dplyr::select(part, combo, Sound, C1:C3_C3) %>%
+  gather(parameter, value, C1:C3_C3) %>%
+  dplyr::mutate(parameter_category = paste(parameter, Sound, sep = "_")) %>%
+  dplyr::select(-c(parameter, Sound)) %>%
+  spread(parameter_category, value)
+``` 
+
+
+```{r create-prototypical-talker-from-English-native}
+
+# get training model parameters
+
+model.parameters <- rbind(res.native %>% mutate(ModelType = "Native"), res.TS %>% mutate(ModelType = "Non-native"))
+
+
+# add a prototypical talker
+
+model.parameters.prototypical <- model.parameters %>%
+  filter(ModelType == "Native") %>%
+  mutate(cor12 = C1_C2/sqrt(C1_C1*C2_C2),     # get correlation matrix from native model (cor_n)
+         cor13 = C1_C3/sqrt(C1_C1*C3_C3),
+         cor23 = C2_C3/sqrt(C2_C2*C3_C3)) %>%
+  dplyr::select(-c(data,model)) %>%
+  group_by(part, Sound, ModelType) %>%
+  mutate(meanSD_C1_log = mean(log(sqrt(C1_C1))),
+         meanSD_C2_log = mean(log(sqrt(C2_C2))),
+         meanSD_C3_log = mean(log(sqrt(C3_C3)))
+            ) %>%
+  summarise_at(vars(C1:meanSD_C3_log), mean, na.rm = TRUE) %>%
+  mutate(C1_C1_old = C1_C1, 
+         C2_C2_old = C2_C2, 
+         C3_C3_old = C3_C3, 
+         C1_C1 = exp(meanSD_C1_log)^2,
+         C2_C2 = exp(meanSD_C2_log)^2,
+         C3_C3 = exp(meanSD_C3_log)^2) %>%
+  mutate(C1_C2 = sqrt(C1_C1*C2_C2) * cor12,
+         C1_C3 = sqrt(C1_C1*C3_C3) * cor13,
+         C2_C1 = sqrt(C1_C1*C2_C2) * cor12,
+         C2_C3 = sqrt(C2_C2*C3_C3) * cor23,
+         C3_C1 = sqrt(C1_C1*C3_C3) * cor13,
+         C3_C2 = sqrt(C2_C2*C3_C3) * cor23) %>%
+  mutate(combo = "prototypical_M5")
+
+
+res.native.prototypical <- model.parameters.prototypical %>%
+ group_by(combo, part, Sound) %>%
+  mutate(
+         model = list(list(mu = structure(c(C1, C2, C3), names = selected_cues),
+                           Sigma = matrix(c(C1_C1,C1_C2,C1_C3, C2_C1,C2_C2, C2_C3, C3_C1, C3_C2, C3_C3), ncol=3, nrow=3, dimnames = list(selected_cues,selected_cues)))))
+
+##-------------------------
+## create a prototypical talker for the native model
+##-------------------------
+
+df.TS1 <- res.TS %>%
+  mutate(label = paste(part,combo, Sound,sep = "_")) %>%
+  dplyr::select(combo, part,Sound, label, data, model, C1, C2, C3, C1_C1, C2_C2, C3_C3) # select mean and sd from TS model (mean_nn, sd_nn)
+
+df.native1 <- res.native %>%
+  mutate(label = paste(part,combo,Sound,sep = "_")) %>%
+  mutate(cor12 = C1_C2/sqrt(C1_C1*C2_C2),     # mutate correlation from native model (cor_n)
+         cor13 = C1_C3/sqrt(C1_C1*C3_C3),
+         cor23 = C2_C3/sqrt(C2_C2*C3_C3)) %>%
+  dplyr::select(label, cor12, cor13, cor23)  ##here take the correlation from the native model
+
+
+df_new1 <- left_join(df.TS1, df.native1, by = "label")
+
+res.TS1 <- df_new1 %>%
+ group_by(combo, part,sound) %>%
+  mutate(model_old = model,
+         model = list(list(mu = structure(c(C1, C2, C3), names = selected_cues),
+                           Sigma = matrix(c(C1_C1,C1_C2,C1_C3, C2_C1,C2_C2, C2_C3, C3_C1, C3_C2, C3_C3), ncol=3, nrow=3, dimnames = list(selected_cues,selected_cues)))))
+  
+
+# integrate the prototypical model with all original talker combos -- basically the output should be the same for all combos
+
+data1 <- res.TS %>%
+  mutate(label = paste(part,combo, Sound,sep = "_")) %>%
+  dplyr::select(c(combo, part, Sound, label, data)) 
+data2 <- res.native.prototypical %>%
+  ungroup() %>%
+  dplyr::select(part:C3_C3, model)
+
+df.propotypical <- left_join(data1, data2, by = c("part", "Sound")) %>%
+  ungroup() %>%
+  dplyr::select(combo,part,Sound,data,model) %>%
+  group_by(combo)
+
+
+##merge updated models into temp.native data, and re-generate models_test
+
+res.native.prototypical.nest1 <- df.propotypical %>%
+  split(.$part) %>%
+  unname(.)
+
+temp.native.prototypical <- list_modify(temp.native, models_trained_new = res.native.prototypical.nest1)
+
+
+##create new models_tested based on updated models_trained
+results.native.prototypical <- temp.native.prototypical %>%
+  mutate(models_tested_new = map2(data_test, models_trained_new, classify, category="Sound")) %>%
+  unnest(models_tested_new) %>%
+  filter(part=="test") %>%
+  mutate(CategoryModel = model) %>%
+  mutate(combo = "prototypical_M5",
+         Talker_train = "prototypical_English") %>%
+  distinct(.) %>%
+  mutate(ModelType = "Native")
+
+##-------------------------
+## create a prototypical talker for the TS model (this only affects how /t/s are formed in the training model)
+##-------------------------
+
+# integrate the prototypical model with all original talke combos in the TS dataframe -- basically the output should be the same for all combos
+
+data1.t <- res.TS %>%
+  filter(Sound == "/t/") %>%
+  mutate(label = paste(part,combo, Sound,sep = "_")) %>%
+  dplyr::select(c(combo, part, Sound, label, data)) 
+  
+data2.t <- res.native.prototypical %>%
+  ungroup() %>%
+  filter(Sound == "/t/") %>% # select the prototypical talker parameters for /t/s only
+  dplyr::select(part:C3_C3,model)
+
+df.propotypical.TS.t <- left_join(data1.t, data2.t, by = c("part", "Sound"))
+
+df.propotypical.TS.d <- res.TS %>%
+  filter(Sound == "/d/")
+
+df.propotypical.TS <- bind_rows(df.propotypical.TS.d,df.propotypical.TS.t) %>%
+  ungroup() %>%
+  mutate(label = paste(part,combo, Sound,sep = "_")) %>%
+  select(-ModelType)
+  
+model.parameters.prototypical.TS <- df.propotypical.TS %>%
+  dplyr::select(part, Sound, C1:C3_C3) %>%
+  distinct() %>%
+  mutate(ModelType = "TS_prototypical",
+         combo = "prototypical_M5") 
+
+##tidy the data frame
+df.propotypical.TS <- df.propotypical.TS %>%
+  ungroup() %>%
+  dplyr::select(combo,part,Sound,data,model) %>%
+  group_by(combo)
+
+
+##merge updated models into temp.TS data, and re-generate models_test
+
+res.TS.prototypical.nest1 <- df.propotypical.TS %>%
+  split(.$part) %>%
+  unname(.)
+
+temp.TS.prototypical <- list_modify(temp.TS, models_trained_new = res.TS.prototypical.nest1)
+
+##create new models_tested based on updated models_trained
+results.TS.prototypical <- temp.TS.prototypical %>%
+  mutate(models_tested_new = map2(data_test, models_trained_new, classify, category="Sound")) %>%
+  unnest(models_tested_new) %>%
+  filter(part=="test") %>%
+  mutate(CategoryModel = model) %>%
+  mutate(combo = "prototypical_M5",
+         Talker_train = "prototypical_English") %>%
+  distinct(.) %>%
+  mutate(ModelType = "Non-native")
+
+```
+
+```{r combine-ideal-observers-English-stims-prototypical}
+
+results.english.all <- rbind(rbind(results.native.prototypical, results.TS.prototypical), results.english)
+#xtabs(~ModelType + combo, results.english.all)
+
+temp.english.all <- rbind(temp.english %>% mutate(Prototypical = "No"),
+                         rbind(temp.native.prototypical %>%
+                                 mutate(models_trained = models_trained_new,
+                                        models_trained_new = NULL) %>%
+                                 mutate(Prototypical = "Yes"),
+                               temp.TS.prototypical %>%
+                                 mutate(models_trained = models_trained_new,
+                                        models_trained_new = NULL) %>%
+                                 mutate(Prototypical = "Yes")))
+
+
+# saveRDS(results.english.all, "../data/ideal_observer_results_English.rds")
+# saveRDS(temp.english.all, "../data/ideal_observer_models_English.rds")
+
+```
+
+
+```{r load-data-for-ideal-observers}
+## ------------------------------------------------------------------------------------------------------
+# To do: 
+# 1)rename Dataset to Language, which currently leads to errors down the road.
+# 2) add plots for cue correction for exposure tokens?
+## ------------------------------------------------------------------------------------------------------
+
+# load Swedish results
+results.swedish <- readRDS("../data/ideal_observer_results_Swedish.rds") 
+# load model parameters for Swedish data
+model.parameter.swedish <- readRDS("../data/ideal_observer_models_Swedish.rds")
+
+# load English results
+results.english <- readRDS("../data/ideal_observer_results_English.rds") %>%
+  mutate(NativeLanguage = "English", Dataset = "Mandarin-accented English") %>%
+  filter(combo == "prototypical_M5") # select the appropriate subset (matching what are available for Swedish data) 
+
+# load model parameters for English data
+model.parameter.english <- readRDS("../data/ideal_observer_models_English.rds") %>%
+  filter(Prototypical == "Yes")
+
+
+  
+# combine the modeling results together
+common_cols <- intersect(colnames(results.swedish), colnames(results.english))
+
+d.IO = results.swedish %>%
+  mutate(NativeLanguage = "Swedish", Dataset = "Flemish-accented Swedish") %>%
+  full_join(results.english) %>%
+  select(one_of(common_cols), NativeLanguage, Dataset, -model) %>%
+  rename(
+         Part = part,
+         Lhood = lhood,
+         Posterior = posterior,
+         Posterior.Choice = posterior_choice) %>%
+  mutate_if(is.character, as.factor) %>%
+  # Make sure the category model and sound variables have the same levels.
+  # mutate_at(c("CategoryModel", "Sound"),
+  #           function (x) factor(paste0("/", x, "/"), 
+  #                       levels = levels.Sound)) %>%
+  left_join(d.test %>%
+              select(Item.MinimalPair, Item.WordID, Item.Word, NativeLanguage) %>%
+              distinct(.), by = c("NativeLanguage", "Item.Word")
+  ) %>%
+  mutate(
+    ModelType = factor(ModelType, levels = levels.Model),
+    Dataset = factor(Dataset, levels = levels.Language),
+#    Language = factor(Language, levels = levels.Language),
+    NativeLanguage = factor(NativeLanguage, levels = levels.NativeLanguage)
+  )
+
+# there should be a total of 180 words across the two datasets; 
+# each word has 2 levels for ModelType (non-native or native) and 2 levels for CategoryModel (/d/ or /t/)
+```
+
+
+
+
+
+
+
 
 
 Figures \@ref(fig:english-cue-before-and-after-residualization) and \@ref(fig:swedish-cue-before-and-after-residualization) show the distribution of test tokens before and after correction for phonological context for the English and Swedish experiment, respectively.
@@ -1082,7 +1831,7 @@ Figures \@ref(fig:english-cue-before-and-after-residualization) and \@ref(fig:sw
 
 1) can you change the values of ResidualizationType to "before" and "after" "correction for phonological context"? 
 2) can you add hover-over word labels to each data point?
-3) change the sound label to /d/ and /t/, nothing else?
+3) change the sound label to /d/ and /t/, nothing else? 
 
 -->
 
@@ -1156,16 +1905,6 @@ We note that this entails that there is no overlap between the training and test
 
 
 ### Visualize Ideal Observer predictions
-
-```{r prepare-ideal-observers}
-acc_method <- 'posterior'
-
-# assign selected cues
-selected_cues <- c('rvowel','rclosure','rburst')
-```
-
-
-
 
 ```{r integrate-test-data-with-modeling-results}
 d.test.IO <- left_join(d.test, d.IO, by = c("NativeLanguage", "Sound", "Item.Word", "Item.MinimalPair", "Item.WordID"))
