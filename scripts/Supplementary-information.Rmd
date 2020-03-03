@@ -60,7 +60,7 @@ library(ggpubr)
 library(gridExtra)
 ## devtools::install_github('kleinschmidt/daver')
 library(daver)
-## devtools::install_github('xinxie-cogsci/nspvowels', auth_token = "46ca462721b1d6fe506b14bee12753a11ec4cb37")
+## devtools::install_github('xinxie-cogsci/nspvowels', auth_token = "FILL IN")
 library(nspvowels)
 ```
 
@@ -942,22 +942,19 @@ Compared to the English experiment, the Swedish experiment had about 50\% fewer 
 
 ## Structure of Ideal Observers
 
-Within each language, we compare the predictions of a native model and a non-native model, for a total of four ideal observers. The only difference between native and non-native models lies in the /d/ tokens used for training---paralleling the difference between the /d/- and control exposure in the experiments. Both the native and non-native ideal observer are evaluated on the same foreign-accented minimal pair stimuli from the test phase of the experiments. Figure \@ref(fig:ideal-observer-and-data) summarizes what speech databases we used to estimate the mean $\mu$ and covariance matrix $\Sigma$ of the multivariate Gaussian distributions for the /d/ and /t/ categories in each of the four ideal observers.
+For both the English and the Swedish data, we compare the predictions of a native model and a non-native model. The native models are meant to predict the behavior of listeners without exposure to the foreign-accented /d/, i.e., listeners in the control condition. The non-native models are meant to predict the behavior of listeners with exposure to the foreign-accented /d/, i.e. listeners in the the /d/-exposure condition. 
+
+To this end, we train and test a total of four ideal observers: the native and non-native English models, and the native and non-native Swedish models. Both the native and non-native ideal observer are *tested* on the same foreign-accented minimal pair stimuli from the test phase of the experiments. The two models are, however, *trained* on different inputs. In particular, the two models received *different /d/ tokens during training*---paralleling the difference between the /d/- and control exposure in the experiments. To derive predictions from the ideal observers it is also necessary to give them a /t/ category. Since /t/ was never (or hardly ever) observed in either exposure condition, both the native and non-native model were training on *native* /t/.
+
+Figure \@ref(fig:ideal-observer-and-data) summarizes what speech databases we used to train the ideal observers---i.e., to estimate the mean $\mu$ and covariance matrix $\Sigma$ of the multivariate Gaussian distributions for the /d/ and /t/ categories in each of the four ideal observers. The dotted lines in Figure \@ref(fig:ideal-observer-and-data) indicate for each category (/d/, /t/) in each model (native vs. non-native x English vs. Swedish), which database it was trained on.
+
+In the following sections, we walk through the steps that are summarized in Figure \@ref(fig:ideal-observer-and-data). As already visible in that figure, we draw on multiple databases. The speech materials in these databases differed along dimensions that were not of theoretical interest to us, but that could affect the performance of the ideal observers. For example, if we train the ideal observers on the vowel, closure, and burst duration of multi-syllabic words and then test them on the vowel, closure, and burst duration of our mono-syllabic test items, this might make the comparison of the native and non-native models' performance on the test items uninformative. We thus prepared the training and test data by correcting for effects of phonological context, as we describe next Following that, we describe the training and test procedure for the ideal observers.
 
 ```{r ideal-observer-and-data, fig.cap="(ref:ideal-observer-and-data)", out.width="100%"}
 knitr::include_graphics("../figures/IdealObserverAndData.png")
 ```
 
-(ref:ideal-observer-and-data) Four ideal observer models---a *native* and *non-native* ideal observer each for the English and the Swedish data---were fit and cross-validated against production data from native- and foreign-accented English and Swedish. 
-
-- **Native** model: 
-  + Exposure /d/ comes from the *native* talker's exposure /d/ (30 tokens)
-  + Exposure /t/ comes from the native talker's test /t/ (downsampled to 30 tokens)
-  + Test /d/ and /t/ comes from the non-native talker's test /d/ and /t/
-- **Non-native** model: 
-  + Exposure /d/ comes from the *non-native* talker's exposure /d/ (30 tokens)
-  + Exposure /t/ comes from the native talker's test /t/ (downsampled to 30 tokens)
-  + Test /d/ and /t/ comes from the non-native talker's test /d/ and /t/
+(ref:ideal-observer-and-data) Four ideal observer models---a *native* and *non-native* ideal observer each for the English and the Swedish data---were fit and cross-validated against production data from native- and foreign-accented English and Swedish. In the databases (top and bottom), native speech is shown in gray; non-native speech is shown in red. We use the same colors to distinguish between the native and non-native *model*. Each ideal observer has two components: the /d/ and the /t/ category. Training of the ideal observer refers to estimating the mean $\mu$ and covariance matrix $\Sigma$ of these two categories.
 
 
 ## Estimating phonetic distributions 
@@ -965,11 +962,17 @@ knitr::include_graphics("../figures/IdealObserverAndData.png")
 The ideal observers require estimates of the distribution of the relevant phonetic cues for the syllable-final contrast between /d/ and /t/. Specifically, we need to estimate these distributions for `typical' native-accented productions of /t/ (for both the native and non-native IOs), the native-accented production of /d/ (for the native IO), and the foreign-accented production of /d/ (for the non-native IO). Additionally, all *test* tokens must be annotated for the same cues. Next, we describe the databases, annotation procedure, and additional steps taken to obtain these estimates.
 
 ### Databases
-The data for the non-native /d/ comes from the 30 critical words with syllable-final /d/ used during the foreign-accented exposure in the experiments. For the English data, native /d/ and /t/ distributions are estimated from a database of 10 male native speakers of American English (Li, Jaeger, & Xie, 2020). This is the same database that also includes the Mandarin-accented speaker used in Xie et al. (2017). Native-accented talkers had the same sex and spanned a similar age range (18-35) as the Mandarin-accented talker in Xie et al. (2017). The recording procedure was the same. 
+For the native English IO, the /d/ and /t/ distributions are estimated from a database of 10 male native speakers of American English (Li, Jaeger, & Xie, 2020). Native-accented talkers had the same sex and spanned a similar age range (18-35) as the Mandarin-accented talker in Xie et al. (2017). The recording procedure was the same. 
+
+For the non-native English IO, the /d/ distribution is estimated from the 30 critical words with syllable-final /d/ used during the foreign-accented exposure in Xie et al. (2017). The foreign-accented speech used in Xie et al. (2017) is part of the non-native portion of the Li et al. (2020) database (hence the dotted line between the native English IO's /d/ category and the Li et al., 2020 database in Figure \@ref(fig:ideal-observer-and-data)).
 
 Of note, the words that were used to estimate native-English /d/ and /t/ distributions were not the same as those used for estimating non-native /d/; however, they were all monosyllabic words with word-final /d/s or /t/s and therefore shared the phonological properties of the minimal pairs /d/-/t/ test words used in Xie et al. (2017). We used this dataset instead of tokens from a particular talker for the following two reasons: 1) recordings from native-English speakers producing the same stimuli as used in Xie et al. (2017) were not available; 2) for the purpose of estimating `typical' native-English productions of /d/ and /t/, this dataset was adequate, and perhaps better than data from just a single speaker. Given the sample size of this database of native English, we were able to construct ideal observers that simulate a *prototypical* native-English speaker. We use this *prototypical* speaker as the native IO, instead of any single native-English speaker, as a comparison to our non-native speaker.
 
 For the Swedish data, we had access to only one gender and age-matched native-accented speaker. This was the speaker recorded to provide the native pronunciations for the foreign-accented talker (see \@ref(sec:recording)).
+
+
+
+The data for the non-native /d/ comes from the 30 critical words with syllable-final /d/ used during the foreign-accented exposure in the experiments. 
 
 ### Phonetic cues
 Tokens were annotated for their duration of vowel, closure, and burst. These three cues are considered primary cues to syllable-final voicing (REFS). It is therefore likely, but not guaranteed, that the three cues would explain a substantial part of variation in participants' ratings during test. The results of the ideal observer analyses reported below support this assumption: performance of the non-native IO was high for both experiments. This suggests that /d/ and /t/ in both the English and the Swedish data formed clusters that were separable within the 3D space defined by the three cues.
@@ -1269,6 +1272,17 @@ d.stims.english.corrected <- plyr::rbind.fill(d.stims.database.step2 %>%
 
 
 # run ideal observers
+
+- **Native** model: 
+  + Exposure /d/ comes from the *native* talker's exposure /d/ (30 tokens)
+  + Exposure /t/ comes from the native talker's test /t/ (downsampled to 30 tokens)
+  + Test /d/ and /t/ comes from the non-native talker's test /d/ and /t/
+- **Non-native** model: 
+  + Exposure /d/ comes from the *non-native* talker's exposure /d/ (30 tokens)
+  + Exposure /t/ comes from the native talker's test /t/ (downsampled to 30 tokens)
+  + Test /d/ and /t/ comes from the non-native talker's test /d/ and /t/
+
+
 
 ```{r prepare-ideal-observers}
 acc_method <- 'posterior'
