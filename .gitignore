@@ -8,5 +8,7 @@
 *.js
 *.css
 *.pdf
+*.log
 scripts/Supplementary-information_files/*
 scripts/bookdown_assets/
+scropts/libs/
