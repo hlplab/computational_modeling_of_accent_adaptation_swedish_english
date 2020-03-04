@@ -58,10 +58,12 @@ library(cowplot)        # multi-plot figures
 library(plotly)         # 3D plotting 
 library(ggpubr)
 library(gridExtra)
+library(assertthat)
 ## devtools::install_github('kleinschmidt/daver')
 library(daver)
-## devtools::install_github('xinxie-cogsci/nspvowels', auth_token = "FILL IN")
-library(nspvowels)
+#devtools::install_github("kleinschmidt/phondisttools")
+library(phondisttools)
+
 ```
 
 ```{r constants and environments}
@@ -1015,6 +1017,7 @@ To train and test a model of human perception, it is thus necessary to either mo
 
 ```{r load data for correcting for phonological context}
 
+
 # load stimuli
 d.stims.swedish <- readRDS("../data/Swedish/test_stimuli_analysis/d.stims.swedish.rds") %>%
   filter(mimic == "irrelevant" | mimic == "yes") %>%
@@ -1296,6 +1299,50 @@ d.stims.swedish <- d.stims.swedish.corrected.aligned
 d.stims.english <- d.stims.english.corrected
 ```
 
+```{r temporary-solution}
+
+library(tidyverse)     
+nest <- nest_legacy
+unnest <- unnest_legacy
+
+add_id_col = function(x) mutate(x, id_=row_number())
+
+classify = function (data, 
+    models, category) 
+{
+    assert_that(is.data.frame(models))  
+    assert_that(category %in% names(models))
+    assert_that(is.data.frame(data))
+    model_groups <- groups(models)
+    if (is.null(model_groups)) {
+        data <- data %>% ungroup()
+    }
+    else {
+        data <- data %>% group_by(.dots = model_groups)
+    }
+    model_lists <- models %>% do(models = list_models(., category))
+    if (is.null(model_groups)) {
+        data_and_models <- bind_cols(data_frame(data = list(data)), 
+            model_lists)
+    }
+    else {
+        data_and_models <- data %>% nest_legacy() %>% left_join(model_lists)
+    }
+    data_and_models %>% mutate(lhoods = purrr::map2(data, models, ~apply_model_list(.x, 
+        .y, model_lhood)),
+        posteriors = purrr::map(lhoods,
+                            . %>%
+                              add_id_col() %>%
+                              gather(model, lhood, -id_) %>%
+             group_by(id_) %>%
+             mutate(posterior = lhood / sum(lhood),
+                                     posterior_choice = posterior==max(posterior)))
+           ) %>%  ### here the category with maximal posterior is chosen
+        unnest_legacy(map2(data, posteriors, ~inner_join(.x %>% add_id_col(),
+            .y, by = "id_") %>% dplyr::select(-id_))) %>% group_by(.dots = model_groups)
+}
+
+```
 
 # train ideal observers for Swedish data
 
@@ -1406,7 +1453,7 @@ for (i in 1:talker_num) {
       Talker1 <- English_talkers[i]
       Talker2 <- c("M5")
 
-# TS model: Exposure /d/ comes from the non-native talker's exposure /d/, exposure /t/ comes from the native talker's test /t/;     
+# TS model: Exposure /d/ comes from the non-native talker's exposure /d/, exposure /t/ comes from the native talker's /t/;     
       temp1.TS.d <- d.stims.english %>% 
         filter(Accent == "Mandarin") %>% 
         filter(Talker == Talker2 & Block.Type == "exposure") %>% 
