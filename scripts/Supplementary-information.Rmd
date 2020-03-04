@@ -1019,7 +1019,7 @@ To train and test a model of human perception, it is thus necessary to either mo
 
 
 # load stimuli
-d.stims.swedish <- readRDS("../data/Swedish/test_stimuli_analysis/d.stims.swedish.rds") %>%
+d.stims.swedish <- read.csv("../data/Swedish/test_stimuli_analysis/d.stims.swedish.csv") %>%
   filter(mimic == "irrelevant" | mimic == "yes") %>%
   filter(! Item.Word %in% c("voart", "voard", "hoart", "hoard")) %>%
   select(-mimic) %>%
@@ -1028,10 +1028,10 @@ d.stims.swedish <- readRDS("../data/Swedish/test_stimuli_analysis/d.stims.swedis
 
 # xtabs(~Talker + Block.Type + Sound, d.stims.swedish)
 
-d.stims.english <- readRDS("../data/English/d.stims.english.rds")
+d.stims.english <- read.csv("../data/English/d.stims.english.csv")
   
 
-d.stims.database <- readRDS("../data/English/d.stims.database.rds")
+d.stims.database <- read.csv("../data/English/d.stims.database.csv")
  
 ```
 
