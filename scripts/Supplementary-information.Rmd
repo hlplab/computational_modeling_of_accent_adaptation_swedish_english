@@ -1021,7 +1021,7 @@ To train and test a model of human perception, it is thus necessary to either mo
 # load stimuli
 d.stims.swedish <- read.csv("../data/Swedish/test_stimuli_analysis/d.stims.swedish.csv") %>%
   filter(mimic == "irrelevant" | mimic == "yes") %>%
-  filter(! Item.Word %in% c("voart", "voard", "hoart", "hoard")) %>%
+  filter(! Word %in% c("voart", "voard", "hoart", "hoard")) %>%
   select(-mimic) %>%
   rename(Talker = language) %>%
   droplevels()
@@ -1301,7 +1301,7 @@ d.stims.english <- d.stims.english.corrected
 
 ```{r temporary-solution}
 
-library(tidyverse)     
+
 nest <- nest_legacy
 unnest <- unnest_legacy
 
@@ -1442,7 +1442,7 @@ results.swedish <- temp.swedish %>%
 
 ```{r train-ideal-observers-English-stims}
 
-English_talkers <- levels(as.factor(d.english$Speaker))
+English_talkers <- levels(as.factor(d.stims.database$Speaker))
 talker_num <- length(English_talkers)
 
 
@@ -1686,27 +1686,6 @@ res.native.prototypical <- model.parameters.prototypical %>%
 ## create a prototypical talker for the native model
 ##-------------------------
 
-df.TS1 <- res.TS %>%
-  mutate(label = paste(part,combo, Sound,sep = "_")) %>%
-  dplyr::select(combo, part,Sound, label, data, model, C1, C2, C3, C1_C1, C2_C2, C3_C3) # select mean and sd from TS model (mean_nn, sd_nn)
-
-df.native1 <- res.native %>%
-  mutate(label = paste(part,combo,Sound,sep = "_")) %>%
-  mutate(cor12 = C1_C2/sqrt(C1_C1*C2_C2),     # mutate correlation from native model (cor_n)
-         cor13 = C1_C3/sqrt(C1_C1*C3_C3),
-         cor23 = C2_C3/sqrt(C2_C2*C3_C3)) %>%
-  dplyr::select(label, cor12, cor13, cor23)  ##here take the correlation from the native model
-
-
-df_new1 <- left_join(df.TS1, df.native1, by = "label")
-
-res.TS1 <- df_new1 %>%
- group_by(combo, part,sound) %>%
-  mutate(model_old = model,
-         model = list(list(mu = structure(c(C1, C2, C3), names = selected_cues),
-                           Sigma = matrix(c(C1_C1,C1_C2,C1_C3, C2_C1,C2_C2, C2_C3, C3_C1, C3_C2, C3_C3), ncol=3, nrow=3, dimnames = list(selected_cues,selected_cues)))))
-  
-
 # integrate the prototypical model with all original talker combos -- basically the output should be the same for all combos
 
 data1 <- res.TS %>%
@@ -1821,6 +1800,7 @@ temp.english.all <- rbind(temp.english %>% mutate(Prototypical = "No"),
 # saveRDS(results.english.all, "../data/ideal_observer_results_English.rds")
 # saveRDS(temp.english.all, "../data/ideal_observer_models_English.rds")
 
+
 ```
 
 
@@ -1866,7 +1846,7 @@ d.IO = results.swedish %>%
   #                       levels = levels.Sound)) %>%
   left_join(d.test %>%
               select(Item.MinimalPair, Item.WordID, Item.Word, NativeLanguage) %>%
-              distinct(.), by = c("NativeLanguage", "Item.Word")
+              distinct(.), by = c("NativeLanguage", "Item.Word", "Item.MinimalPair")
   ) %>%
   mutate(
     ModelType = factor(ModelType, levels = levels.Model),
@@ -1875,6 +1855,8 @@ d.IO = results.swedish %>%
     NativeLanguage = factor(NativeLanguage, levels = levels.NativeLanguage)
   )
 
+
+xtabs(~NativeLanguage+ModelType+Sound, d.IO)
 # there should be a total of 180 words across the two datasets; 
 # each word has 2 levels for ModelType (non-native or native) and 2 levels for CategoryModel (/d/ or /t/)
 ```
