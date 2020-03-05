@@ -59,9 +59,9 @@ library(plotly)         # 3D plotting
 library(ggpubr)
 library(gridExtra)
 library(assertthat)
-## devtools::install_github('kleinschmidt/daver')
+# devtools::install_github('kleinschmidt/daver')
 library(daver)
-#devtools::install_github("kleinschmidt/phondisttools")
+# devtools::install_github("kleinschmidt/phondisttools")
 library(phondisttools)
 
 ```
@@ -950,7 +950,7 @@ To this end, we train and test a total of four ideal observers: the native and n
 
 Figure \@ref(fig:ideal-observer-and-data) summarizes what speech databases we used to train the ideal observers---i.e., to estimate the mean $\mu$ and covariance matrix $\Sigma$ of the multivariate Gaussian distributions for the /d/ and /t/ categories in each of the four ideal observers. The dotted lines in Figure \@ref(fig:ideal-observer-and-data) indicate for each category (/d/, /t/) in each model (native vs. non-native x English vs. Swedish), which database it was trained on.
 
-In the following sections, we walk through the steps that are summarized in Figure \@ref(fig:ideal-observer-and-data). As already visible in that figure, we draw on multiple databases. The speech materials in these databases differed along dimensions that were not of theoretical interest to us, but that could affect the performance of the ideal observers. For example, if we train the ideal observers on the vowel, closure, and burst duration of multi-syllabic words and then test them on the vowel, closure, and burst duration of our mono-syllabic test items, this might make the comparison of the native and non-native models' performance on the test items uninformative. We thus prepared the training and test data by correcting for effects of phonological context, as we describe next Following that, we describe the training and test procedure for the ideal observers.
+In the following sections, we walk through the steps that are summarized in Figure \@ref(fig:ideal-observer-and-data). As already visible in that figure, we draw on multiple databases. The speech materials in these databases differed along dimensions that were not of theoretical interest to us, but that could affect the performance of the ideal observers. For example, if we train the ideal observers on the vowel, closure, and burst duration of multi-syllabic words and then test them on the vowel, closure, and burst duration of the mono-syllabic test items (of the English and Swedish experiment), this might make the comparison of the native and non-native models' performance on the test items uninformative. We thus prepared the training and test data by correcting for effects of phonological context, as we describe next. Following that, we describe the training and test procedure for the ideal observers.
 
 ```{r ideal-observer-and-data, fig.cap="(ref:ideal-observer-and-data)", out.width="100%"}
 knitr::include_graphics("../figures/IdealObserverAndData.png")
