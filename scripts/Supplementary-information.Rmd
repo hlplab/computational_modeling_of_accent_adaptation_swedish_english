@@ -240,10 +240,10 @@ We compare the results of the perception experiments on English and Swedish. We 
 # load human rating data
 ##-----------------------
 # Swedish rating data
-d.swedish = read_csv(file = "../data/Swedish/d.exposure+test.csv")
+d.swedish = read_csv(file = "../data/Swedish/Swedish_perception_exposure+test.csv")
 # English rating data
-d.english.exposure <- read.csv("../data/English/d.exposure.csv")
-d.english.test <- read.csv("../data/English/d.test.csv")
+d.english.exposure <- read.csv("../data/English/English_perception_exposure.csv")
+d.english.test <- read.csv("../data/English/English_perception_test.csv")
 
 # Standardize variable names for Swedish
 d.swedish %<>%
@@ -1019,7 +1019,7 @@ To train and test a model of human perception, it is thus necessary to either mo
 
 
 # load stimuli
-d.stims.swedish <- read.csv("../data/Swedish/test_stimuli_analysis/d.stims.swedish.csv") %>%
+d.stims.swedish <- read.csv("../data/Swedish/test_stimuli_analysis/Swedish_production_exposure+testcsv") %>%
   filter(mimic == "irrelevant" | mimic == "yes") %>%
   filter(! Word %in% c("voart", "voard", "hoart", "hoard")) %>%
   select(-mimic) %>%
@@ -2469,14 +2469,14 @@ plot_ly(data = d.IO.diff,
 
 ### English
 ```{r wordlist-English}
-read_csv("../data/English/English.exposure.wordlist.csv") %>% 
+read_csv("../data/English/English_wordlist_exposure.csv") %>% 
   replace_na(list(`Critical (/d/-Exposure)` = "-", `Critical (Control)` = "-" , `Filler` = "-" )) %>%
   knitr::kable(booktabs = TRUE, caption = 'English - Exposure')
 ```
 
 ### Swedish
 ```{r wordlist-Swedish}
-read_csv("../data/Swedish/Swedish.exposure.wordlist.csv") %>% 
+read_csv("../data/Swedish/Swedish_wordlist_exposure.csv") %>% 
   replace_na(list(`Critical (/d/-Exposure)` = "-", `Critical (Control)` = "-" , `Filler` = "-" )) %>%
   knitr::kable(booktabs = TRUE, caption = 'Swedish - Exposure')
 ```
@@ -2485,7 +2485,7 @@ read_csv("../data/Swedish/Swedish.exposure.wordlist.csv") %>%
 
 ### English
 ```{r test-wordlist-English}
-read_csv("../data/English/d.test.csv") %>% 
+read_csv("../data/English/English_perception_test.csv") %>% 
   distinct(Word, MinimalPairID, Sound) %>%
   pivot_wider(
     names_from = Sound,
@@ -2498,6 +2498,6 @@ read_csv("../data/English/d.test.csv") %>%
 
 ### Swedish
 ```{r test-wordlist-Swedish}
-read_csv("../data/Swedish/Swedish.test.wordlist.csv") %>%
+read_csv("../data/Swedish/Swedish_wordlist_test.csv") %>%
   knitr::kable(booktabs = TRUE, caption = 'Swedish - Test')
 ```
