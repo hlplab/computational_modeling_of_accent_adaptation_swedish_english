@@ -2,11 +2,3 @@
 .Rhistory
 .RData
 .Ruserdata
-.DS_Store
-*.Rproj
-*.html
-*.js
-*.css
-*.pdf
-scripts/Supplementary-information_files/*
-scripts/bookdown_assets/
