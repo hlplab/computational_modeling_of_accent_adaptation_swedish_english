@@ -240,10 +240,10 @@ We compare the results of the perception experiments on English and Swedish. We 
 # load human rating data
 ##-----------------------
 # Swedish rating data
-d.swedish = read_csv(file = "../data/Swedish/Swedish_perception_exposure+test.csv")
+d.swedish = read_csv(file = "../data/Swedish/Swedish_perception_rating_exposure+test_Tan et al 2020.csv")
 # English rating data
-d.english.exposure <- read.csv("../data/English/English_perception_exposure.csv")
-d.english.test <- read.csv("../data/English/English_perception_test.csv")
+d.english.exposure <- read.csv("../data/English/English_perception_rating_exposure_Xie et al 2017.csv")
+d.english.test <- read.csv("../data/English/English_perception_rating_test_Xie et al 2017.csv")
 
 # Standardize variable names for Swedish
 d.swedish %<>%
@@ -942,8 +942,6 @@ Compared to the English experiment, the Swedish experiment had about 50\% fewer 
 
 # Ideal observer analyses {#sec:IO}
 
-## Structure of Ideal Observers
-
 For both the English and the Swedish data, we compare the predictions of a native model and a non-native model. The native models are meant to predict the behavior of listeners without exposure to the foreign-accented /d/, i.e., listeners in the control condition. The non-native models are meant to predict the behavior of listeners with exposure to the foreign-accented /d/, i.e. listeners in the the /d/-exposure condition. 
 
 To this end, we train and test a total of four ideal observers: the native and non-native English models, and the native and non-native Swedish models. Both the native and non-native ideal observer are *tested* on the same foreign-accented minimal pair stimuli from the test phase of the experiments. The two models are, however, *trained* on different inputs. In particular, the two models received *different /d/ tokens during training*---paralleling the difference between the /d/- and control exposure in the experiments. To derive predictions from the ideal observers it is also necessary to give them a /t/ category. Since /t/ was never (or hardly ever) observed in either exposure condition, both the native and non-native model were training on *native* /t/. In other words, our non-native ideal observer makes the simplifying assumption that the /d/-exposure condition did not convey any information about the /t/ category, so that listeners in the /d/-exposure condition change their beliefs about the /d/ category, but do not change their beliefs about the /t/ category. This simplifying assumption is almost certainly wrong since, for example, talkers' means for different categories tend to correlate (Chodroff et al., 2017, 2018). <!-- Xin: if it's also the case in the Li et al data, we could say so here --> However, it is unlikely to bias our results: here we ask whether the predictions of native and non-native ideal observers differ for the English and the Swedish data. Critically, we apply the same simplifying assumption to both the English and the Swedish ideal observers. Any difference we find between the predictions for English and Swedish can therefore not be due to this simplifying assumption.
@@ -1015,24 +1013,16 @@ To train and test a model of human perception, it is thus necessary to either mo
 <!-- Maryann: The number of stimuli from the native speaker (23 exposure /d/ items, 25 test /t/ items, after excluding the 4 -r words) was fewer than that from the non-native speaker. Was it because some bursts were not released? Can you double-check? -->
 
 
-```{r load data for correcting for phonological context}
-
-
-# load stimuli
-d.stims.swedish <- read.csv("../data/Swedish/test_stimuli_analysis/Swedish_production_exposure+testcsv") %>%
+```{r load production data, include=FALSE}
+d.stims.swedish <- read.csv("../data/Swedish/Swedish_production_exposure+test_Tan et al 2019.csv") %>%
   filter(mimic == "irrelevant" | mimic == "yes") %>%
   filter(! Word %in% c("voart", "voard", "hoart", "hoard")) %>%
   select(-mimic) %>%
   rename(Talker = language) %>%
   droplevels()
 
-# xtabs(~Talker + Block.Type + Sound, d.stims.swedish)
-
-d.stims.english <- read.csv("../data/English/d.stims.english.csv")
-  
-
-d.stims.database <- read.csv("../data/English/d.stims.database.csv")
- 
+d.stims.english <- read.csv("../data/English/English_production_exposure+test_Xie et al 2017.csv")
+d.stims.LiETAL <- read.csv("../data/English/English_production_Li et al 2020.csv")
 ```
 
 ```{r functions-residualize-data}
@@ -1219,7 +1209,7 @@ my.resids.length = function(var.name, data.fit, data.pred) {
 
 # correct for phonological contexts effect -- do this by speaker so that the estimates are comparable to those of the single non-native talker and those of the Swedish data
 
-d.stims.database.step1 <- d.stims.database %>%
+d.stims.LiETAL.step1 <- d.stims.LiETAL %>%
   nest(-c(Speaker)) %>%
   group_by(Speaker) %>%
   mutate(rvowel = purrr::map(data, ~my.resids.phon("vowel", data.fit = ., data.pred = .)),   # create rvowel as a list element
@@ -1236,7 +1226,7 @@ d.stims.database.step1 <- d.stims.database %>%
          burst1 = NULL)
 
 
-d.stims.database.step2 <- d.stims.database.step1 %>%  # Caveat: because the stimuli from the English speaker are all monosyllabic, here the effect of syllable length was estimated using the Mandarin talker's data and applied to the English talker
+d.stims.LiETAL.step2 <- d.stims.LiETAL.step1 %>%  # Caveat: because the stimuli from the English speaker are all monosyllabic, here the effect of syllable length was estimated using the Mandarin talker's data and applied to the English talker
   nest(-c(Speaker)) %>%
   group_by(Speaker) %>%
   mutate(rvowel = purrr::map(data, ~my.resids.length("rvowel", data.fit = d.stims.english.step1 %>% 
@@ -1257,7 +1247,7 @@ d.stims.database.step2 <- d.stims.database.step1 %>%  # Caveat: because the stim
 
 # combine the data from the native English database and the non-native talker in Xie et al
 
-d.stims.english.corrected <- plyr::rbind.fill(d.stims.database.step2 %>% 
+d.stims.english.corrected <- plyr::rbind.fill(d.stims.LiETAL.step2 %>% 
                             mutate(Accent = "English"), 
                           d.stims.english.step2 %>% mutate(Accent = "Mandarin",
                                                            Speaker = "M5")) %>%
@@ -1442,7 +1432,7 @@ results.swedish <- temp.swedish %>%
 
 ```{r train-ideal-observers-English-stims}
 
-English_talkers <- levels(as.factor(d.stims.database$Speaker))
+English_talkers <- levels(as.factor(d.stims.LiETAL$Speaker))
 talker_num <- length(English_talkers)
 
 
@@ -2049,7 +2039,7 @@ The simple link function we use here was chosen based on considerations of parsi
 
 ```{r load categorization experiments, results='hide'}
 # load English ID data
-d.english.ID <- read.csv("../data/English/d.identification.xie_etal2017.csv")
+d.english.ID <- read.csv("../data/English/English_perception_identification_Xie et al 2017.csv")
 
 # recode identification response as proportion of /d/ response
 d.english.ID <- d.english.ID %>%
@@ -2485,7 +2475,7 @@ read_csv("../data/Swedish/Swedish_wordlist_exposure.csv") %>%
 
 ### English
 ```{r test-wordlist-English}
-read_csv("../data/English/English_perception_test.csv") %>% 
+read_csv("../data/English/English_perception_rating_test_Xie et al 2017.csv") %>% 
   distinct(Word, MinimalPairID, Sound) %>%
   pivot_wider(
     names_from = Sound,
