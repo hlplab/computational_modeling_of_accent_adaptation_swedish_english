@@ -1023,7 +1023,8 @@ d.stims =
   # Select columns and order them
   select(Language, Talker, Block.Type, Item.MinimalPair, Item.WordID, Item.Word, Sound,
          vowel, closure, burst, 
-         starts_with("has"), starts_with("onset"), starts_with("coda"), everything())
+         starts_with("has"), starts_with("onset"), starts_with("coda"), everything()) %>%
+  mutate_at(c("vowel", "closure", "burst"), function(x) x * 100)
 
 d.stims.LiETAL <- read.csv("../data/English/English_production_Li et al 2020.csv")
 ```
@@ -1056,14 +1057,13 @@ correct_for_phonctxt = function(cue.name,
       T ~ NA_character_))
   
   l = lm(f, data = data.fit)
-  cat(paste0("Effects of segmental context on ", cue.name, "duration for the ", language, "test data.\n"))
-  print(summary(l))
-  # tab_model(l, 
-  #           title = paste0("Effects of segmental context on ", cue.name, "duration for the ", language, "test data")) %>%
-  #   return() %T>%
-  #   knitr() %>%
-  #   as_is_output()
-  
+  # cat(paste("Effects of segmental context on", cue.name, "duration for the", language, "test data.\n"))
+  # print(summary(l))
+  print(plot_model(l, type = "est",
+                  show.p = T, show.values = T, show.data = T,
+            title = paste("Effects of segmental context on", cue.name, "duration for the", language, "test data"),
+            axis.title = c(paste("Change in", cue.name, "duration (in msec)"), "")))
+
   return(data.predict[, cue.name] - predict(l, newdata = data.predict))
 }
 ```
@@ -1084,6 +1084,7 @@ The phonological contexts considered differ somewhat for the Swedish and English
  
 <!-- Xin, Maryann: what about lexical stress? I guess words like lemonade do have secondary stress on the d-syllable. was d or t ever at the end of an unstressed syllable? Reply here: in the English dataset, most exposure words had a lexical stress on the syllable of /d/, but there were a few instances where the words ended in an unstressed syllable, e.g. "haphazard". We did not model lexical stress. All /t/ words were stressed as they were all monosyllabic.--> 
 
+<!-- Xin, Maryann: Perhaps we can put the output plots into html tabs, so as to not have this onslaught of figures -->
 
 ```{r correcting for segmental context}
 d.stims %<>%
@@ -1139,16 +1140,6 @@ d.stims %<>%
 
 ```{r residualize-English-data-Xieetal}
 
-# step 1: correct for phonological contexts effect
-d.stims.english.step1 <- 
-  d.stims.english %>%
-  mutate(rvowel = my.resids.phon.english("vowel", data.fit = d.stims.english %>%
-                          filter(Block.Type == "test"), data.pred = .),
-         rclosure = my.resids.phon.english("closure", data.fit = d.stims.english %>%
-                                   filter(Block.Type == "test"), data.pred = .),
-         rburst = my.resids.phon.english("burst", data.fit = d.stims.english %>%
-                                   filter(Block.Type == "test"), data.pred = .)
-  )
 
 # step 2: correct for syllable length effect, on the corrected measures from step 1
 
