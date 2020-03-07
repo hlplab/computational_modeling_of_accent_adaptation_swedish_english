@@ -9,6 +9,9 @@
 *.css
 *.pdf
 *.log
-scripts/Supplementary-information_files/*
+*.tmp
+scripts/Supplementary-information_files/
+scripts/Supplementary-information_cache/
 scripts/bookdown_assets/
-scropts/libs/
+scripts/libs/
+data/_TEMP/
