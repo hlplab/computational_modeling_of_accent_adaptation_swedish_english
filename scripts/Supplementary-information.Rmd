@@ -1171,7 +1171,7 @@ d.stims %<>%
 <!-- Xin, Maryann: Perhaps we can put the output plots into html tabs, so as to not have this onslaught of figures -->
 
 
-Figures \@ref(fig:native-english-cue-before-and-after-segment-correction) to \@ref(fig:non-native-swedish-cue-before-and-after-segment-correction) show the distribution of test tokens before and after correction for segmental context for the English and Swedish experiment, respectively.
+Figures \@ref(fig:native-english-cue-before-and-after-segment-correction) to \@ref(fig:non-native-swedish-cue-before-and-after-segment-correction) show the distribution of cues to the /t/ and /d/ categories before and after correction for segmental context for the English and Swedish experiment, respectively. 
 
 <!-- Xin: can we make points in these plots more transparent? -->
 
@@ -1205,8 +1205,8 @@ plot_ly(data = d.stims.long %>%
         text= ~Item.Word,
         color= ~Sound,
         colors = colors.Category,
-        symbol= ~Used_for,
-        symbols = shapes.Category,
+        # symbol= ~Used_for,
+        # symbols = shapes.Category,
         hoverinfo = "text", showlegend = T,
         type="scatter3d", mode="markers") %>%
   animation_slider(
@@ -1230,8 +1230,8 @@ plot_ly(data = d.stims.long %>%
         text= ~Item.Word,
         color= ~Sound,
         colors = colors.Category,
-        symbol= ~Used_for,
-        symbols = shapes.Category,
+        # symbol= ~Used_for,
+        # symbols = shapes.Category,
         hoverinfo = "text", showlegend = T,
         type="scatter3d", mode="markers") %>%
   animation_slider(
@@ -1257,8 +1257,8 @@ plot_ly(data = d.stims.long %>%
         text= ~Item.Word,
         color= ~Sound,
         colors = colors.Category,
-        symbol= ~Used_for,
-        symbols = shapes.Category,
+        # symbol= ~Used_for,
+        # symbols = shapes.Category,
         hoverinfo = "text", showlegend = T,
         type="scatter3d", mode="markers") %>%
   animation_slider(
@@ -1283,8 +1283,8 @@ plot_ly(data = d.stims.long %>%
         text= ~Item.Word,
         color= ~Sound,
         colors = colors.Category,
-        symbol= ~Used_for,
-        symbols = shapes.Category,
+        # symbol= ~Used_for,
+        # symbols = shapes.Category,
         hoverinfo = "text", showlegend = T,
         type="scatter3d", mode="markers") %>%
   animation_slider(
@@ -1378,7 +1378,7 @@ d.stims %<>%
 ```
 
 
-Figures \@ref(fig:native-english-cue-before-and-after-length-correction) to \@ref(fig:non-native-swedish-cue-before-and-after-length-correction) show the distribution of test tokens before and after correction for supra-segmental context for the English and Swedish experiment, respectively.
+Figures \@ref(fig:native-english-cue-before-and-after-length-correction) to \@ref(fig:non-native-swedish-cue-before-and-after-length-correction) show the distribution of cues to the /t/ and /d/ categories before and after correction for supra-segmental context for the English and Swedish experiment, respectively.
 
 <!-- Xin: can we make points in these plots more transparent? -->
 
@@ -1412,8 +1412,8 @@ plot_ly(data = d.stims.long %>%
         text= ~Item.Word,
         color= ~Sound,
         colors = colors.Category,
-        symbol= ~Used_for,
-        symbols = shapes.Category,
+        # symbol= ~Used_for,
+        # symbols = shapes.Category,
         hoverinfo = "text", showlegend = T,
         type="scatter3d", mode="markers") %>%
   animation_slider(
@@ -1437,8 +1437,8 @@ plot_ly(data = d.stims.long %>%
         text= ~Item.Word,
         color= ~Sound,
         colors = colors.Category,
-        symbol= ~Used_for,
-        symbols = shapes.Category,
+        # symbol= ~Used_for,
+        # symbols = shapes.Category,
         hoverinfo = "text", showlegend = T,
         type="scatter3d", mode="markers") %>%
   animation_slider(
@@ -1463,8 +1463,8 @@ plot_ly(data = d.stims.long %>%
         text= ~Item.Word,
         color= ~Sound,
         colors = colors.Category,
-        symbol= ~Used_for,
-        symbols = shapes.Category,
+        # symbol= ~Used_for,
+        # symbols = shapes.Category,
         hoverinfo = "text", showlegend = T,
         type="scatter3d", mode="markers") %>%
   animation_slider(
@@ -1488,8 +1488,8 @@ plot_ly(data = d.stims.long %>%
         text= ~Item.Word,
         color= ~Sound,
         colors = colors.Category,
-        symbol= ~Used_for,
-        symbols = shapes.Category,
+        # symbol= ~Used_for,
+        # symbols = shapes.Category,
         hoverinfo = "text", showlegend = T,
         type="scatter3d", mode="markers") %>%
   animation_slider(
