@@ -1189,58 +1189,51 @@ d.stims.long = d.stims %>%
   mutate(
     ContextCorrected = ifelse(ContextCorrected == "r", "yes", "no")
   )
+
+# Animations can be manipulated via animation_opts() but it seems that 
+# scatter3d (and other 3D options) are currently not animatable (see schema()).
+plot_corrected_cues = function(data.stims, title) {
+  plot_ly(data = data.stims %>% 
+            droplevels(),
+          frame= ~ContextCorrected,
+          ids= ~Item.Word, 
+          x= ~vowel,
+          y= ~closure,
+          z= ~burst,
+          text= ~Item.Word,
+          color= ~Sound,
+          colors = colors.Category,
+          # symbol= ~Used_for,
+          # symbols = shapes.Category,
+          hoverinfo = "text", showlegend = T,
+          type="scatter3d", mode="markers") %>%
+    animation_slider(
+      currentvalue = list(prefix = paste0(title, ": "), 
+                          font = list(color="black"))
+    )   
+}
 ```
 
 #### English (native)
 (ref:native-english-cue-before-and-after-segment-correction) Native-accented English words with syllable-final /d/ or /t/ before and after correction for segmental context.
 
 ```{r native-english-cue-before-and-after-segment-correction, fig.cap="(ref:native-english-cue-before-and-after-segment-correction)", out.width="75%", fig.show='hold'}
-# Animations can be manipulated via animation_opts() but it seems that 
-# scatter3d (and other 3D options) are currently not animatable (see schema()).
-plot_ly(data = d.stims.long %>% 
-          filter(NativeLanguage == "English", Accent == "native") %>%
-          droplevels(),
-        frame= ~ContextCorrected,
-        ids= ~Item.Word, 
-        x= ~vowel,
-        y= ~closure,
-        z= ~burst,
-        text= ~Item.Word,
-        color= ~Sound,
-        colors = colors.Category,
-        # symbol= ~Used_for,
-        # symbols = shapes.Category,
-        hoverinfo = "text", showlegend = T,
-        type="scatter3d", mode="markers") %>%
-  animation_slider(
-    currentvalue = list(prefix = "Corrected for segmental context: ", 
-                        font = list(color="black"))
-  ) 
+plot_corrected_cues(
+   d.stims.long %>% 
+          filter(NativeLanguage == "English", Accent == "native"),
+   title = "Corrected for segmental context"
+)
 ```
 
 #### English (non-native)
 (ref:non-native-english-cue-before-and-after-segment-correction) Mandarin-accented English words with syllable-final /d/ or /t/ before and after correction for segmental context.
 
 ```{r non-native-english-cue-before-and-after-segment-correction, fig.cap="(ref:non-native-english-cue-before-and-after-segment-correction)", out.width="75%", fig.show='hold'}
-plot_ly(data = d.stims.long %>% 
-          filter(NativeLanguage == "English", Accent == "non-native") %>%
-          droplevels(),
-        frame= ~ContextCorrected,
-        ids= ~Item.Word, 
-        x= ~vowel,
-        y= ~closure,
-        z= ~burst,
-        text= ~Item.Word,
-        color= ~Sound,
-        colors = colors.Category,
-        # symbol= ~Used_for,
-        # symbols = shapes.Category,
-        hoverinfo = "text", showlegend = T,
-        type="scatter3d", mode="markers") %>%
-  animation_slider(
-    currentvalue = list(prefix = "Corrected for segmental context: ", 
-                        font = list(color="black"))
-  ) 
+plot_corrected_cues(
+   d.stims.long %>% 
+          filter(NativeLanguage == "English", Accent == "non-native"),
+   title = "Corrected for segmental context"
+)
 ```
 
 
@@ -1249,50 +1242,22 @@ plot_ly(data = d.stims.long %>%
 
 
 ```{r native-swedish-cue-before-and-after-segment-correction, fig.cap="(ref:native-swedish-cue-before-and-after-segment-correction)", out.width="75%", fig.show='hold'}
-plot_ly(data = d.stims.long %>% 
-          filter(NativeLanguage == "Swedish", Accent == "native") %>%
-          droplevels(),
-        frame= ~ContextCorrected,
-        ids= ~Item.Word, 
-        x= ~vowel,
-        y= ~closure,
-        z= ~burst,
-        text= ~Item.Word,
-        color= ~Sound,
-        colors = colors.Category,
-        # symbol= ~Used_for,
-        # symbols = shapes.Category,
-        hoverinfo = "text", showlegend = T,
-        type="scatter3d", mode="markers") %>%
-  animation_slider(
-    currentvalue = list(prefix = "Corrected for segmental context: ", 
-                        font = list(color="black"))
-  ) 
+plot_corrected_cues(
+   d.stims.long %>% 
+          filter(NativeLanguage == "Swedish", Accent == "native"),
+   title = "Corrected for segmental context"
+)
 ```
 
 #### Swedish (non-native)
 (ref:non-native-swedish-cue-before-and-after-segment-correction) Flemish-accented Swedish words with syllable-final /d/ or /t/ before and after correction for segmental context.
 
 ```{r non-native-swedish-cue-before-and-after-segment-correction, fig.cap="(ref:non-native-swedish-cue-before-and-after-segment-correction)", out.width="75%", fig.show='hold'}
-plot_ly(data = d.stims.long %>% 
-          filter(NativeLanguage == "Swedish", Accent == "non-native") %>%
-          droplevels(),
-        frame= ~ContextCorrected,
-        ids= ~Item.Word, 
-        x= ~vowel,
-        y= ~closure,
-        z= ~burst,
-        text= ~Item.Word,
-        color= ~Sound,
-        colors = colors.Category,
-        # symbol= ~Used_for,
-        # symbols = shapes.Category,
-        hoverinfo = "text", showlegend = T,
-        type="scatter3d", mode="markers") %>%
-  animation_slider(
-    currentvalue = list(prefix = "Corrected for segmental context: ", 
-                        font = list(color="black"))
-  ) 
+plot_corrected_cues(
+   d.stims.long %>% 
+          filter(NativeLanguage == "Swedish", Accent == "non-native"),
+   title = "Corrected for segmental context"
+)
 ```
 
 
@@ -1304,7 +1269,6 @@ plot_ly(data = d.stims.long %>%
 # /d/-final words (data.fit) for the specified experiment (language). 
 # The predictions of this linear regression are then substracted from *all* data (data.predict: 
 # exposure /d/ + test /d/ + test /t/). 
-
 correct_for_word_length = function(cue.name, 
                           data.fit, 
                           language = c("English", "Swedish")
@@ -1401,52 +1365,22 @@ d.stims.long = d.stims %>%
 (ref:native-english-cue-before-and-after-length-correction) Native-accented English words with syllable-final /d/ or /t/ before and after correction for supra-segmental context.
 
 ```{r native-english-cue-before-and-after-length-correction, fig.cap="(ref:native-english-cue-before-and-after-length-correction)", out.width="75%", fig.show='hold'}
-# Animations can be manipulated via animation_opts() but it seems that 
-# scatter3d (and other 3D options) are currently not animatable (see schema()).
-plot_ly(data = d.stims.long %>% 
-          filter(NativeLanguage == "English", Accent == "native") %>%
-          droplevels(),
-        frame= ~ContextCorrected,
-        ids= ~Item.Word, 
-        x= ~vowel,
-        y= ~closure,
-        z= ~burst,
-        text= ~Item.Word,
-        color= ~Sound,
-        colors = colors.Category,
-        # symbol= ~Used_for,
-        # symbols = shapes.Category,
-        hoverinfo = "text", showlegend = T,
-        type="scatter3d", mode="markers") %>%
-  animation_slider(
-    currentvalue = list(prefix = "Corrected for supra-segmental context: ", 
-                        font = list(color="black"))
-  ) 
+plot_corrected_cues(
+   d.stims.long %>% 
+          filter(NativeLanguage == "English", Accent == "native"),
+   title = "Corrected for supra-segmental context"
+)
 ```
 
 #### English (non-native)
 (ref:non-native-english-cue-before-and-after-length-correction) Mandarin-accented English words with syllable-final /d/ or /t/ before and after correction for supra-segmental context.
 
 ```{r non-native-english-cue-before-and-after-length-correction, fig.cap="(ref:non-native-english-cue-before-and-after-length-correction)", out.width="75%", fig.show='hold'}
-plot_ly(data = d.stims.long %>% 
-          filter(NativeLanguage == "English", Accent == "non-native") %>%
-          droplevels(),
-        frame= ~ContextCorrected,
-        ids= ~Item.Word, 
-        x= ~vowel,
-        y= ~closure,
-        z= ~burst,
-        text= ~Item.Word,
-        color= ~Sound,
-        colors = colors.Category,
-        # symbol= ~Used_for,
-        # symbols = shapes.Category,
-        hoverinfo = "text", showlegend = T,
-        type="scatter3d", mode="markers") %>%
-  animation_slider(
-    currentvalue = list(prefix = "Corrected for supra-segmental context: ", 
-                        font = list(color="black"))
-  ) 
+plot_corrected_cues(
+   d.stims.long %>% 
+          filter(NativeLanguage == "English", Accent == "non-native"),
+   title = "Corrected for supra-segmental context"
+)
 ```
 
 
@@ -1454,50 +1388,22 @@ plot_ly(data = d.stims.long %>%
 (ref:native-swedish-cue-before-and-after-length-correction) Native-accented Swedish words with syllable-final /d/ or /t/ before and after correction for supra-segmental context.
 
 ```{r native-swedish-cue-before-and-after-length-correction, fig.cap="(ref:native-swedish-cue-before-and-after-length-correction)", out.width="75%", fig.show='hold'}
-plot_ly(data = d.stims.long %>% 
-          filter(NativeLanguage == "Swedish", Accent == "native") %>%
-          droplevels(),
-        frame= ~ContextCorrected,
-        ids= ~Item.Word, 
-        x= ~vowel,
-        y= ~closure,
-        z= ~burst,
-        text= ~Item.Word,
-        color= ~Sound,
-        colors = colors.Category,
-        # symbol= ~Used_for,
-        # symbols = shapes.Category,
-        hoverinfo = "text", showlegend = T,
-        type="scatter3d", mode="markers") %>%
-  animation_slider(
-    currentvalue = list(prefix = "Corrected for supra-segmental context: ", 
-                        font = list(color="black"))
-  ) 
+plot_corrected_cues(
+   d.stims.long %>% 
+          filter(NativeLanguage == "Swedish", Accent == "native"),
+   title = "Corrected for supra-segmental context"
+)
 ```
 
 #### Swedish (non-native)
 (ref:non-native-swedish-cue-before-and-after-length-correction) Flemish-accented Swedish words with syllable-final /d/ or /t/ before and after correction for supra-segmental context.
 
 ```{r non-native-swedish-cue-before-and-after-length-correction, fig.cap="(ref:non-native-swedish-cue-before-and-after-length-correction)", out.width="75%", fig.show='hold'}
-plot_ly(data = d.stims.long %>% 
-          filter(NativeLanguage == "Swedish", Accent == "non-native") %>%
-          droplevels(),
-        frame= ~ContextCorrected,
-        ids= ~Item.Word, 
-        x= ~vowel,
-        y= ~closure,
-        z= ~burst,
-        text= ~Item.Word,
-        color= ~Sound,
-        colors = colors.Category,
-        # symbol= ~Used_for,
-        # symbols = shapes.Category,
-        hoverinfo = "text", showlegend = T,
-        type="scatter3d", mode="markers") %>%
-  animation_slider(
-    currentvalue = list(prefix = "Corrected for supra-segmental context: ", 
-                        font = list(color="black"))
-  ) 
+plot_corrected_cues(
+   d.stims.long %>% 
+          filter(NativeLanguage == "Swedish", Accent == "non-native"),
+   title = "Corrected for supra-segmental context"
+)
 ```
 
 
@@ -1569,50 +1475,22 @@ d.stims.long = d.stims %>%
 (ref:native-english-cue-before-and-after-alignment) Native-accented English words with syllable-final /d/ or /t/ before and after correction for supra-segmental context.
 
 ```{r native-english-cue-before-and-after-alignment, fig.cap="(ref:native-english-cue-before-and-after-alignment)", out.width="75%", fig.show='hold'}
-plot_ly(data = d.stims.long %>% 
-          filter(NativeLanguage == "English", Accent == "native") %>%
-          droplevels(),
-        frame= ~ContextCorrected,
-        ids= ~Item.Word, 
-        x= ~vowel,
-        y= ~closure,
-        z= ~burst,
-        text= ~Item.Word,
-        color= ~Sound,
-        colors = colors.Category,
-        # symbol= ~Used_for,
-        # symbols = shapes.Category,
-        hoverinfo = "text", showlegend = T,
-        type="scatter3d", mode="markers") %>%
-  animation_slider(
-    currentvalue = list(prefix = "Alignment with mean of non-native /t/ category: ", 
-                        font = list(color="black"))
-  ) 
+plot_corrected_cues(
+  d.stims.long %>% 
+          filter(NativeLanguage == "English", Accent == "native"),
+  title = "Alignment with mean of non-native /t/ category"
+)
 ```
 
 #### English (non-native)
 (ref:non-native-english-cue-before-and-after-alignment) Mandarin-accented English words with syllable-final /d/ or /t/ before and after correction for supra-segmental context.
 
 ```{r non-native-english-cue-before-and-after-alignment, fig.cap="(ref:non-native-english-cue-before-and-after-alignment)", out.width="75%", fig.show='hold'}
-plot_ly(data = d.stims.long %>% 
-          filter(NativeLanguage == "English", Accent == "non-native") %>%
-          droplevels(),
-        frame= ~ContextCorrected,
-        ids= ~Item.Word, 
-        x= ~vowel,
-        y= ~closure,
-        z= ~burst,
-        text= ~Item.Word,
-        color= ~Sound,
-        colors = colors.Category,
-        # symbol= ~Used_for,
-        # symbols = shapes.Category,
-        hoverinfo = "text", showlegend = T,
-        type="scatter3d", mode="markers") %>%
-  animation_slider(
-    currentvalue = list(prefix = "Alignment with mean of non-native /t/ category: ", 
-                        font = list(color="black"))
-  ) 
+plot_corrected_cues(
+  d.stims.long %>% 
+          filter(NativeLanguage == "English", Accent == "non-native"),
+  title = "Alignment with mean of non-native /t/ category"
+)
 ```
 
 
@@ -1620,50 +1498,22 @@ plot_ly(data = d.stims.long %>%
 (ref:native-swedish-cue-before-and-after-alignment) Native-accented Swedish words with syllable-final /d/ or /t/ before and after correction for supra-segmental context.
 
 ```{r native-swedish-cue-before-and-after-alignment, fig.cap="(ref:native-swedish-cue-before-and-after-alignment)", out.width="75%", fig.show='hold'}
-plot_ly(data = d.stims.long %>% 
-          filter(NativeLanguage == "Swedish", Accent == "native") %>%
-          droplevels(),
-        frame= ~ContextCorrected,
-        ids= ~Item.Word, 
-        x= ~vowel,
-        y= ~closure,
-        z= ~burst,
-        text= ~Item.Word,
-        color= ~Sound,
-        colors = colors.Category,
-        # symbol= ~Used_for,
-        # symbols = shapes.Category,
-        hoverinfo = "text", showlegend = T,
-        type="scatter3d", mode="markers") %>%
-  animation_slider(
-    currentvalue = list(prefix = "Alignment with mean of non-native /t/ category: ", 
-                        font = list(color="black"))
-  ) 
+plot_corrected_cues(
+  d.stims.long %>% 
+          filter(NativeLanguage == "Swedish", Accent == "native"),
+  title = "Alignment with mean of non-native /t/ category"
+)
 ```
 
 #### Swedish (non-native)
 (ref:non-native-swedish-cue-before-and-after-alignment) Flemish-accented Swedish words with syllable-final /d/ or /t/ before and after correction for supra-segmental context.
 
 ```{r non-native-swedish-cue-before-and-after-alignment, fig.cap="(ref:non-native-swedish-cue-before-and-after-alignment)", out.width="75%", fig.show='hold'}
-plot_ly(data = d.stims.long %>% 
-          filter(NativeLanguage == "Swedish", Accent == "non-native") %>%
-          droplevels(),
-        frame= ~ContextCorrected,
-        ids= ~Item.Word, 
-        x= ~vowel,
-        y= ~closure,
-        z= ~burst,
-        text= ~Item.Word,
-        color= ~Sound,
-        colors = colors.Category,
-        # symbol= ~Used_for,
-        # symbols = shapes.Category,
-        hoverinfo = "text", showlegend = T,
-        type="scatter3d", mode="markers") %>%
-  animation_slider(
-    currentvalue = list(prefix = "Alignment with mean of non-native /t/ category: ", 
-                        font = list(color="black"))
-  ) 
+plot_corrected_cues(
+  d.stims.long %>% 
+          filter(NativeLanguage == "Swedish", Accent == "non-native"),
+  title = "Alignment with mean of non-native /t/ category"
+)
 ```
 
 ## Training ideal observers
