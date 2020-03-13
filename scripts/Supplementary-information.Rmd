@@ -1011,7 +1011,7 @@ d.stims =
     NativeLanguage = "Swedish",
     Talker = ifelse(Accent == "native", "S1", "F1"),
     # Maryann, please check whether this list is complete and correct and then 
-    # remove this comment.
+    # remove this comment. # -- I'm not sure how onset has nasal is defined here because it includes "hemmavid" and "loppmarknad" but excludes "marmelad"
     has_long_vowel = ifelse(has_long_vowel == "short", "no", "yes"),
     onset_has_nasal = ifelse(Item.Word %in% 
                                c("skillnad", "vemod", "nomad", "haarmed", 
@@ -1079,7 +1079,6 @@ We thus obtained context-corrected phonetic cues by estimating (via linear regre
 
 Next, we describe the three step procedure we employed to correct for various aspects of phonological context. As we describe, these steps involved a number of researchers' degrees of freedom. In other words, there often were several reasonable approaches that made slightly different assumptions about the data, and we had to choose one. Sometimes the data we had access to limited our choices. Whenever possible, however, we were guided by the goal to train and test two ideal observers that differed maximally in how much they knew about the foreign-accented speech: the native ideal observer reflecting a native listener without any knowledge about the foreign-accented speech, and the non-native ideal observer reflecting a native listener with maximal knowledge about the foreign-accented speech.
 
-<!-- Maryann: The number of stimuli from the native speaker (23 exposure /d/ items, 25 test /t/ items, after excluding the 4 -r words) was fewer than that from the non-native speaker. Was it because some bursts were not released? Can you double-check? -->
 
 ### Step 1: Correcting for segmental context {.tabset .tabset-fade}
 
