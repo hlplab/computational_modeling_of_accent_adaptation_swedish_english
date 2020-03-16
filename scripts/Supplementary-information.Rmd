@@ -995,7 +995,7 @@ d.stims =
   # Remove the 4 items because -rd and -rt are pronounced differently in Swedish than d/t in other context
   # (the same items were removed from the perception data)
   filter(! Word %in% c("voart", "voard", "hoart", "hoard")) %>%
-  select(-mimic, -phon_ctxt_canonical_vl, -MinimalPairID, -Item.Filename,) %>%
+  select(-mimic, -phon_ctxt_canonical_vl, -MinimalPairID, -Item.Filename) %>%
   rename(
     has_long_vowel = phon_ctxt_vl,
     has_stress = phon_ctxt_stress,
@@ -1010,11 +1010,10 @@ d.stims =
     NativeLanguage = "Swedish",
     Talker = ifelse(Accent == "native", "S1", "F1"),
     # Maryann, please check whether this list is complete and correct and then 
-    # remove this comment. # -- I'm not sure how onset has nasal is defined here because it includes "hemmavid" and "loppmarknad" but excludes "marmelad"
     has_long_vowel = ifelse(has_long_vowel == "short", "no", "yes"),
     onset_has_nasal = ifelse(Item.Word %in% 
                                c("skillnad", "vemod", "nomad", "haarmed", 
-                                 "skepnad", "hemmavid", "loppmarknad" , 
+                                 "skepnad", "loppmarknad" , 
                                  "promenad", "oeverlevnad", "nod", "not", 
                                  "smed", "smet", "smid", "smit", "mod", 
                                  "mot", "nod15", "noet"), "yes", "no")) %>%
@@ -1064,9 +1063,6 @@ d.stims =
               "has_stress", "has_long_vowel", "onset_has_nasal",
               "coda_has_rhotic", "coda_has_lateral", "coda_has_nasal", "coda_has_fricative",
               "set"), factor)
-
-
-
 ```
 
 
@@ -1172,8 +1168,6 @@ d.stims %<>%
 
 Figures \@ref(fig:native-english-cue-before-and-after-segment-correction) to \@ref(fig:non-native-swedish-cue-before-and-after-segment-correction) show the distribution of cues to the /t/ and /d/ categories before and after correction for segmental context for the English and Swedish experiment, respectively. 
 
-<!-- Xin: can we make points in these plots more transparent? -->
-
 ```{r prepare for cue plot after step 1, include=FALSE}
 d.stims.long = d.stims %>%
   distinct() %>%
@@ -1199,6 +1193,7 @@ plot_corrected_cues = function(data.stims, title) {
           text= ~Item.Word,
           color= ~Sound,
           colors = colors.Category,
+          opacity = .35, 
           # symbol= ~Used_for,
           # symbols = shapes.Category,
           hoverinfo = "text", showlegend = T,
