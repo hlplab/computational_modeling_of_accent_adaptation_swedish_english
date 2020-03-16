@@ -1444,6 +1444,13 @@ d.diff.t <- NULL
 Finally, in order to make sure that we are really comparing likes with likes, we align the /t/ category of *all* four data sets (the native and non-native English and Swedish data) with the /t/ category in the respective non-native test data. For example, for the native Swedish data, we calculated the vector from the mean of the native /t/ category to the non-native /t/ category (recall that the latter is solely based on the /t/-final test words). We then added that vector to all tokens in the native Swedish training data (i.e., both words with syllable-final /t/ and words with syllable-final /d/). 
 
 Since the /t/-categories of both the native and non-native ideal observers are trained on the same (native) /t/-data (see dashed lines in Figure \@ref(fig:ideal-observer-and-data)), this makes sure that any differences in performance between the native and non-native ideal observers comes solely from differences in their /d/ categories. This is line with our goal to use these ideal observers to capture the effect of the two exposure conditions (exposure to foreign-accented /d/ and control exposure without any such exposure).
+
+```{r summary-cue-correction, fig.cap="(ref:summary-cue-correction)", out.width="100%"}
+knitr::include_graphics("../figures/table_correction_steps.png")
+
+```
+(ref:summary-cue-correction) Summary of steps in the cue value correction procedure. Refer to \@ref(fig:ideal-observer-and-data) for database information.
+For the native Swedish data, the test words are the native recordings of the same words used in the foreign-accented test phase of the Swedish experiment. For the native English data, the test words are the native recordings of the mono-syllabic words with final /d,t/ in Li et al. (2020).
   
 Figures \@ref(fig:native-english-cue-before-and-after-alignment) to \@ref(fig:non-native-swedish-cue-before-and-after-alignment) show the distribution of cues to the /t/ and /d/ categories before and after alignment with the mean of the non-native /t/-category from the test tokens.
 
