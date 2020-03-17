@@ -204,6 +204,7 @@ insertLayer <- function(P, after=0, ...) {
 
 1) Check whether warnings are addressed, and then (after) set to silent.
 2) Run final compilation with echo = F.
+3) Check why in English non-native data the stress-final n-coda words get pulled out of the rest of the cloud. that seems wrong.
 
 **TO BE DELETED LATER (PROJECT INTERNAL NOTES)**
 
