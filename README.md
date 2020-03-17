@@ -6,6 +6,10 @@ Then run:
 
 `git lfs install`
 
+and
+
+`git lfs track *.RData`
+
 in the directory with the .git repository. You can do so from the R terminal.
 
 
