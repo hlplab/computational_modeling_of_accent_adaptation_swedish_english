@@ -20,18 +20,18 @@ header-includes:
   - \subsubsectionfont{\color{red}}
 output: 
   bookdown::gitbook:
-    lib_dir: bookdown_assets
+    split_by: section+number
     config:
+      toc:
+        collapse: subsection
+        scroll_highlight: yes
+        before: null
+        after: null
       toolbar:
         position: static
-  bookdown::pdf_book:
-    keep_tex: false
-    toc: true
-    toc_depth: 3
-    number_section: true
-    latex_engine: xelatex
-  bookdown::html_book:
-    css: toc.css
+      edit : null
+      download: null
+      search: yes
 documentclass: book
 always_allow_html: true
 ---
@@ -57,6 +57,7 @@ library(broom.mixed)    # easy extraction of information from LMMs
 library(ggplot2)        # plotting
 library(cowplot)        # multi-plot figures
 library(plotly)         # 3D plotting 
+library(shiny)          # tabs
 library(ggpubr)
 library(gridExtra)
 library(assertthat)
@@ -194,8 +195,6 @@ insertLayer <- function(P, after=0, ...) {
   return(P)
 }
 ```
-
-\newpage
 
 
 # Overview #
@@ -1209,6 +1208,25 @@ plot_corrected_cues = function(data.stims, title) {
 }
 ```
 
+<!-- ```{r results='asis', echo=FALSE} -->
+<!-- p1 = plot_corrected_cues( -->
+<!--    d.stims.long %>%  -->
+<!--           filter(NativeLanguage == "English", Accent == "native"), -->
+<!--    title = "Corrected for segmental context" -->
+<!-- ) -->
+
+<!-- p2 = plot_corrected_cues( -->
+<!--    d.stims.long %>%  -->
+<!--           filter(NativeLanguage == "English", Accent == "non-native"), -->
+<!--    title = "Corrected for segmental context" -->
+<!-- ) -->
+
+<!-- shiny::tabsetPanel(id = 'tbSet1', -->
+<!--                    shiny::tabPanel('Tab Name 1', ggplotly(p1)), -->
+<!--                    shiny::tabPanel('Tab Name 2', ggplotly(p2)) -->
+<!-- ) -->
+<!-- ``` -->
+
 #### English (native)
 (ref:native-english-cue-before-and-after-segment-correction) Native-accented English words with syllable-final /d/ or /t/ before and after correction for segmental context.
 
@@ -1341,8 +1359,6 @@ d.stims %<>%
 
 Figures \@ref(fig:native-english-cue-before-and-after-length-correction) to \@ref(fig:non-native-swedish-cue-before-and-after-length-correction) show the distribution of cues to the /t/ and /d/ categories before and after correction for supra-segmental context for the English and Swedish experiment, respectively.
 
-<!-- Xin: can we make points in these plots more transparent? -->
-
 ```{r prepare for cue plot after step 2, include=FALSE}
 d.stims.long = d.stims %>%
   distinct() %>%
@@ -1451,8 +1467,6 @@ Since the /t/-categories of both the native and non-native ideal observers are t
 
 Figures \@ref(fig:native-english-cue-before-and-after-alignment) to \@ref(fig:non-native-swedish-cue-before-and-after-alignment) show the distribution of cues to the /t/ and /d/ categories before and after alignment with the mean of the non-native /t/-category from the test tokens.
 
-<!-- Xin: can we make points in these plots more transparent? -->
-
 ```{r prepare for cue plot after step 3, include=FALSE}
 d.stims.long = d.stims %>%
   distinct() %>%
@@ -1511,36 +1525,216 @@ plot_corrected_cues(
 )
 ```
 
-## Training ideal observers
+## Training the four ideal observers
 
-## Testing ideal observers
+```{r IO-training-functions, include=FALSE}
+# Draws on training set for all four IO models (i.e., English & Swedish x native & non-native)
+# The only random part is the selection of the native English training data
+draw_training_data = function(
+  .data
+) {
+  # Draw English and Swedish training data for /t/ and /d/ category of native models
+  .data %>%
+    filter(Used_for == "training", Accent == "native") %>%
+    group_by(NativeLanguage, Talker, Sound) %>%
+    droplevels() %>% 
+    sample_n(30, replace = T) %>%
+    mutate(Used_for.Accent = "native") %>%
+    ungroup() %>%
+    # Duplicate this training data for the /t/ category of non-native models
+    { . ->> temp } %>% 
+    rbind(temp %>% 
+            filter(Sound == "/t/") %>%
+            mutate(Used_for.Accent = "non-native")) %>%
+    # Draw English and Swedish training data for /d/ category of non-native model
+    full_join(
+      .data %>%
+        filter(Used_for == "training", Accent == "non-native" & Sound == "/d/") %>% 
+        droplevels() %>% 
+        group_by(NativeLanguage, Talker, Item.Word) %>%
+        sample_n(1) %>%
+        mutate(Used_for.Accent = "non-native")
+    ) %>% 
+    ungroup() %>%
+    rename(
+      Used_for.NativeLanguage = NativeLanguage,
+      Used_for.Sound = Sound) %>%
+    mutate_at(vars(Used_for, Used_for.NativeLanguage, Used_for.Accent, Used_for.Sound,
+           Talker,Item.Word), factor) %>%
+    select(Used_for, Used_for.NativeLanguage, Used_for.Accent, Used_for.Sound,
+           Talker,Item.Word, 
+           vowel, closure, burst, 
+           rvowel, rclosure, rburst)
+}
 
+# Guesses groups for data
+guess_groups = function(.data) {
+  groups = c()
+  
+  if (length(unique(.data$Used_for.NativeLanguage)) > 1) groups = append(groups, "Used_for.NativeLanguage") 
+  if (length(unique(.data$Used_for.Accent)) > 1) groups = append(groups, "Used_for.Accent") 
+  if (length(unique(.data$Used_for.Sound)) > 1) groups = append(groups, "Used_for.Sound") 
+  if (length(unique(.data$Talker)) > 1) groups = append(groups, "Talker") 
+
+  return(groups)  
+}
+
+# Returns the mu and Sigma for a data se
+make_IO = function(
+  .data, 
+  cues, 
+  groups = guess_groups(.data)
+) {
+  # Make sure that only training data is used
+  .data %<>%
+    ungroup() %>%
+    filter(Used_for == "training") %>%
+    droplevels()
+  
+  # Get the mean and covariance matrix
+  .data %>%
+    # If there's more than one talker do the subsequent steps separately for each talker
+    group_by(!!! rlang::syms(groups)) %>%
+    summarise(
+      mu = list(colMeans(cbind(!!! rlang::syms(cues)))),
+      Sigma = list(cov(cbind(!!! rlang::syms(cues))))
+    ) %>%
+    # If there's more than one talker get the average of by-talker mu and Sigma
+    { if (nlevels(.data$Talker) > 1) {
+      group_by(., !!! rlang::syms(setdiff(groups, "Talker"))) %>%
+        summarise(
+          mu = list(Reduce("+", mu) / length(mu)),
+          Sigma = list(Reduce("+", Sigma) / length(Sigma))
+        ) } else . } %>%
+    select(!!! rlang::syms(setdiff(groups, "Talker")), mu, Sigma)
+}
+```
+
+```{r IO-visualization-functions, include=FALSE}
+# Make ellipsis from mu and Sigma, and return as tibble with 3 columns, named after cue names
+make_ellipse = function(mu, Sigma, cues = c("vowel", "closure", "burst")) {
+  ellipse = rgl::ellipse3d(Sigma, subdivide = 5)
+  x = as.numeric(ellipse$vb[1,] + mu[1])
+  y = as.numeric(ellipse$vb[2,] + mu[2])
+  z = as.numeric(ellipse$vb[3,] + mu[3])
+  
+  t = tibble(x, y, z)
+  names(t) = cues
+  return(t)
+}
+
+# Plot ideal observer's beliefs in 3D cue space.
+plot_IO = function(.data.IO, NativeLanguage, .data.training = NULL) {
+  # axis setting 
+  axx <- list(
+    nticks = 4,
+    range = range(.data.IO$vowel),
+    gridwidth = 2
+  )
+  
+  axy <- list(
+    nticks = 4,
+    range = range(.data.IO$closure),
+    gridwidth = 2
+  )
+  
+  axz <- list(
+    nticks = 4,
+    range =  range(.data.IO$burst),
+    gridwidth = 2
+  )
+  
+  if (!is.null(.data.training)) {
+      p = plot_ly(
+        data = .data.training %>%
+          mutate(vowel = rvowel, closure = rclosure, burst = rburst) %>%
+          filter(Used_for.NativeLanguage == NativeLanguage),
+        inherit = T,
+        x= ~vowel, y= ~closure, z= ~burst,
+        color= ~Used_for.Sound,
+        colors = colors.Category,
+        frame = ~Used_for.Accent,
+        opacity = .1,
+        showlegend = T,
+        type="scatter3d", mode="markers") 
+  } else p = plot_ly()
+  
+  p = p %>%
+    add_trace(
+      data = .data.IO %>%
+        filter(Used_for.NativeLanguage == NativeLanguage),
+      type = 'scatter3d', 
+      size = I(1),
+      color = ~Used_for.Sound,
+      colors = colors.Category,
+      opacity = .5, 
+      frame = ~Used_for.Accent,
+      x = ~vowel, y = ~closure, z = ~burst,
+      showlegend = F, mode="markers") %>%
+    # specify axis range to be held constant across plots
+    layout(scene = list(xaxis=axx, yaxis=axy, zaxis=axz, aspectmode='cube')) %>%
+    animation_slider(
+      currentvalue = list(prefix = paste0("Ideal observer for ", NativeLanguage, ": "), 
+                          font = list(color="black"))
+    ) 
+    
+  return(p)
+}
+```
+
+For the non-native /d/ category, we used all 30 tokens observed during non-native exposure. For the native /d/ and /t/, we sampled 30 tokens with replacement for each talker. The non-native /t/ category was identical to the native /t/ category (for each draw of a training set). We then calculated the mean $\mu$ and covariance matrix $\Sigma$ for each unique combination of native language (English, Swedish), model type (native, non-native), sound category (/d/, /t/), and talker. For the native English /d/ and /t/, for which we had 10 talkers' worth of data, we then calculated the mean of the by-talker $\mu$s and $\Sigma$s. Put differently, we marginalize (average over) the 10 different ideal observers for English, to create an ideal observer based on expectations about the 'prototypical' native talker of English. The result of this procedure was one estimate of $\mu$ and $\Sigma$ for each unique combination of native language (English, Swedish), model type (native, non-native), and sound category (/d/, /t/). In summary, we use the following training data:
 
 - **Native** model: 
   + Exposure /d/ comes from the *native* talker's exposure /d/ (30 tokens)
   + Exposure /t/ comes from the native talker's test /t/ (downsampled to 30 tokens)
   + Test /d/ and /t/ comes from the non-native talker's test /d/ and /t/
+
 - **Non-native** model: 
   + Exposure /d/ comes from the *non-native* talker's exposure /d/ (30 tokens)
   + Exposure /t/ comes from the native talker's test /t/ (downsampled to 30 tokens)
   + Test /d/ and /t/ comes from the non-native talker's test /d/ and /t/
 
+Figures \@ref(ref:plot-IO-3D-English) and \@ref(ref:plot-IO-3D-Swedish) visualize the native and non-native ideal observers for both English and Swedish that result from this training procedure.
+
+(ref:plot-IO-3D-English) English native and non-native ideal observer visualized in 3D cue space.
+
+(ref:plot-IO-3D-Swedish) Swedish native and non-native ideal observer visualized in 3D cue space.
+
+```{r plot-IO-3D-English, fig.cap="(ref:plot-IO-3D-English)", out.width="75%", fig.show='hold'}
+d.training = d.stims %>%
+  draw_training_data() 
+
+d.IO = d.training %>%
+  make_IO(., cues = c("rvowel", "rclosure", "rburst")) %>%
+  # Create ellipses of the training data
+  mutate(ellipse = map2(mu, Sigma, make_ellipse)) %>% 
+  unnest(ellipse)
+
+d.IO %>% plot_IO("English", d.training)
+```
+
+```{r plot-IO-3D-Swedish, fig.cap="(ref:plot-IO-3D-Swedish)", out.width="75%", fig.show='hold'}
+d.IO %>% plot_IO("Swedish", d.training)
+``` 
 
 
-```{r prepare-ideal-observers}
+
+## Testing the four ideal observers
+
+
+
+
+
+
+```{r setup-ideal-observers}
+# decision rule (posterior = Luce's choice rule)
 acc_method <- 'posterior'
 
-# assign selected cues
+# cues to consider in IOs
 selected_cues <- c('rvowel','rclosure','rburst')
-
-d.stims.swedish <- d.stims.swedish.corrected.aligned
-
-d.stims.english <- d.stims.english.corrected
 ```
 
 ```{r temporary-solution}
-
-
 nest <- nest_legacy
 unnest <- unnest_legacy
 
@@ -1583,32 +1777,40 @@ classify = function (data,
 
 ```
 
-# train ideal observers for Swedish data
+
+
+
+### Swedish ideal observers
 
 ```{r train-ideal-observers-Swedish-stims, cache=TRUE, dependson=c('classification-helpers')}
 
-Talker1 <- c("native")
-Talker2 <- c("non-native")
+Accent1 <- c("native")
+Accent2 <- c("non-native")
       
 # Exposure /d/ comes from the non-native talker's exposure /d/, exposure /t/ comes from the native talker's test /t/; 
 # Test /d/ and /t/ comes from the non-native talker's test /d/ and /t/
 
 
-# TS model: Exposure /d/ comes from the non-native talker's exposure /d/, exposure /t/ comes from the native talker's test /t/;      
+# Non-native model: Exposure /d/ comes from the non-native talker's exposure /d/, exposure /t/ comes from the native talker's test /t/;      
+temp1.TS.d <- d.stims.swedish %>%
+  filter(Accent == "non-native" & Block.Type == "exposure") %>% 
+  droplevels() %>% mutate(Used_for = "training") %>% 
+  group_by(Accent, Item.Word) %>%
+  sample_n(1)
 
-      temp1.TS.d <- d.stims.swedish %>%
-      filter(Talker == Talker2 & Block.Type == "exposure") %>% 
-      droplevels(.) %>% mutate(part = "train") %>% 
-      group_by(Talker, Word) %>%
-      sample_n(., 1)
-      
-      temp1.TS.t <- d.stims.swedish %>% 
-      filter(Talker == Talker1 & Sound == "/t/") %>% 
-      droplevels(.) %>% mutate(part = "train") %>% 
-      sample_n(., 30)
-      
-      temp1.TS <- plyr::rbind.fill(temp1.TS.d,temp1.TS.t)
-      
+temp1.TS.t <- d.stims.swedish %>% 
+  filter(Accent == "native" & Sound == "/t/") %>% 
+  droplevels() %>% mutate(Used_for = "training") %>% 
+  sample_n(30)
+
+temp1.TS <- full_join(temp1.TS.d,temp1.TS.t)
+
+
+# Changed Talker --> Accent
+# Changed part --> Used_for ("train" --> "training")
+```
+
+```{r}
 # Native model: # Exposure /d/ comes from the native talker's exposure /d/ and test /t/; 
       temp1.native.d <- d.stims.swedish %>% 
       filter(Talker == Talker1 & Block.Type == "exposure") %>%
@@ -2047,7 +2249,7 @@ temp.english.all <- rbind(temp.english %>% mutate(Prototypical = "No"),
 ## ------------------------------------------------------------------------------------------------------
 # To do: 
 # 1)rename Dataset to Language, which currently leads to errors down the road.
-# 2) add plots for cue correction for exposure tokens?
+# 
 ## ------------------------------------------------------------------------------------------------------
 
 # load Swedish results
@@ -2105,81 +2307,6 @@ xtabs(~NativeLanguage+ModelType+Sound, d.IO)
 
 
 
-
-
-
-Figures \@ref(fig:english-cue-before-and-after-residualization) and \@ref(fig:swedish-cue-before-and-after-residualization) show the distribution of test tokens before and after correction for phonological context for the English and Swedish experiment, respectively.
-
-<!-- Xin: 
-
-1) can you change the values of ResidualizationType to "before" and "after" "correction for phonological context"? 
-2) can you add hover-over word labels to each data point?
-3) change the sound label to /d/ and /t/, nothing else? 
-
--->
-
-(ref:english-cue-before-and-after-residualization) Mandarin-accented English /d/- and /t/-final minimal pair test tokens from the English experiment before and after correction for phonological context.
-
-(ref:swedish-cue-before-and-after-residualization) Flemish-accented Swedish /d/- and /t/-final minimal pair test tokens from the Swedish experiment before and after correction for phonological context.
-
-```{r english-cue-before-and-after-residualization, fig.cap="(ref:english-cue-before-and-after-residualization)", out.width="75%", fig.show='hold'}
-d.corrected = d.IO %>%
-  select(-ModelType, -CategoryModel, -Lhood, -Posterior, -Posterior.Choice) %>%
-  distinct() %>%
-  pivot_longer(
-    cols = c("vowel", "closure", "burst", "rvowel", "rclosure", "rburst"),
-    names_to = c("ContextCorrected", ".value"),
-    names_pattern = "(r{0,1})(.*)"
-  ) %>%
-  mutate(
-    ContextCorrected = ifelse(ContextCorrected == "r", "yes", "no")
-  )
-
-# Animations can be manipulated via animation_opts() but it seems that 
-# scatter3d (and other 3D options) are currently not animatable (see schema()).
-plot_ly(data = d.corrected %>% 
-          filter(NativeLanguage == "English") %>%
-          na.omit() %>%
-          droplevels(),
-        frame= ~ContextCorrected,
-        ids= ~Item.Word, 
-        x= ~vowel,
-        y= ~closure,
-        z= ~burst,
-        text= ~Item.Word,
-        color= ~Sound,
-        colors = colors.Category,
-        symbol= ~Sound,
-        symbols = shapes.Category,
-        hoverinfo = "text", showlegend = T,
-        type="scatter3d", mode="markers") %>%
-  animation_slider(
-    currentvalue = list(prefix = "Corrected for phonological context: ", 
-                        font = list(color="black"))
-  ) 
-```
-```{r swedish-cue-before-and-after-residualization, fig.cap="(ref:swedish-cue-before-and-after-residualization)", out.width="75%", fig.show='hold'}
-plot_ly(data = d.corrected %>% 
-          filter(NativeLanguage == "Swedish") %>%
-          na.omit() %>%
-          droplevels(),
-        frame= ~ContextCorrected,
-        ids= ~Item.Word, 
-        x= ~vowel,
-        y= ~closure,
-        z= ~burst,
-        text= ~Item.Word,
-        color= ~Sound,
-        colors = colors.Category,
-        symbol= ~Sound,
-        symbols = shapes.Category,
-        hoverinfo = "text", showlegend = T,
-        type="scatter3d", mode="markers") %>%
-  animation_slider(
-    currentvalue = list(prefix = "Corrected for phonological context: ", 
-                        font = list(color="black"))
-  ) 
-```
 
 ## Fitting procedure 
 We note that this entails that there is no overlap between the training and test data for the Ideal Observers, so that concerns about bias due to overfitting to the data is *not* a concern. 
