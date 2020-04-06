@@ -1783,7 +1783,7 @@ By applying the native and non-native ideal observers to the stimuli from the te
 To derive predictions about human behavior from the posterior category probabilities of the ideal observer, it is necessary to specify a linking hypothesis. Previous work has done so for *categorization* tasks (e.g., Clayards et al., 2008; Kleinschmidt \& Jaeger, 2011,, 2012, 2016; Kronrod et al., 2016). We follow these previous works and assume Luce's choice rule---also known as probability matching---and visualize the predictions for categorization tasks in Section \@ref{sec:IO-methods-categorization}. Then we specify the linking hypothesis for goodness ratings in Section \@ref{sec:IO-methods-link}. To reduce researchers' degrees of freedom, we simply assume a linear link between posterior probabilities and goodness ratings. This essentially makes the same assumptions as Luce's choice rule makes for categorization. We validate the linking hypothesis against human data from another experiment (Experiments 1 and 2 of Xie et al., 2017). <!-- Xin: correct? -->
 
 
-### Posterior probabilities {sec:IO-methods-posterior-probabilities}
+### Posterior probabilities {#sec:IO-methods-posterior-probabilities}
 
 Figure \@ref{fig:ideal-observers-posterior} summarizes the predicted posterior probability of /d/ under both the native and non-native ideal observer.
 
@@ -1813,7 +1813,7 @@ p.post +
 ```
 
 
-### Categorization accuracy {sec:IO-methods-categorization}
+### Categorization accuracy {#sec:IO-methods-categorization}
 
 As in our previous work, we assume that the ideal observer employs Luce's choice rule (also known as probability matching) to categorize inputs. Under this assumption, the ideal observer responds by sampling from its posterior. If the posterior probability of a /d/ is, say, .45 for a given stimulus, the observer will on average respond "d" on 45\% of all trials and "t" on 55\% of all trials. This choice rule does thus not introduce any additional degrees of freedom. 
 
@@ -1836,7 +1836,7 @@ p.post %+%
 ```
 
 
-### Linking hypothesis for goodness ratings {sec:IO-methods-link}
+### Linking hypothesis for goodness ratings {#sec:IO-methods-link}
 
 Here we assume a linear link with 0 degrees of freedom between the posterior probability of /d/ and the predicted rating of /d/-goodness. Specifically, we simply scale the predicted proportion of /d/ responses (the same as in Figure \@ref(fig:ideal-observers-posterior)) to have the same range as the human ratings across the two experiments:
 <!-- Xin: can you fill in? -->
