@@ -1516,6 +1516,9 @@ plot_corrected_cues(
 ## Training the four ideal observers
 
 ```{r IO-training-functions, include=FALSE}
+# Select cues to train on
+selected_cues = c("rvowel", "rclosure", "rburst")
+
 # Draws on training set for all four IO models (i.e., English & Swedish x native & non-native)
 # The only random part is the selection of the native English training data
 draw_training_data = function(
@@ -1526,6 +1529,8 @@ draw_training_data = function(
     filter(Used_for == "training", Accent == "native") %>%
     group_by(NativeLanguage, Talker, Sound) %>%
     droplevels() %>% 
+    # For the native data, one can sample with replacement since this is really meant to represent 
+    # knowledge from a much large base of experience
     sample_n(30, replace = T) %>%
     mutate(Used_for.Accent = "native") %>%
     ungroup() %>%
@@ -1571,6 +1576,7 @@ guess_groups = function(.data) {
 make_IO = function(
   .data, 
   cues, 
+  # Guess maximal grouping structure from data
   groups = guess_groups(.data)
 ) {
   # Make sure that only training data is used
@@ -1589,22 +1595,27 @@ make_IO = function(
     ) %>%
     # If there's more than one talker get the average of by-talker mu and Sigma
     { if (nlevels(.data$Talker) > 1) {
+      # Group by everything *except* for Talker
       group_by(., !!! rlang::syms(setdiff(groups, "Talker"))) %>%
         summarise(
-          mu = list(Reduce("+", mu) / length(mu)),
-          Sigma = list(Reduce("+", Sigma) / length(Sigma))
+          model = list(list(
+            mu = Reduce("+", mu) / length(mu),
+            Sigma = Reduce("+", Sigma) / length(Sigma)))
         ) } else . } %>%
-    select(!!! rlang::syms(setdiff(groups, "Talker")), mu, Sigma)
+    select(!!! rlang::syms(setdiff(groups, "Talker")), model)
 }
 ```
 
 ```{r IO-visualization-functions, include=FALSE}
 # Make ellipsis from mu and Sigma, and return as tibble with 3 columns, named after cue names
-make_ellipse = function(mu, Sigma, cues = c("vowel", "closure", "burst")) {
-  ellipse = rgl::ellipse3d(Sigma, subdivide = 5)
-  x = as.numeric(ellipse$vb[1,] + mu[1])
-  y = as.numeric(ellipse$vb[2,] + mu[2])
-  z = as.numeric(ellipse$vb[3,] + mu[3])
+make_ellipse = function(model, cues) {
+  ellipse = rgl::ellipse3d(model$Sigma, subdivide = 5)
+  message("make_ellipse() currently expects three cues: vowel, closure, burst (corrected or uncorrected).")
+  
+  # Could be revised to accept a flexible number of cues
+  x = as.numeric(ellipse$vb[1,] + model$mu[1])
+  y = as.numeric(ellipse$vb[2,] + model$mu[2])
+  z = as.numeric(ellipse$vb[3,] + model$mu[3])
   
   t = tibble(x, y, z)
   names(t) = cues
@@ -1612,33 +1623,46 @@ make_ellipse = function(mu, Sigma, cues = c("vowel", "closure", "burst")) {
 }
 
 # Plot ideal observer's beliefs in 3D cue space.
-plot_IO = function(.data.IO, NativeLanguage, .data.training = NULL) {
+plot_IO = function(
+  .data.IO, 
+  NativeLanguage, 
+  .data.training = NULL,
+  cues) {
+  message("plot_IO() currently expects three cues: vowel, closure, burst (corrected or uncorrected).")
+  
+  # Unnest data if that hasn't already happened
+  if ("ellipse" %in% names(.data.IO)) .data.IO %<>%
+    unnest(ellipse)
+  
   # axis setting 
   axx <- list(
     nticks = 4,
-    range = range(.data.IO$vowel),
+    range = range(.data.IO[, cues[1]]),
     gridwidth = 2
   )
   
   axy <- list(
     nticks = 4,
-    range = range(.data.IO$closure),
+    range = range(.data.IO[, cues[2]]),
     gridwidth = 2
   )
   
   axz <- list(
     nticks = 4,
-    range =  range(.data.IO$burst),
+    range =  range(.data.IO[, cues[3]]),
     gridwidth = 2
   )
   
   if (!is.null(.data.training)) {
-      p = plot_ly(
-        data = .data.training %>%
-          mutate(vowel = rvowel, closure = rclosure, burst = rburst) %>%
-          filter(Used_for.NativeLanguage == NativeLanguage),
-        inherit = T,
-        x= ~vowel, y= ~closure, z= ~burst,
+    p = plot_ly(
+      data = .data.training %>%
+        filter(Used_for.NativeLanguage == NativeLanguage) %>%
+        mutate(
+          vowel = !! rlang::sym(cues[1]),
+          closure = !! rlang::sym(cues[2]),
+          burst = !! rlang::sym(cues[3])),
+      inherit = T,
+      x= ~vowel, y= ~closure, z= ~burst,
         color= ~Used_for.Sound,
         colors = colors.Category,
         frame = ~Used_for.Accent,
@@ -1650,14 +1674,18 @@ plot_IO = function(.data.IO, NativeLanguage, .data.training = NULL) {
   p = p %>%
     add_trace(
       data = .data.IO %>%
-        filter(Used_for.NativeLanguage == NativeLanguage),
+        filter(Used_for.NativeLanguage == NativeLanguage) %>%
+        mutate(
+          vowel = !! rlang::sym(cues[1]),
+          closure = !! rlang::sym(cues[2]),
+          burst = !! rlang::sym(cues[3])),
       type = 'scatter3d', 
       size = I(1),
       color = ~Used_for.Sound,
       colors = colors.Category,
       opacity = .5, 
       frame = ~Used_for.Accent,
-      x = ~vowel, y = ~closure, z = ~burst,
+      x= ~vowel, y= ~closure, z= ~burst,
       showlegend = F, mode="markers") %>%
     # specify axis range to be held constant across plots
     layout(scene = list(xaxis=axx, yaxis=axy, zaxis=axz, aspectmode='cube')) %>%
@@ -1682,32 +1710,64 @@ For the non-native /d/ category, we used all 30 tokens observed during non-nativ
   + Exposure /t/ comes from the native talker's test /t/ (downsampled to 30 tokens)
   + Test /d/ and /t/ comes from the non-native talker's test /d/ and /t/
 
-Figures \@ref(ref:plot-IO-3D-English) and \@ref(ref:plot-IO-3D-Swedish) visualize the native and non-native ideal observers for both English and Swedish that result from this training procedure.
+Figures \@ref(ref:plot-IO-3D-English) and \@ref(ref:plot-IO-3D-Swedish) visualize the native and non-native ideal observers for both English and Swedish that result from this training procedure, along with the training data that was used to train these four models.
 
-(ref:plot-IO-3D-English) English native and non-native ideal observer visualized in 3D cue space.
+(ref:plot-IO-3D-English) English native and non-native ideal observer visualized in 3D cue space. Points show the data used for *training* the model.
 
-(ref:plot-IO-3D-Swedish) Swedish native and non-native ideal observer visualized in 3D cue space.
+(ref:plot-IO-3D-Swedish) Swedish native and non-native ideal observer visualized in 3D cue space. Points show the data used for *training* the model.
 
 ```{r plot-IO-3D-English, fig.cap="(ref:plot-IO-3D-English)", out.width="75%", fig.show='hold'}
 d.training = d.stims %>%
   draw_training_data() 
 
 d.IO = d.training %>%
-  make_IO(., cues = c("rvowel", "rclosure", "rburst")) %>%
+  make_IO(., cues = selected_cues) %>%
   # Create ellipses of the training data
-  mutate(ellipse = map2(mu, Sigma, make_ellipse)) %>% 
-  unnest(ellipse)
+  mutate(ellipse = map(model, ~ make_ellipse(.x, cues = selected_cues))) 
 
-d.IO %>% plot_IO("English", d.training)
+d.IO %>% plot_IO("English", d.training, cues = selected_cues)
 ```
 
 ```{r plot-IO-3D-Swedish, fig.cap="(ref:plot-IO-3D-Swedish)", out.width="75%", fig.show='hold'}
-d.IO %>% plot_IO("Swedish", d.training)
+d.IO %>% plot_IO("Swedish", d.training, cues = selected_cues)
 ``` 
 
 
 
 ## Testing the four ideal observers
+
+ADD TEXT
+
+```{r add-test-data-to-IO}
+categorize = function(
+  .data.test,
+  .data.IO
+) {
+  # Add model information to test data
+.data.test %>%
+  filter(Block.Type == "test", Accent == "non-native") %>%
+  crossing(.data.IO %>%
+             select(-ellipse)) %>%
+  # Only use data + model combinations for which the native language matches (i.e., do not 
+  # predict Swedish data from English model, etc.)
+  filter(NativeLanguage == Used_for.NativeLanguage) %>%
+  # Get likelihood for each test token under each model
+  mutate(
+    x = pmap(list(!!! rlang::syms(selected_cues)), cbind),
+    model_likelihood = unlist(map2(model, x, model_lhood))) %>%
+  # Move models and likelihoods for the two categories into separate columns (rather than rows)
+  pivot_wider(
+    names_from = Used_for.Sound,
+    values_from = c(model, model_likelihood)) %>%
+  mutate(
+    `model_posterior_/d/` = `model_likelihood_/d/` / (`model_likelihood_/d/` + `model_likelihood_/t/`),
+    model_posterior_choice = ifelse(`model_posterior_/d/` >= .5, "/d/", "/t/")
+  )
+}
+
+d.IO.test = d.stims %>%
+  categorize(d.IO)
+```
 
 ```{r load-data-for-ideal-observers}
 ## ------------------------------------------------------------------------------------------------------
@@ -1955,40 +2015,50 @@ unnest <- unnest_legacy
 
 add_id_col = function(x) mutate(x, id_=row_number())
 
-classify = function (data, 
-    models, category) 
+classify = function (data, models, category) 
 {
+    assert_that(is.data.frame(data))
     assert_that(is.data.frame(models))  
     assert_that(category %in% names(models))
-    assert_that(is.data.frame(data))
     model_groups <- groups(models)
     
     if (is.null(model_groups)) {
         data %<>% ungroup()
-    }
-    else {
+    } else {
         data %<>% group_by(.dots = model_groups)
     }
+    
     model_lists <- models %>% do(models = list_models(., category))
     if (is.null(model_groups)) {
-        data_and_models <- bind_cols(data_frame(data = list(data)), 
+        data_and_models <- 
+          bind_cols(
+            data_frame(data = list(data)), 
             model_lists)
+    } else {
+      data_and_models <- data %>% nest_legacy() %>% left_join(model_lists)
     }
-    else {
-        data_and_models <- data %>% nest_legacy() %>% left_join(model_lists)
-    }
-    data_and_models %>% mutate(lhoods = purrr::map2(data, models, ~apply_model_list(.x, 
-        .y, model_lhood)),
-        posteriors = purrr::map(lhoods,
-                            . %>%
-                              add_id_col() %>%
-                              gather(model, lhood, -id_) %>%
-             group_by(id_) %>%
-             mutate(posterior = lhood / sum(lhood),
-                                     posterior_choice = posterior==max(posterior)))
-           ) %>%  ### here the category with maximal posterior is chosen
-        unnest_legacy(map2(data, posteriors, ~inner_join(.x %>% add_id_col(),
-            .y, by = "id_") %>% dplyr::select(-id_))) %>% group_by(.dots = model_groups)
+    
+    data_and_models %>% 
+      mutate(lhoods = purrr::map2(data, models, ~apply_model_list(.x, 
+                                                                  .y, model_lhood)),
+             posteriors = purrr::map(lhoods,
+                                     . %>%
+                                       add_id_col() %>%
+                                       gather(model, lhood, -id_) %>%
+                                       group_by(id_) %>%
+                                       mutate(posterior = lhood / sum(lhood),
+                                              posterior_choice = posterior == max(posterior)))
+      ) %>%  # here the category with maximal posterior is chosen
+      unnest_legacy(
+        map2(
+          data, 
+          posteriors, 
+          ~inner_join(
+            .x %>% 
+              add_id_col(),
+            .y, by = "id_") %>% 
+            dplyr::select(-id_))) %>% 
+      group_by(.dots = model_groups)
 }
 
 ```
