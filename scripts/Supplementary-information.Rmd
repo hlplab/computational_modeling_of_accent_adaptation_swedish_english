@@ -1025,9 +1025,11 @@ d.stims =
     Used_for = case_when(
       # Only the non-native /d/ and /t/ are used for test.
       # The native test /d/ are not used at all.
+      # The native test /t/ are used for training (only exist for Swedish, where they are the only available native /t/s)
       # The exposure /d/s are used for training.
       Sound %in% c("/d/", "/t/") & Accent %in% "non-native" & Block.Type == "test" ~ "test",
       Sound %in% c("/d/") & Accent == "native" & Block.Type == "test" ~ "nothing",
+      Sound %in% c("/t/") & Accent == "native" & Block.Type == "test" ~ "training",
       Sound %in% c("/d/") & Accent %in% c("native", "non-native") & Block.Type == "exposure" ~ "training",
       T ~ NA_character_)) %>%
   # English data from Li et al. (2020). It is assumed that this file only
@@ -1459,7 +1461,7 @@ Finally, in order to make sure that we are really comparing likes with likes, we
 
 Since the /t/-categories of both the native and non-native ideal observers are trained on the same (native) /t/-data (see dashed lines in Figure \@ref(fig:ideal-observer-and-data)), this makes sure that any differences in performance between the native and non-native ideal observers comes solely from differences in their /d/ categories. This is line with our goal to use these ideal observers to capture the effect of the two exposure conditions (exposure to foreign-accented /d/ and control exposure without any such exposure).
 
-Figures \@ref(fig:native-english-cue-before-and-after-alignment) to \@ref(fig:non-native-swedish-cue-before-and-after-alignment) show the distribution of cues to the /t/ and /d/ categories before and after alignment with the mean of the non-native /t/-category from the test tokens.
+Figures \@ref(fig:native-english-cue-before-and-after-alignment) to \@ref(fig:non-native-swedish-cue-before-and-after-alignment) show the distribution of cues to the /t/ and /d/ categories before and after alignment with the mean of the non-native /t/-category from the test tokens. The comparison of the cue distributions before and after correction shows that the three correction steps employed here are successful in reducing the multi-modality of cue distribution, leading to largely unimodal distributions within each category. This is particularly striking for Swedish (likely because vowel length is a strong, phonologized, factor for Swedish).
 
 ```{r prepare for cue plot after step 3, include=FALSE}
 d.stims.long = d.stims %>%
@@ -2008,10 +2010,6 @@ Figure \@ref(fig:ratings-results-repeat) replots the human rating results for th
 
 ```{r ratings-results-repeat, fig.cap="(ref:ratings-results-repeat)", fig.height=4, out.width='75%'}
 p.results.perception
-```
-
-```{r IO-ratings-results, fig.cap="(ref:IO-ratings-results)", fig.height=4, out.width='75%'}
-
 ```
 
 
