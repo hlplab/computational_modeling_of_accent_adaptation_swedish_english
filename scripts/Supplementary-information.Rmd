@@ -536,7 +536,7 @@ p.results.perception = d.test %>%
   group_by(Language, NativeLanguage, Group, Sound, Participant) %>%
   summarise(Rating.mean = mean(Rating.Response.d.zscored)) %>%
   ggplot(mapping = aes(x = Sound, y = Rating.mean)) + 
-  stat_summary(aes(fill = Group), fun.y = mean, geom = "bar", 
+  stat_summary(aes(fill = Group), fun = mean, geom = "bar", 
                alpha = .6,
                position = position_dodge(.93)) +
   stat_summary(aes(group = Group), fun.data = mean_cl_boot, geom = "linerange", 
@@ -553,13 +553,12 @@ p.results.perception = d.test %>%
 ggsave(p, filename = "../figures/Result-ratings.png",
        width = 7, height = 4)
 
-p.results.perception = insertLayer(p.results.perception, after = 0,
+p.results.perception.bySubject = insertLayer(p.results.perception, after = 0,
             geom_dotplot(aes(fill = Group), color = NA, 
                alpha = 1,  dotsize = 0.5, 
                binaxis = "y", stackdir = "center", 
                position = position_dodge(.9)))
-
-p.results.perception
+p.results.perception.bySubject
 ```
 
 Figure \@ref(fig:ratings-results) shows the z-scored /d/-goodness ratings from both experiments. To compare participants' ratings for the /d,t/-final test words across the two experiments, we conducted a linear mixed-effects regression (Baayen et al., 2008) over the combined data from both experiments. The regression predicted z-scored /d/-goodness ratings based on the sound category (sum-coded: 1 = word recording intended to end in /d/ vs. -1 = word recording intended to end in /t/), exposure group (sum-coded: 1 =  /d/-exposure vs. -1 = control), the experiment (sum-coded: 1 = Swedish vs. -1 = English), and all their interactions. The regression contained the maximal random effect structure justified by the design (random by-participant intercepts and slope for sound; random by-item intercepts and slopes for sound, exposure group, and their interaction).^[Even this simplified model estimated the variance of the by-participant intercepts to be zero (see below), presumably because the z-scoring of ratings within participant already removed that variance. If all by-participant random effects are excluded, the results reported below do not change. If non-zscored ratings are analyzed instead (unlike in previous work), the three-way interaction is no longer significant ($p = .11$).]
@@ -1783,18 +1782,39 @@ IO_categorization = function(
       values_from = c(model, model_likelihood)) %>%
     mutate(
       `model_posterior_/d/` = `model_likelihood_/d/` / (`model_likelihood_/d/` + `model_likelihood_/t/`),
-      model_posterior = ifelse(Sound == "/d/", `model_posterior_/d/`, 1 - `model_posterior_/d/`),
-      model_posterior_choice = ifelse(`model_posterior_/d/` >= .5, "/d/", "/t/")
+      `model_posterior_/t/` = `model_likelihood_/t/` / (`model_likelihood_/d/` + `model_likelihood_/t/`),
+      model_posterior = ifelse(Sound == "/d/", `model_posterior_/d/`, `model_posterior_/t/`),
+      model_posterior_categorization = ifelse(`model_posterior_/d/` >= .5, "/d/", "/t/")
     ) %>%
     mutate(
       x = NULL
     )
 }
 
-IO_ratings = function(
-  .data.test,
-  .data.IO
-) {
+
+# Links the IO's posterior to the human ratings by using a linear model to predict the latter from the former. 
+# The ratings predicted by the IO are the predictions of that link model.
+# (assumes that the input is a data frame that contains both the IO predictions and the human test ratings)
+IO_ratings = function(.data) {
+  assert_that(unique(.data$Block.Type) == "test")
+  
+  message("Ideal observers' posterior is linked to human z-scored ratings on a by-item level after aggregating over subjects, with separate links for each native language.")
+  l = lm(
+    Rating.Response.d.zscored ~ `model_posterior_/d/` * NativeLanguage,
+    data = .data %>%
+      # Only use posterior from models that match the exposure group
+      filter(model_matches_group == "yes") %>%
+      # Group data by Native language, group
+      group_by(NativeLanguage, Group, Item.WordID) %>%
+      summarise(
+        Rating.Response.d.zscored = mean(Rating.Response.d.zscored),
+        `model_posterior_/d/` = mean(`model_posterior_/d/`))
+  )
+  
+  .data %>%
+    mutate(
+      `model_rating_/d/` = predict(l, newdata = .)
+    )
 }
 ```
 
@@ -1821,14 +1841,15 @@ d.test.IO =
   left_join(d.IO.test) %>%
   # Is the model meant for this exposure group? 
   mutate(
-    ModelGroupConsistency = case_when(
+    model_matches_group = case_when(
       NativeLanguage != Used_for.NativeLanguage ~ NA_character_,
       Group == "control" & Used_for.Accent == "native" ~"yes",
       Group == "control" & Used_for.Accent == "non-native" ~"no",
       Group == "/d/-exposure" & Used_for.Accent == "non-native" ~"yes",
       Group == "/d/-exposure" & Used_for.Accent == "native" ~"no",
       T ~ NA_character_
-    ))
+    )) %>%
+  IO_ratings()
 
 save(d.test.IO, file = "../data/data_perception_test phase plus IO predictions_both languages.Rdata")
 ```
@@ -1972,6 +1993,8 @@ ggscatter(d.english.test.byItem, x = "Proportion.d", y = "zRating.d", color = "G
 
 # Results of ideal observer analyses {#sec:IO-results}
 
+<!-- Maryann, Xin: this text needs to be expanded, following the style used in the remainder of the SI -->
+
 We expect to see a match between the ideal observer predictions and human responses in two ways. First, we qualitatively compare *average group-level* for the two exposure groups (/d/-exposure vs. control). Second, we analyze and visualize item-level correlations between the ideal observer and human responses.  
 
   + human resp (d-goodness) ~ model prediction (d-goodness) X intended category X consistence 
@@ -1979,67 +2002,31 @@ We expect to see a match between the ideal observer predictions and human respon
 
 ## Group-level comparison between human and model-predicted ratings
 
-Figure \@ref(fig:ratings-results-repeat) replots the human rating results for the English and Swedish experiments. Figure \@ref(fig:IO-ratings-results) replots the human rating results for the English and Swedish experiments. There is a clear difference between the two experiments, but in both cases, the model predictions qualitatively match the patterns of human ratings:
+Figure \@ref(fig:ratings-results-repeat) replots the human rating results for the English and Swedish experiments. Figure \@ref(fig:IO-ratings-results) plots the predictions of the ideal observers. There is a clear difference between the two experiments, but in both cases, the model predictions qualitatively match the patterns of human ratings:
 
   + For the Swedish data, the Ideal Observers show no difference between the native model and the non-native model; mirroring this, the human data show no difference between the /d/-exposure and the control groups. 
   + For the English data, the Ideal Observers predict significantly bettter performance from the non-native model over the native model for both /d/ and /t/; this pattern was also reflected in the higher ratings for the intended category (for both /d/ and /t/) in the human ratings.
 
 
-(ref:ratings-results-repeat) Human /d/-goodness ratings during test (z-scored) by native language and exposure group. Replotted from Figure \@ref(fig:ratings-results).
+(ref:ratings-results-repeat) Human /d/-goodness ratings during test (z-scored) by native language and exposure group. Replotted from Figure \@ref(fig:ratings-results). Errorbars show 95\% bootstrapped confidence intervals over by-subject means.
 
-(ref:IO-ratings-results) /d/-goodness ratings during test (z-scored) predicted by the native and non-native ideal observers. Shown for both the English and Swedish data. TO DO: USE SAME PLOT AESTHETICS AS IN HUMAN RESULT PLOT AND ONLY SHOW MODEL DATA.
+(ref:IO-ratings-results) /d/-goodness ratings during test (z-scored) predicted by the native and non-native ideal observers. Shown for both the English and Swedish data. Errorbars show 95\% bootstrapped confidence intervals over by-item predictions (since there aren't multiple subjects).
 
 ```{r ratings-results-repeat, fig.cap="(ref:ratings-results-repeat)", fig.height=4.5, out.width='75%'}
-p.results.perception
+p.results.perception.bySubject
 ```
 
 
-<!-- Xin: just making sure that your prediction link only uses proportion information below, or does d.test.IO.rating also have group, and item.minimalPair? Perhaps it would be best to use an lm() over aggregate data, rather than an lmer(), to avoid that we're accidently including item effects in our link function. -->
-
-
-```{r get-predicted-ratings-from-IO}
-# get predicted ratings of /d/ from Ideal observers
-d.test.IO.rating <- d.test.IO %>%
-  filter(CategoryModel == "/d/") %>%
-  select(NativeLanguage, Dataset, Group, Participant, Used_for.Accent, Consistence, Sound, Item.MinimalPair, Item.Word,  rvowel, rclosure, rburst, Posterior, Rating.Response.d.zscored) %>%
-  mutate(zRating.d = Rating.Response.d.zscored,
-         Proportion.d = Posterior)
-
-d.test.IO.rating %<>%
-  mutate(PredictedRating.d = predict(ratingID.lmer, newdata= d.test.IO.rating, allow.new.levels = TRUE)) %>%
-  select(-zRating.d, -Proportion.d) %>%
-  mutate_if(is.character, as.factor)
+```{r get-predicted-ratings-from-IO, fig.cap="(ref:IO-ratings-results)", fig.height=4.5, out.width='75%'}
+p.results.perception %+%
+  (d.test.IO %>%
+     filter(model_matches_group == "yes") %>%
+     group_by(Language, NativeLanguage, Group, Sound, Item.WordID) %>%
+     summarise(Rating.mean = mean(`model_rating_/d/`))) +
+  scale_y_continuous("ideal observer predicted\n/d/-goodness rating (z-score aligned)")
 ```
 
-```{r IO-ratings-results, fig.cap="(ref:IO-ratings-results)", fig.height=4.5, out.width='75%'}
-p.model <- ggplot(data = d.test.IO.rating %>%
-                    mutate(Used_for.Accent = factor(Used_for.Accent, levels = c("Non-native", "Native"))),
-            aes(x=Sound, y = PredictedRating.d, color = Used_for.Accent, fill = Used_for.Accent)) + 
-  geom_bar(aes(y=PredictedRating.d),stat = "summary", fun.y = mean, position=position_dodge(0.7), width = 0.7) +
-  geom_errorbar(aes(y=PredictedRating.d), stat = "summary", fun.data = "mean_cl_boot",size = 0.5,position=position_dodge(0.7), width=0.1) +
-   coord_cartesian(ylim=c(-1, 1)) +
-  scale_color_manual(values = c("black", "black")) +
-  scale_fill_manual(values = c("black", "white")) +
-  facet_grid(~Dataset) + 
-  # facet_grid(cues~., labeller = "label_both") + 
-  ggtitle(paste("Model predictions\nPredicted ratings as /d/ for accented speech")) 
 
-p.human = ggplot(data = d.test.IO.rating %>%
-                   distinct(NativeLanguage, Dataset, Group, Participant, Sound, Item.MinimalPair, Item.Word, .keep_all = T) %>%
-                   group_by(Dataset, NativeLanguage, Group, Sound, Participant) %>%
-                   summarise(Rating.Response.d.zscored = mean(Rating.Response.d.zscored)),
-aes(x= Sound, y = Rating.Response.d.zscored, color = Group, fill = Group)) + 
-  geom_bar(aes(y=Rating.Response.d.zscored),stat = "summary", fun.y = mean, position=position_dodge(0.7), width = 0.7) +
-  geom_errorbar(aes(y=Rating.Response.d.zscored), stat = "summary", fun.data = "mean_cl_boot",size = 0.5,position=position_dodge(0.7), width=0.1) +
-   coord_cartesian(ylim=c(-1, 1)) +
-  scale_color_manual(values = c("black", "black")) +
-  scale_fill_manual(values = c("black", "white")) +
-  facet_grid(~Dataset) + 
-  # facet_grid(cues~., labeller = "label_both") + 
-  ggtitle("Human responses\nMean /d/ goodness from rating task (transformed)")
-  
-grid.arrange(p.model, p.human, nrow = 1)
-```
 
 
 ## Item-level analysis (TO DO)
