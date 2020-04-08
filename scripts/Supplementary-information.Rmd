@@ -435,6 +435,9 @@ d.exposure =
     c("Participant", "Block.Type", "Item.Type", "Item.WordStatus"),
     .funs = factor
   )
+
+save(d.exposure, file = "../data/data_perception_exposure phase_both languages.Rdata")
+save(d.test, file = "../data/data_perception_test phase_both languages.Rdata")
 ```
 
 ## Lexical decision accuracy during exposure ##
@@ -456,7 +459,7 @@ This suggests that the syllable-final /d/ of the Flemish-accented speaker was in
 
 (ref:LD-accuracy) Lexical decision accuracies and RTs in the Swedish experiment by exposure group: all words (left) or only critical words (right). For the /d/ exposure group, critical words have syllable-final /d/. For the control group, critical words are matched in average length and frequency, but do not contain /d/ (or /t/).
 
-```{r LD-accuracy, fig.cap="(ref:LD-accuracy)", fig.height=3.5, out.width='75%', fig.show = 'hold'}
+```{r LD-accuracy, fig.cap="(ref:LD-accuracy)", fig.height=4.5, out.width='75%', fig.show = 'hold'}
 p = d.exposure %>%
   filter(NativeLanguage == "Swedish") %>%
   get_LD_byParticipant() %>%
@@ -499,7 +502,7 @@ We note here that the two experiments differed in the number of subject and item
 
 (ref:rating-to-rating-correlation) /d/-goodness ratings during test (z-scored) by native language and exposure group
 
-```{r rating-to-rating-correlation, fig.cap='(ref:rating-to-rating-correlation)', fig.height=4, out.width='75%'}
+```{r rating-to-rating-correlation, fig.cap='(ref:rating-to-rating-correlation)', fig.height=4.5, out.width='75%'}
 d.test %>%
   filter(NativeLanguage == "English") %>%
   droplevels() %>%
@@ -528,7 +531,7 @@ The /d/- and /t/-goodness ratings could range from 1 to 7. The two types of rati
 
 (ref:ratings-results) /d/-goodness ratings during test (z-scored) by native language and exposure group
 
-```{r ratings-results, fig.cap="(ref:ratings-results)", fig.height=4, out.width='75%'}
+```{r ratings-results, fig.cap="(ref:ratings-results)", fig.height=4.5, out.width='75%'}
 p.results.perception = d.test %>%
   group_by(Language, NativeLanguage, Group, Sound, Participant) %>%
   summarise(Rating.mean = mean(Rating.Response.d.zscored)) %>%
@@ -673,7 +676,7 @@ The decision to recruit a smaller number of participants was made because 1) the
 
 ### Are differences in the number of participants and test items likely to explain the results? {#sec:bootstrap}
 
-```{r bootstrap-downsampling, warning=F, fig.cap = "(ref:bootstrap-downsampling)", fig.height=4, out.width='70%'}
+```{r bootstrap-downsampling, warning=F, fig.cap = "(ref:bootstrap-downsampling)", fig.height=4.5, out.width='70%'}
 set.seed(333)
 
 n.participant = 11
@@ -1521,6 +1524,15 @@ plot_corrected_cues(
 )
 ```
 
+
+```{r store corrected production data, include=FALSE}
+save(d.stims, file = "../data/data_production_corrected for phonetic context_both languages.Rdata")
+```
+
+
+
+
+
 ## Training the four ideal observers
 
 ```{r IO-training-functions, include=FALSE}
@@ -1718,26 +1730,27 @@ For the non-native /d/ category, we used all 30 tokens observed during non-nativ
   + Exposure /t/ comes from the native talker's test /t/ (downsampled to 30 tokens)
   + Test /d/ and /t/ comes from the non-native talker's test /d/ and /t/
 
-Figures \@ref(ref:plot-IO-3D-English) and \@ref(ref:plot-IO-3D-Swedish) visualize the native and non-native ideal observers for both English and Swedish that result from this training procedure, along with the training data that was used to train these four models.
+Figures \@ref(fig:plot-IO-3D-English) and \@ref(fig:plot-IO-3D-Swedish) visualize the native and non-native ideal observers for both English and Swedish that result from this training procedure, along with the training data that was used to train these four models.
 
 (ref:plot-IO-3D-English) English native and non-native ideal observer visualized in 3D cue space. Points show the data used for *training* the model.
 
 (ref:plot-IO-3D-Swedish) Swedish native and non-native ideal observer visualized in 3D cue space. Points show the data used for *training* the model.
 
 ```{r plot-IO-3D-English, fig.cap="(ref:plot-IO-3D-English)", out.width="75%", fig.show='hold'}
-d.training = d.stims %>%
+d.IO.training = d.stims %>%
   draw_training_data() 
+save(d.IO.training, file = "../data/data_IO training_both languages.Rdata")
 
-d.IO = d.training %>%
+d.IO = d.IO.training %>%
   make_IO(., cues = selected_cues) %>%
   # Create ellipses of the training data
   mutate(ellipse = map(model, ~ make_ellipse(.x, cues = selected_cues))) 
 
-d.IO %>% plot_IO("English", d.training, cues = selected_cues)
+d.IO %>% plot_IO("English", d.IO.training, cues = selected_cues)
 ```
 
 ```{r plot-IO-3D-Swedish, fig.cap="(ref:plot-IO-3D-Swedish)", out.width="75%", fig.show='hold'}
-d.IO %>% plot_IO("Swedish", d.training, cues = selected_cues)
+d.IO %>% plot_IO("Swedish", d.IO.training, cues = selected_cues)
 ``` 
 
 
@@ -1790,18 +1803,22 @@ By applying the native and non-native ideal observers to the stimuli from the te
 To derive predictions about human behavior from the posterior category probabilities of the ideal observer, it is necessary to specify a linking hypothesis. Previous work has done so for *categorization* tasks (e.g., Clayards et al., 2008; Kleinschmidt \& Jaeger, 2011, 2012, 2016; Kronrod et al., 2016). We follow these previous works and assume Luce's choice rule---also known as probability matching---and visualize the predictions for categorization tasks in Section \@ref{sec:IO-methods-categorization}. Then we specify the linking hypothesis for goodness ratings in Section \@ref{sec:IO-methods-link}. To reduce researchers' degrees of freedom, we simply assume a linear link between posterior probabilities and goodness ratings. This essentially makes the same assumptions as Luce's choice rule makes for categorization. We validate the linking hypothesis against human data from another experiment (Experiments 1 and 2 of Xie et al., 2017). <!-- Xin: correct? -->
 
 ```{r integrate-test-data-with-modeling-results, include=FALSE}
+# Bind stimulus information and predictions of ideal observer
+# (this is the tibble to use for visualization of predictions -- each test data point occurs only once)
+d.IO.test = 
+    d.stims %>%
+      filter(Block.Type == "test", Accent == "non-native") %>%
+      IO_categorization(d.IO) %>%
+      droplevels()
+
+# Add human data into the prediction file
+# (this increases the number of rows by many times -- each test data point occurs once *per participant*)
 d.test.IO = 
   # Human rating responses during test phase of perception experiment
   d.test %>%
   droplevels() %>%
   # Join with stimulus and ideal observer information 
-  left_join(
-    # Bind stimulus information and predictions of ideal observer
-    d.stims %>%
-      filter(Block.Type == "test", Accent == "non-native") %>%
-      IO_categorization(d.IO) %>%
-      droplevels()
-  ) %>%
+  left_join(d.IO.test) %>%
   # Is the model meant for this exposure group? 
   mutate(
     ModelGroupConsistency = case_when(
@@ -1812,9 +1829,9 @@ d.test.IO =
       Group == "/d/-exposure" & Used_for.Accent == "native" ~"no",
       T ~ NA_character_
     ))
-```
 
-CONTINUE HERE.
+save(d.test.IO, file = "../data/data_perception_test phase plus IO predictions_both languages.Rdata")
+```
 
 ### Posterior probabilities {#sec:IO-methods-posterior-probabilities}
 
@@ -1822,49 +1839,25 @@ Figure \@ref{fig:ideal-observers-posterior} summarizes the predicted posterior p
 
 (ref:ideal-observers-posterior) Posterior probabilities of /d/ and /t/ predicted by the native and non-native ideal observers for the foreign-accented /d/- and /t/ words during test. Each point is a test token.
 
-```{r ideal-observers-posterior, fig.cap="(ref:ideal-observers-posterior)"}
-p.post = d.IO %>%
-         filter(CategoryModel == Sound) %>%
-         mutate(Posterior = ifelse(Sound == levels.Sound[1], Posterior, 1 - Posterior)) %>%
+```{r ideal-observers-posterior, fig.cap="(ref:ideal-observers-posterior)", fig.height=4.5, out.width="75%"}
+p.post = d.IO.test %>%
   ggplot(aes(x= Sound, 
-           y = Posterior, 
-           color = ModelType, 
-           fill = ModelType)) +
+           y = `model_posterior`, 
+           color = Used_for.Accent, 
+           fill = Used_for.Accent)) +
   scale_x_discrete("Intended sound category") +
   scale_y_continuous("posterior probability of /d/") +
   scale_color_manual("Ideal observer", values = colors.Group) +
   scale_fill_manual("Ideal observer", values = colors.Group) +
-  facet_grid(. ~ Dataset, scales="free_y") +
+  facet_grid(. ~ NativeLanguage, scales="free_y") +
   theme(legend.position = "top",
         panel.grid.major.x = element_blank(),
         panel.grid.minor.x = element_blank())
 
 p.post + 
-    stat_summary(aes(group = ModelType), fun.data = mean_cl_boot, geom = "pointrange", 
+    stat_summary(aes(group = Used_for.Accent), fun.data = mean_cl_boot, geom = "pointrange", 
                alpha = .8, size = .8, 
                position = position_dodge(.3))
-
-# PERHAPS REPLACE BY
-# p.post = d.test.IO %>%
-#          # filter(CategoryModel == Sound) %>%
-#          # mutate(model_posterior = ifelse(Sound == levels.Sound[1], Posterior, 1 - Posterior)) %>%
-#   ggplot(aes(x= Sound, 
-#            y = model_posterior, 
-#            color = Used_for.Accent, 
-#            fill = Used_for.Accent)) +
-#   scale_x_discrete("Intended sound category") +
-#   scale_y_continuous("posterior probability of /d/") +
-#   scale_color_manual("Ideal observer", values = colors.Group) +
-#   scale_fill_manual("Ideal observer", values = colors.Group) +
-#   facet_grid(. ~ Used_for.NativeLanguage, scales="free_y") +
-#   theme(legend.position = "top",
-#         panel.grid.major.x = element_blank(),
-#         panel.grid.minor.x = element_blank())
-# 
-# p.post + 
-#     stat_summary(aes(group = Used_for.Accent), fun.data = mean_cl_boot, geom = "pointrange", 
-#                alpha = .8, size = .8, 
-#                position = position_dodge(.3))
 ```
 
 
@@ -1876,15 +1869,14 @@ Figure \@ref(fig:ideal-observers-accuracy) shows the predicted accuracy for a hy
 
 (ref:ideal-observers-accuracy) Predicted accuracy of native and non-native ideal observers for the foreign-accented /d/- and /t/ words during test.
 
-```{r ideal-observers-accuracy, fig.cap="(ref:ideal-observers-accuracy)"}
+```{r ideal-observers-accuracy, fig.cap="(ref:ideal-observers-accuracy)", fig.height=4.5, out.width="75%"}
 p.post %+% 
-  (d.IO %>%
-         filter(CategoryModel == Sound)) +
+  (d.IO.test) +
   geom_hline(yintercept = 1/2, color = "gray") +
-  stat_summary(aes(color = ModelType), fun.y = mean, geom = "bar",
+  stat_summary(aes(color = Used_for.Accent), fun.y = mean, geom = "bar",
                alpha = .6, fill = NA,
                position = position_dodge(.93)) +
-  stat_summary(aes(group = ModelType), fun.data = mean_cl_boot, geom = "linerange", 
+  stat_summary(aes(group = Used_for.Accent), fun.data = mean_cl_boot, geom = "linerange", 
                alpha = .8, size = .8, color = "black",
                position = position_dodge(.93)) +
   scale_y_continuous("Accuracy") 
@@ -1910,7 +1902,7 @@ Figure \@ref(fig:ID-to-ratings) shows the item-level correlation in participants
 # load English ID data
 d.english.ID <- read.csv("../data/English/English_perception_identification_Xie et al 2017.csv")
 
-# recode identification response as proportion of /d/ response
+# Recode identification response as proportion of /d/ response
 d.english.ID <- d.english.ID %>%
   rename(
     Participant = participant,
@@ -1932,29 +1924,19 @@ d.english.ID <- d.english.ID %>%
    Subject = NULL,
    Session = NULL
 ) 
-                    
-# Merge English ID data with IdealObserver results
-d.test.IO.english.ID <- 
-  left_join(
-    d.english.ID, d.IO %>%
-      filter(NativeLanguage == "English") %>%
-      ungroup(), 
-    by = c("NativeLanguage", "Item.Word", "Sound"))
 ```
 
-(ref:ID-to-ratings) Item-level correlation of human identification and rating responses from two experiments in Xie et al. (2017). The two experiments used the same exposure and test stimuli, and differed only in the task during test (categorization vs. rating). The trend line shows a generalized linear model fit with a non-parametric smoother. That is, the fit would in principle allow non-linearity in the relation between categorization and rating responses. The fact that no non-linearity is detected suggests that the relation is largely linear. Shaded areas show 95\% confidence intervals.
+(ref:ID-to-ratings) Item-level correlation of human identification and rating responses from two experiments in Xie et al. (2017). The two experiments used the same exposure and test stimuli, and differed only in the task during test (categorization vs. rating). The trend line shows a generalized additive model fit with a non-parametric smoother. That is, the fit would in principle allow non-linearity in the relation between categorization and rating responses. The fact that no non-linearity is detected suggests that the relation is largely linear. Shaded areas show 95\% confidence intervals.
 
-```{r ID-to-ratings, fig.height = 6, fig.width = 12, fig.cap="(ref:ID-to-ratings)"}
-##-------------------------------------------------------------------------------------
-# check whether responses are consistent between rating and identification tasks -- yes
-##-------------------------------------------------------------------------------------
-d.english.test.2tasks <- plyr::rbind.fill(d.test %>%
-                                            filter(NativeLanguage == "English") %>%
-                                            droplevels() %>%
-                                            mutate(Task = "rating"), 
-                                          d.english.ID %>% mutate(Task = "ID"))
+<!-- Xin: this code of joining the two data frames seems really cumbersome. can you check whether we can simplify it? -->
 
-d.english.test.byItem <- d.english.test.2tasks %>%
+```{r ID-to-ratings, fig.cap="(ref:ID-to-ratings)", fig.height = 4.5, out.width="75%"}
+d.english.test.byItem = 
+  plyr::rbind.fill(d.test %>%
+                     filter(NativeLanguage == "English") %>%
+                     droplevels() %>%
+                     mutate(Task = "rating"), 
+                   d.english.ID %>% mutate(Task = "ID")) %>%
   group_by(Task, Group, Sound, Item.Word) %>%
   summarise(zRating.d = mean(Rating.Response.d.zscored),
             Proportion.d = mean(ID.Response.d)) %>%
@@ -1964,25 +1946,24 @@ d.english.test.byItem <- d.english.test.2tasks %>%
   filter(!is.na(value)) %>%
   spread(resp,value) %>%
   mutate(Logodds.d = qlogis(Proportion.d)) %>%
-  mutate_if(is.character, as.factor)
-
-d.english.test.byItem <- left_join(d.english.test.byItem, 
-                                   d.IO %>%
-                                     filter(NativeLanguage == "English") %>%
-                                     select(Item.Word, Item.MinimalPair, Sound) %>%
-                              distinct(), by = c("Item.Word", "Sound"))
-                                   
+  mutate_if(is.character, as.factor) %>%
+  left_join(
+    d.test %>%
+      filter(NativeLanguage == "English") %>%
+      select(Item.Word, Item.MinimalPair, Sound) %>%
+      distinct(), by = c("Item.Word", "Sound"))
 
 # correlation between ratings and percent /d/ responses
-ggscatter(d.english.test.byItem, x = "Proportion.d", y = "zRating.d", 
-          add = "reg.line", conf.int = TRUE, 
-          palette = "jco",  cor.method = "pearson",
+ggscatter(d.english.test.byItem, x = "Proportion.d", y = "zRating.d", color = "Group", 
+          cor.method = "pearson",
           xlab = "Proportion of /d/-responses from identification task", ylab = "/d/-goodness from rating task") + 
   stat_cor(label.x.npc = "middle", label.y.npc = "top") + 
   facet_grid(~ Group) + 
-  ggtitle("Item-wise correlation between ID and rating task (English data)") +
-  geom_smooth(color = "red", method = "lm") + 
-  geom_smooth(color = "black", method = "gam", formula = y~s(x))
+  geom_smooth(method = "gam", formula = y ~ s(x), color = "black", fill = "black") +
+  scale_color_manual(
+    breaks = c("/d/-exposure", "control"),
+    values = colors.Group
+  )
 ```
 
 
@@ -2008,7 +1989,7 @@ Figure \@ref(fig:ratings-results-repeat) replots the human rating results for th
 
 (ref:IO-ratings-results) /d/-goodness ratings during test (z-scored) predicted by the native and non-native ideal observers. Shown for both the English and Swedish data. TO DO: USE SAME PLOT AESTHETICS AS IN HUMAN RESULT PLOT AND ONLY SHOW MODEL DATA.
 
-```{r ratings-results-repeat, fig.cap="(ref:ratings-results-repeat)", fig.height=4, out.width='75%'}
+```{r ratings-results-repeat, fig.cap="(ref:ratings-results-repeat)", fig.height=4.5, out.width='75%'}
 p.results.perception
 ```
 
@@ -2020,7 +2001,7 @@ p.results.perception
 # get predicted ratings of /d/ from Ideal observers
 d.test.IO.rating <- d.test.IO %>%
   filter(CategoryModel == "/d/") %>%
-  select(NativeLanguage, Dataset, Group, Participant, ModelType, Consistence, Sound, Item.MinimalPair, Item.Word,  rvowel, rclosure, rburst, Posterior, Rating.Response.d.zscored) %>%
+  select(NativeLanguage, Dataset, Group, Participant, Used_for.Accent, Consistence, Sound, Item.MinimalPair, Item.Word,  rvowel, rclosure, rburst, Posterior, Rating.Response.d.zscored) %>%
   mutate(zRating.d = Rating.Response.d.zscored,
          Proportion.d = Posterior)
 
@@ -2030,10 +2011,10 @@ d.test.IO.rating %<>%
   mutate_if(is.character, as.factor)
 ```
 
-```{r IO-ratings-results, fig.cap="(ref:IO-ratings-results)", fig.height=4, out.width='75%'}
+```{r IO-ratings-results, fig.cap="(ref:IO-ratings-results)", fig.height=4.5, out.width='75%'}
 p.model <- ggplot(data = d.test.IO.rating %>%
-                    mutate(ModelType = factor(ModelType, levels = c("Non-native", "Native"))),
-            aes(x=Sound, y = PredictedRating.d, color = ModelType, fill = ModelType)) + 
+                    mutate(Used_for.Accent = factor(Used_for.Accent, levels = c("Non-native", "Native"))),
+            aes(x=Sound, y = PredictedRating.d, color = Used_for.Accent, fill = Used_for.Accent)) + 
   geom_bar(aes(y=PredictedRating.d),stat = "summary", fun.y = mean, position=position_dodge(0.7), width = 0.7) +
   geom_errorbar(aes(y=PredictedRating.d), stat = "summary", fun.data = "mean_cl_boot",size = 0.5,position=position_dodge(0.7), width=0.1) +
    coord_cartesian(ylim=c(-1, 1)) +
