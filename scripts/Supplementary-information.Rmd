@@ -492,7 +492,7 @@ plot_grid(
 
 
 
-## Ratings during test ##
+## Goodness ratings during test ##
 
 We focus here on goodness ratings for test words ending in /d,t/. Unlike the English data, the Swedish data also contained ratings for words beginning with /d,t/. These ratings were always obtained *after* the ratings of /d/-final test words. Ratings of these /d/-intial test words are not analyzed here, though we mention for completeness's sake that /d/-initial test words also did not reveal a significant effect of exposure group for the Swedish data.
 
@@ -1551,13 +1551,13 @@ draw_training_data = function(
     # For the native data, one can sample with replacement since this is really meant to represent 
     # knowledge from a much large base of experience
     sample_n(30, replace = T) %>%
-    mutate(Used_for.Accent = "native") %>%
+    mutate(Used_for.Model.Accent = "native") %>%
     ungroup() %>%
     # Duplicate this training data for the /t/ category of non-native models
     { . ->> temp } %>% 
     rbind(temp %>% 
             filter(Sound == "/t/") %>%
-            mutate(Used_for.Accent = "non-native")) %>%
+            mutate(Used_for.Model.Accent = "non-native")) %>%
     # Draw English and Swedish training data for /d/ category of non-native model
     full_join(
       .data %>%
@@ -1565,15 +1565,15 @@ draw_training_data = function(
         droplevels() %>% 
         group_by(NativeLanguage, Talker, Item.Word) %>%
         sample_n(1) %>%
-        mutate(Used_for.Accent = "non-native")
+        mutate(Used_for.Model.Accent = "non-native")
     ) %>% 
     ungroup() %>%
     rename(
-      Used_for.NativeLanguage = NativeLanguage,
-      Used_for.Sound = Sound) %>%
-    mutate_at(vars(Used_for, Used_for.NativeLanguage, Used_for.Accent, Used_for.Sound,
+      Used_for.Model.NativeLanguage = NativeLanguage,
+      Used_for.Model.Sound = Sound) %>%
+    mutate_at(vars(Used_for, Used_for.Model.NativeLanguage, Used_for.Model.Accent, Used_for.Model.Sound,
            Talker,Item.Word), factor) %>%
-    select(Used_for, Used_for.NativeLanguage, Used_for.Accent, Used_for.Sound,
+    select(Used_for, Used_for.Model.NativeLanguage, Used_for.Model.Accent, Used_for.Model.Sound,
            Talker,Item.Word, 
            vowel, closure, burst, 
            rvowel, rclosure, rburst)
@@ -1583,9 +1583,9 @@ draw_training_data = function(
 guess_groups = function(.data) {
   groups = c()
   
-  if (length(unique(.data$Used_for.NativeLanguage)) > 1) groups = append(groups, "Used_for.NativeLanguage") 
-  if (length(unique(.data$Used_for.Accent)) > 1) groups = append(groups, "Used_for.Accent") 
-  if (length(unique(.data$Used_for.Sound)) > 1) groups = append(groups, "Used_for.Sound") 
+  if (length(unique(.data$Used_for.Model.NativeLanguage)) > 1) groups = append(groups, "Used_for.Model.NativeLanguage") 
+  if (length(unique(.data$Used_for.Model.Accent)) > 1) groups = append(groups, "Used_for.Model.Accent") 
+  if (length(unique(.data$Used_for.Model.Sound)) > 1) groups = append(groups, "Used_for.Model.Sound") 
   if (length(unique(.data$Talker)) > 1) groups = append(groups, "Talker") 
 
   return(groups)  
@@ -1617,11 +1617,13 @@ make_IO = function(
       # Group by everything *except* for Talker
       group_by(., !!! rlang::syms(setdiff(groups, "Talker"))) %>%
         summarise(
-          model = list(list(
+          Model = list(list(
             mu = Reduce("+", mu) / length(mu),
             Sigma = Reduce("+", Sigma) / length(Sigma)))
         ) } else . } %>%
-    select(!!! rlang::syms(setdiff(groups, "Talker")), model)
+    select(!!! rlang::syms(setdiff(groups, "Talker")), Model) %>%
+    # Now that IO is made, change the "Used_for" columns into "Model" columns
+    rename_at(vars(starts_with("Used_for.")), ~str_remove(.x, pattern = "Used_for."))
 }
 ```
 
@@ -1644,9 +1646,54 @@ make_ellipse = function(model, cues) {
 # Plot ideal observer's beliefs in 3D cue space.
 plot_IO = function(
   .data.IO, 
-  NativeLanguage, 
+  language, 
+  .plot = NULL,
+  cues,
+  alpha = .5,
+  addSlider = T
+) {
+  # Unnest data if that hasn't already happened
+  if ("ellipse" %in% names(.data.IO)) .data.IO %<>%
+    unnest(ellipse)
+
+  if (is.null(.plot)) .plot = plot_ly()
+  
+  .plot = .plot %>%
+    add_trace(
+      data = .data.IO %>%
+        filter(Model.NativeLanguage == language) %>%
+        mutate(
+          vowel = !! rlang::sym(cues[1]),
+          closure = !! rlang::sym(cues[2]),
+          burst = !! rlang::sym(cues[3])),
+      type = 'scatter3d', 
+      size = I(1),
+      color = ~Model.Sound,
+      colors = colors.Category,
+      inherit = F,
+      opacity = alpha, 
+      frame = ~Model.Accent,
+      x= ~vowel, y= ~closure, z= ~burst,
+      showlegend = F, mode="markers")
+  
+  if (addSlider) {
+    .plot = .plot %>%
+    animation_slider(
+      currentvalue = list(prefix = paste0("Ideal observer for ", language, ": "), 
+                          font = list(color="black"))
+    ) 
+  }
+  
+  return(.plot)
+}
+
+plot_IO_training = 
+  function(
+  .data.IO, 
   .data.training = NULL,
-  cues) {
+  language, 
+  cues
+) {
   message("plot_IO() currently expects three cues: vowel, closure, burst (corrected or uncorrected).")
   
   # Unnest data if that hasn't already happened
@@ -1675,49 +1722,32 @@ plot_IO = function(
   if (!is.null(.data.training)) {
     p = plot_ly(
       data = .data.training %>%
-        filter(Used_for.NativeLanguage == NativeLanguage) %>%
+        filter(Used_for.Model.NativeLanguage == language) %>%
         mutate(
           vowel = !! rlang::sym(cues[1]),
           closure = !! rlang::sym(cues[2]),
           burst = !! rlang::sym(cues[3])),
-      inherit = T,
       x= ~vowel, y= ~closure, z= ~burst,
-        color= ~Used_for.Sound,
+        color= ~Used_for.Model.Sound,
         colors = colors.Category,
-        frame = ~Used_for.Accent,
+        frame = ~Used_for.Model.Accent,
         opacity = .1,
         showlegend = T,
         type="scatter3d", mode="markers") 
   } else p = plot_ly()
   
   p = p %>%
-    add_trace(
-      data = .data.IO %>%
-        filter(Used_for.NativeLanguage == NativeLanguage) %>%
-        mutate(
-          vowel = !! rlang::sym(cues[1]),
-          closure = !! rlang::sym(cues[2]),
-          burst = !! rlang::sym(cues[3])),
-      type = 'scatter3d', 
-      size = I(1),
-      color = ~Used_for.Sound,
-      colors = colors.Category,
-      opacity = .5, 
-      frame = ~Used_for.Accent,
-      x= ~vowel, y= ~closure, z= ~burst,
-      showlegend = F, mode="markers") %>%
     # specify axis range to be held constant across plots
-    layout(scene = list(xaxis=axx, yaxis=axy, zaxis=axz, aspectmode='cube')) %>%
-    animation_slider(
-      currentvalue = list(prefix = paste0("Ideal observer for ", NativeLanguage, ": "), 
-                          font = list(color="black"))
-    ) 
+    layout(scene = list(xaxis=axx, yaxis=axy, zaxis=axz, aspectmode='cube'))
+
+  p = plot_IO(.data.IO, language = language, .plot = p, cues = cues)
     
   return(p)
 }
 ```
 
-For the non-native /d/ category, we used all 30 tokens observed during non-native exposure. For the native /d/ and /t/, we sampled 30 tokens with replacement for each talker. The non-native /t/ category was identical to the native /t/ category (for each draw of a training set). We then calculated the mean $\mu$ and covariance matrix $\Sigma$ for each unique combination of native language (English, Swedish), model type (native, non-native), sound category (/d/, /t/), and talker. For the native English /d/ and /t/, for which we had 10 talkers' worth of data, we then calculated the mean of the by-talker $\mu$s and $\Sigma$s. Put differently, we marginalize (average over) the 10 different ideal observers for English, to create an ideal observer based on expectations about the 'prototypical' native talker of English. The result of this procedure was one estimate of $\mu$ and $\Sigma$ for each unique combination of native language (English, Swedish), model type (native, non-native), and sound category (/d/, /t/). In summary, we use the following training data:
+
+For the non-native /d/ category, we used all 30 tokens observed during non-native exposure. For the native /d/ and /t/, we sampled 30 tokens with replacement for each talker. The non-native /t/ category was identical to the native /t/ category (for each draw of a training set). In summary, we use the following training data:
 
 - **Native** model: 
   + Exposure /d/ comes from the *native* talker's exposure /d/ (30 tokens)
@@ -1729,7 +1759,7 @@ For the non-native /d/ category, we used all 30 tokens observed during non-nativ
   + Exposure /t/ comes from the native talker's test /t/ (downsampled to 30 tokens)
   + Test /d/ and /t/ comes from the non-native talker's test /d/ and /t/
 
-Figures \@ref(fig:plot-IO-3D-English) and \@ref(fig:plot-IO-3D-Swedish) visualize the native and non-native ideal observers for both English and Swedish that result from this training procedure, along with the training data that was used to train these four models.
+We then calculated the mean $\mu$ and covariance matrix $\Sigma$ for each unique combination of native language (English, Swedish), model type (native, non-native), sound category (/d/, /t/), and talker. For the native English /d/ and /t/, for which we had 10 talkers' worth of data, we then calculated the mean of the by-talker $\mu$s and $\Sigma$s. Put differently, we marginalize (average over) the 10 different ideal observers for English, to create an ideal observer based on expectations about the 'prototypical' native talker of English. The result of this procedure was one estimate of $\mu$ and $\Sigma$ for each unique combination of native language (English, Swedish), model type (native, non-native), and sound category (/d/, /t/). Together the pairs of $\mu$s and $\Sigma$s for /d/ and /t/ form an ideal observer, for a total of four ideal observers (native and non-native English, native and non-native Swedish). Figures \@ref(fig:plot-IO-3D-English) and \@ref(fig:plot-IO-3D-Swedish) visualize the resulting four ideal observers, along with the training data that was used to train these four models.
 
 (ref:plot-IO-3D-English) English native and non-native ideal observer visualized in 3D cue space. Points show the data used for *training* the model.
 
@@ -1743,13 +1773,13 @@ save(d.IO.training, file = "../data/data_IO training_both languages.Rdata")
 d.IO = d.IO.training %>%
   make_IO(., cues = selected_cues) %>%
   # Create ellipses of the training data
-  mutate(ellipse = map(model, ~ make_ellipse(.x, cues = selected_cues))) 
+  mutate(ellipse = map(Model, ~ make_ellipse(.x, cues = selected_cues))) 
 
-d.IO %>% plot_IO("English", d.IO.training, cues = selected_cues)
+d.IO %>% plot_IO_training(d.IO.training, language = "English", cues = selected_cues)
 ```
 
 ```{r plot-IO-3D-Swedish, fig.cap="(ref:plot-IO-3D-Swedish)", out.width="75%", fig.show='hold'}
-d.IO %>% plot_IO("Swedish", d.IO.training, cues = selected_cues)
+d.IO %>% plot_IO_training(d.IO.training, language = "Swedish", cues = selected_cues)
 ``` 
 
 
@@ -1771,20 +1801,24 @@ IO_categorization = function(
                select(-ellipse)) %>%
     # Only use data + model combinations for which the native language matches (i.e., do not 
     # predict Swedish data from English model, etc.)
-    filter(NativeLanguage == Used_for.NativeLanguage) %>%
+    filter(NativeLanguage == Model.NativeLanguage) %>%
     # Get likelihood for each test token under each model
     mutate(
       x = pmap(list(!!! rlang::syms(selected_cues)), cbind),
-      model_likelihood = unlist(map2(model, x, model_lhood))) %>%
+      Model.Likelihood = unlist(map2(Model, x, phondisttools::model_lhood))) %>%
     # Move models and likelihoods for the two categories into separate columns (rather than rows)
     pivot_wider(
-      names_from = Used_for.Sound,
-      values_from = c(model, model_likelihood)) %>%
+      names_from = Model.Sound,
+      values_from = c(Model, Model.Likelihood)) %>%
+    rename(
+      Model.Likelihood.d = `Model.Likelihood_/d/`,
+      Model.Likelihood.t = `Model.Likelihood_/t/`
+    ) %>%
     mutate(
-      `model_posterior_/d/` = `model_likelihood_/d/` / (`model_likelihood_/d/` + `model_likelihood_/t/`),
-      `model_posterior_/t/` = `model_likelihood_/t/` / (`model_likelihood_/d/` + `model_likelihood_/t/`),
-      model_posterior = ifelse(Sound == "/d/", `model_posterior_/d/`, `model_posterior_/t/`),
-      model_posterior_categorization = ifelse(`model_posterior_/d/` >= .5, "/d/", "/t/")
+      Model.Posterior.d = Model.Likelihood.d / (Model.Likelihood.d + Model.Likelihood.t),
+      Model.Posterior.t = Model.Likelihood.t / (Model.Likelihood.d + Model.Likelihood.t),
+      Model.Posterior = ifelse(Sound == "/d/", Model.Posterior.d, Model.Posterior.t),
+      Model.Categorization = ifelse(Model.Posterior.d >= .5, "/d/", "/t/")
     ) %>%
     mutate(
       x = NULL
@@ -1800,20 +1834,20 @@ IO_ratings = function(.data) {
   
   message("Ideal observers' posterior is linked to human z-scored ratings on a by-item level after aggregating over subjects, with separate links for each native language.")
   l = lm(
-    Rating.Response.d.zscored ~ `model_posterior_/d/` * NativeLanguage,
+    Rating.Response.d.zscored ~ Model.Posterior.d * NativeLanguage,
     data = .data %>%
       # Only use posterior from models that match the exposure group
-      filter(model_matches_group == "yes") %>%
+      filter(Model.Accent.matchesGroup == "yes") %>%
       # Group data by Native language, group
       group_by(NativeLanguage, Group, Item.WordID) %>%
       summarise(
         Rating.Response.d.zscored = mean(Rating.Response.d.zscored),
-        `model_posterior_/d/` = mean(`model_posterior_/d/`))
+        Model.Posterior.d = mean(Model.Posterior.d))
   )
   
   .data %>%
     mutate(
-      `model_rating_/d/` = predict(l, newdata = .)
+      Model.Rating.d.zscored = predict(l, newdata = .)
     )
 }
 ```
@@ -1841,17 +1875,21 @@ d.test.IO =
   left_join(d.IO.test) %>%
   # Is the model meant for this exposure group? 
   mutate(
-    model_matches_group = case_when(
-      NativeLanguage != Used_for.NativeLanguage ~ NA_character_,
-      Group == "control" & Used_for.Accent == "native" ~"yes",
-      Group == "control" & Used_for.Accent == "non-native" ~"no",
-      Group == "/d/-exposure" & Used_for.Accent == "non-native" ~"yes",
-      Group == "/d/-exposure" & Used_for.Accent == "native" ~"no",
+    Model.Accent.matchesGroup = factor(case_when(
+      NativeLanguage != Model.NativeLanguage ~ NA_character_,
+      Group == "control" & Model.Accent == "native" ~"yes",
+      Group == "control" & Model.Accent == "non-native" ~"no",
+      Group == "/d/-exposure" & Model.Accent == "non-native" ~"yes",
+      Group == "/d/-exposure" & Model.Accent == "native" ~"no",
       T ~ NA_character_
-    )) %>%
+    ), levels = c("no", "yes"))) %>%
   IO_ratings()
 
 save(d.test.IO, file = "../data/data_perception_test phase plus IO predictions_both languages.Rdata")
+
+# Combinations of Native languages, exposure groups, and model properties
+# d.IO.test %>% select(NativeLanguage, Model.NativeLanguage, Model.Accent) %>% distinct()
+# d.test.IO %>% select(NativeLanguage, Model.NativeLanguage, Group, Model.Accent) %>% distinct()
 ```
 
 ### Posterior probabilities {#sec:IO-methods-posterior-probabilities}
@@ -1863,9 +1901,9 @@ Figure \@ref{fig:ideal-observers-posterior} summarizes the predicted posterior p
 ```{r ideal-observers-posterior, fig.cap="(ref:ideal-observers-posterior)", fig.height=4.5, out.width="75%"}
 p.post = d.IO.test %>%
   ggplot(aes(x= Sound, 
-           y = `model_posterior`, 
-           color = Used_for.Accent, 
-           fill = Used_for.Accent)) +
+           y = Model.Posterior, 
+           color = Model.Accent, 
+           fill = Model.Accent)) +
   scale_x_discrete("Intended sound category") +
   scale_y_continuous("posterior probability of /d/") +
   scale_color_manual("Ideal observer", values = colors.Group) +
@@ -1876,7 +1914,7 @@ p.post = d.IO.test %>%
         panel.grid.minor.x = element_blank())
 
 p.post + 
-    stat_summary(aes(group = Used_for.Accent), fun.data = mean_cl_boot, geom = "pointrange", 
+    stat_summary(aes(group = Model.Accent), fun.data = mean_cl_boot, geom = "pointrange", 
                alpha = .8, size = .8, 
                position = position_dodge(.3))
 ```
@@ -1894,10 +1932,10 @@ Figure \@ref(fig:ideal-observers-accuracy) shows the predicted accuracy for a hy
 p.post %+% 
   (d.IO.test) +
   geom_hline(yintercept = 1/2, color = "gray") +
-  stat_summary(aes(color = Used_for.Accent), fun.y = mean, geom = "bar",
+  stat_summary(aes(color = Model.Accent), fun.y = mean, geom = "bar",
                alpha = .6, fill = NA,
                position = position_dodge(.93)) +
-  stat_summary(aes(group = Used_for.Accent), fun.data = mean_cl_boot, geom = "linerange", 
+  stat_summary(aes(group = Model.Accent), fun.data = mean_cl_boot, geom = "linerange", 
                alpha = .8, size = .8, color = "black",
                position = position_dodge(.93)) +
   scale_y_continuous("Accuracy") 
@@ -1978,7 +2016,7 @@ d.english.test.byItem =
 ggscatter(d.english.test.byItem, x = "Proportion.d", y = "zRating.d", color = "Group", 
           cor.method = "pearson",
           xlab = "Proportion of /d/-responses from identification task", ylab = "/d/-goodness from rating task") + 
-  stat_cor(label.x.npc = "middle", label.y.npc = "top") + 
+  stat_cor(label.x.npc = "middle", label.y.npc = "bottom") + 
   facet_grid(~ Group) + 
   geom_smooth(method = "gam", formula = y ~ s(x), color = "black", fill = "black") +
   scale_color_manual(
@@ -2002,38 +2040,49 @@ We expect to see a match between the ideal observer predictions and human respon
 
 ## Group-level comparison between human and model-predicted ratings
 
-Figure \@ref(fig:ratings-results-repeat) replots the human rating results for the English and Swedish experiments. Figure \@ref(fig:IO-ratings-results) plots the predictions of the ideal observers. There is a clear difference between the two experiments, but in both cases, the model predictions qualitatively match the patterns of human ratings:
+Figure \@ref(fig:IO-ratings-results) plots the predictions of the ideal observers. Figure \@ref(fig:ratings-results-repeat) replots the human rating results for the English and Swedish experiments. Unlike the original plot of the human rating results in Section \@ref{sec:results}, Figure \@ref(fig:ratings-results-byItem) shows by-item (rather than by-subject) means. This is done to facilitate comparison to the ideal observer predictions, which---by necessity---are predictions about individual items. 
+
+There is a clear difference between the English and Swedish data, but the predictions of the non-native vs. native ideal observers qualitatively match the patterns of human ratings in the /d/-exposure vs. control conditions:
 
   + For the Swedish data, the Ideal Observers show no difference between the native model and the non-native model; mirroring this, the human data show no difference between the /d/-exposure and the control groups. 
   + For the English data, the Ideal Observers predict significantly bettter performance from the non-native model over the native model for both /d/ and /t/; this pattern was also reflected in the higher ratings for the intended category (for both /d/ and /t/) in the human ratings.
 
-
-(ref:ratings-results-repeat) Human /d/-goodness ratings during test (z-scored) by native language and exposure group. Replotted from Figure \@ref(fig:ratings-results). Errorbars show 95\% bootstrapped confidence intervals over by-subject means.
-
 (ref:IO-ratings-results) /d/-goodness ratings during test (z-scored) predicted by the native and non-native ideal observers. Shown for both the English and Swedish data. Errorbars show 95\% bootstrapped confidence intervals over by-item predictions (since there aren't multiple subjects).
 
-```{r ratings-results-repeat, fig.cap="(ref:ratings-results-repeat)", fig.height=4.5, out.width='75%'}
-p.results.perception.bySubject
+(ref:ratings-results-byItem) Human /d/-goodness ratings during test (z-scored) by native language and exposure group. To faciltiate comparison of the human data to the ideal observer models in Figure \@ref(fig:IO-ratings-results), we first aggregate the human data by exposure condition and *item*, averaging across all subjects. These are the individual points shown in the figure. The bars show the mean of these by-item means, and the error interval shows the 95\% confidence interval over the by-item means. This contrasts with Figure \@ref(fig:ratings-results) in Section \@ref{sec:results}, where we plotted the mean and confidence interval of by-subject means. 
+
+
+```{r ratings-results-byItem, fig.cap="(ref:ratings-results-byItem)", fig.height=4.5, out.width='75%'}
+p.results.perception.byItem = 
+  p.results.perception.bySubject %+%
+  (d.test %>%
+     group_by(Language, NativeLanguage, Group, Sound, Item.WordID) %>%
+     summarise(Rating.mean = mean(Rating.Response.d.zscored)) )
+
+p.results.perception.byItem 
 ```
 
 
 ```{r get-predicted-ratings-from-IO, fig.cap="(ref:IO-ratings-results)", fig.height=4.5, out.width='75%'}
-p.results.perception %+%
+p.results.perception.byItem %+%
   (d.test.IO %>%
-     filter(model_matches_group == "yes") %>%
+     filter(Model.Accent.matchesGroup == "yes") %>%
      group_by(Language, NativeLanguage, Group, Sound, Item.WordID) %>%
-     summarise(Rating.mean = mean(`model_rating_/d/`))) +
+     summarise(Rating.mean = mean(Model.Rating.d.zscored))) +
   scale_y_continuous("ideal observer predicted\n/d/-goodness rating (z-score aligned)")
 ```
 
 
 
 
-## Item-level analysis (TO DO)
+## Item-level analysis
+
+<!-- Maryann, Xin: this text needs work -->
+
 Second, at the item level, we hope to predict human responses from the posterior of each token. Ideally, we expect to see a consistent correlation between IO predictions and human data across the two categories (/d/ and /t/). This ideal situation is based on the following assumptions:
 
   1. we have enough participant data. 
-  2. models use all cues that human have access to -- likely to lead to lines shifted apart (assuming also the other assumptions are orthogonal to this particular assumption.
+  2. models use all cues that human have access to---likely to lead to lines shifted apart (assuming also the other assumptions are orthogonal to this particular assumption.
   3. the space in which we assess performance are the same as human participant use.
   4. cues are multi-Gaussian distributions.
   5. the link function between the IO prediction and human response is correct.
@@ -2043,69 +2092,197 @@ Second, at the item level, we hope to predict human responses from the posterior
 2. Are the correlations stronger for the consistent pairing (consistence coded as "yes": /d/-exposure and non-native model; control and native model)? 
 
 
+```{r fig-ratings-IO-item-level, fig.height = 9, out.width="100%"}
+ggscatter(d.test.IO %>%
+            group_by(Language, NativeLanguage, Group, Model.Accent, Model.Accent.matchesGroup, Item.Word, Sound) %>%
+            summarise(
+              Model.Posterior.d = mean(Model.Posterior.d),
+              Model.Rating.d.zscored = mean(Model.Rating.d.zscored),
+              Rating.Response.d.zscored = mean(Rating.Response.d.zscored)), 
+          # x = Model.Rating.d.zscored, 
+          x = "Model.Posterior.d", y = "Rating.Response.d.zscored", color = "Group",
+          cor.method = "pearson",
+          xlab = "Ideal observer posterior of /d/", ylab = "human mean /d/-goodness rating") + 
+  stat_cor(label.x.npc = "middle", label.y.npc = "bottom") + 
+  geom_smooth(method = "lm", formula = y ~ x, color = "black", fill = "black") +
+  scale_color_manual(
+    breaks = c("/d/-exposure", "control", ""),
+    values = append(colors.Group, "black")
+  ) +
+  facet_grid(Model.Accent.matchesGroup ~ NativeLanguage + Group, 
+             # margins = c("NativeLanguage"),
+             labeller = "label_both") 
+
+# # Only IOs matching exposure conditions:
+# ggscatter(d.test.IO %>%
+#             filter(Model.Accent.matchesGroup == "yes") %>%
+#             group_by(Language, NativeLanguage, Group, Model.Accent, Model.Accent.matchesGroup, Item.Word, Sound) %>%
+#             summarise(Model.Rating.d.zscored = mean(Model.Rating.d.zscored),
+#                       Rating.Response.d.zscored = mean(Rating.Response.d.zscored)), 
+#           x = "Model.Rating.d.zscored", y = "Rating.Response.d.zscored", color = "Group",
+#           cor.method = "pearson",
+#           xlab = "Ideal observer predicted rating of /d/", ylab = "human mean /d/-goodness rating") + 
+#   stat_cor(label.x.npc = "middle", label.y.npc = "bottom") + 
+#   geom_smooth(method = "lm", formula = y ~ x, color = "black", fill = "black") +
+#   scale_color_manual(
+#     breaks = c("/d/-exposure", "control"),
+#     values = colors.Group
+#   ) +
+#   facet_grid(Group ~ NativeLanguage, labeller = "label_both") 
+```
+
+
+### Do ideal observers predict human /d/-goodness rating responses?
+
+For this first analysis, we predict human responses across all native languages and exposure conditions from the ideal observers that meant for those languages and exposure conditions. That is, we predict human ratings in the /d/-exposure group from the non-native ideal observer, and human ratings in the control group from the native ideal observer. Specifically, we use a linear mixed-effects regression, predicting human /d/-gooodness ratings from the posterior probabiltiy of /d/ predicted by the ideal observers, while also including random intercepts by minimal pair. SAY STH ABOUT BY PARTICIAPNT (DIDN'T CONVERGE B/C OF Z-SCORING AND THERE NOT BEING MUCH VARIANCE LEFT)
 
 ```{r item-level-regression-between-ID-rating-tasks}
-d.english.test.byItem <-  within(d.english.test.byItem, {
-  contrasts(Group) <- contr.sum
-  contrasts(Sound) <- contr.sum
-  })
+d.test.IO <- within(d.test.IO, {
+  contrasts(NativeLanguage) = cbind("Swedish vs English" = c(-1,1))
+  contrasts(Group) = cbind("/d/-exposure vs control" = c(1, -1))
+  contrasts(Sound) = cbind("/d/ vs /t/" = c(1, -1))
+  contrasts(Model.Accent.matchesGroup)
+})
 
-ratingID.lmer <- lmer(zRating.d ~ Proportion.d + (1 + Group|Item.MinimalPair), 
-                     data = d.english.test.byItem)
-summary(ratingID.lmer)
+lmer.IOtoRating =
+  lmer(Rating.Response.d.zscored ~ 1 + Model.Posterior.d + (1 | Item.MinimalPair), 
+                     data = d.test.IO %>%
+                       filter(Model.Accent.matchesGroup == "yes")
+                       )
+summary(lmer.IOtoRating)
+```
+
+Next, we asked whether this effect was solely driven by differences between the native languages, the exposure group, or sound. To this end, we refit the above mode while also including the full factorial interactions of native language (sum-coded: English = -1 vs. Swedish = 1), exposure group (sum-coded: control = -1 vs. /d/-exposure = 1), and sound category (sum-coded: /t/ = -1 vs. /d/ = 1), as well as the maximal by-item random effect structure (random intercept and slopes for exposure group, sound category, and their interaction) and by-participant random intercepts (more complex random effect structures by participant did not converge). <!-- Maryann, Xin: Check whether the next sentence holds--> In this analysis, the ideal observers' posterior probability was no longer a significant predictor of human /d/-goodness ratings:
+
+```{r}
+lmer.IOtoRating.full <- lmer(Rating.Response.d.zscored ~ 1 + NativeLanguage * Group * Sound + Model.Posterior.d  + (1 + Group * Sound | Item.MinimalPair) + (1 | Participant), 
+                     data = d.test.IO %>%
+                       filter(Model.Accent.matchesGroup == "yes"))
+summary(lmer.IOtoRating.full)
+```
+
+### Do ideal observers that are intended to capture the expousre condition predict human /d/-goodness rating responses *better* than ideal observers intended for another exposure condition?
+
+### Visualize predictions of ideal observers in original cue space
+
+```{r functions to plot-ideal-observers-results-3D}
+plot_IO_test = function(
+  .data.IO, 
+  .data.test = NULL,
+  language, 
+  cues
+) {
+  message("plot_IO() currently expects three cues: vowel, closure, burst (corrected or uncorrected).")
+  
+  # If .data.test contains more than one instance per unique combination of stimulus & model, summarize it down to one observation 
+  # per stimulus & model
+  .data.test %<>% 
+    { if ("Model.Accent.matchesGroup" %in% names(.)) filter(., Model.Accent.matchesGroup == "yes") else . } %>%
+          group_by(NativeLanguage, Item.Word, Item.WordID, Item.MinimalPair, Model.Accent, Sound) %>%
+          summarise_at(c(cues, "Model.Posterior"), first)
+  
+  # Unnest data if that hasn't already happened
+  if ("ellipse" %in% names(.data.IO)) .data.IO %<>%
+    unnest(ellipse)
+  
+  # axis setting 
+  axx <- list(
+    nticks = 4,
+    range = range(.data.IO[, cues[1]]),
+    gridwidth = 2
+  )
+  
+  axy <- list(
+    nticks = 4,
+    range = range(.data.IO[, cues[2]]),
+    gridwidth = 2
+  )
+  
+  axz <- list(
+    nticks = 4,
+    range =  range(.data.IO[, cues[3]]),
+    gridwidth = 2
+  )
+  
+  if (!is.null(.data.test)) {
+    p = plot_ly(
+      data = .data.test %>%
+        filter(NativeLanguage == language) %>%
+        mutate(
+          vowel = !! rlang::sym(cues[1]),
+          closure = !! rlang::sym(cues[2]),
+          burst = !! rlang::sym(cues[3])),
+      x= ~vowel,
+      y= ~closure,
+      z= ~burst,
+      color= ~Model.Posterior,
+      symbol= ~Sound,
+      symbols = shapes.Category,
+      frame= ~Model.Accent,
+      opacity = .8,
+        showlegend = T,
+        type="scatter3d", mode="markers")
+  } else p = plot_ly()
+  
+  p = p %>%
+    # specify axis range to be held constant across plots
+    layout(scene = list(xaxis=axx, yaxis=axy, zaxis=axz, aspectmode='cube')) 
+
+  p = plot_IO(.data.IO, language = language, .plot = p, cues = cues, alpha = .1, addSlider = T)
+    
+  return(p)
+}
+```
+
+ADD TEXT HERE THAT REFERS TO Figure \@ref(fig:plot-3d-test-IO-English) and Figure \@ref(fig:plot-3d-test-IO-Swedish).
+
+(ref:plot-3d-test-IO-English) XXX
+
+(ref:plot-3d-test-IO-Swedish) XXX
+
+
+```{r plot-3d-test-IO-English, fig.cap="(ref:plot-3d-test-IO-English)", fig.height=4.5, out.width="75%}
+plot_IO_test(d.IO, d.IO.test, language = "English", cues = selected_cues)
+``` 
+
+```{r plot-3d-test-IO-Swedish, fig.cap="(ref:plot-3d-test-IO-Swedish)", fig.height=4.5, out.width="75%}
+plot_IO_test(d.IO, d.IO.test, language = "Swedish", cues = selected_cues)
+``` 
+
+Plot the differences between the native and non-native models.
+<!--colorscale is weird when plotting both NativeLanguage together and use frame to separate.!-->
+
+```{r plot-differences-between-ideal-observers-3d}
+
+d.IO.diff <- d.IO %>%
+  ungroup() %>%
+  filter(CategoryModel == Sound) %>%
+  select(NativeLanguage, ModelType, Item.Word, Sound, Posterior, rvowel, rclosure, rburst) %>%
+  spread(ModelType, Posterior) %>%
+  mutate(NonNative_over_Native = `Non-native` - Native)
+
+
+plot_ly(data = d.IO.diff,
+               x= ~rvowel,
+               y= ~rclosure,
+               z= ~rburst,
+              # color= ~NonNative_over_Native,
+               marker = list(color = ~NonNative_over_Native, colorscale = 'RdBu', cmin = -1, cmax = 1, showscale = T),
+              # colors = 'RdBu',
+              symbol= ~Sound,
+              symbols = c('circle','square'),
+              frame= ~NativeLanguage,
+               type="scatter3d", mode="markers", showlegend = FALSE) %>%
+    layout(scene = list(xaxis=axx,yaxis=axy,zaxis=axz,aspectmode='cube')) 
+
 ```
 
 
-```{r fig-ratings-IO-item-level, fig.height = 9, fig.width = 12}
 
-## -------------------------------------------------------------------------------
-# Visualizing the correlation between ratings and posteriors from ideal observers
-## -------------------------------------------------------------------------------
-
-# correlate Predicted Rating of /d/ with transformed human ratings (/d/ goodness) 
-
-ggscatter(d.test.IO.rating %>%
-                       group_by(Dataset, NativeLanguage, Group, ModelType, Consistence, Item.Word, Sound) %>%
-                       summarise(PredictedRating.d = mean(PredictedRating.d),
-                                Rating.Response.d.zscored = mean(Rating.Response.d.zscored)), 
-          x = "PredictedRating.d", y = "Rating.Response.d.zscored", 
-        #  color = "Sound", 
-          add = "reg.line", conf.int = TRUE, 
-          palette = "jco",  cor.method = "pearson",
-          xlab = "Predicted rating of /d/ from IO", ylab = "mean rating \n/d/ goodness") + 
- # stat_cor(aes(color = Sound), label.x.npc = "middle", label.y.npc = "top") +
-  stat_cor() + 
-  geom_smooth(color = "black", method = "lm") + 
-  facet_grid(Consistence~NativeLanguage, labeller = "label_both") +
-  ggtitle("Correlations between model predicted ratings and human ratings\nas a function of consistence") 
-
-
-# for English data, plot the correlations separately for rating_d and rating_t task
-p.corr2 <- ggscatter(d.test.IO %>%
-            filter(NativeLanguage == "English") %>% 
-            filter(CategoryModel == "d") %>% 
-            group_by(Rating.for, Item.Word, Sound, Group, ModelType, Consistence) %>%
-            summarise(meanPosterior.d = mean(Posterior),
-                      meanRating.d = mean(Rating.Response.d.zscored)),
-          x = "meanPosterior.d", y = "meanRating.d", 
-        #  color = "Sound", 
-          add = "reg.line", conf.int = TRUE, 
-          palette = "jco",  cor.method = "pearson",
-          xlab = "posterior of /d/ from IO", ylab = "mean rating \n/d/ goodness") + 
- # stat_cor(aes(color = Sound), label.x.npc = "middle", label.y.npc = "top") + 
-  stat_cor() +
-  geom_smooth(color = "black", method = "lm") + 
-  facet_grid(Consistence~Rating.for, labeller= labeller(Rating.for = label_both)) + 
-  ggtitle("Correlations separately for rating_d and rating_t tasks- English data")
-
-```
-
-
+### OLD STUFF
 Run mixed-effects model to see if human responses (rated /d/ goodness) are predicted by the model predictions (some function of posterior of /d/) and we expect to see an **interaction between consistence (/d/-exposure matching non-native model; control matching native model) and model predicted /d/ goodness**.
 
 The predictions of IOs matching the exposure condition (e.g, the native IO for the control group) achieved positive correlations with human ratings (English: $r^2 =$ .XXX; Swedish: $r^2 =$ .XXX). This suggests that a substantial amount of variance participants' ratings could be described by the simple 0-DF linking hypothesis between the three cues and ratings (Bayes theorem \& Luce's choice rule). The IOs fit to the Swedish data did not fail to predict participants' performance. Rather, like the human participants, the IOs fail to find a benefit of /d/-exposure.
-
-
 ```{r lmer-IO-group-level}
 
 # model: human resp (d-goodness) ~ model prediction (d-goodness) x intended category x consistence
