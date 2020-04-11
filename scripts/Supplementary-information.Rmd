@@ -2161,7 +2161,7 @@ lmer.IOtoRating.full <- lmer(Rating.Response.d.zscored ~ 1 + NativeLanguage * Gr
 summary(lmer.IOtoRating.full)
 ```
 
-### Do ideal observers that are intended to capture the expousre condition predict human /d/-goodness rating responses *better* than ideal observers intended for another exposure condition?
+### Do ideal observers that are intended to capture the exposure condition predict human /d/-goodness rating responses *better* than ideal observers intended for another exposure condition?
 
 ### Visualize predictions of ideal observers in original cue space
 
