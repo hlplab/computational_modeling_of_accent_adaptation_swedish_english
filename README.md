@@ -10,7 +10,7 @@ and
 
 `git lfs track *.RData`
 
-in the directory with the .git repository. You can do so from the R terminal.
+in the directory with the .git repository. You can do so from the R terminal. Then make sure to pull the most recent version from the remote repository on github.com.
 
 
 # PBR_adaptation_accented_swedish
