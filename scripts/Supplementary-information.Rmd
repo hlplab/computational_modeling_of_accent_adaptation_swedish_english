@@ -1071,7 +1071,7 @@ d.stims =
          Item.MinimalPair, Item.WordID, Item.Word, Sound,
          vowel, closure, burst, 
          starts_with("has"), starts_with("onset"), starts_with("coda"), everything()) %>%
-  mutate_at(c("vowel", "closure", "burst"), function(x) x * 100) %>%
+  mutate_at(c("vowel", "closure", "burst"), function(x) x * 1000) %>%
   mutate_at(c("NativeLanguage", "Accent", "Used_for", "Talker", "Block.Type",
               "Item.MinimalPair", "Item.Word", "Item.WordID",
               "has_stress", "has_long_vowel", "onset_has_nasal",
