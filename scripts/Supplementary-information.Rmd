@@ -2241,18 +2241,18 @@ ADD TEXT HERE THAT REFERS TO Figure \@ref(fig:plot-3d-test-IO-English) and Figur
 (ref:plot-3d-test-IO-Swedish) XXX
 
 
-```{r plot-3d-test-IO-English, fig.cap="(ref:plot-3d-test-IO-English)", fig.height=4.5, out.width="75%}
+```{r plot-3d-test-IO-English, fig.cap="(ref:plot-3d-test-IO-English)", fig.height=4.5, out.width="75%"}
 plot_IO_test(d.IO, d.IO.test, language = "English", cues = selected_cues)
 ``` 
 
-```{r plot-3d-test-IO-Swedish, fig.cap="(ref:plot-3d-test-IO-Swedish)", fig.height=4.5, out.width="75%}
+```{r plot-3d-test-IO-Swedish, fig.cap="(ref:plot-3d-test-IO-Swedish)", fig.height=4.5, out.width="75%"}
 plot_IO_test(d.IO, d.IO.test, language = "Swedish", cues = selected_cues)
 ``` 
 
 Plot the differences between the native and non-native models.
 <!--colorscale is weird when plotting both NativeLanguage together and use frame to separate.!-->
 
-```{r plot-differences-between-ideal-observers-3d}
+```{r plot-3d-test-IO-differences}
 
 d.IO.diff <- d.IO %>%
   ungroup() %>%
