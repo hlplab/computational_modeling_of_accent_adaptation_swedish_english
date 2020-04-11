@@ -80,7 +80,7 @@ colors.Language = c("cyan", "pink")
 shapes.Category = c("circle","square")
 levels.Sound = c("/d/", "/t/")
 levels.Group = c("/d/-exposure", "control")
-levels.Model = c("Non-native", "Native")
+levels.Model = c("non-native", "native")
 levels.Language = c("Mandarin-accented English", "Flemish-accented Swedish")
 levels.NativeLanguage = c("English", "Swedish")
 ```
@@ -221,11 +221,7 @@ Regardless of the specific source of the difference between the Flemish- and Man
 
 We compare the results of the perception experiments on English and Swedish. We first compare lexical decision accuracy during exposure. Then we compare the effect of the exposure manipulation on ratings of /d/-goodness during test. 
 
-
 ```{r load rating experiments, results='hide'}
-##-----------------------
-# load human rating data
-##-----------------------
 # Swedish rating data
 d.swedish = read_csv(file = "../data/Swedish/Swedish_perception_rating_exposure+test_Tan et al 2020.csv")
 # English rating data
@@ -257,10 +253,7 @@ d.swedish %<>%
       T ~ NA_character_
     ),
     Participant = paste0("S", Participant),
-    Item.WordID = paste0("S", Item.WordID),
-    Item.MinimalPair = 
-      ifelse(Block.Type == "exposure", NA, paste0("S",
-             tolower(gsub("^[A-Z]+_([0-9]+)_.*$", "\\1", Item.Filename)))),
+    # Do not move the next line from here (order sensitive)
     ItemTemp = gsub("^[A-Z]([A-Z]+)$", "\\1", Item.Type),
     Item.WordStatus = factor(case_when(
       ItemTemp == "NW" ~ "pseudoword",
@@ -287,8 +280,22 @@ d.swedish %<>%
       Item.Filename, 
       "Latin-ASCII"),
       "^[A-Z]+_[0-9]+_([a-z]+)_.*$", "\\1"),
-    Item.Word = ifelse(Item.WordID == "S15" & Item.Word == "nod", 
-                       "nod15", as.character(Item.Word))
+    # For exposure trials, set Item.Minimal ID to NA. For the test trials, extract
+    # ID from filename
+    Item.MinimalPair = 
+      ifelse(Block.Type == "exposure", 
+             NA, 
+             paste0("S", tolower(gsub("^[A-Z]+_([0-9]+)_.*$", "\\1", Item.Filename)))),
+    # For exposure trials, use Item.WordID. For test trials, this is ambiguous since both
+    # words of a minimal pair currently have the same Item.WordID. So change it for test
+    # trials so that these words have unique IDs (the minimal pair ID plus d or t)
+    Item.WordID = 
+      ifelse(Block.Type == "exposure", 
+             paste0("S", Item.WordID),
+             paste0(Item.MinimalPair, ifelse(Sound == "/d/", "d", "t"))), 
+    # One word ("nod") occurs twice. Make sure it has a unique Item.Word value.
+    Item.Word = ifelse(Item.MinimalPair == "S15" & Item.Word == "nod", 
+                       "nod15", as.character(Item.Word)),
   ) %>%
   group_by(Participant) %>%
   mutate(
@@ -321,7 +328,9 @@ d.swedish %<>%
 d.swedish %<>%
   # Remove participants 100 & 111 because they are nonnative
   filter(!Participant %in% c("S100", "S111")) %>%
-  # Remove the 4 items because -rd and -rt are pronounced differently in Swedish than d/t in other context
+  # Remove the second test block with /d,t/-initial sounds
+  filter(is.na(Sound.Position) | Sound.Position == "final") %>%
+  # Remove the 4 test items because -rd and -rt are pronounced differently in Swedish than d/t in other context
   filter(! Item.Word %in% c("voart", "voard", "hoart", "hoard")) %>%
   droplevels()
 
@@ -365,7 +374,7 @@ d.test = d.swedish %>%
     NativeLanguage = factor(NativeLanguage, levels = levels.NativeLanguage),
     Rating.Response.d = ifelse(Rating.for == "d", Rating.Response, 8 - Rating.Response) 
   ) %>%
-  group_by(Group, Participant) %>%
+  group_by(NativeLanguage, Group, Participant) %>%
   mutate(
     Rating.Response.d.zscored = as.numeric(scale(Rating.Response.d))
   ) %>%
@@ -521,7 +530,7 @@ d.test %>%
   scale_color_manual(values = colors.Group) +
   scale_fill_manual(values = colors.Group) +
   facet_wrap(~ Language) +
-  theme(legend.position = "right")
+  theme(legend.position = "top")
 ```
 
 
@@ -904,7 +913,7 @@ The test stimuli included 60 monosyllabic minimal pairs ending in /d/ or /t/ (e.
 ### Swedish 
 The Swedish experiment employed fewer test stimuli (64 \/d-\/t\/-final words from 32 minimal pairs,  e.g., *röd*---'red', *comm. gen.* and *röt*---'shout', *pret.*).  Additionally, test words were allowed to have word-initial voiced stops (other than /d/, e.g. *bädd-bett*).
 
-Two pairs, (*vård-vårt* and *hård-hårt*) were excluded from analysis as it was discovered that dental stops preceded by /r/ in Swedish are pronounced differently as retroflexed variations of /d,t/ and therefore would not have been consistent with the rest of the set.
+Two pairs, (*vård-vårt* and *hård-hårt*) were excluded from analysis as it was discovered that dental stops preceded by /r/ in Swedish are pronounced differently as retroflexed variations of /d,t/ and therefore would not have been consistent with the rest of the set. This left 30 minimal pairs for analysis (and the test of the ideal observers in Section \@ref{sec:IO-results}).
 
 Due to a misunderstanding, the Swedish data did not counter-balance whether a word recording was rated for /d/- or for /t/-goodness (e.g., the word *rid*---'ride' was always rated for /d/-goodness; the word *rit* ---'rite' was always rated for /t/-goodness; across minimal pair words, /d/- and /t/-final words were equally often rated for /d/- and /t/-goodness). This is unlikely to cause any problems: as shown in Figure \@ref(fig:rating-to-rating-correlation) /d/- and /t/-goodness ratings were almost perfectly inversely correlation, so that the gain in information from having each word rated for both /d/- and /t/-goodness (across participants) is minimal.
 
@@ -999,6 +1008,13 @@ d.stims =
   mutate(
     # Repair item ID to match that used in the perception experiment data files
     Item.WordID = paste0("S", gsub("^[A-Z]+_([0-9]+)_.*$", "\\1", Item.WordID)),
+    # For exposure trials, use Item.WordID. For test trials, this is ambiguous since both
+    # words of a minimal pair currently have the same Item.WordID. So change it for test
+    # trials so that these words have unique IDs (the minimal pair ID plus d or t)
+    Item.WordID = 
+      ifelse(Block.Type == "exposure", 
+             Item.WordID,
+             paste0(Item.MinimalPair, ifelse(Sound == "/d/", "d", "t"))), 
     NativeLanguage = "Swedish",
     Talker = ifelse(Accent == "native", "S1", "F1"),
     # Maryann, please check whether this list is complete and correct and then 
@@ -1195,7 +1211,7 @@ plot_corrected_cues = function(data.stims, title) {
           color= ~Sound,
           colors = colors.Category,
           opacity = .35, 
-          # symbol= ~Used_for,
+          symbol= ~Used_for,
           # symbols = shapes.Category,
           hoverinfo = "text", showlegend = T,
           type="scatter3d", mode="markers") %>%
@@ -2228,7 +2244,7 @@ plot_IO_test = function(
     # specify axis range to be held constant across plots
     layout(scene = list(xaxis=axx, yaxis=axy, zaxis=axz, aspectmode='cube')) 
 
-  p = plot_IO(.data.IO, language = language, .plot = p, cues = cues, alpha = .1, addSlider = T)
+  p = plot_IO(.data.IO, language = language, .plot = p, cues = cues, alpha = .2, addSlider = T)
     
   return(p)
 }
