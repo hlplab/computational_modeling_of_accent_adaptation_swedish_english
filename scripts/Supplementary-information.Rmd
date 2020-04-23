@@ -1270,7 +1270,7 @@ d.stims.long =
 
 # Animations can be manipulated via animation_opts() but it seems that 
 # scatter3d (and other 3D options) are currently not animatable (see schema()).
-plot_corrected_cues = function(.data, title) {
+plot_corrected_cues = function(.data, title = "Correction step") {
   plot_ly(data = .data %>% 
             droplevels(),
           frame= ~ContextCorrected,
@@ -1318,9 +1318,7 @@ plot_corrected_cues = function(.data, title) {
 ```{r native-english-cue-before-and-after-segment-correction, fig.cap="(ref:native-english-cue-before-and-after-segment-correction)", out.width="75%", fig.show='hold'}
 plot_corrected_cues(
    d.stims.long %>% 
-          filter(NativeLanguage == "English", Accent == "native"),
-   title = "Corrected for segmental context"
-)
+          filter(NativeLanguage == "English", Accent == "native"))
 ```
 
 #### English (non-native)
@@ -1329,9 +1327,7 @@ plot_corrected_cues(
 ```{r non-native-english-cue-before-and-after-segment-correction, fig.cap="(ref:non-native-english-cue-before-and-after-segment-correction)", out.width="75%", fig.show='hold'}
 plot_corrected_cues(
    d.stims.long %>% 
-          filter(NativeLanguage == "English", Accent == "non-native"),
-   title = "Corrected for segmental context"
-)
+          filter(NativeLanguage == "English", Accent == "non-native"))
 ```
 
 
@@ -1342,9 +1338,7 @@ plot_corrected_cues(
 ```{r native-swedish-cue-before-and-after-segment-correction, fig.cap="(ref:native-swedish-cue-before-and-after-segment-correction)", out.width="75%", fig.show='hold'}
 plot_corrected_cues(
    d.stims.long %>% 
-          filter(NativeLanguage == "Swedish", Accent == "native"),
-   title = "Corrected for segmental context"
-)
+          filter(NativeLanguage == "Swedish", Accent == "native"))
 ```
 
 #### Swedish (non-native)
@@ -1353,9 +1347,7 @@ plot_corrected_cues(
 ```{r non-native-swedish-cue-before-and-after-segment-correction, fig.cap="(ref:non-native-swedish-cue-before-and-after-segment-correction)", out.width="75%", fig.show='hold'}
 plot_corrected_cues(
    d.stims.long %>% 
-          filter(NativeLanguage == "Swedish", Accent == "non-native"),
-   title = "Corrected for segmental context"
-)
+          filter(NativeLanguage == "Swedish", Accent == "non-native"))
 ```
 
 
@@ -1461,9 +1453,7 @@ d.stims.long =
 ```{r native-english-cue-before-and-after-length-correction, fig.cap="(ref:native-english-cue-before-and-after-length-correction)", out.width="75%", fig.show='hold'}
 plot_corrected_cues(
    d.stims.long %>% 
-          filter(NativeLanguage == "English", Accent == "native"),
-   title = "Corrected for supra-segmental context"
-)
+          filter(NativeLanguage == "English", Accent == "native"))
 ```
 
 #### English (non-native)
@@ -1472,9 +1462,7 @@ plot_corrected_cues(
 ```{r non-native-english-cue-before-and-after-length-correction, fig.cap="(ref:non-native-english-cue-before-and-after-length-correction)", out.width="75%", fig.show='hold'}
 plot_corrected_cues(
    d.stims.long %>% 
-          filter(NativeLanguage == "English", Accent == "non-native"),
-   title = "Corrected for supra-segmental context"
-)
+          filter(NativeLanguage == "English", Accent == "non-native"))
 ```
 
 
@@ -1484,9 +1472,7 @@ plot_corrected_cues(
 ```{r native-swedish-cue-before-and-after-length-correction, fig.cap="(ref:native-swedish-cue-before-and-after-length-correction)", out.width="75%", fig.show='hold'}
 plot_corrected_cues(
    d.stims.long %>% 
-          filter(NativeLanguage == "Swedish", Accent == "native"),
-   title = "Corrected for supra-segmental context"
-)
+          filter(NativeLanguage == "Swedish", Accent == "native"))
 ```
 
 #### Swedish (non-native)
@@ -1495,9 +1481,7 @@ plot_corrected_cues(
 ```{r non-native-swedish-cue-before-and-after-length-correction, fig.cap="(ref:non-native-swedish-cue-before-and-after-length-correction)", out.width="75%", fig.show='hold'}
 plot_corrected_cues(
    d.stims.long %>% 
-          filter(NativeLanguage == "Swedish", Accent == "non-native"),
-   title = "Corrected for supra-segmental context"
-)
+          filter(NativeLanguage == "Swedish", Accent == "non-native"))
 ```
 
 
@@ -1566,9 +1550,7 @@ d.stims.long =
 ```{r native-english-cue-before-and-after-alignment, fig.cap="(ref:native-english-cue-before-and-after-alignment)", out.width="75%", fig.show='hold'}
 plot_corrected_cues(
   d.stims.long %>% 
-          filter(NativeLanguage == "English", Accent == "native"),
-  title = "Alignment with mean of non-native /t/ category"
-)
+          filter(NativeLanguage == "English", Accent == "native"))
 ```
 
 #### English (non-native)
@@ -1577,9 +1559,7 @@ plot_corrected_cues(
 ```{r non-native-english-cue-before-and-after-alignment, fig.cap="(ref:non-native-english-cue-before-and-after-alignment)", out.width="75%", fig.show='hold'}
 plot_corrected_cues(
   d.stims.long %>% 
-          filter(NativeLanguage == "English", Accent == "non-native"),
-  title = "Alignment with mean of non-native /t/ category"
-)
+          filter(NativeLanguage == "English", Accent == "non-native"))
 ```
 
 
@@ -1589,9 +1569,7 @@ plot_corrected_cues(
 ```{r native-swedish-cue-before-and-after-alignment, fig.cap="(ref:native-swedish-cue-before-and-after-alignment)", out.width="75%", fig.show='hold'}
 plot_corrected_cues(
   d.stims.long %>% 
-          filter(NativeLanguage == "Swedish", Accent == "native"),
-  title = "Alignment with mean of non-native /t/ category"
-)
+          filter(NativeLanguage == "Swedish", Accent == "native"))
 ```
 
 #### Swedish (non-native)
@@ -1600,9 +1578,7 @@ plot_corrected_cues(
 ```{r non-native-swedish-cue-before-and-after-alignment, fig.cap="(ref:non-native-swedish-cue-before-and-after-alignment)", out.width="75%", fig.show='hold'}
 plot_corrected_cues(
   d.stims.long %>% 
-          filter(NativeLanguage == "Swedish", Accent == "non-native"),
-  title = "Alignment with mean of non-native /t/ category"
-)
+          filter(NativeLanguage == "Swedish", Accent == "non-native"))
 ```
 
 
