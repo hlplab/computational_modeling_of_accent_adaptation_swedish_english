@@ -1231,7 +1231,11 @@ d.stims %<>%
   rename(
     rvowel.step1 = vowel1,
     rclosure.step1 = closure1,
-    rburst.step1 = burst1
+    rburst.step1 = burst1,
+    # Always make sure that the most recent step is *also* stored as rvowel, rclosure, rburst
+    rvowel = rvowel.step1,
+    rclosure = rclosure.step1,
+    rburst = rburst.step1
   )
 ```
 
@@ -1244,16 +1248,23 @@ Figures \@ref(fig:native-english-cue-before-and-after-segment-correction) to \@r
 ```{r prepare for cue plot after step 1, include=FALSE}
 make_long = . %>%
   distinct() %>%
+  # Remove duplicate of most recent step
+  select(-c("rvowel", "rclosure", "rburst")) %>%
+  # Convert into long format for plotting, with one row for each correction step as well 
+  # as uncorrected cues
   pivot_longer(
     cols = c(contains("vowel"), contains("closure"), contains("burst"), -"has_long_vowel"),
     names_to = c(".value", "ContextCorrected"),
     names_pattern = "r{0,1}([a-z]+)[\\.]{0,1}(step[0-9]){0,1}"
   ) %>%
   mutate(
-    ContextCorrected = ifelse(is.na(ContextCorrected), "uncorrected", ContextCorrected)
+    ContextCorrected = ifelse(is.na(ContextCorrected), "uncorrected", ContextCorrected),
+    ContextCorrected = factor(ContextCorrected,
+                              levels = unique(ContextCorrected))
   )
 
-d.stims.long = d.stims %>%
+d.stims.long = 
+  d.stims %>%
   make_long()
 
 # Animations can be manipulated via animation_opts() but it seems that 
@@ -1425,7 +1436,11 @@ d.stims %<>%
   rename(
     rvowel.step2 = rvowel1,
     rclosure.step2 = rclosure1,
-    rburst.step2 = rburst1
+    rburst.step2 = rburst1,
+    # Always make sure that the most recent step is *also* stored as rvowel, rclosure, rburst
+    rvowel = rvowel.step2,
+    rclosure = rclosure.step2,
+    rburst = rburst.step2
   )
 ```
 
@@ -1433,7 +1448,7 @@ d.stims %<>%
 Figures \@ref(fig:native-english-cue-before-and-after-length-correction) to \@ref(fig:non-native-swedish-cue-before-and-after-length-correction) show the distribution of cues to the /t/ and /d/ categories before and after correction for supra-segmental context for the English and Swedish experiment, respectively.
 
 ```{r prepare for cue plot after step 2, include=FALSE}
-d.stims.long = d.stims %>%
+d.stims.long = 
   d.stims %>%
   make_long()
 ```
@@ -1519,7 +1534,11 @@ d.stims %<>%
   mutate(
     rvowel.step3 = rvowel - diff.vowel,
     rclosure.step3 = rclosure - diff.closure,
-    rburst.step3 = rburst - diff.burst
+    rburst.step3 = rburst - diff.burst,
+    # Always make sure that the most recent step is *also* stored as rvowel, rclosure, rburst
+    rvowel = rvowel.step3,
+    rclosure = rclosure.step3,
+    rburst = rburst.step3
   ) %>%
   select(-starts_with("diff"))
 
@@ -1534,7 +1553,8 @@ Since the /t/-categories of both the native and non-native ideal observers are t
 Figures \@ref(fig:native-english-cue-before-and-after-alignment) to \@ref(fig:non-native-swedish-cue-before-and-after-alignment) show the distribution of cues to the /t/ and /d/ categories before and after alignment with the mean of the non-native /t/-category from the test tokens. The comparison of the cue distributions before and after correction shows that the three correction steps employed here are successful in reducing the multi-modality of cue distribution, leading to largely unimodal distributions within each category. This is particularly striking for Swedish (likely because vowel length is a strong, phonologized, factor for Swedish).
 
 ```{r prepare for cue plot after step 3, include=FALSE}
-d.stims.long = d.stims %>%
+d.stims.long = 
+  d.stims %>%
   make_long()
 ```
 
@@ -1585,13 +1605,6 @@ plot_corrected_cues(
 
 
 ```{r store corrected production data, include=FALSE}
-d.stims %<>%
-  mutate(
-    rvowel = rvowel.step3,
-    rclosure = rclosure.step3,
-    rburst = rburst.step3
-  )
-
 save(d.stims, file = "../data/data_production_corrected for phonetic context_both languages.Rdata")
 ```
 
