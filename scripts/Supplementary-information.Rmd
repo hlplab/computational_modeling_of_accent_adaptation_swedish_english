@@ -1224,16 +1224,14 @@ d.stims %<>%
       data, NativeLanguage, 
       ~ correct_for_segmental_context("burst", 
                              data.fit = .x, 
-                             language = .y))
-    
-  )
+                             language = .y)))
 
 d.stims %<>%
   unnest(data, rvowel, rclosure, rburst) %>%
   rename(
-    rvowel = vowel1,
-    rclosure = closure1,
-    rburst = burst1
+    rvowel.step1 = vowel1,
+    rclosure.step1 = closure1,
+    rburst.step1 = burst1
   )
 ```
 
@@ -1244,16 +1242,19 @@ d.stims %<>%
 Figures \@ref(fig:native-english-cue-before-and-after-segment-correction) to \@ref(fig:non-native-swedish-cue-before-and-after-segment-correction) show the distribution of cues to the /t/ and /d/ categories before and after correction for segmental context for the English and Swedish experiment, respectively. 
 
 ```{r prepare for cue plot after step 1, include=FALSE}
-d.stims.long = d.stims %>%
+make_long = . %>%
   distinct() %>%
   pivot_longer(
-    cols = c("vowel", "closure", "burst", "rvowel", "rclosure", "rburst"),
-    names_to = c("ContextCorrected", ".value"),
-    names_pattern = "(r{0,1})(.*)"
+    cols = c(contains("vowel"), contains("closure"), contains("burst"), -"has_long_vowel"),
+    names_to = c(".value", "ContextCorrected"),
+    names_pattern = "r{0,1}([a-z]+)[\\.]{0,1}(step[0-9]){0,1}"
   ) %>%
   mutate(
-    ContextCorrected = ifelse(ContextCorrected == "r", "yes", "no")
+    ContextCorrected = ifelse(is.na(ContextCorrected), "uncorrected", ContextCorrected)
   )
+
+d.stims.long = d.stims %>%
+  make_long()
 
 # Animations can be manipulated via animation_opts() but it seems that 
 # scatter3d (and other 3D options) are currently not animatable (see schema()).
@@ -1422,9 +1423,9 @@ d.stims %<>%
     rburst = NULL
   ) %>%
   rename(
-    rvowel = rvowel1,
-    rclosure = rclosure1,
-    rburst = rburst1
+    rvowel.step2 = rvowel1,
+    rclosure.step2 = rclosure1,
+    rburst.step2 = rburst1
   )
 ```
 
@@ -1433,15 +1434,8 @@ Figures \@ref(fig:native-english-cue-before-and-after-length-correction) to \@re
 
 ```{r prepare for cue plot after step 2, include=FALSE}
 d.stims.long = d.stims %>%
-  distinct() %>%
-  pivot_longer(
-    cols = c("vowel", "closure", "burst", "rvowel", "rclosure", "rburst"),
-    names_to = c("ContextCorrected", ".value"),
-    names_pattern = "(r{0,1})(.*)"
-  ) %>%
-  mutate(
-    ContextCorrected = ifelse(ContextCorrected == "r", "yes", "no")
-  )
+  d.stims %>%
+  make_long()
 ```
 
 #### English (native)
@@ -1523,9 +1517,9 @@ d.stims %<>%
   left_join(d.diff.t) %>%
   replace_na(list(diff.vowel = 0, diff.closure = 0, diff.burst = 0)) %>%
   mutate(
-    rvowel = rvowel - diff.vowel,
-    rclosure = rclosure - diff.closure,
-    rburst = rburst - diff.burst
+    rvowel.step3 = rvowel - diff.vowel,
+    rclosure.step3 = rclosure - diff.closure,
+    rburst.step3 = rburst - diff.burst
   ) %>%
   select(-starts_with("diff"))
 
@@ -1541,15 +1535,7 @@ Figures \@ref(fig:native-english-cue-before-and-after-alignment) to \@ref(fig:no
 
 ```{r prepare for cue plot after step 3, include=FALSE}
 d.stims.long = d.stims %>%
-  distinct() %>%
-  pivot_longer(
-    cols = c("vowel", "closure", "burst", "rvowel", "rclosure", "rburst"),
-    names_to = c("ContextCorrected", ".value"),
-    names_pattern = "(r{0,1})(.*)"
-  ) %>%
-  mutate(
-    ContextCorrected = ifelse(ContextCorrected == "r", "yes", "no")
-  )
+  make_long()
 ```
 
 #### English (native)
@@ -1599,6 +1585,13 @@ plot_corrected_cues(
 
 
 ```{r store corrected production data, include=FALSE}
+d.stims %<>%
+  mutate(
+    rvowel = rvowel.step3,
+    rclosure = rclosure.step3,
+    rburst = rburst.step3
+  )
+
 save(d.stims, file = "../data/data_production_corrected for phonetic context_both languages.Rdata")
 ```
 
