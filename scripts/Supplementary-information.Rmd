@@ -1188,6 +1188,10 @@ correct_for_segmental_context = function(cue.name,
             axis.title = c(paste("Change in", cue.name, "duration (in msec)"), "")))
 
   return(data.predict[, cue.name] - predict(l, newdata = data.predict))
+  # If unnesting doesn't work consider using this
+  # data.predict[, cue.name] - predict(l, newdata = data.predict) %>%
+  #   as_tibble() %>%
+  #   rename_at(cue.name, .funs = function(x) paste0("r", x))
 }
 ```
 
@@ -1226,7 +1230,10 @@ d.stims %<>%
                              data.fit = .x, 
                              language = .y)))
 
-d.stims %<>%
+warning("Check whether this way of unnesting does what we want!")
+
+d.stims %>%
+#  unnest(cols = c(data, rvowel, rclosure, rburst), .names_repair = "unique") %>%
   unnest(data, rvowel, rclosure, rburst) %>%
   rename(
     rvowel.step1 = vowel1,
