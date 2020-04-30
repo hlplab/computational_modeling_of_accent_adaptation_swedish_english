@@ -3113,5 +3113,5 @@ plot_ly(data = d.IO.diff,
 
 # Session info 
 ```{r}
-session_info()
+devtools::session_info()
 ```
