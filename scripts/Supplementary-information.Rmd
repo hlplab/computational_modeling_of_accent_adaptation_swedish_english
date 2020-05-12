@@ -1266,7 +1266,21 @@ make_long = . %>%
 
 d.stims.long = 
   d.stims %>%
-  make_long()
+  distinct() %>%
+  # Remove duplicate of most recent step
+  select(-c("rvowel", "rclosure", "rburst")) %>%
+  # Convert into long format for plotting, with one row for each correction step as well 
+  # as uncorrected cues
+  pivot_longer(
+    cols = c(contains("vowel"), contains("closure"), contains("burst"), -"has_long_vowel"),
+    names_to = c(".value", "ContextCorrected"),
+    names_pattern = "r{0,1}([a-z]+)[\\.]{0,1}(step[0-9]){0,1}"
+  ) %>%
+  mutate(
+    ContextCorrected = ifelse(is.na(ContextCorrected), "uncorrected", ContextCorrected),
+    ContextCorrected = factor(ContextCorrected,
+                              levels = unique(ContextCorrected))
+  )
 
 # Animations can be manipulated via animation_opts() but it seems that 
 # scatter3d (and other 3D options) are currently not animatable (see schema()).
