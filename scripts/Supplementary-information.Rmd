@@ -1187,11 +1187,7 @@ correct_for_segmental_context = function(cue.name,
             title = paste("Effects of segmental context on", cue.name, "duration for the", language, "test data"),
             axis.title = c(paste("Change in", cue.name, "duration (in msec)"), "")))
 
-  return(data.predict[, cue.name] - predict(l, newdata = data.predict))
-  # If unnesting doesn't work consider using this
-  # data.predict[, cue.name] - predict(l, newdata = data.predict) %>%
-  #   as_tibble() %>%
-  #   rename_at(cue.name, .funs = function(x) paste0("r", x))
+  return(unlist(data.predict[, cue.name] - predict(l, newdata = data.predict)))
 }
 ```
 
@@ -1230,21 +1226,14 @@ d.stims %<>%
                              data.fit = .x, 
                              language = .y)))
 
-warning("Check whether this way of unnesting does what we want!")
-
-d.stims %>%
-#  unnest(cols = c(data, rvowel, rclosure, rburst), .names_repair = "unique") %>%
+warning("I have checked whether this way of unnesting does what we want, but perhaps double check whether this matches the resid values!")
+d.stims %<>%
   unnest(data, rvowel, rclosure, rburst) %>%
-  rename(
-    rvowel.step1 = vowel1,
-    rclosure.step1 = closure1,
-    rburst.step1 = burst1) %>%
-  # Always make sure that the most recent step is *also* stored as rvowel, rclosure, rburst
+  # Make copy of most recent correction step and store it separately 
   mutate(
-    rvowel = rvowel.step1,
-    rclosure = rclosure.step1,
-    rburst = rburst.step1
-  )
+    rvowel.step1 = rvowel,
+    rclosure.step1 = rclosure,
+    rburst.step1 = rburst) 
 ```
 
  
@@ -1262,7 +1251,7 @@ make_long = . %>%
   # Convert into long format for plotting, with one row for each correction step as well 
   # as uncorrected cues
   pivot_longer(
-    cols = c(contains("vowel"), contains("closure"), contains("burst"), -"has_long_vowel"),
+    cols = c(contains("vowel"), contains("closure"), contains("burst"), -has_long_vowel),
     names_to = c(".value", "ContextCorrected"),
     names_pattern = "r{0,1}([a-z]+)[\\.]{0,1}(step[0-9]){0,1}"
   ) %>%
@@ -1394,7 +1383,7 @@ correct_for_word_length = function(cue.name,
             title = paste("Effects of supra-segmental context on", cue.name, "duration for the", language, "test data"),
             axis.title = c(paste("Change in", cue.name, "duration (in msec)"), "")))
 
-  return(data.predict[, cue.name] - predict(l, newdata = data.predict))
+  return(unlist(data.predict[, cue.name] - predict(l, newdata = data.predict)))
 }
 ```
 
@@ -1429,16 +1418,11 @@ d.stims %<>%
 
 d.stims %<>%
   unnest(data, rvowel, rclosure, rburst) %>%
-  mutate(
-    rvowel = NULL,
-    rclosure = NULL,
-    rburst = NULL
-  ) %>%
   rename(
     rvowel.step2 = rvowel1,
     rclosure.step2 = rclosure1,
     rburst.step2 = rburst1) %>%
-  # Always make sure that the most recent step is *also* stored as rvowel, rclosure, rburst
+  # Override rvowel, rclosure, rburst with second step
   mutate(
     rvowel = rvowel.step2,
     rclosure = rclosure.step2,
