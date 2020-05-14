@@ -1254,6 +1254,7 @@ d.stims %>%
 Figures \@ref(fig:native-english-cue-before-and-after-segment-correction) to \@ref(fig:non-native-swedish-cue-before-and-after-segment-correction) show the distribution of cues to the /t/ and /d/ categories before and after correction for segmental context for the English and Swedish experiment, respectively. 
 
 ```{r prepare for cue plot after step 1, include=FALSE}
+# Make pipe to transform d.stim into long format for plotting (used a few times below)
 make_long = . %>%
   distinct() %>%
   # Remove duplicate of most recent step
