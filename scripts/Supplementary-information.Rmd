@@ -65,7 +65,6 @@ library(assertthat)
 library(daver)
 # devtools::install_github("kleinschmidt/phondisttools")
 library(phondisttools)
-
 ```
 
 ```{r constants and environments}
@@ -74,14 +73,14 @@ theme_set(
     theme(panel.border = element_blank())
 )
 
-levels.Sound = c("/d/", "/t/")
+levels.Category = c("/d/", "/t/")
 levels.Group = c("/d/-exposure", "control")
 levels.Accent = c("non-native", "native")
 levels.Language = c("Mandarin-accented English", "Flemish-accented Swedish")
 levels.NativeLanguage = c("English", "Swedish")
 colors.Group = c("red", "gray")
 colors.Accent = colors.Group
-colors.Category = c("orange", "lightblue")
+colors.Category = c("lightblue", "orange")
 colors.Language = c("cyan", "pink")
 shapes.Category = c("circle","square")
 ```
@@ -103,7 +102,7 @@ applyFactorLevels = function(d) {
                                                   levels = levels.Accent)) else . } %>%
     { if ("Sound" %in% names(d)) mutate(., Sound = 
                                           factor(Sound, 
-                                                 levels = levels.Sound)) else . } %>%
+                                                 levels = levels.Category)) else . } %>%
     { if ("Used_for.Model.NativeLanguage" %in% names(d)) mutate(., Used_for.Model.NativeLanguage = 
                                                                 factor(Used_for.Model.NativeLanguage, 
                                                                        levels = levels.NativeLanguage)) else . } %>%
@@ -112,7 +111,7 @@ applyFactorLevels = function(d) {
                                                                  levels = levels.Accent)) else . } %>%
     { if ("Used_for.Model.Sound" %in% names(d)) mutate(., Used_for.Model.Sound = 
                                                          factor(Used_for.Model.Sound, 
-                                                                levels = levels.Sound)) else . }
+                                                                levels = levels.Category)) else . }
 }
 
 applyContrasts = function(d) {
@@ -252,7 +251,7 @@ d.swedish %<>%
       ItemTemp %in% c("DI", "DF", "TW") ~ "/d/",
       ItemTemp %in% c("TI", "TF") ~ "/t/",
       T ~ NA_character_
-    ), levels = levels.Sound),  
+    ), levels = levels.Category),  
     Sound.Position = case_when(
       ItemTemp %in% c("TF", "DF", "TW") ~ "final",
       ItemTemp %in% c("TI", "DI") ~ "initial",
@@ -1932,7 +1931,7 @@ save(d.test.IO, file = "../data/data_perception_test phase plus IO predictions_b
 
 Figure \@ref(fig:ideal-observers-posterior) summarizes the predicted posterior probability of /d/ under both the native and non-native ideal observer.
 
-(ref:ideal-observers-posterior) Posterior probabilities of /d/ and /t/ predicted by the native and non-native ideal observers for the foreign-accented /d/- and /t/ words during test. Each point is a test token.
+(ref:ideal-observers-posterior) Posterior probabilities of /d/ and /t/ predicted by the native and non-native ideal observers for the foreign-accented /d/- and /t/ words during test.
 
 ```{r ideal-observers-posterior, fig.cap="(ref:ideal-observers-posterior)", fig.height=4.5, out.width="75%"}
 p.post = d.IO.test %>%
@@ -2011,11 +2010,11 @@ d.english.ID <- d.english.ID %>%
     Group = ifelse(Group == "experimental", "/d/-exposure", "control"),
     Block.Type = "test",
     Sound = factor(paste0("/", Sound, "/"),
-                   levels = levels.Sound),
+                   levels = levels.Category),
     Sound.Position = "final",
     ID.Response.d = case_when(
-      (Sound == levels.Sound[1] & ID.Response == 1) | (Sound == levels.Sound[2] & ID.Response == 0) ~ 1,
-      (Sound == levels.Sound[2] & ID.Response == 1) | (Sound == levels.Sound[1] & ID.Response == 0) ~ 0),
+      (Sound == levels.Category[1] & ID.Response == 1) | (Sound == levels.Category[2] & ID.Response == 0) ~ 1,
+      (Sound == levels.Category[2] & ID.Response == 1) | (Sound == levels.Category[1] & ID.Response == 0) ~ 0),
     Subject = NULL,
     Session = NULL
   ) %>%
