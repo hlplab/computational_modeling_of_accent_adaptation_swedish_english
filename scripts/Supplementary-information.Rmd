@@ -80,11 +80,7 @@ levels.Language = c("Mandarin-accented English", "Flemish-accented Swedish")
 levels.NativeLanguage = c("English", "Swedish")
 colors.Group = c("red", "gray")
 colors.Accent = colors.Group
-<<<<<<< HEAD
 colors.Category = c("lightblue", "orange")
-=======
-colors.Category = c( "lightblue", "orange")
->>>>>>> 85281acf2c76fff664b4084cf00a9f23b74b3b33
 colors.Language = c("cyan", "pink")
 shapes.Category = c("circle","square")
 ```
@@ -1391,7 +1387,7 @@ correct_for_word_length = function(cue.name,
   l = lm(f, data = data.fit)
   print(plot_model(l, type = "est",
                   show.p = T, show.values = T, show.data = T,
-            title = paste("Effects of supra-segmental context on", cue.name, "duration for the", language, "test data"),
+            title = paste("Effects of supra-segmental context on", gsub("^r", "", cue.name), "duration for the", language, "test data"),
             axis.title = c(paste("Change in", cue.name, "duration (in msec)"), "")))
 
   return(unlist(data.predict[, cue.name] - predict(l, newdata = data.predict)))
