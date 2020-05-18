@@ -181,6 +181,7 @@ get_axes = function(.data, cues) {
 4) Add test to result section of ideal observers
 5) Consider adding perception noise to IOs to simulate various subjects. In any case, *explain in IO result section why IO results are more categorical than human responses** (lack of noise is one plausible reason).
 6) Add model comparisons that assess whether the models that match the exposure condition (`Model.Accent.matchesGroup == yes`) perform better than those that don't.
+7) REMOVE CATEGORY DENSITY CODE.
 
 # Overview
 
