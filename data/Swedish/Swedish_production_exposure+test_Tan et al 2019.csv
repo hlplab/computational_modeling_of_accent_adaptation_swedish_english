@@ -1,4 +1,4 @@
-vowel,closure,burst,language,phon_ctxt_stress,phon_ctxt_canonical_vl,mimic,Block.Type,MinimalPairID,Word,Sound,phon_ctxt_vl,phon_ctxt_r,phon_ctxt_l,phon_ctxt_n,Item.Filename,syllable,Item.MinimalPair,Item.Word,Syllable_duration
+vowel,closure,burst,language,phon_ctxt_stress,phon_ctxt_canonical_vl,mimic,Block.Type,MinimalPairID,Word,Sound,phon_ctxt_vl,phon_ctxt_r,phon_ctxt_l,phon_ctxt_n,Item.Filename,syllable,Item.MinimalPair,Item.Word,syllable_duration
 0.115471795,0.082339474,0.076242403,native,yes,short,irrelevant,exposure,NA,oskuld,/d/,long,no,yes,no,ETW_1_oskuld,2,NA,ETW_1_oskuld,0.427515296
 0.149258799,0.113726012,0.078723779,native,yes,short,irrelevant,exposure,NA,skillnad,/d/,long,no,no,no,ETW_2_skillnad,2,NA,ETW_2_skillnad,0.447046776
 0.259815238,0.103067219,0.059364205,native,yes,long,irrelevant,exposure,NA,choklad,/d/,long,no,no,no,ETW_3_choklad,2,NA,ETW_3_choklad,0.545813985
