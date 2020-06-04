@@ -1358,10 +1358,10 @@ plot_corrected_cues(
 
 
 ### Step 2: Correcting for supra-segmental context
+
 ```{r step 2 functions to correct for word length}
 # Correct for word length. For the specified cue (cue.name), we use linear regression 
-# to predict its values from the number of syllables. The linear regression is fit against the
-# /d/-final words (data.fit) for the specified experiment (language). 
+# to predict its values from the number of syllables. The linear regression is fit against the /d/-final words (data.fit) for the specified experiment (language). 
 # The predictions of this linear regression are then substracted from *all* data (data.predict: 
 # exposure /d/ + test /d/ + test /t/). 
 correct_for_word_length = function(cue.name, 
@@ -1439,9 +1439,82 @@ d.stims %<>%
 ```
 
 
+
+### Step 3: Correcting for speaking rate
+
+```{r step 3 functions to correct for speaking rate}
+# Correct for speaking rate. For the specified cue (cue.name), we use linear regression 
+# to predict its values from the syllable duration. The linear regression is fit against *all* words (data.fit: exposure /d/ + test /d/ + test /t/) for the specified experiment (language). 
+# The predictions of this linear regression are then substracted from *all* data (data.predict: 
+# exposure /d/ + test /d/ + test /t/). 
+correct_for_speaking_rate = function(cue.name, 
+                          data.fit, 
+                          language = c("English", "Swedish")
+) {
+  data.predict = data.fit
+  
+  data.fit$y = as_vector(data.fit[, cue.name])
+
+  # Fit separate effects for each accent
+  f = formula(
+    case_when(
+      language == "English" ~ "y ~ 1 + syllable_duration",
+      language == "Swedish" ~ "y ~ 1 + syllable_duration",
+      T ~ NA_character_))
+  
+  l = lm(f, data = data.fit)
+  print(plot_model(l, type = "est",
+                  show.p = T, show.values = T, show.data = T,
+            title = paste("Effects of speaking rate on", gsub("^r", "", cue.name), "duration for the", language, "test data"),
+            axis.title = c(paste("Change in", cue.name, "duration (in msec)"), "")))
+
+  return(unlist(data.predict[, cue.name] - predict(l, newdata = data.predict)))
+}
+```
+
+
+```{r step 3 correct for speaking rate}
+d.stims %<>%
+  group_by(NativeLanguage) %>%
+  nest() %>%
+  mutate(
+    rvowel = map2(
+      data, NativeLanguage,
+      ~ correct_for_speaking_rate("rvowel", 
+                             data.fit = .x, 
+                             language = .y)),
+    rclosure = map2(
+      data, NativeLanguage, 
+      ~ correct_for_speaking_rate("rclosure", 
+                             data.fit = .x,
+                             language = .y)),
+    rburst = map2(
+      data, NativeLanguage, 
+      ~ correct_for_speaking_rate("rburst", 
+                             data.fit = .x, 
+                             language = .y))
+    
+  )
+
+
+d.stims %<>%
+  unnest(data, rvowel, rclosure, rburst) %>%
+  rename(
+    rvowel.step3 = rvowel1,
+    rclosure.step3 = rclosure1,
+    rburst.step3 = rburst1) %>%
+  # Override rvowel, rclosure, rburst with second step
+  mutate(
+    rvowel = rvowel.step3,
+    rclosure = rclosure.step3,
+    rburst = rburst.step3
+  )
+```
+
+
 Figures \@ref(fig:native-english-cue-before-and-after-length-correction) to \@ref(fig:non-native-swedish-cue-before-and-after-length-correction) show the distribution of cues to the /t/ and /d/ categories before and after correction for supra-segmental context for the English and Swedish experiment, respectively.
 
-```{r prepare for cue plot after step 2, include=FALSE}
+```{r prepare for cue plot after step 2 and 3, include=FALSE}
 d.stims.long = 
   d.stims %>%
   make_long()
@@ -1486,8 +1559,8 @@ plot_corrected_cues(
 
 
 
-### Step 3: Align all data sets with the non-native test /t/ 
-```{r step 3 align to /t/ category from non-native test words, include = FALSE, eval=FALSE}
+### Step 4: Align all data sets with the non-native test /t/ 
+```{r step 4 align to /t/ category from non-native test words}
 # Get difference between non-native and native /t/ means (separately for each native talker)
 d.diff.t =
   d.stims %>%
@@ -1518,13 +1591,13 @@ d.stims %<>%
   left_join(d.diff.t) %>%
   replace_na(list(diff.vowel = 0, diff.closure = 0, diff.burst = 0)) %>%
   mutate(
-    rvowel.step3 = rvowel - diff.vowel,
-    rclosure.step3 = rclosure - diff.closure,
-    rburst.step3 = rburst - diff.burst,
+    rvowel.step4 = rvowel - diff.vowel,
+    rclosure.step4 = rclosure - diff.closure,
+    rburst.step4 = rburst - diff.burst,
     # Always make sure that the most recent step is *also* stored as rvowel, rclosure, rburst
-    rvowel = rvowel.step3,
-    rclosure = rclosure.step3,
-    rburst = rburst.step3
+    rvowel = rvowel.step4,
+    rclosure = rclosure.step4,
+    rburst = rburst.step4
   ) %>%
   select(-starts_with("diff"))
 
@@ -1538,7 +1611,7 @@ Since the /t/-categories of both the native and non-native ideal observers are t
 
 Figures \@ref(fig:native-english-cue-before-and-after-alignment) to \@ref(fig:non-native-swedish-cue-before-and-after-alignment) show the distribution of cues to the /t/ and /d/ categories before and after alignment with the mean of the non-native /t/-category from the test tokens. The comparison of the cue distributions before and after correction shows that the three correction steps employed here are successful in reducing the multi-modality of cue distribution, leading to largely unimodal distributions within each category. This is particularly striking for Swedish (likely because vowel length is a strong, phonologized, factor for Swedish).
 
-```{r prepare for cue plot after step 3, include=FALSE}
+```{r prepare for cue plot after step 4}
 d.stims.long = 
   d.stims %>%
   make_long()
@@ -1843,7 +1916,7 @@ Figure \@ref(fig:ideal-observers-training-density) shows the density functions o
 
 (ref:ideal-observers-training-density) Density functions of /d/ and /t/ estimated by the native and non-native ideal observers for the foreign-accented /d/- and /t/ words during training. 
 
-```{r compute-ideal-observers-training-density, include = FALSE}
+```{r compute-ideal-observers-training-density, include = FALSE, eval = FALSE}
 
 # extract model paramters and organize them into dataframes
 df.mu.train <- map(d.IO$Model, magrittr::extract, c('mu')) %>%
@@ -1867,7 +1940,7 @@ library(lattice)
 library(MASS)
 ```
 
-```{r function-bivariate-gaussian-distribution-density, include = FALSE}
+```{r function-bivariate-gaussian-distribution-density, include = FALSE, eval = FALSE}
 
 # gaussian distribution
 f<-function(x1,x2)
@@ -1936,7 +2009,7 @@ plot_ly(x = df1$y, y = df1$x, z = df1$z) %>% add_surface(opacity = 0.5, colorsca
 
 
 
-```{r compute-IO-training-model-density-2d, include = FALSE}
+```{r compute-IO-training-model-density-2d, include = FALSE, eval = FALSE}
 
 debug_mode = "no"
 toyset = 2
@@ -2115,7 +2188,7 @@ p.categorization.compare <- plot_ly(x = df.resp$rvowel, y = df.resp$rclosure, z 
 ```
 
 
-```{r fig-ideal-observers-training-density, fig.cap="(ref:ideal-observers-training-density)", fig.height=4.5, out.width="75%"}
+```{r fig-ideal-observers-training-density, fig.cap="(ref:ideal-observers-training-density)", fig.height=4.5, out.width="75%", include = FALSE, eval = FALSE}
 
 color <- rep(0, length(df$z))
 
@@ -2158,7 +2231,7 @@ p.category.density
 ```
 
 
-```{r fig-ideal-observers-categorization, fig.cap="(ref:ideal-observers-categorization-function)", fig.height=4.5, out.width="75%"}
+```{r fig-ideal-observers-categorization, fig.cap="(ref:ideal-observers-categorization-function)", fig.height=4.5, out.width="75%",include = FALSE, eval = FALSE}
 # plot categorization surface
 p.categorization.function <- plot_ly(data = d.IO.test %>%
                  filter(NativeLanguage == current_NativeLanguage &
@@ -2172,8 +2245,6 @@ p.categorization.function <- plot_ly(data = d.IO.test %>%
             type="scatter3d", mode="markers") %>% add_surface(x = df.resp$rvowel, y = df.resp$rclosure, z = df.resp$d_prop, opacity = 0.5,colorscale = list(c(0, 1), c(colors.Category[2], colors.Category[1]))) 
 
 p.categorization.function
-
-library(dplyr)
 ```
 
 ## Testing the four ideal observers
