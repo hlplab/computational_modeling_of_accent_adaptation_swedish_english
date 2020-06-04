@@ -1,4 +1,4 @@
-Word,Sound,Block.Type,phon_ctxt_stress,onset_has_nasal,onset_has_lateral,onset_has_rhotic,coda_has_nasal,coda_has_lateral,coda_has_rhotic,coda_has_fricative,has_long_vowel,syllable,burst,closure,vowel,Item.Word,Item.WordID,Item.MinimalPair,Word_duration,Syllable_duration,Syllable
+Word,Sound,Block.Type,phon_ctxt_stress,onset_has_nasal,onset_has_lateral,onset_has_rhotic,coda_has_nasal,coda_has_lateral,coda_has_rhotic,coda_has_fricative,has_long_vowel,syllable,burst,closure,vowel,Item.Word,Item.WordID,Item.MinimalPair,word_duration,syllable_duration,syllable_id
 alongside,/d/,exposure,yes,no,no,no,no,no,no,no,yes,3,0.06,0.053,0.205,alongside,NA,NA,0.757,0.405,side
 apprehend,/d/,exposure,yes,no,no,no,yes,no,no,no,no,3,0.08,0.115,0.155,apprehend,NA,NA,0.792,0.418,hend
 coincide,/d/,exposure,yes,no,no,no,no,no,no,no,yes,3,0.097,0.02,0.208,coincide,NA,NA,0.75,0.397,cide
