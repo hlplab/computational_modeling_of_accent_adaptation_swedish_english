@@ -1,8 +1,4 @@
-<<<<<<< HEAD
 Speaker,Sound,Word,set,burst,closure,vowel,phon_ctxt_stress,syllable,Item.Word,onset_has_nasal,onset_has_lateral,onset_has_rhotic,coda_has_nasal,coda_has_lateral,coda_has_rhotic,has_long_vowel,syllable_duration,word_duration
-=======
-Speaker,Sound,Word,set,burst,closure,vowel,phon_ctxt_stress,syllable,Item.Word,onset_has_nasal,onset_has_lateral,onset_has_rhotic,coda_has_nasal,coda_has_lateral,coda_has_rhotic,has_long_vowel,Syllable_duration,Word_duration
->>>>>>> e20b7a8150575bb13dc13dc5bf483197c8342854
 E1,/d/,bad,1,0.058,0.038,0.259,yes,1,bad,no,no,no,no,no,no,no,0.374,0.374
 E1,/d/,bad,2,0.161,0.039,0.266,yes,1,bad,no,no,no,no,no,no,no,0.478,0.478
 E1,/d/,bad,3,0.124,0.039,0.241,yes,1,bad,no,no,no,no,no,no,no,0.434,0.434
