@@ -1369,20 +1369,20 @@ correct_for_word_length = function(cue.name,
                           language = c("English", "Swedish")
 ) {
   data.predict = data.fit
-  data.fit %<>%
-    filter(Sound == "/d/")
+  #data.fit %<>%
+    #filter(Sound == "/d/")
   
-  if (language == "English")
-    data.fit %<>%
-    filter(Accent == "non-native")
+  #if (language == "English")
+    #data.fit %<>%
+    #filter(Accent == "non-native")
   
   data.fit$y = as_vector(data.fit[, cue.name])
 
   # Fit separate effects for each accent
   f = formula(
     case_when(
-      language == "English" ~ "y ~ 1 + number_syllables + has_stress",
-      language == "Swedish" ~ "y ~ 1 + Accent / (number_syllables + has_stress)",
+      language == "English" ~ "y ~ 1 + Accent / (number_syllables + has_stress + syllable_duration)",
+      language == "Swedish" ~ "y ~ 1 + Accent / (number_syllables + has_stress + syllable_duration)",
       T ~ NA_character_))
   
   l = lm(f, data = data.fit)
@@ -1473,7 +1473,7 @@ correct_for_speaking_rate = function(cue.name,
 ```
 
 
-```{r step 3 correct for speaking rate}
+```{r step 3 correct for speaking rate, eval = FALSE, include = FALSE}
 d.stims %<>%
   group_by(NativeLanguage) %>%
   nest() %>%
