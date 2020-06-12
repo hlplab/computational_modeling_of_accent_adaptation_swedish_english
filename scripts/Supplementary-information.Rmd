@@ -1381,7 +1381,7 @@ correct_for_word_length = function(cue.name,
   # Fit separate effects for each accent
   f = formula(
     case_when(
-      language == "English" ~ "y ~ 1 + Accent / (number_syllables + has_stress + syllable_duration)",
+      language == "English" ~ "y ~ 1 + number_syllables + has_stress + syllable_duration",
       language == "Swedish" ~ "y ~ 1 + Accent / (number_syllables + has_stress + syllable_duration)",
       T ~ NA_character_))
   
