@@ -1360,161 +1360,142 @@ plot_corrected_cues(
 ### Step 2: Correcting for supra-segmental context
 
 ```{r step 2 functions to correct for word length}
-# Correct for word length. For the specified cue (cue.name), we use linear regression 
-# to predict its values from the number of syllables. The linear regression is fit against the /d/-final words (data.fit) for the specified experiment (language). 
+# Correct for word length. Syllable duration affects cue duration and syllable duration is itself affected by lexical stress and the total number of segments. We correct syllable duration for these factors so that the syllable_duration measure used in the correction of cue durations is better correlated with cue durations. 
 # The predictions of this linear regression are then substracted from *all* data (data.predict: 
 # exposure /d/ + test /d/ + test /t/). 
-correct_for_word_length = function(cue.name, 
-                          data.fit, 
-                          language = c("English", "Swedish")
+
+# Step 2a: function to residualise effects of stress and word length on syllable duration 
+correct_syllable_duration = function(syllable_duration, 
+                                     data.fit,
+                                     language = c("English", "Swedish")
 ) {
   data.predict = data.fit
-  #data.fit %<>%
-    #filter(Sound == "/d/")
+  data.fit %<>%
+    filter(Sound == "/d/")
   
-  #if (language == "English")
-    #data.fit %<>%
-    #filter(Accent == "non-native")
+  if (language == "English")
+    data.fit %<>%
+    filter(Accent == "non-native")
   
-  data.fit$y = as_vector(data.fit[, cue.name])
-
-  # Fit separate effects for each accent
+  data.fit$y = as_vector(data.fit[, syllable_duration])
+  
+  # Fit separate effects for each language
   f = formula(
     case_when(
-      language == "English" ~ "y ~ 1 + number_syllables + has_stress + syllable_duration",
-      language == "Swedish" ~ "y ~ 1 + Accent / (number_syllables + has_stress + syllable_duration)",
+      language == "English" ~ "y ~ 1 + number_syllables + has_stress",
+      language == "Swedish" ~ "y ~ 1 + Accent / (number_syllables + has_stress)",
       T ~ NA_character_))
   
   l = lm(f, data = data.fit)
   print(plot_model(l, type = "est",
-                  show.p = T, show.values = T, show.data = T,
-            title = paste("Effects of supra-segmental context on", gsub("^r", "", cue.name), "duration for the", language, "test data"),
-            axis.title = c(paste("Change in", cue.name, "duration (in msec)"), "")))
+                   show.p = T, show.values = T, show.data = T,
+                   title = paste("Effects of supra-segmental context on syllable duration for the", language, "test data"),
+                   axis.title = "Change in syllable duration (in msec)"))
+  
+  return(unlist(data.predict[, syllable_duration] - predict(l, newdata = data.predict)))
+}
 
+# Step 2b: function to correct cues for word length effects
+correct_for_word_length = function(cue.name, 
+                                   data.fit, 
+                                   language,
+                                   accent) {
+  
+  data.predict = data.fit
+  data.fit %<>%
+    filter(Sound == "/d/")
+
+  
+  data.fit$y = as_vector(data.fit[, cue.name])
+  
+  # Fit separate effects for each accent
+  f = formula(
+    case_when(
+      language == "English" & accent == "native" ~ "y ~ 1 + rsyllable_duration", 
+      language == "English" & accent == "non-native" ~ "y ~ 1 + number_syllables + has_stress + rsyllable_duration",
+      language == "Swedish" ~ "y ~ 1 + number_syllables + has_stress + rsyllable_duration",
+      T ~ NA_character_))
+  
+  l = lm(f, data = data.fit)
+  print(plot_model(l, type = "est",
+                   show.p = T, show.values = T, show.data = T,
+                   title = paste("Effects of supra-segmental context on", gsub("^r", "", cue.name), "duration for the", accent, language, "test data"),
+                   axis.title = c(paste("Change in", cue.name, "duration (in msec)"), "")))
+  
   return(unlist(data.predict[, cue.name] - predict(l, newdata = data.predict)))
 }
+
+
 ```
 
-Word length and lexical stress are also known to affect the phonetic realization of sounds. Specifically, durational cues tend to have longer absolute values in stressed syllables (Lindblom, 1963; Van Summers, 1987), and some evidence suggests that they tend to be longer in shorter words (Warner et al., 2004; but see Gahl at al., 2012). We thus aimed to remove differences in the cue realization that were due to word length or stress. We again did so separately for the native and non-native data, as in Step 1. <!-- Xin: note the difference to what you had done previously. I just couldn't figure out how to motivate it differently. --> 
+Word length, lexical stress, and speech rate are also known to affect the phonetic realization of sounds. Specifically, durational cues tend to have longer absolute values in stressed syllables (Lindblom, 1963; Van Summers, 1987) and  some evidence suggests that they tend to be longer in shorter words (Warner et al., 2004; but see Gahl at al., 2012). Furthermore, faster speech rates result in shorter average durations of speech segments (e.g. Crystal & House, 1982; Tsao et al). We thus aimed to remove differences in the cue realization that were due to word length or stress, and speech rates (syllable duration).
 
-For the native-accented English data, Step 2 was not necessary since all words in that data set were mono-syllabic. For the other three data sets, we *estimated* (fit) the effect of word length and lexical stress from the words with syllable-final /d/. We then *corrected* (residualized) the test and the training data for the predicted effects. We did not include /t/-final words in the fitting of the regression, because syllable-final /t/ (by design) only occurred in the mono-syllabic test words. Our procedure thus assumes that the effect of word length is identical for both syllable-final /d/ and /t/. However, even if this assumption turned out to be wrong, it does not introduce any obvious bias with regard to the ideal observer comparisons. 
+While accounting for the effects of speech rate on the final cue durations, we note that syllable duration itself is influenced by phonological factors such as stress and word length due to compensatory shortening or lengthening, and coarticulation (Peterson & Lehiste, 1960; Lindblom & Rapp, 1973; Fowler, 1981). To ensure that the syllable duration measures used in the residualisation of cue durations are intrinsic measures we therefore first residualised the raw syllable duration measures to correct for phonological effects. This is formalised in separate linear regressions for English: `lm(syllable_duration ~ 1 + number_syllables + has_stress)` and the two accents of Swedish: `lm(syllable_duration ~ 1 + Accent / (number_syllables + has_stress))`. The models were estimated using only the /d/-final words; specifically for English, only /d/-final words from the *non-native* talker were used because the words from the native English talker varied neither in word length nor stress. 
 
-This again resulted in six linear regressions: one regression for each of the three cues in the Swedish data, `lm(cue ~ 1 + Accent / (number_of_syllables + has_stress))`; and one regression for each of the three cues in the English data, `lm(cue ~ 1 + number_of_syllables + has_stress)` (note that Accent is not included in the correction of the English data, since only the non-native data required correction for word length and lexical stress.
+After obtaining the residualised syllable duration measures we then proceeded to estimate the effects of word length, lexical stress, and (residualised) syllable duration on the durational cues. We fitted three separate linear regressions for English native: `lm(cue ~ 1 + rsyllable_duration)`, English non-native: `lm(cue ~ 1 + number_syllables + has_stress + rsyllable_duration)`, and Swedish: `lm(cue ~ 1 + number_syllables + has_stress + rsyllable_duration)`, using /d/-final words. 
 
-```{r step 2 correct for word length}
+We did not include /t/-final words in the fitting of the regression, because syllable-final /t/ (by design) only occurred in the mono-syllabic test words. Our procedure thus assumes that the effect of word length is identical for both syllable-final /d/ and /t/. However, even if this assumption turned out to be wrong, it does not introduce any obvious bias with regard to the ideal observer comparisons. 
+
+These regressions were applied to all the test and the training data for the predicted effects by *language and accent*. This resulted in nine linear regressions: one regression for each of the three cues in the Swedish data, one regression for each of the three cues in the English native data, and one for each of the three cues in the English non-native data.
+
+```{r step 2a correct syllable duration for phonological effects}
 d.stims %<>%
   group_by(NativeLanguage) %>%
   nest() %>%
-  mutate(
-    rvowel = map2(
-      data, NativeLanguage,
-      ~ correct_for_word_length("rvowel", 
-                             data.fit = .x, 
-                             language = .y)),
-    rclosure = map2(
-      data, NativeLanguage, 
-      ~ correct_for_word_length("rclosure", 
-                             data.fit = .x,
-                             language = .y)),
-    rburst = map2(
-      data, NativeLanguage, 
-      ~ correct_for_word_length("rburst", 
-                             data.fit = .x, 
-                             language = .y))
-    
-  )
+  mutate(rsyllable_duration = map2(data, NativeLanguage, 
+                                   ~ correct_syllable_duration("syllable_duration",
+                                                               data.fit = .x, 
+                                                               language = .y)))
+d.stims %<>% 
+  unnest(data, rsyllable_duration) 
 
-d.stims %<>%
-  unnest(data, rvowel, rclosure, rburst) %>%
-  rename(
+```
+
+
+```{r step 2b correct cues for suprasegmental context}
+
+d.stims %<>% 
+  group_by(NativeLanguage, Accent) %>% 
+  nest() %>% 
+  mutate(
+    rvowel = pmap(
+      list(data, NativeLanguage, Accent),
+      ~ correct_for_word_length("rvowel", 
+                                data.fit = ..1, 
+                                language = ..2,
+                                accent = ..3)),
+    rclosure = pmap(
+      list(data, NativeLanguage, Accent),
+      ~ correct_for_word_length("rclosure", 
+                                data.fit = ..1, 
+                                language = ..2,
+                                accent = ..3)),
+    rburst = pmap(
+      list(data, NativeLanguage, Accent),
+      ~ correct_for_word_length("rburst", 
+                                data.fit = ..1, 
+                                language = ..2,
+                                accent = ..3))) 
+
+d.stims %<>%  unnest(data, rvowel, rclosure, rburst) 
+
+ d.stims %<>%  rename(
     rvowel.step2 = rvowel1,
     rclosure.step2 = rclosure1,
     rburst.step2 = rburst1) %>%
-  # Override rvowel, rclosure, rburst with second step
+#Override rvowel, rclosure, rburst with second step
   mutate(
     rvowel = rvowel.step2,
     rclosure = rclosure.step2,
     rburst = rburst.step2
   )
-```
 
-
-
-### Step 3: Correcting for speaking rate
-
-```{r step 3 functions to correct for speaking rate}
-# Correct for speaking rate. For the specified cue (cue.name), we use linear regression 
-# to predict its values from the syllable duration. The linear regression is fit against *all* words (data.fit: exposure /d/ + test /d/ + test /t/) for the specified experiment (language). 
-# The predictions of this linear regression are then substracted from *all* data (data.predict: 
-# exposure /d/ + test /d/ + test /t/). 
-correct_for_speaking_rate = function(cue.name, 
-                          data.fit, 
-                          language = c("English", "Swedish")
-) {
-  data.predict = data.fit
-  
-  data.fit$y = as_vector(data.fit[, cue.name])
-
-  # Fit separate effects for each accent
-  f = formula(
-    case_when(
-      language == "English" ~ "y ~ 1 + syllable_duration",
-      language == "Swedish" ~ "y ~ 1 + syllable_duration",
-      T ~ NA_character_))
-  
-  l = lm(f, data = data.fit)
-  print(plot_model(l, type = "est",
-                  show.p = T, show.values = T, show.data = T,
-            title = paste("Effects of speaking rate on", gsub("^r", "", cue.name), "duration for the", language, "test data"),
-            axis.title = c(paste("Change in", cue.name, "duration (in msec)"), "")))
-
-  return(unlist(data.predict[, cue.name] - predict(l, newdata = data.predict)))
-}
-```
-
-
-```{r step 3 correct for speaking rate, eval = FALSE, include = FALSE}
-d.stims %<>%
-  group_by(NativeLanguage) %>%
-  nest() %>%
-  mutate(
-    rvowel = map2(
-      data, NativeLanguage,
-      ~ correct_for_speaking_rate("rvowel", 
-                             data.fit = .x, 
-                             language = .y)),
-    rclosure = map2(
-      data, NativeLanguage, 
-      ~ correct_for_speaking_rate("rclosure", 
-                             data.fit = .x,
-                             language = .y)),
-    rburst = map2(
-      data, NativeLanguage, 
-      ~ correct_for_speaking_rate("rburst", 
-                             data.fit = .x, 
-                             language = .y))
-    
-  )
-
-
-d.stims %<>%
-  unnest(data, rvowel, rclosure, rburst) %>%
-  rename(
-    rvowel.step3 = rvowel1,
-    rclosure.step3 = rclosure1,
-    rburst.step3 = rburst1) %>%
-  # Override rvowel, rclosure, rburst with second step
-  mutate(
-    rvowel = rvowel.step3,
-    rclosure = rclosure.step3,
-    rburst = rburst.step3
-  )
 ```
 
 
 Figures \@ref(fig:native-english-cue-before-and-after-length-correction) to \@ref(fig:non-native-swedish-cue-before-and-after-length-correction) show the distribution of cues to the /t/ and /d/ categories before and after correction for supra-segmental context for the English and Swedish experiment, respectively.
 
-```{r prepare for cue plot after step 2 and 3, include=FALSE}
+```{r prepare for cue plot after step 1 and 2, include=FALSE}
 d.stims.long = 
   d.stims %>%
   make_long()
@@ -1559,8 +1540,8 @@ plot_corrected_cues(
 
 
 
-### Step 4: Align all data sets with the non-native test /t/ 
-```{r step 4 align to /t/ category from non-native test words}
+### Step 3: Align all data sets with the non-native test /t/ 
+```{r step 3 align to /t/ category from non-native test words}
 # Get difference between non-native and native /t/ means (separately for each native talker)
 d.diff.t =
   d.stims %>%
@@ -1591,13 +1572,13 @@ d.stims %<>%
   left_join(d.diff.t) %>%
   replace_na(list(diff.vowel = 0, diff.closure = 0, diff.burst = 0)) %>%
   mutate(
-    rvowel.step4 = rvowel - diff.vowel,
-    rclosure.step4 = rclosure - diff.closure,
-    rburst.step4 = rburst - diff.burst,
+    rvowel.step3 = rvowel - diff.vowel,
+    rclosure.step3 = rclosure - diff.closure,
+    rburst.step3 = rburst - diff.burst,
     # Always make sure that the most recent step is *also* stored as rvowel, rclosure, rburst
-    rvowel = rvowel.step4,
-    rclosure = rclosure.step4,
-    rburst = rburst.step4
+    rvowel = rvowel.step3,
+    rclosure = rclosure.step3,
+    rburst = rburst.step3
   ) %>%
   select(-starts_with("diff"))
 
