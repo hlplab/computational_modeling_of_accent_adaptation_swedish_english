@@ -1428,15 +1428,18 @@ correct_for_word_length = function(cue.name,
 
 ```
 
-Word length, lexical stress, and speech rate are also known to affect the phonetic realization of sounds. Specifically, segments tend to have longer durations in stressed syllables (Lindblom, 1963; Van Summers, 1987) and  some evidence suggests that they tend to be longer in shorter words (Warner et al., 2004; but see Gahl at al., 2012). We thus expect syllable durations to be affected by both word length and lexical stress. At the same time, speaking rate--defined as syllable per second, or the inverse of syllable duration--has a direct influence on durational measures: faster speech rates usually result in shorter durations of speech segments (e.g. Crystal & House, 1982; Tsao et al). Given that non-native speakers tend to speak more slowly, it is necessary to control for cue duration variaion caused by differences in speaking rate. We thus aimed to remove differences in the cue realization that were due to word length or stress, and speech rates (syllable duration).
+Supra-segmental factors like---lexical stress and speech rate---are also known to affect the phonetic realization of sounds. For example, segments tend to have longer durations in stressed, compared to unstressed, syllables (Lindblom, 1963; Van Summers, 1987). Processes like compensatory lengthening/shortening (Peterson & Lehiste, 1960; Lindblom & Rapp, 1973; Fowler, 1981) can also cause segments to be longer in syllables with fewer segments (REF), and words with fewer syllables (Warner et al., 2004). <!-- Xin, Maryann: pls fill ref --> Additionally, local changes in speech rate are likely to affect durational measures like the ones used here (e.g. Crystal & House, 1982; Gahl et al., 2012; Tsao et al). Given that non-native speakers tend to speak more slowly, it is necessary to control for cue duration variation caused by differences in speaking rate. We thus removed effects of speech rate, lexical stress, and syllable/word complexity on vowel, closure, and burst duration.
 
-We take a two-step approach. First, we assess the influence of phonological factors on syllable duration itself. We expect syllable duration to be influenced stress and word length due to compensatory shortening or lengthening, and coarticulation (Peterson & Lehiste, 1960; Lindblom & Rapp, 1973; Fowler, 1981). This is formalised in separate linear regressions for English: `lm(syllable_duration ~ 1 + number_syllables + has_stress)` and the two accents of Swedish: `lm(syllable_duration ~ 1 + Accent / (number_syllables + has_stress))`. The models were estimated using only the /d/-final words; specifically for English, only /d/-final words from the *non-native* talker were used because the words from the native English talker varied neither in word length nor stress. We take the residualised syllable duration as a measure for speaking rate, beyond influences from phonological factors within an accent. 
+<!-- Maryann, Xin: ideally, we should estimate syllable duration for as many syllables as we can. This will reduce the dependence between step 1 and step 2: If we have a larger corpus for each talker, including other types of words, we can do that (e.g, the filler words, or even non-target syllables). That's something to think about -->
+We took a two-step approach. First, we estimated the local speech rate. Specifically, we estimate how short/long the target syllable is relative to its expected duration. We predicted syllable duration (in msecs) from lexical stress, syllable complexity (number of segments in the syllable's citation form), and word complexity (number of syllables in the word's citation form). This was achieved through separate linear regressions for the following data, depending on which of the supra-segmental factors varied in the data set:
 
-Second, we estimate the effects of phonological factors (word length, lexical stress) and speaking rate (residualised syllable duration) affect cue duration. We fitted separate linear regressions: English native: `lm(cue ~ 1 + rsyllable_duration)`, English non-native: `lm(cue ~ 1 + number_syllables + has_stress + rsyllable_duration)`, and Swedish (fitted for each accent separately): `lm(cue ~ 1 +  number_syllables + has_stress + rsyllable_duration)`, using /d/-final words. 
+  1) native English: `lm(syllable_duration ~ 1 + number_segments_in_syllable)` 
+  2) non-native English: `lm(syllable_duration ~ 1 + number_segments_in_syllable + number_syllables + has_stress)` 
+  3) native and non-native Swedish: `lm(syllable_duration ~ 1 + Accent / (number_segments_in_syllable + number_syllables + has_stress))`
+  
+The models were estimated using only the /d/-final words, since the syllable-final /t/ (by design) only occurred in the mono-syllabic test words. The resulting linear regression fits were then used to predict the syllable duration of both /d/- and /t/-final words. We take the residualised syllable duration as a measure for speaking rate, beyond influences from phonological factors within an accent. Our procedure thus assumes that supra-segemntal effects are identical for both syllable-final /d/ and /t/. However, even if this assumption turned out to be wrong, it does not introduce any obvious bias with regard to the ideal observer comparisons. 
 
-We did not include /t/-final words in the fitting of the regression, because syllable-final /t/ (by design) only occurred in the mono-syllabic test words. Our procedure thus assumes that the effect of word length is identical for both syllable-final /d/ and /t/. However, even if this assumption turned out to be wrong, it does not introduce any obvious bias with regard to the ideal observer comparisons. 
-
-These regressions were applied to all the test and the training data for the predicted effects by *language and accent*. This resulted in nine linear regressions: one regression for each of the three cues in the Swedish data, one regression for each of the three cues in the English native data, and one for each of the three cues in the English non-native data.
+The following plots summarize the effects on syllable duration.
 
 ```{r step 2a correct syllable duration for phonological effects}
 d.stims %<>%
@@ -1448,12 +1451,16 @@ d.stims %<>%
                                                                language = .y)))
 d.stims %<>% 
   unnest(data, rsyllable_duration) 
-
 ```
+
+<!-- Florian: this needs work. check whether it really makes sense to separate out syllable duration/speech rate effects from compensatory lengthening of the cues b/c of complexity of the syllable if these two groups of effects are estimated on the same data. Also check effects of number of segments per syllable --> 
+In a second step, we estimated the effects of speaking rate (residualised syllable duration) and of phonological factors (word length, lexical stress) on cue duration. We fitted separate linear regressions: English native: `lm(cue ~ 1 + rsyllable_duration)`, English non-native: `lm(cue ~ 1 + number_syllables + has_stress + rsyllable_duration)`, and Swedish (fitted for each accent separately): `lm(cue ~ 1 +  number_syllables + has_stress + rsyllable_duration)`, using /d/-final words. 
+
+
+These regressions were applied to all the test and the training data for the predicted effects by *language and accent*. This resulted in nine linear regressions: one regression for each of the three cues in the Swedish data, one regression for each of the three cues in the English native data, and one for each of the three cues in the English non-native data.
 
 
 ```{r step 2b correct cues for suprasegmental context}
-
 d.stims %<>% 
   group_by(NativeLanguage, Accent) %>% 
   nest() %>% 
