@@ -185,7 +185,7 @@ get_axes = function(.data, cues) {
 
 # Overview
 
-This supplementary information describes the results and methods of the perception experiments on Mandarin-accented English and Flemish-accented Swedish, as well as the development and evaluation of the ideal observer models. The experiment on Mandarin-accented English (Xie et al., 2017) found an effect of exposure to the foreign-accented sound (syllable-final /d/) on subsequent /d/- and /t/-goodness ratings. This effect has been replicated in two other paradigms (categorization and priming) using the same stimuli (Xie et al., 2017). <!-- Xin: is this summary correct? --> Additionally, an earlier priming study found the same type of benefit for exposure to syllable-final /d/ in Dutch-accented English (Dutch, like Flemish, exhibits final devoicing, partially or completely neutralizing stop voicing in the syllable final position). In contrast to these previous studies, the experiment on Flemish-accented Swedish did *not* find a significant effect of exposure on subsequent /d/ and /t/-goodness ratings.
+This supplementary information describes the results and methods of the perception experiments on Mandarin-accented English and Flemish-accented Swedish, as well as the development and evaluation of the ideal observer models. The experiment on Mandarin-accented English (Xie et al., 2017) found an effect of exposure to the foreign-accented sound (syllable-final /d/) on subsequent /d/- and /t/-goodness ratings. This effect has been replicated in two other paradigms (categorization and priming) using the same stimuli (Xie et al., 2017). Additionally, an earlier priming study found the same type of benefit for exposure to syllable-final /d/ in Dutch-accented English (Dutch, like Flemish, exhibits final devoicing, partially or completely neutralizing stop voicing in the syllable final position). In contrast to these previous studies, the experiment on Flemish-accented Swedish did *not* find a significant effect of exposure on subsequent /d/ and /t/-goodness ratings.
 
 We begin by summarizing the results of the two experiments. As we discuss, these analyses suggest that the native Swedish listeners had an easier time understanding the Flemish-accented speaker than the American listeners had understanding the Mandarin-accented English speaker. This showed in the lexical decision accuracies during exposure, as well as the goodness ratings during test. 
 
@@ -1039,7 +1039,7 @@ Annotations were completed in Praat (Boersma, 2001) using visual examination of 
 
 ## Correction for phonological context
 
-<!-- Xin: should we perhaps code vowel lenght, coda lateral and rhotic for the English data or are there good reasons to believe that these variables don't matter for the English data? Or perhaps we don't have enough of those contexts? (there seemed to be quite a few, but they might not be balanced across data parts in a way that let's us estimate their effect?) -->
+<!-- Xin: should we perhaps code vowel lenght, coda lateral and rhotic for the English data or are there good reasons to believe that these variables don't matter for the English data? Or perhaps we don't have enough of those contexts? (there seemed to be quite a few, but they might not be balanced across data parts in a way that let's us estimate their effect?)  ANSWER: these variables are coded and loaded into d.stims. We can model them anytime-->
 
 ```{r load production data, include=FALSE}
 d.stims = 
@@ -1176,7 +1176,7 @@ correct_for_segmental_context = function(cue.name,
   l = 
     if(language == "English") 
       lmer(
-        y ~ 1 + Accent /  (onset_has_nasal + coda_has_nasal) + (1 + onset_has_nasal + coda_has_nasal | Talker), 
+        y ~ 1 + Accent /  (onset_has_nasal + coda_has_nasal + onset_has_rhotic + coda_has_lateral) + (1 + onset_has_nasal + coda_has_nasal + onset_has_rhotic + coda_has_lateral| Talker), 
         data = data.fit) else
       lm(
         y ~ 1 + Accent / (has_long_vowel + coda_has_nasal), 
@@ -1613,6 +1613,15 @@ d.stims.long =
 #   filter(rvowel != "NaN",
 #          rclosure != "NaN",
 #          rburst != "NaN")
+
+# set axis range for plotly
+axis.list = list(
+    camera = list(eye = list(x = 1.25, y = 2.5, z = 0), 
+                  up =  list(x = 0, y = 0, z = 1)),
+    zaxis = list(range = c(-100,200), dtick = 50),
+    yaxis = list(range = c(-200,300), dtick = 50),
+         xaxis = list(range = c(-200,300),dtick = 50))
+
 ```
 
 #### English (native)
@@ -1621,7 +1630,8 @@ d.stims.long =
 ```{r native-english-cue-before-and-after-alignment, fig.cap="(ref:native-english-cue-before-and-after-alignment)", out.width="75%", fig.show='hold'}
 plot_corrected_cues(
   d.stims.long %>% 
-          filter(NativeLanguage == "English", Accent == "native"))
+          filter(NativeLanguage == "English", Accent == "native")) %>%
+  layout(scene = axis.list)
 ```
 
 #### English (non-native)
@@ -1630,7 +1640,8 @@ plot_corrected_cues(
 ```{r non-native-english-cue-before-and-after-alignment, fig.cap="(ref:non-native-english-cue-before-and-after-alignment)", out.width="75%", fig.show='hold'}
 plot_corrected_cues(
   d.stims.long %>% 
-          filter(NativeLanguage == "English", Accent == "non-native"))
+          filter(NativeLanguage == "English", Accent == "non-native")) %>%
+  layout(scene = axis.list)
 ```
 
 
@@ -1640,7 +1651,8 @@ plot_corrected_cues(
 ```{r native-swedish-cue-before-and-after-alignment, fig.cap="(ref:native-swedish-cue-before-and-after-alignment)", out.width="75%", fig.show='hold'}
 plot_corrected_cues(
   d.stims.long %>% 
-          filter(NativeLanguage == "Swedish", Accent == "native"))
+          filter(NativeLanguage == "Swedish", Accent == "native")) %>%
+  layout(scene = axis.list)
 ```
 
 #### Swedish (non-native)
@@ -1649,7 +1661,8 @@ plot_corrected_cues(
 ```{r non-native-swedish-cue-before-and-after-alignment, fig.cap="(ref:non-native-swedish-cue-before-and-after-alignment)", out.width="75%", fig.show='hold'}
 plot_corrected_cues(
   d.stims.long %>% 
-          filter(NativeLanguage == "Swedish", Accent == "non-native"))
+          filter(NativeLanguage == "Swedish", Accent == "non-native")) %>%
+  layout(scene = axis.list)
 ```
 
 
@@ -2302,7 +2315,7 @@ IO_ratings = function(.data) {
 
 By applying the native and non-native ideal observers to the stimuli from the test phase of the English and Swedish perception experiments, we can calculate the posterior category probabilities, $p(sound | cues, model)$, for each of those test stimuli. Specifically, we apply the English models to the English test data, and the Swedish models to the Swedish test data. The resulting posterior category probabilities are shown in Section \@ref(sec:IO-methods-posterior-probabilities).
 
-To derive predictions about human behavior from the posterior category probabilities of the ideal observer, it is necessary to specify a linking hypothesis. Previous work has done so for *categorization* tasks (e.g., Clayards et al., 2008; Kleinschmidt \& Jaeger, 2011, 2012, 2016; Kronrod et al., 2016). We follow these previous works and assume Luce's choice rule---also known as probability matching---and visualize the predictions for categorization tasks in Section \@ref(sec:IO-methods-categorization). Then we specify the linking hypothesis for goodness ratings in Section \@ref(sec:IO-methods-link). To reduce researchers' degrees of freedom, we simply assume a linear link between posterior probabilities and goodness ratings. This essentially makes the same assumptions as Luce's choice rule makes for categorization. We validate the linking hypothesis against human data from another experiment (Experiments 1 and 2 of Xie et al., 2017). <!-- Xin: correct? -->
+To derive predictions about human behavior from the posterior category probabilities of the ideal observer, it is necessary to specify a linking hypothesis. Previous work has done so for *categorization* tasks (e.g., Clayards et al., 2008; Kleinschmidt \& Jaeger, 2011, 2012, 2016; Kronrod et al., 2016). We follow these previous works and assume Luce's choice rule---also known as probability matching---and visualize the predictions for categorization tasks in Section \@ref(sec:IO-methods-categorization). Then we specify the linking hypothesis for goodness ratings in Section \@ref(sec:IO-methods-link). To reduce researchers' degrees of freedom, we simply assume a linear link between posterior probabilities and goodness ratings. This essentially makes the same assumptions as Luce's choice rule makes for categorization. We validate the linking hypothesis against human data from another experiment (Experiments 2 and 3 of Xie et al., 2017). 
 
 ```{r integrate-test-data-with-modeling-results, include=FALSE}
 # Bind stimulus information and predictions of ideal observer
@@ -2392,7 +2405,7 @@ p.post %+%
 ### Linking hypothesis for goodness ratings {#sec:IO-methods-link}
 
 Here we assume a linear link with 0 degrees of freedom between the posterior probability of /d/ and the predicted rating of /d/-goodness. Specifically, we simply scale the predicted proportion of /d/ responses (the same as in Figure \@ref(fig:ideal-observers-posterior)) to have the same range as the human ratings across the two experiments:
-<!-- Xin: can you fill in? -->
+<!-- Xin: can you fill in? --ANSWER: the range of item-wise Rating.Response.d.zscored: (-1.17, 1.26) -->
 
 <!-- $\rm{/d/-goodness\_rating} = p(/d/ | cue) - $ -->
 
@@ -2405,6 +2418,7 @@ Xie et al. (2017) conducted both an identification and a rating experiment using
 Figure \@ref(fig:ID-to-ratings) shows the item-level correlation in participants' rating and categorization responses across the two experiments. At least for the range of test stimuli in Xie et al. (2017), the link between ratings and categorization indeed seems to be linear.
 
 ```{r load categorization experiments, results='hide'}
+
 # load English ID data
 d.english.ID <- read.csv("../data/English/English_perception_identification_Xie et al 2017.csv")
 
@@ -2430,12 +2444,15 @@ d.english.ID <- d.english.ID %>%
     Subject = NULL,
     Session = NULL
   ) %>%
+  left_join(
+    d.test %>%
+      filter(NativeLanguage == "English") %>%
+      select(Item.Word, Item.MinimalPair, Sound) %>%
+      distinct(), by = c("Item.Word", "Sound"))
   applyFactorLevels()
 ```
 
 (ref:ID-to-ratings) Item-level correlation of human identification and rating responses from two experiments in Xie et al. (2017). The two experiments used the same exposure and test stimuli, and differed only in the task during test (categorization vs. rating). The trend line shows a generalized additive model fit with a non-parametric smoother. That is, the fit would in principle allow non-linearity in the relation between categorization and rating responses. The fact that no non-linearity is detected suggests that the relation is largely linear. Shaded areas show 95\% confidence intervals.
-
-<!-- Xin: this code of joining the two data frames seems really cumbersome. can you check whether we can simplify it? -->
 
 ```{r ID-to-ratings, fig.cap="(ref:ID-to-ratings)", fig.height = 4.5, out.width="75%"}
 d.english.test.byItem = 
@@ -2444,7 +2461,7 @@ d.english.test.byItem =
                      droplevels() %>%
                      mutate(Task = "rating"), 
                    d.english.ID %>% mutate(Task = "ID")) %>%
-  group_by(Task, Group, Sound, Item.Word) %>%
+  group_by(Task, Group, Sound, Item.Word, Item.MinimalPair) %>%
   summarise(zRating.d = mean(Rating.Response.d.zscored),
             Proportion.d = mean(ID.Response.d)) %>%
   ungroup() %>%
@@ -2454,11 +2471,7 @@ d.english.test.byItem =
   spread(resp,value) %>%
   mutate(Logodds.d = qlogis(Proportion.d)) %>%
   mutate_if(is.character, as.factor) %>%
-  left_join(
-    d.test %>%
-      filter(NativeLanguage == "English") %>%
-      select(Item.Word, Item.MinimalPair, Sound) %>%
-      distinct(), by = c("Item.Word", "Sound"))
+  applyFactorLevels()
 
 # correlation between ratings and percent /d/ responses
 ggscatter(d.english.test.byItem, x = "Proportion.d", y = "zRating.d", color = "Group", 
@@ -2568,27 +2581,6 @@ ggscatter(data = d.test.IO %>%
              # margins = c("NativeLanguage"),
              labeller = "label_both") 
 
-
-
-ggscatter(data = d.test.IO %>%
-            group_by(Language, NativeLanguage, Group, Model.Accent, Model.Accent.matchesGroup, Item.Word, Sound) %>%
-            summarise(
-              Model.Posterior.d = mean(Model.Posterior.d),
-              Model.Rating.d.zscored = mean(Model.Rating.d.zscored),
-              Rating.Response.d.zscored = mean(Rating.Response.d.zscored)), 
-          # x = Model.Rating.d.zscored, 
-          x = "Model.Posterior.d", y = "Rating.Response.d.zscored", color = "Group",
-          cor.method = "pearson",
-          xlab = "Ideal observer posterior of /d/", ylab = "human mean /d/-goodness rating") + 
-  stat_cor(label.x.npc = "middle", label.y.npc = "bottom") + 
-  geom_smooth(method = "lm", formula = y ~ x, color = "black", fill = "black") +
-  scale_color_manual(
-    breaks = c("/d/-exposure", "control", ""),
-    values = append(colors.Group, "black")
-  ) +
-  facet_grid(NativeLanguage + Group ~ Model.Accent, 
-             # margins = c("NativeLanguage"),
-             labeller = "label_both") 
 ```
 
 
