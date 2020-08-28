@@ -1602,7 +1602,7 @@ Since the /t/-categories of both the native and non-native ideal observers are t
 
 Figures \@ref(fig:native-english-cue-before-and-after-alignment) to \@ref(fig:non-native-swedish-cue-before-and-after-alignment) show the distribution of cues to the /t/ and /d/ categories before and after alignment with the mean of the non-native /t/-category from the test tokens. The comparison of the cue distributions before and after correction shows that the three correction steps employed here are successful in reducing the multi-modality of cue distribution, leading to largely unimodal distributions within each category. This is particularly striking for Swedish (likely because vowel length is a strong, phonologized, factor for Swedish).
 
-```{r prepare for cue plot after step 4}
+```{r prepare for cue plot after step 3}
 d.stims.long = 
   d.stims %>%
   make_long()
@@ -2451,7 +2451,7 @@ d.english.ID <- d.english.ID %>%
     d.test %>%
       filter(NativeLanguage == "English") %>%
       select(Item.Word, Item.MinimalPair, Sound) %>%
-      distinct(), by = c("Item.Word", "Sound"))
+      distinct(), by = c("Item.Word", "Sound")) %>%
   applyFactorLevels()
 ```
 
