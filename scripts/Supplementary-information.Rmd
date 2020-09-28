@@ -34,6 +34,9 @@ output:
       search: yes
 documentclass: book
 always_allow_html: true
+bibliography: [refs.bib]
+biblio-style: apalike
+link-citations: yes
 ---
 
 ```{r rmarkdown setup, include=FALSE}
@@ -186,7 +189,7 @@ get_axes = function(.data, cues) {
 
 # Overview
 
-This supplementary information describes the results and methods of the perception experiments on Mandarin-accented English and Flemish-accented Swedish, as well as the development and evaluation of the ideal observer models. The experiment on Mandarin-accented English (Xie et al., 2017) found an effect of exposure to the foreign-accented sound (syllable-final /d/) on subsequent /d/- and /t/-goodness ratings. This effect has been replicated in two other paradigms (categorization and priming) using the same stimuli (Xie et al., 2017). <!-- Xin: is this summary correct? --> Additionally, an earlier priming study found the same type of benefit for exposure to syllable-final /d/ in Dutch-accented English (Dutch, like Flemish, exhibits final devoicing, partially or completely neutralizing stop voicing in the syllable final position). In contrast to these previous studies, the experiment on Flemish-accented Swedish did *not* find a significant effect of exposure on subsequent /d/ and /t/-goodness ratings.
+This supplementary information describes the results and methods of the perception experiments on Mandarin-accented English and Flemish-accented Swedish, as well as the development and evaluation of the ideal observer models. The experiment on Mandarin-accented English [@xie2017more] found an effect of exposure to the foreign-accented sound (syllable-final /d/) on subsequent /d/- and /t/-goodness ratings. This effect has been replicated in two other paradigms (categorization and priming) using the same stimuli [-@xie2017more]. Additionally, an earlier priming study found the same type of benefit for exposure to syllable-final /d/ in Dutch-accented English (Dutch, like Flemish, exhibits final devoicing, partially or completely neutralizing stop voicing in the syllable final position). In contrast to these previous studies, the experiment on Flemish-accented Swedish did *not* find a significant effect of exposure on subsequent /d/ and /t/-goodness ratings.
 
 We begin by summarizing the results of the two experiments. As we discuss, these analyses suggest that the native Swedish listeners had an easier time understanding the Flemish-accented speaker than the American listeners had understanding the Mandarin-accented English speaker. This showed in the lexical decision accuracies during exposure, as well as the goodness ratings during test. 
 
@@ -719,7 +722,7 @@ d.test %>%
 
 # Methods of perception experiments {#sec:perception-methods}
 
-We describe the methods used to derive the English (Xie, Theodore, \& Myers, 2017) and Swedish data sets. Both experiments employed an exposure-test paradigm. Exposure was manipulated between participants. Both groups were exposed to foreign-accented speech from the same talker (Mandarin-accented English for the English data; Flemish-accented Swedish for the Swedish data). The two groups of participants differed, however, in whether the exposure materials contained information about the critical phonological category (syllable-final /d/), for which the foreign accent is known to deviate from native pronunciations. The control group never heard any instances of syllable-final /d/ or /t/. The /d/-exposure group heard words with syllable-final /d/, but no words with syllable-final /t/. Following exposure, both groups went through the exact same test phase, during which they made goodness judgments of /d/- or /t/ tokens that were part of minimal pairs (e.g., "seed" or "seat").
+We describe the methods used to derive the English [@xie2017more] and Swedish data sets. Both experiments employed an exposure-test paradigm. Exposure was manipulated between participants. Both groups were exposed to foreign-accented speech from the same talker (Mandarin-accented English for the English data; Flemish-accented Swedish for the Swedish data). The two groups of participants differed, however, in whether the exposure materials contained information about the critical phonological category (syllable-final /d/), for which the foreign accent is known to deviate from native pronunciations. The control group never heard any instances of syllable-final /d/ or /t/. The /d/-exposure group heard words with syllable-final /d/, but no words with syllable-final /t/. Following exposure, both groups went through the exact same test phase, during which they made goodness judgments of /d/- or /t/ tokens that were part of minimal pairs (e.g., "seed" or "seat").
 
 In addition to the L1-L2 language pairs (Mandarin-accented English vs. Flemish-accented Swedish) and participants' L1 (American English vs. Swedish), the two experiments exhibited a number of differences that we detail next. This includes differences in i) the number of participants, ii) the instructions and visual appearance of the experiment, iii) the number of stimuli, and iv) minor differences in the stimuli design. As indicated below, some of these differences were intended, some were not. For each difference, we consider whether it is likely to explain the difference in results, and find this to be unlikely---at least, compared to the possibility explored in this study that it is primarily the phonetic properties of the foreign-accented speech and its relation to native listeners' expectations that causes the difference in results.
 
@@ -738,7 +741,7 @@ Compared to the English experiment, the Swedish experiment had substantially few
 
 ### Why the difference?
 
-The decision to recruit a smaller number of participants was made because 1) the Swedish experiment was conceived as pilot experiment for a larger series of experiments still to be conducted, and 2) other previous studies had found significant effects with a similarly small number of participants (12 participants for each of two conditions in Eisner, Melinger, \& Weber, 2013).
+The decision to recruit a smaller number of participants was made because 1) the Swedish experiment was conceived as pilot experiment for a larger series of experiments still to be conducted, and 2) other previous studies had found significant effects with a similarly small number of participants (12 participants for each of two conditions in @eisner2013constraints).
 
 ### Are differences in the number of participants and test items likely to explain the results? {#sec:bootstrap}
 
@@ -938,7 +941,7 @@ During exposure, participants performed a lexical decision task. Recordings were
 The full list of stimuli is available in Section \@ref(sec:stimuli) for both Swedish and English. In both experiments participants in both groups heard a total of 180 words, including the same 60 filler words in the respective languages and 90 pseudowords that obeyed English or Swedish phonotactical rules. The remaining 30 words were the critical words, manipulated between exposure groups. 
 
 ### English
-The /d/-exposure group heard 30 critical words ending with \/d\/, and without \/t\/-final minimal pair neighbors (e.g. \textit{overload}). The 30 replacement words for the control group (e.g., animal) were matched to the critical /d/-words in syllable length and mean lemma frequency (based on CELEX, Baayen, Piepenbrock, & Gulikers, 1995). 
+The /d/-exposure group heard 30 critical words ending with \/d\/, and without \/t\/-final minimal pair neighbors (e.g. \textit{overload}). The 30 replacement words for the control group (e.g., animal) were matched to the critical /d/-words in syllable length and mean lemma frequency (based on CELEX, @baayen1995celex). 
 
 All words or pseudowords were multisyllabic and contained three to four syllables. Other than the critical /d/-final words, no other alveolar stops, voiced stops, dental fricatives, and postalveolar affricates occured. The voiceless stops (/k/ and /p/) did not appear in word-final position. 
 
@@ -1004,7 +1007,7 @@ For both the English and the Swedish data, we compare the predictions of a nativ
 
 To this end, we train and test a total of four ideal observers: the native and non-native English models, and the native and non-native Swedish models. Both the native and non-native ideal observer are *tested* on the same foreign-accented minimal pair stimuli from the test phase of the experiments. Below we refer to these as the **test data**. The two models are, however, *trained* on different inputs. To avoid confusion with the set of exposure words used in the experiments, we refer to sets of words used during the training of the ideal observers as the **training data**.  In particular, the native and non-native IOs were *trained on different /d/ tokens*: The non-native IOs were trained on the foreign-accented words with syllable-final /d/ from the /d/-exposure condition. The native IOs were trained on native-accented syllable-final /d/ productions from another database. This training is meant to parallel and capture the difference between the /d/- and control exposure in the experiments.
 
-To derive predictions from the ideal observers it is also necessary to train each ideal observer on data from the /t/ category. Since /t/ was never (or hardly ever) observed in either exposure condition, both the native and non-native model were trained on *native* /t/. In other words, our non-native ideal observer makes the simplifying assumption that the /d/-exposure condition did not convey any information about the /t/ category, so that listeners in the /d/-exposure condition change their beliefs about the /d/ category, but do not change their beliefs about the /t/ category. This simplifying assumption is almost certainly wrong since, for example, talkers' means for different categories tend to correlate (Chodroff et al., 2017, 2018). Such between-category correlations are also observed in the native-English database we used (Li et al., 2020; see below for details). However, it is unlikely to bias our results: here we ask whether the predictions of native and non-native ideal observers differ for the English and the Swedish data. Critically, we apply the same simplifying assumption to both the English and the Swedish ideal observers. Any difference we find between the predictions for English and Swedish can therefore not be due to this simplifying assumption.
+To derive predictions from the ideal observers it is also necessary to train each ideal observer on data from the /t/ category. Since /t/ was never (or hardly ever) observed in either exposure condition, both the native and non-native model were trained on *native* /t/. In other words, our non-native ideal observer makes the simplifying assumption that the /d/-exposure condition did not convey any information about the /t/ category, so that listeners in the /d/-exposure condition change their beliefs about the /d/ category, but do not change their beliefs about the /t/ category. This simplifying assumption is almost certainly wrong since, for example, talkers' means for different categories tend to correlate [@chodroff2017structure; @chodroff2018predictability]. Such between-category correlations are also observed in the native-English database we used (Li et al., 2020; see below for details). However, it is unlikely to bias our results: here we ask whether the predictions of native and non-native ideal observers differ for the English and the Swedish data. Critically, we apply the same simplifying assumption to both the English and the Swedish ideal observers. Any difference we find between the predictions for English and Swedish can therefore not be due to this simplifying assumption.
 
 Figure \@ref(fig:ideal-observer-and-data) summarizes what speech databases we used to train the ideal observers---i.e., to estimate the mean $\mu$ and covariance matrix $\Sigma$ of the multivariate Gaussian distributions for the /d/ and /t/ categories in each of the four ideal observers. The dotted lines in Figure \@ref(fig:ideal-observer-and-data) indicate for each category (/d/, /t/) in each model (native vs. non-native x English vs. Swedish), which database it was trained on.
 
@@ -1020,9 +1023,9 @@ knitr::include_graphics("../figures/IdealObserverAndData.png")
 The ideal observers require estimates of the distribution of the relevant phonetic cues for the syllable-final contrast between /d/ and /t/. Specifically, we need to estimate these distributions for `typical' native-accented productions of /t/ (for both the native and non-native IOs), the native-accented production of /d/ (for the native IO), and the foreign-accented production of /d/ (for the non-native IO). Next, we describe the databases, annotation procedure, and additional steps taken to obtain these estimates.
 
 ### English
-For the native English IO, the /d/ and /t/ training data came from a database of 10 male native talkers of American English (Li, Jaeger, & Xie, 2020). To the best of our knowledge, this is the largest database of syllable-final stop voicing in native-accented American English for which vowel, closure, and burst duration are annotated. The 10 talkers had the same sex and spanned a similar age range (18-35) as the Mandarin-accented talker in Xie et al. (2017). The recording procedure was the same as in Xie et al. (2017). We used the data of the 10 male native speakers in Li et al. (2020) to estimate the mean and covariance for a *prototypical* native talker's /d/ and /t/. Specifically, we took the prototypical category mean to be the mean of 10 talkers' category means, and the prototypical category covariance to be the mean of the 10 talkers' covariance matrices. This provides an---admittedly very coarse-grained---point estimate of a native listeners' beliefs about a prototypical native talker's /d/ and /t/ categories.
+For the native English IO, the /d/ and /t/ training data came from a database of 10 male native talkers of American English (Li, Jaeger, & Xie, 2020). To the best of our knowledge, this is the largest database of syllable-final stop voicing in native-accented American English for which vowel, closure, and burst duration are annotated. The 10 talkers had the same sex and spanned a similar age range (18-35) as the Mandarin-accented talker in @xie2017more. The recording procedure was the same as in @xie2017more. We used the data of the 10 male native speakers in Li et al. (2020) to estimate the mean and covariance for a *prototypical* native talker's /d/ and /t/. Specifically, we took the prototypical category mean to be the mean of 10 talkers' category means, and the prototypical category covariance to be the mean of the 10 talkers' covariance matrices. This provides an---admittedly very coarse-grained---point estimate of a native listeners' beliefs about a prototypical native talker's /d/ and /t/ categories.
 
-For the non-native English IO, the /t/ training data was the same as the /t/ training data for the native English IO. This reflects our simplifying assumption that the /d/-exposure condition did not contain any information about the non-native /t/ (see above). The /d/ training data for the non-native English IO were the 30 critical words with syllable-final /d/ used during the foreign-accented exposure in Xie et al. (2017). Note that we intentionally did *not* use data from additional non-native talkers in Li et al.'s database: the non-native IO is intended to approximate the beliefs held by a native listener who has perfectly adapted to the foreign-accented /d/ distribution during exposure. 
+For the non-native English IO, the /t/ training data was the same as the /t/ training data for the native English IO. This reflects our simplifying assumption that the /d/-exposure condition did not contain any information about the non-native /t/ (see above). The /d/ training data for the non-native English IO were the 30 critical words with syllable-final /d/ used during the foreign-accented exposure in @xie2017more. Note that we intentionally did *not* use data from additional non-native talkers in Li et al.'s database: the non-native IO is intended to approximate the beliefs held by a native listener who has perfectly adapted to the foreign-accented /d/ distribution during exposure. 
 
 Of note, the words that were used as training data for the native /d/ were not the same as those used as training data for the non-native /d/. The training data for the native /d/ were all mono-syllabic words with syllable-final /d/ from Li et al. (2020). Below, we report how we corrected for effects of phonological context and syllable length.
 
@@ -1033,13 +1036,13 @@ As for the English data, the non-native Swedish IO's /t/ category was the same a
 
 
 ## Annotation and extraction of cues
-Tokens were annotated for their duration of vowel, closure, and burst. These three cues are considered primary cues to syllable-final voicing (Hillenbrand et al., 1984; Lisker, 1957 Luce & Charles-Luce, 1985). It is therefore likely, but not guaranteed, that the three cues would explain a substantial part of variation in participants' ratings during test. The results of the ideal observer analyses reported below support this assumption: performance of the non-native IO was high for both experiments. This suggests that /d/ and /t/ in both the English and the Swedish data formed clusters that were separable within the 3D space defined by the three cues.
+Tokens were annotated for their duration of vowel, closure, and burst. These three cues are considered primary cues to syllable-final voicing [@hillenbrand1984perception; @lisker1957closure; @luce1985contextual]. It is therefore likely, but not guaranteed, that the three cues would explain a substantial part of variation in participants' ratings during test. The results of the ideal observer analyses reported below support this assumption: performance of the non-native IO was high for both experiments. This suggests that /d/ and /t/ in both the English and the Swedish data formed clusters that were separable within the 3D space defined by the three cues.
 
-Annotations were completed in Praat (Boersma, 2001) using visual examination of spectrograms, and listening judgments. Cue boundaries were marked following conventions (Flege, Munro, & Skelton, 1992). Vowel duration was measured from the beginning of the first periodic portion of each waveform to the zero-crossing where the amplitude decreased abruptly and the waveform became sinusoidal. Burst was measured from stop release to the first zero crossing point where the amplitude became near zero. Closure was measured as the time between vowel offset and burst onset (for stops following nasals, closure onset was marked by an abrupt decline in amplitude of the nasal). Annotations for both English and Swedish datasets were conducted separately by phonetically trained experimenters, following the same procedure and applied the same decision criteria. 
+Annotations were completed in Praat [@boersma2001praat] using visual examination of spectrograms, and listening judgments. Cue boundaries were marked following conventions [@flege1992production]. Vowel duration was measured from the beginning of the first periodic portion of each waveform to the zero-crossing where the amplitude decreased abruptly and the waveform became sinusoidal. Burst was measured from stop release to the first zero crossing point where the amplitude became near zero. Closure was measured as the time between vowel offset and burst onset (for stops following nasals, closure onset was marked by an abrupt decline in amplitude of the nasal). Annotations for both English and Swedish datasets were conducted separately by phonetically trained experimenters, following the same procedure and applied the same decision criteria. 
 
 ## Correction for phonological context
 
-<!-- Xin: should we perhaps code vowel lenght, coda lateral and rhotic for the English data or are there good reasons to believe that these variables don't matter for the English data? Or perhaps we don't have enough of those contexts? (there seemed to be quite a few, but they might not be balanced across data parts in a way that let's us estimate their effect?) -->
+<!-- Xin: should we perhaps code vowel lenght, coda lateral and rhotic for the English data or are there good reasons to believe that these variables don't matter for the English data? Or perhaps we don't have enough of those contexts? (there seemed to be quite a few, but they might not be balanced across data parts in a way that let's us estimate their effect?)  ANSWER: these variables are coded and loaded into d.stims. We can model them anytime-->
 
 ```{r load production data, include=FALSE}
 d.stims = 
@@ -1138,7 +1141,7 @@ d.stims =
 ```
 
 
-The realization of phonetic cues is known to be strongly influenced by phonological context (Ladefoged & Broadbent 1957; Lindblom & Studdert-Kennedy, 1967), and human listeners are known to effectively discount these effects---a process often referred to as *normalization* (e.g., Mann & Repp, 1980; Ohala 1986; McMurray & Jongman, 2011). Additionally, some of the cues to syllable-final /d/ voicing are simultaneously used to signal other contrasts. This is most obviously the case for vowel duration in Swedish. Swedish has a phonological contrast between long and short vowels (e.g., *vit*---'white, comm. gend.' vs. *vitt*---'white, neuter'). Vowel duration is an important cue to this contrast. 
+The realization of phonetic cues is known to be strongly influenced by phonological context (@ladefoged1957information; @lindblom1967role), and human listeners are known to effectively discount these effects---a process often referred to as *normalization* (e.g., @mann1980influence; @mann1981influence; @mcmurray2011information). Additionally, some of the cues to syllable-final /d/ voicing are simultaneously used to signal other contrasts. This is most obviously the case for vowel duration in Swedish. Swedish has a phonological contrast between long and short vowels (e.g., *vit*---'white, comm. gend.' vs. *vitt*---'white, neuter'). Vowel duration is an important cue to this contrast. 
 
 We thus obtained context-corrected phonetic cues by estimating (via linear regression) and removing (via residualization) the effects of phonological context from vowel, closure, and burst duration. This also includes corrections of word length (in syllables), as word length affects the realization of durational cues. By both training and testing the ideal observer on context-corrected cues, we ensure that we are comparing likes with likes. 
 
@@ -1176,7 +1179,7 @@ correct_for_segmental_context = function(cue.name,
   l = 
     if(language == "English") 
       lmer(
-        y ~ 1 + Accent /  (onset_has_nasal + coda_has_nasal) + (1 + onset_has_nasal + coda_has_nasal | Talker), 
+        y ~ 1 + Accent /  (onset_has_nasal + coda_has_nasal + onset_has_rhotic + coda_has_lateral) + (1 + onset_has_nasal + coda_has_nasal + onset_has_rhotic + coda_has_lateral| Talker), 
         data = data.fit) else
       lm(
         y ~ 1 + Accent / (has_long_vowel + coda_has_nasal), 
@@ -1191,7 +1194,7 @@ correct_for_segmental_context = function(cue.name,
 }
 ```
 
-It is possible that native and non-native speakers differ in how their pronunciations are affected by segmental context. There are at least two reasons to believe that this might be the case. First, effects of segmental context are known to be at least partially conventionalized (Lahiri & Marslen-Wilson, 1991), and thus would have to be learned by non-native speakers. Second, it is possible that non-native speakers react differently to being recorded, choosing different speech registers. In a study conducted over the Li et al. (2020) database of native and Mandardin-accented English, Xie and Jaeger (2020) found that effects of phonological context were often reduced in the foreign-accented speech. 
+It is possible that native and non-native speakers differ in how their pronunciations are affected by segmental context. There are at least two reasons to believe that this might be the case. First, effects of segmental context are known to be at least partially conventionalized [@lahiri1991mental], and thus would have to be learned by non-native speakers. Second, it is possible that non-native speakers react differently to being recorded, choosing different speech registers. In a study conducted over the Li et al. (2020) database of native and Mandardin-accented English, @xie2020comparing found that effects of phonological context were often reduced in the foreign-accented speech. 
 
 This raises questions as to how we should estimate effects of phonological context. There are at least two possibilities. One possibility is to estimate the effects of phonological context from native data alone. For the present purpose, this would model the assumption that non-native speakers do not deviate from native speakers in how they are affected by phonological context, or the assumption that native listeners do *not* learn that non-native speakers deviate from native speakers in how phonological context affects their speech. A third possibility is to estimate effects of phonological context separately for native and non-native speech. For the present purpose---where we use the non-native speech to train the non-native ideal observer---this would model the assumption that native listeners learn, not only the general cue distribution of non-native speakers, but also how non-native speakers differ from native speakers in how they are affected by phonological context. 
 
@@ -1199,7 +1202,7 @@ Here we adopt the latter approach. As mentioned above, we aimed to make the nati
 
 For Swedish, we *estimated* (fit) the effects of segmental context from both the native and non-native recordings of the /d/- and /t/-final words from the test block. This was achieved through linear regressions (one each for the three cues) that contained predictors for segmental context, accent (native vs. non-native), and their interactions. We then *corrected* (residualized) both test and the training data for the predicted effects. We did not include words from the training data in the fitting of the regression, because test and training words differed in terms of word length (corrected for in Step 2 below). Our procedure thus assumes that the effect of segmental context is identical regardless of word length. However, even if this assumption turned out to be wrong, it does not introduce any obvious bias with regard to the ideal observer comparisons. 
 
-For English, we followed the same procedure with two exceptions. First, recordings of the /d/- and /t/-final words from the test block were available only from the non-native talker. Effects of phonological context in native speech were estimated from Li et al. (2020). As mentioned above, the words in in Li et al. were slightly different from those in Xie et al.'s (2017) test block. However, both sets of words were mono-syllabic sets of minimal pairs and included the same type of segmental contexts. Second, since Li et al. contained data from multiple talkers, we used linear mixed-effects regressions with random by-talker intercepts and slopes for all context effects. This additionally normalizes for cross-talker differences in both the average duration of each cue and the effect of segmental context on each cue.
+For English, we followed the same procedure with two exceptions. First, recordings of the /d/- and /t/-final words from the test block were available only from the non-native talker. Effects of phonological context in native speech were estimated from Li et al. (2020). As mentioned above, the words in in Li et al. were slightly different from those in @xie2017more test block. However, both sets of words were mono-syllabic sets of minimal pairs and included the same type of segmental contexts. Second, since Li et al. contained data from multiple talkers, we used linear mixed-effects regressions with random by-talker intercepts and slopes for all context effects. This additionally normalizes for cross-talker differences in both the average duration of each cue and the effect of segmental context on each cue.
 
 The phonological contexts that were included as predictors in the linear regressions differed somewhat for the Swedish and English datasets, based on previous findings on context effects in the two languages as well as the type of contexts present in each dataset. For the English data, we considered the effect of preceding and following nasals. This was achieved by fitting a separate linear regression to each of the three cues `lm(cue ~ 1 + Accent / (preceded_by_nasal + followed_by_nasal))`. For the Swedish data, we considered two phonological contexts (phonologically long vs. short vowel; following nasal, e.g., *sladd*---'cord' vs. *ved*---'wood'). This was achieved by fitting a separate linear regression to each of the three cues: `lm(cue ~ 1 + Accent / (has_long_vowel + preceded_by_nasal))`. All effects were treatment-coded. 
 
@@ -1417,7 +1420,7 @@ correct_for_word_length = function(cue.name,
 }
 ```
 
-Supra-segmental factors like---lexical stress and speech rate---are also known to affect the phonetic realization of sounds. For example, segments tend to have longer durations in stressed, compared to unstressed, syllables (Lindblom, 1963; Van Summers, 1987). Processes like compensatory lengthening/shortening (Peterson & Lehiste, 1960; Lindblom & Rapp, 1973; Fowler, 1981) can also cause segments to be longer in syllables with fewer segments (REF), and words with fewer syllables (Warner et al., 2004). <!-- Xin, Maryann: pls fill ref --> Additionally, local changes in speech rate are likely to affect durational measures like the ones used here (e.g. Crystal & House, 1982; Gahl et al., 2012; Tsao et al). Given that non-native speakers tend to speak more slowly, it is necessary to control for cue duration variation caused by differences in speaking rate. We thus removed effects of speech rate, lexical stress, and syllable/word complexity on vowel, closure, and burst duration.
+Supra-segmental factors like---lexical stress and speech rate---are also known to affect the phonetic realization of sounds. For example, segments tend to have longer durations in stressed, compared to unstressed, syllables (@lindblom1963spectrographic; @van1987effects). Processes like compensatory lengthening/shortening (@peterson1960duration; @lindblom1973some; @fowler1981relationship) can also cause segments to be longer in syllables with fewer segments (REF), and words with fewer syllables (Warner et al., 2004).<!--Florian: are you referring to anticipatory shortening? --> Additionally, local changes in speech rate are likely to affect durational measures like the ones used here (e.g. @crystal1982segmental; @gahl2012reduce). Given that non-native speakers tend to speak more slowly, it is necessary to control for cue duration variation caused by differences in speaking rate. We thus removed effects of speech rate, lexical stress, and syllable/word complexity on vowel, closure, and burst duration.
 
 <!-- Maryann, Xin: ideally, we should estimate syllable duration for as many syllables as we can. This will reduce the dependence between step 1 and step 2: If we have a larger corpus for each talker, including other types of words, we can do that (e.g, the filler words, or even non-target syllables). That's something to think about -->
 We took a two-step approach. First, we estimated the local speech rate. Specifically, we estimate how short/long the target syllable is relative to its expected duration. We predicted syllable duration (in msecs) from lexical stress, syllable complexity (number of segments in the syllable's citation form), and word complexity (number of syllables in the word's citation form). This was achieved through separate linear regressions for the following data, depending on which of the supra-segmental factors varied in the data set:
@@ -1588,7 +1591,7 @@ Since the /t/-categories of both the native and non-native ideal observers are t
 
 Figures \@ref(fig:native-english-cue-before-and-after-alignment) to \@ref(fig:non-native-swedish-cue-before-and-after-alignment) show the distribution of cues to the /t/ and /d/ categories before and after alignment with the mean of the non-native /t/-category from the test tokens. The comparison of the cue distributions before and after correction shows that the three correction steps employed here are successful in reducing the multi-modality of cue distribution, leading to largely unimodal distributions within each category. This is particularly striking for Swedish (likely because vowel length is a strong, phonologized, factor for Swedish).
 
-```{r prepare for cue plot after step 4}
+```{r prepare for cue plot after step 3}
 d.stims.long = 
   d.stims %>%
   make_long()
@@ -1602,6 +1605,15 @@ d.stims.long =
 #   filter(rvowel != "NaN",
 #          rclosure != "NaN",
 #          rburst != "NaN")
+
+# set axis range for plotly
+axis.list = list(
+    camera = list(eye = list(x = 1.25, y = 2.5, z = 0), 
+                  up =  list(x = 0, y = 0, z = 1)),
+    zaxis = list(range = c(-100,200), dtick = 50),
+    yaxis = list(range = c(-200,300), dtick = 50),
+         xaxis = list(range = c(-200,300),dtick = 50))
+
 ```
 
 #### English (native)
@@ -1610,7 +1622,8 @@ d.stims.long =
 ```{r native-english-cue-before-and-after-alignment, fig.cap="(ref:native-english-cue-before-and-after-alignment)", out.width="75%", fig.show='hold'}
 plot_corrected_cues(
   d.stims.long %>% 
-          filter(NativeLanguage == "English", Accent == "native"))
+          filter(NativeLanguage == "English", Accent == "native")) %>%
+  layout(scene = axis.list)
 ```
 
 #### English (non-native)
@@ -1619,7 +1632,8 @@ plot_corrected_cues(
 ```{r non-native-english-cue-before-and-after-alignment, fig.cap="(ref:non-native-english-cue-before-and-after-alignment)", out.width="75%", fig.show='hold'}
 plot_corrected_cues(
   d.stims.long %>% 
-          filter(NativeLanguage == "English", Accent == "non-native"))
+          filter(NativeLanguage == "English", Accent == "non-native")) %>%
+  layout(scene = axis.list)
 ```
 
 
@@ -1629,7 +1643,8 @@ plot_corrected_cues(
 ```{r native-swedish-cue-before-and-after-alignment, fig.cap="(ref:native-swedish-cue-before-and-after-alignment)", out.width="75%", fig.show='hold'}
 plot_corrected_cues(
   d.stims.long %>% 
-          filter(NativeLanguage == "Swedish", Accent == "native"))
+          filter(NativeLanguage == "Swedish", Accent == "native")) %>%
+  layout(scene = axis.list)
 ```
 
 #### Swedish (non-native)
@@ -1638,7 +1653,8 @@ plot_corrected_cues(
 ```{r non-native-swedish-cue-before-and-after-alignment, fig.cap="(ref:non-native-swedish-cue-before-and-after-alignment)", out.width="75%", fig.show='hold'}
 plot_corrected_cues(
   d.stims.long %>% 
-          filter(NativeLanguage == "Swedish", Accent == "non-native"))
+          filter(NativeLanguage == "Swedish", Accent == "non-native")) %>%
+  layout(scene = axis.list)
 ```
 
 
@@ -1956,7 +1972,7 @@ IO_ratings = function(.data) {
 
 By applying the native and non-native ideal observers to the stimuli from the test phase of the English and Swedish perception experiments, we can calculate the posterior category probabilities, $p(sound | cues, model)$, for each of those test stimuli. Specifically, we apply the English models to the English test data, and the Swedish models to the Swedish test data. The resulting posterior category probabilities are shown in Section \@ref(sec:IO-methods-posterior-probabilities).
 
-To derive predictions about human behavior from the posterior category probabilities of the ideal observer, it is necessary to specify a linking hypothesis. Previous work has done so for *categorization* tasks (e.g., Clayards et al., 2008; Kleinschmidt \& Jaeger, 2011, 2012, 2016; Kronrod et al., 2016). We follow these previous works and assume Luce's choice rule---also known as probability matching---and visualize the predictions for categorization tasks in Section \@ref(sec:IO-methods-categorization). Then we specify the linking hypothesis for goodness ratings in Section \@ref(sec:IO-methods-link). To reduce researchers' degrees of freedom, we simply assume a linear link between posterior probabilities and goodness ratings. This essentially makes the same assumptions as Luce's choice rule makes for categorization. We validate the linking hypothesis against human data from another experiment (Experiments 1 and 2 of Xie et al., 2017). <!-- Xin: correct? -->
+To derive predictions about human behavior from the posterior category probabilities of the ideal observer, it is necessary to specify a linking hypothesis. Previous work has done so for *categorization* tasks (e.g., Clayards et al., 2008; Kleinschmidt \& Jaeger, 2011, 2012, 2016; Kronrod et al., 2016). We follow these previous works and assume Luce's choice rule---also known as probability matching---and visualize the predictions for categorization tasks in Section \@ref(sec:IO-methods-categorization). Then we specify the linking hypothesis for goodness ratings in Section \@ref(sec:IO-methods-link). To reduce researchers' degrees of freedom, we simply assume a linear link between posterior probabilities and goodness ratings. This essentially makes the same assumptions as Luce's choice rule makes for categorization. We validate the linking hypothesis against human data from another experiment (Experiments 2 and 3 of Xie et al., 2017). 
 
 ```{r integrate-test-data-with-modeling-results, include=FALSE}
 # Bind stimulus information and predictions of ideal observer
@@ -2046,7 +2062,7 @@ p.post %+%
 ### Linking hypothesis for goodness ratings {#sec:IO-methods-link}
 
 Here we assume a linear link with 0 degrees of freedom between the posterior probability of /d/ and the predicted rating of /d/-goodness. Specifically, we simply scale the predicted proportion of /d/ responses (the same as in Figure \@ref(fig:ideal-observers-posterior)) to have the same range as the human ratings across the two experiments:
-<!-- Xin: can you fill in? -->
+<!-- Xin: can you fill in? --ANSWER: the range of item-wise Rating.Response.d.zscored: (-1.17, 1.26) -->
 
 <!-- $\rm{/d/-goodness\_rating} = p(/d/ | cue) - $ -->
 
@@ -2059,6 +2075,7 @@ Xie et al. (2017) conducted both an identification and a rating experiment using
 Figure \@ref(fig:ID-to-ratings) shows the item-level correlation in participants' rating and categorization responses across the two experiments. At least for the range of test stimuli in Xie et al. (2017), the link between ratings and categorization indeed seems to be linear.
 
 ```{r load categorization experiments, results='hide'}
+
 # load English ID data
 d.english.ID <- read.csv("../data/English/English_perception_identification_Xie et al 2017.csv")
 
@@ -2084,12 +2101,15 @@ d.english.ID <- d.english.ID %>%
     Subject = NULL,
     Session = NULL
   ) %>%
+  left_join(
+    d.test %>%
+      filter(NativeLanguage == "English") %>%
+      select(Item.Word, Item.MinimalPair, Sound) %>%
+      distinct(), by = c("Item.Word", "Sound")) %>%
   applyFactorLevels()
 ```
 
 (ref:ID-to-ratings) Item-level correlation of human identification and rating responses from two experiments in Xie et al. (2017). The two experiments used the same exposure and test stimuli, and differed only in the task during test (categorization vs. rating). The trend line shows a generalized additive model fit with a non-parametric smoother. That is, the fit would in principle allow non-linearity in the relation between categorization and rating responses. The fact that no non-linearity is detected suggests that the relation is largely linear. Shaded areas show 95\% confidence intervals.
-
-<!-- Xin: this code of joining the two data frames seems really cumbersome. can you check whether we can simplify it? -->
 
 ```{r ID-to-ratings, fig.cap="(ref:ID-to-ratings)", fig.height = 4.5, out.width="75%"}
 d.english.test.byItem = 
@@ -2098,7 +2118,7 @@ d.english.test.byItem =
                      droplevels() %>%
                      mutate(Task = "rating"), 
                    d.english.ID %>% mutate(Task = "ID")) %>%
-  group_by(Task, Group, Sound, Item.Word) %>%
+  group_by(Task, Group, Sound, Item.Word, Item.MinimalPair) %>%
   summarise(zRating.d = mean(Rating.Response.d.zscored),
             Proportion.d = mean(ID.Response.d)) %>%
   ungroup() %>%
@@ -2108,11 +2128,7 @@ d.english.test.byItem =
   spread(resp,value) %>%
   mutate(Logodds.d = qlogis(Proportion.d)) %>%
   mutate_if(is.character, as.factor) %>%
-  left_join(
-    d.test %>%
-      filter(NativeLanguage == "English") %>%
-      select(Item.Word, Item.MinimalPair, Sound) %>%
-      distinct(), by = c("Item.Word", "Sound"))
+  applyFactorLevels()
 
 # correlation between ratings and percent /d/ responses
 ggscatter(d.english.test.byItem, x = "Proportion.d", y = "zRating.d", color = "Group", 
@@ -2222,27 +2238,6 @@ ggscatter(data = d.test.IO %>%
              # margins = c("NativeLanguage"),
              labeller = "label_both") 
 
-
-
-ggscatter(data = d.test.IO %>%
-            group_by(Language, NativeLanguage, Group, Model.Accent, Model.Accent.matchesGroup, Item.Word, Sound) %>%
-            summarise(
-              Model.Posterior.d = mean(Model.Posterior.d),
-              Model.Rating.d.zscored = mean(Model.Rating.d.zscored),
-              Rating.Response.d.zscored = mean(Rating.Response.d.zscored)), 
-          # x = Model.Rating.d.zscored, 
-          x = "Model.Posterior.d", y = "Rating.Response.d.zscored", color = "Group",
-          cor.method = "pearson",
-          xlab = "Ideal observer posterior of /d/", ylab = "human mean /d/-goodness rating") + 
-  stat_cor(label.x.npc = "middle", label.y.npc = "bottom") + 
-  geom_smooth(method = "lm", formula = y ~ x, color = "black", fill = "black") +
-  scale_color_manual(
-    breaks = c("/d/-exposure", "control", ""),
-    values = append(colors.Group, "black")
-  ) +
-  facet_grid(NativeLanguage + Group ~ Model.Accent, 
-             # margins = c("NativeLanguage"),
-             labeller = "label_both") 
 ```
 
 
