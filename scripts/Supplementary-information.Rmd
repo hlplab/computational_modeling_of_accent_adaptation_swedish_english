@@ -1,5 +1,5 @@
 ---
-title: "Supplementary Information for PAPER TITLE 2"
+title: "Supplementary Information for PAPER TITLE_testing with raw measures: Step 1 & 2 (n_syllable only; English and Swedish both use old correction method step 2) & 3; talkers with high release; correct by speaker"
 author: "Tan, M., Xie, X., Jaeger, T. F."
 date: \today
 header-includes:
@@ -1114,6 +1114,7 @@ d.stims =
   # contains data from **native** talkers.
   full_join(
     read.csv("../data/English/English_production_Li et al 2020.csv") %>%
+      filter(!(Speaker %in% c("E12", "E3", "E7", "E9"))) %>%
       select(-Word) %>%
       rename(
         Talker = Speaker,
@@ -1137,9 +1138,26 @@ d.stims =
               "has_stress", "has_long_vowel", "onset_has_nasal",
               "coda_has_rhotic", "coda_has_lateral", "coda_has_nasal", "coda_has_fricative",
               "set"), factor) %>%
-  applyFactorLevels()
+  applyFactorLevels() %>%
+  left_join(read.csv("../data/English/English_word_info_old.csv"), by = "Item.Word")
+
+
 ```
 
+
+*In the current version, no correction steps were included. Instead, we correct only for speaking rate by taking the proportional measures of cues (cue duration/word duration). In this way, we examine how the predictions align with the previous results (as performed by Xin's early analyses).*
+
+```{r create proportional measures for production data, include=FALSE, eval = FALSE}
+d.stims.original <- d.stims
+
+d.stims %<>%
+  gather(Measure, duration, vowel:burst) %>%
+  mutate(duration.prop = duration/syllable_duration) %>%
+  select(-duration) %>%
+  spread(Measure, duration.prop)
+
+
+```
 
 The realization of phonetic cues is known to be strongly influenced by phonological context (@ladefoged1957information; @lindblom1967role), and human listeners are known to effectively discount these effects---a process often referred to as *normalization* (e.g., @mann1980influence; @mann1981influence; @mcmurray2011information). Additionally, some of the cues to syllable-final /d/ voicing are simultaneously used to signal other contrasts. This is most obviously the case for vowel duration in Swedish. Swedish has a phonological contrast between long and short vowels (e.g., *vit*---'white, comm. gend.' vs. *vitt*---'white, neuter'). Vowel duration is an important cue to this contrast. 
 
@@ -1178,11 +1196,15 @@ correct_for_segmental_context = function(cue.name,
   # Fit separate effects for each accent
   l = 
     if(language == "English") 
-      lmer(
-        y ~ 1 + Accent /  (onset_has_nasal + coda_has_nasal + onset_has_rhotic + coda_has_lateral) + (1 + onset_has_nasal + coda_has_nasal + onset_has_rhotic + coda_has_lateral| Talker), 
+      # lmer(
+      #   y ~ 1 + Accent /  (onset_has_nasal + coda_has_nasal + onset_has_rhotic + coda_has_lateral) + (1 + onset_has_nasal + coda_has_nasal + onset_has_rhotic + coda_has_lateral| Talker), 
+      #   data = data.fit)
+      lm(
+        y ~ 1 + (coda_has_nlr + onset_has_nlr), 
         data = data.fit) else
       lm(
-        y ~ 1 + Accent / (has_long_vowel + coda_has_nasal), 
+        y ~ 1 + (has_long_vowel + coda_has_nasal), 
+       # y ~ 1 + Accent / (has_long_vowel + coda_has_nasal), 
         data = data.fit)
 
   print(plot_model(l, type = "est",
@@ -1209,8 +1231,36 @@ The phonological contexts that were included as predictors in the linear regress
 Across the two languages, there were a total of six linear regressions, summarized in the next six figures. Each figure shows the predicted effect (in msecs) and confidence interval for all predictors. Significance is indicated through stars. For some cues and contexts, the simple effects of phonological context did not differ much between native and non-native speech. A notable exception is the effect of onset nasals, which was substantial in native-accented English but completely absent in Mandarin-accented English. Another exception was the effect of phonological vowel length in the Swedish data, which was *more* pronounced in the Flemish-accented talker compared to the native-accented talker. 
 
 ```{r step 1 correct for segmental context}
+# xxx <- d.stims %>% filter(Talker == "M5")
+# 
+# xxx %<>%
+#   group_by(NativeLanguage, Talker) %>%
+#   nest() %>%
+#   mutate(
+#     rvowel = map2(
+#       data, NativeLanguage,
+#       ~ correct_for_segmental_context("vowel", 
+#                              data.fit = .x,
+#                              language = .y)),
+#     rclosure = map2(
+#       data, NativeLanguage, 
+#       ~ correct_for_segmental_context("closure", 
+#                              data.fit = .x,
+#                              language = .y)),
+#     rburst = map2(
+#       data, NativeLanguage, 
+#       ~ correct_for_segmental_context("burst", 
+#                              data.fit = .x, 
+#                              language = .y))) %>%
+#   unnest(data, rvowel, rclosure, rburst) %>%
+#   # Make copy of most recent correction step and store it separately 
+#   mutate(
+#     rvowel.step1 = rvowel,
+#     rclosure.step1 = rclosure,
+#     rburst.step1 = rburst) 
+
 d.stims %<>%
-  group_by(NativeLanguage) %>%
+  group_by(NativeLanguage, Talker) %>%
   nest() %>%
   mutate(
     rvowel = map2(
@@ -1227,7 +1277,7 @@ d.stims %<>%
       data, NativeLanguage, 
       ~ correct_for_segmental_context("burst", 
                              data.fit = .x, 
-                             language = .y)))
+                             language = .y))) 
 
 d.stims %<>%
   unnest(data, rvowel, rclosure, rburst) %>%
@@ -1405,9 +1455,12 @@ correct_for_word_length = function(cue.name,
   # Fit separate effects for each accent
   f = formula(
     case_when(
-      language == "English" & accent == "native" ~ "y ~ 1 + rsyllable_duration", 
-      language == "English" & accent == "non-native" ~ "y ~ 1 + number_syllables + has_stress + rsyllable_duration",
-      language == "Swedish" ~ "y ~ 1 + number_syllables + has_stress + rsyllable_duration",
+      # language == "English" & accent == "native" ~ "y ~ 1 + rsyllable_duration", 
+      # language == "English" & accent == "non-native" ~ "y ~ 1 + number_syllables + has_stress + rsyllable_duration",
+      # language == "Swedish" ~ "y ~ 1 + number_syllables + has_stress + rsyllable_duration",
+      language == "English" & accent == "native" ~ "y ~ 1 + number_syllables", 
+      language == "English" & accent == "non-native" ~ "y ~ 1 + number_syllables",
+      language == "Swedish" ~ "y ~ 1 + number_syllables",
       T ~ NA_character_))
   
   l = lm(f, data = data.fit)
@@ -1433,7 +1486,7 @@ The models were estimated using only the /d/-final words, since the syllable-fin
 
 The following plots summarize the effects on syllable duration.
 
-```{r step 2a correct syllable duration for phonological effects}
+```{r step 2a correct syllable duration for phonological effects, eval = FALSE}
 d.stims %<>%
   group_by(NativeLanguage) %>%
   nest() %>%
@@ -1452,29 +1505,32 @@ In a second step, we estimated the effects of speaking rate (residualized syllab
 These regressions were applied to all the test and the training data for the predicted effects by *language and accent*. This resulted in nine linear regressions: one regression for each of the three cues in the Swedish data, one regression for each of the three cues in the English native data, and one for each of the three cues in the English non-native data.
 
 
-```{r step 2b correct cues for suprasegmental context}
-d.stims %<>% 
-  group_by(NativeLanguage, Accent) %>% 
-  nest() %>% 
+```{r step 2b correct cues for suprasegmental context, eval = FALSE}
+
+
+d.stims %<>%
+  group_by(NativeLanguage, Accent, Talker) %>%
+  nest() %>%
   mutate(
     rvowel = pmap(
       list(data, NativeLanguage, Accent),
-      ~ correct_for_word_length("rvowel", 
-                                data.fit = ..1, 
+      ~ correct_for_word_length("rvowel",
+                                data.fit = ..1,
                                 language = ..2,
                                 accent = ..3)),
     rclosure = pmap(
       list(data, NativeLanguage, Accent),
-      ~ correct_for_word_length("rclosure", 
-                                data.fit = ..1, 
+      ~ correct_for_word_length("rclosure",
+                                data.fit = ..1,
                                 language = ..2,
                                 accent = ..3)),
     rburst = pmap(
       list(data, NativeLanguage, Accent),
-      ~ correct_for_word_length("rburst", 
-                                data.fit = ..1, 
+      ~ correct_for_word_length("rburst",
+                                data.fit = ..1,
                                 language = ..2,
-                                accent = ..3))) 
+                                accent = ..3)))
+
 
 d.stims %<>%  unnest(data, rvowel, rclosure, rburst) 
 
@@ -1489,8 +1545,75 @@ d.stims %<>%  unnest(data, rvowel, rclosure, rburst)
     rburst = rburst.step2
   )
 
+# xxx2 <- d.stims %>% filter(Talker == "M5") 
 ```
 
+```{r step 2b correct cues for suprasegmental context-using old method}
+d.stims.unchanged <- d.stims
+
+my.resids.length = function(var.name, data.fit, data.pred) {
+  # data.fit should be exposure /d/ and test /d/ words only
+  # data.pre should be all words: exposure /d/ + test /d/ + test /t/
+  if (is.null(data.pred)) data.pred = data.fit
+  
+  data.fit.df = as.data.frame(data.fit)
+  y = data.fit.df[,var.name]
+  
+  l = lm(y ~ 1 + number_syllables, data = data.fit)
+  print(summary(l))
+  return(as.data.frame(data.pred[,var.name] - predict(l, newdata = data.pred)))
+}
+
+d.stims.english.step2 <- d.stims %>%
+  filter(NativeLanguage == "English") %>%
+  nest(-c(Talker)) %>%
+  group_by(Talker) %>%
+    mutate(rvowel.step2 = purrr::map(data, ~my.resids.length("rvowel", data.fit = d.stims %>%
+  filter(NativeLanguage == "English") %>% filter(Accent == "non-native") %>%
+                                   filter(Sound == "/d/"), data.pred = .)),
+         rclosure.step2 = purrr::map(data, ~my.resids.length("rclosure", data.fit = d.stims %>%
+  filter(NativeLanguage == "English") %>% filter(Accent == "non-native") %>%
+                                     filter(Sound == "/d/"), data.pred = .)),
+         rburst.step2 = purrr::map(data, ~my.resids.length("rburst", data.fit = d.stims %>%
+  filter(NativeLanguage == "English") %>% filter(Accent == "non-native") %>%
+                                     filter(Sound == "/d/"), data.pred = .))
+  ) %>%
+  unnest() %>%
+rename(rvowel.step2 = rvowel1,
+       rclosure.step2 = rclosure1,
+       rburst.step2 = rburst1) %>%
+  mutate(rvowel= rvowel.step2,
+         rclosure = rclosure.step2,
+         rburst = rburst.step2)
+
+# colnames(d.stims.english.step2) = c("NativeLanguage","Talker","Accent", "Used_for", "Block.Type","Item.MinimalPair",   "Item.WordID", "Item.Word" ,"Sound" , "vowel" ,"closure","burst" ,"has_stress", "has_long_vowel","onset_has_nasal"  ,  "onset_has_lateral" , "onset_has_rhotic","coda_has_rhotic","coda_has_lateral","coda_has_nasal","coda_has_fricative", "number_syllables" ,  "syllable_duration" , "word_duration", "syllable_id" , "set" , "coda_has_nlr","onset_has_nlr","rvowel", "rclosure","rburst","rvowel.step1","rclosure.step1","rburst.step1" ,"rvowel.step2", "rclosure.step2", "rburst.step2")  
+#   
+
+d.stims.swedish.step2 <- d.stims %>%
+  filter(NativeLanguage == "Swedish") %>%
+  nest(-c(Talker)) %>%
+  group_by(Talker) %>%
+  mutate(rvowel.step2 = purrr::map(data, ~my.resids.length("rvowel", data.fit = d.stims %>%
+  filter(NativeLanguage == "Swedish") %>% filter(Accent == "non-native") %>%
+                                   filter(Sound == "/d/"), data.pred = .)),
+         rclosure.step2 = purrr::map(data, ~my.resids.length("rclosure", data.fit = d.stims %>%
+  filter(NativeLanguage == "Swedish") %>% filter(Accent == "non-native") %>%
+                                   filter(Sound == "/d/"),data.pred = .)),
+         rburst.step2 = purrr::map(data, ~my.resids.length("rburst", data.fit = d.stims %>%
+  filter(NativeLanguage == "Swedish") %>% filter(Accent == "non-native") %>%
+                                   filter(Sound == "/d/"),data.pred = .))
+  ) %>%
+  unnest() %>%
+  rename(rvowel.step2 = rvowel1,
+       rclosure.step2 = rclosure1,
+       rburst.step2 = rburst1) %>%
+  mutate(rvowel= rvowel.step2,
+         rclosure = rclosure.step2,
+         rburst = rburst.step2)
+
+d.stims <- rbind(d.stims.english.step2, d.stims.swedish.step2)
+
+```
 
 Figures \@ref(fig:native-english-cue-before-and-after-length-correction) to \@ref(fig:non-native-swedish-cue-before-and-after-length-correction) show the distribution of cues to the /t/ and /d/ categories before and after correction for supra-segmental context for the English and Swedish experiment, respectively.
 
@@ -1503,7 +1626,7 @@ d.stims.long =
 #### English (native)
 (ref:native-english-cue-before-and-after-length-correction) Native-accented English words with syllable-final /d/ or /t/ before and after correction for supra-segmental context.
 
-```{r native-english-cue-before-and-after-length-correction, fig.cap="(ref:native-english-cue-before-and-after-length-correction)", out.width="75%", fig.show='hold'}
+```{r native-english-cue-before-and-after-length-correction, fig.cap="(ref:native-english-cue-before-and-after-length-correction)", out.width="75%", fig.show='hold', eval = FALSE}
 plot_corrected_cues(
    d.stims.long %>% 
           filter(NativeLanguage == "English", Accent == "native"))
@@ -1512,7 +1635,7 @@ plot_corrected_cues(
 #### English (non-native)
 (ref:non-native-english-cue-before-and-after-length-correction) Mandarin-accented English words with syllable-final /d/ or /t/ before and after correction for supra-segmental context.
 
-```{r non-native-english-cue-before-and-after-length-correction, fig.cap="(ref:non-native-english-cue-before-and-after-length-correction)", out.width="75%", fig.show='hold'}
+```{r non-native-english-cue-before-and-after-length-correction, fig.cap="(ref:non-native-english-cue-before-and-after-length-correction)", out.width="75%", fig.show='hold', eval = FALSE}
 plot_corrected_cues(
    d.stims.long %>% 
           filter(NativeLanguage == "English", Accent == "non-native"))
@@ -1522,7 +1645,7 @@ plot_corrected_cues(
 #### Swedish (native)
 (ref:native-swedish-cue-before-and-after-length-correction) Native-accented Swedish words with syllable-final /d/ or /t/ before and after correction for supra-segmental context.
 
-```{r native-swedish-cue-before-and-after-length-correction, fig.cap="(ref:native-swedish-cue-before-and-after-length-correction)", out.width="75%", fig.show='hold'}
+```{r native-swedish-cue-before-and-after-length-correction, fig.cap="(ref:native-swedish-cue-before-and-after-length-correction)", out.width="75%", fig.show='hold', eval = FALSE}
 plot_corrected_cues(
    d.stims.long %>% 
           filter(NativeLanguage == "Swedish", Accent == "native"))
@@ -1531,7 +1654,7 @@ plot_corrected_cues(
 #### Swedish (non-native)
 (ref:non-native-swedish-cue-before-and-after-length-correction) Flemish-accented Swedish words with syllable-final /d/ or /t/ before and after correction for supra-segmental context.
 
-```{r non-native-swedish-cue-before-and-after-length-correction, fig.cap="(ref:non-native-swedish-cue-before-and-after-length-correction)", out.width="75%", fig.show='hold'}
+```{r non-native-swedish-cue-before-and-after-length-correction, fig.cap="(ref:non-native-swedish-cue-before-and-after-length-correction)", out.width="75%", fig.show='hold', eval = FALSE}
 plot_corrected_cues(
    d.stims.long %>% 
           filter(NativeLanguage == "Swedish", Accent == "non-native"))
@@ -1607,6 +1730,13 @@ d.stims.long =
 #          rburst != "NaN")
 
 # set axis range for plotly
+# axis.list = list(
+#     camera = list(eye = list(x = 1.25, y = 2.5, z = 0), 
+#                   up =  list(x = 0, y = 0, z = 1)),
+#     zaxis = list(range = c(-0.1,0.2), dtick = 0.1),
+#     yaxis = list(range = c(-0.2,0.3), dtick = 0.1),
+#          xaxis = list(range = c(-0.2,0.3),dtick = 0.1))
+
 axis.list = list(
     camera = list(eye = list(x = 1.25, y = 2.5, z = 0), 
                   up =  list(x = 0, y = 0, z = 1)),
@@ -2391,6 +2521,13 @@ plot_IO_test(d.IO, d.IO.test, language = c("Swedish"), cues = selected_cues, sho
 ```
 
 
+
+```{r compare-old-current-ideal-observers-accuracy, eval = FALSE}
+# write.csv(d.current, "d.current.csv")
+# write.csv(d.old.wide, "d.old.csv")
+# saveRDS(d.current.model, "d.current.model.rds")
+# write.csv(d.old.model, "d.old.model.csv")
+```
 
 # Appendix: List of stimuli {#sec:stimuli}
 
