@@ -182,6 +182,7 @@ get_axes = function(.data, cues) {
 2) Run final compilation with echo = F.
 3) Check why in English non-native data the stress-final n-coda words get pulled out of the rest of the cloud. that seems wrong.
 4) Add test to result section of ideal observers
+5) Remove spurious regression line plot. THIS IS DUE TO WEIRD DEFAULT IN PLOT_MODEL, WHICH FOR A SINGLE PREDICTOR ALSO PLOTS THE REGRESSION LINE.
 5) Consider adding perception noise to IOs to simulate various subjects. In any case, *explain in IO result section why IO results are more categorical than human responses** (lack of noise is one plausible reason).
 6) Add model comparisons that assess whether the models that match the exposure condition (`Model.Accent.matchesGroup == yes`) perform better than those that don't.
 7) REMOVE CATEGORY DENSITY CODE.
@@ -1012,12 +1013,11 @@ Figure \@ref(fig:ideal-observer-and-data) summarizes what speech databases we us
 
 In the following sections, we walk through the steps summarized in Figure \@ref(fig:ideal-observer-and-data). As shown in the figure, we draw on multiple databases. The speech materials in these databases differed along dimensions that were not of theoretical interest to us, but that could affect the performance of the ideal observers. For example, if we train the ideal observers on the vowel, closure, and burst duration of multi-syllabic words and then test them on the vowel, closure, and burst duration of the mono-syllabic test items (of the English and Swedish experiment), this might make the comparison of the native and non-native models' performance on the test items uninformative. We thus prepared the training and test data by correcting for effects of phonological context, as we describe next. Following that, we describe the training and test procedure for the ideal observers.
 
+(ref:ideal-observer-and-data) Four ideal observer models---a *native* and *non-native* ideal observer each for the English and the Swedish data---were fit and cross-validated against production data from native- and foreign-accented English and Swedish. In the databases (top and bottom), native speech is shown in gray; non-native speech is shown in red. We use the same colors to distinguish between the native and non-native *model*. Each ideal observer has two components: the /d/ and the /t/ category. Training of the ideal observer refers to estimating the mean $\mu$ and covariance matrix $\Sigma$ of these two categories.
+
 ```{r ideal-observer-and-data, fig.cap="(ref:ideal-observer-and-data)", out.width="100%"}
 knitr::include_graphics("../figures/IdealObserverAndData.png")
 ```
-
-(ref:ideal-observer-and-data) Four ideal observer models---a *native* and *non-native* ideal observer each for the English and the Swedish data---were fit and cross-validated against production data from native- and foreign-accented English and Swedish. In the databases (top and bottom), native speech is shown in gray; non-native speech is shown in red. We use the same colors to distinguish between the native and non-native *model*. Each ideal observer has two components: the /d/ and the /t/ category. Training of the ideal observer refers to estimating the mean $\mu$ and covariance matrix $\Sigma$ of these two categories.
-
 
 ## Phonetically annotated production data
 The ideal observers require estimates of the distribution of the relevant phonetic cues for the syllable-final contrast between /d/ and /t/. Specifically, we need to estimate these distributions for `typical' native-accented productions of /t/ (for both the native and non-native IOs), the native-accented production of /d/ (for the native IO), and the foreign-accented production of /d/ (for the non-native IO). Next, we describe the databases, annotation procedure, and additional steps taken to obtain these estimates.
@@ -1229,7 +1229,6 @@ d.stims %<>%
                              data.fit = .x, 
                              language = .y)))
 
-warning("I have checked whether this way of unnesting does what we want, but perhaps double check whether this matches the resid values!")
 d.stims %<>%
   unnest(data, rvowel, rclosure, rburst) %>%
   # Make copy of most recent correction step and store it separately 
@@ -1253,24 +1252,16 @@ make_long = . %>%
   select(-c("rvowel", "rclosure", "rburst")) %>%
   # Convert into long format for plotting, with one row for each correction step as well 
   # as uncorrected cues
-  # pivot_longer(
-  #   cols = c(contains("vowel"), contains("closure"), contains("burst"), -has_long_vowel),
-  #   names_to = c(".value", "ContextCorrected"),
-  #   names_pattern = "r{0,1}([a-z]+)[\\.]{0,1}(step[0-9]){0,1}"
-  # ) %>%
-  # <!-- I had problems running the above pivot_longer chunk, so having this as a temporay get-around--!>
-  rename(has_long_v = has_long_vowel) %>%
-  pivot_longer(cols = c(contains("vowel"), contains("closure"), contains("burst")),
+  pivot_longer(
+    cols = c(contains("vowel"), contains("closure"), contains("burst"), -has_long_vowel),
     names_to = c(".value", "ContextCorrected"),
     names_pattern = "r{0,1}([a-z]+)[\\.]{0,1}(step[0-9]){0,1}"
   ) %>%
-  rename(has_long_vowel = has_long_v) %>%
   mutate(
-    ContextCorrected = ifelse(is.na(ContextCorrected), "uncorrected", ContextCorrected),
+    ContextCorrected = ifelse(ContextCorrected == "", "uncorrected", ContextCorrected),
     ContextCorrected = factor(ContextCorrected,
                               levels = unique(ContextCorrected))
   )
-
 
 d.stims.long = 
   d.stims %>%
@@ -1420,18 +1411,16 @@ correct_for_word_length = function(cue.name,
       T ~ NA_character_))
   
   l = lm(f, data = data.fit)
-  print(plot_model(l, type = "est",
-                   show.p = T, show.values = T, show.data = T,
+  print(plot_model(l, 
+                   show.p = T, show.values = T,
                    title = paste("Effects of supra-segmental context on", gsub("^r", "", cue.name), "duration for the", accent, language, "test data"),
                    axis.title = c(paste("Change in", cue.name, "duration (in msec)"), "")))
   
   return(unlist(data.predict[, cue.name] - predict(l, newdata = data.predict)))
 }
-
-
 ```
 
-Supra-segmental factors like---lexical stress and speech rate---are also known to affect the phonetic realization of sounds. For example, segments tend to have longer durations in stressed, compared to unstressed, syllables (@lindblom1963spectrographic; @van1987effects). Processes like compensatory lengthening/shortening (@peterson1960duration; @lindblom1973some; @fowler1981relationship) can also cause segments to be longer in syllables with fewer segments (REF), and words with fewer syllables (Warner et al., 2004).<!--Florian: are you referring to anticipatory shortening? --> Additionally, local changes in speech rate are likely to affect durational measures like the ones used here (e.g. @crystal1982segmental; @gahl2012reduce). Given that non-native speakers tend to speak more slowly, it is necessary to control for cue duration variation caused by differences in speaking rate. We thus removed effects of speech rate, lexical stress, and syllable/word complexity on vowel, closure, and burst duration.
+Supra-segmental factors like---lexical stress and speech rate---are also known to affect the phonetic realization of sounds. For example, segments tend to have longer durations in stressed, compared to unstressed, syllables (@lindblom1963spectrographic; @van1987effects). Processes like compensatory lengthening/shortening (@peterson1960duration; @lindblom1973some; @fowler1981relationship) can also cause segments to be longer in syllables with fewer segments (REF), and words with fewer syllables (Warner et al., 2004).<!--Florian: are you referring to anticipatory shortening? MARYANN: I am referring to compensartory shortening/lengthening (the same segment might be shorter if the syllable has more segements.) --> Additionally, local changes in speech rate are likely to affect durational measures like the ones used here (e.g. @crystal1982segmental; @gahl2012reduce). Given that non-native speakers tend to speak more slowly, it is necessary to control for cue duration variation caused by differences in speaking rate. We thus removed effects of speech rate, lexical stress, and syllable/word complexity on vowel, closure, and burst duration.
 
 <!-- Maryann, Xin: ideally, we should estimate syllable duration for as many syllables as we can. This will reduce the dependence between step 1 and step 2: If we have a larger corpus for each talker, including other types of words, we can do that (e.g, the filler words, or even non-target syllables). That's something to think about -->
 We took a two-step approach. First, we estimated the local speech rate. Specifically, we estimate how short/long the target syllable is relative to its expected duration. We predicted syllable duration (in msecs) from lexical stress, syllable complexity (number of segments in the syllable's citation form), and word complexity (number of syllables in the word's citation form). This was achieved through separate linear regressions for the following data, depending on which of the supra-segmental factors varied in the data set:
@@ -1457,7 +1446,7 @@ d.stims %<>%
 ```
 
 <!-- Florian: this needs work. check whether it really makes sense to separate out syllable duration/speech rate effects from compensatory lengthening of the cues b/c of complexity of the syllable if these two groups of effects are estimated on the same data. Also check effects of number of segments per syllable --> 
-In a second step, we estimated the effects of speaking rate (residualised syllable duration) and of phonological factors (word length, lexical stress) on cue duration. We fitted separate linear regressions: English native: `lm(cue ~ 1 + rsyllable_duration)`, English non-native: `lm(cue ~ 1 + number_syllables + has_stress + rsyllable_duration)`, and Swedish (fitted for each accent separately): `lm(cue ~ 1 +  number_syllables + has_stress + rsyllable_duration)`, using /d/-final words. 
+In a second step, we estimated the effects of speaking rate (residualized syllable duration) and of phonological factors (word length, lexical stress) on cue duration. We fitted separate linear regressions: English native: `lm(cue ~ 1 + rsyllable_duration)`, English non-native: `lm(cue ~ 1 + number_syllables + has_stress + rsyllable_duration)`, and Swedish (fitted for each accent separately): `lm(cue ~ 1 +  number_syllables + has_stress + rsyllable_duration)`, using /d/-final words. 
 
 
 These regressions were applied to all the test and the training data for the predicted effects by *language and accent*. This resulted in nine linear regressions: one regression for each of the three cues in the Swedish data, one regression for each of the three cues in the English native data, and one for each of the three cues in the English non-native data.
@@ -1493,7 +1482,7 @@ d.stims %<>%  unnest(data, rvowel, rclosure, rburst)
     rvowel.step2 = rvowel1,
     rclosure.step2 = rclosure1,
     rburst.step2 = rburst1) %>%
-#Override rvowel, rclosure, rburst with second step
+  # Override rvowel, rclosure, rburst with second step
   mutate(
     rvowel = rvowel.step2,
     rclosure = rclosure.step2,
@@ -1914,342 +1903,7 @@ d.IO %>% plot_IO_training(d.IO.training, language = "Swedish", cues = selected_c
 ``` 
 
 
-### Category density function {#sec:IO-methods-training-density-functions}
 
-Figure \@ref(fig:ideal-observers-training-density) shows the density functions of /d/ and /t/ categories under both the native and non-native ideal observer.
-
-(ref:ideal-observers-training-density) Density functions of /d/ and /t/ estimated by the native and non-native ideal observers for the foreign-accented /d/- and /t/ words during training. 
-
-```{r compute-ideal-observers-training-density, include = FALSE, eval = FALSE}
-
-# extract model paramters and organize them into dataframes
-df.mu.train <- map(d.IO$Model, magrittr::extract, c('mu')) %>%
-  map_dfr(., magrittr::extract, c('mu')) 
-df.mu.train = as.data.frame(matrix(t(df.mu.train), ncol=length(selected_cues), 
-                                               byrow=TRUE), stringsAsFactors=FALSE)
-colnames(df.mu.train) <- c('C1','C2','C3')
-
-
-df.Sigma.train <- map(d.IO$Model, magrittr::extract, c('Sigma')) %>%
-  map_dfr(., magrittr::extract, c('Sigma'))
-df.Sigma.train = as.data.frame(matrix(t(df.Sigma.train), ncol=length(selected_cues)^2,byrow=TRUE), stringsAsFactors=FALSE)
-colnames(df.Sigma.train) <- c('C1_C1','C1_C2','C1_C3','C2_C1','C2_C2','C2_C3', 'C3_C1', 'C3_C2', 'C3_C3')
-
-d.model.parameters.train <- cbind(as.data.frame(d.IO), as.data.frame(cbind(df.mu.train,df.Sigma.train)))
-
-```
-
-```{r load-libraries-for-bivariate-gaussian-distribution-density, include = FALSE, eval = FALSE}
-library(lattice)  
-library(MASS)
-```
-
-```{r function-bivariate-gaussian-distribution-density, include = FALSE, eval = FALSE}
-
-# gaussian distribution
-f<-function(x1,x2)
-{
-term1<-1/(2*pi*sqrt(s11*s22*(1-rho^2)))
-term2<--1/(2*(1-rho^2))
-term3<-(x1-mu1)^2/s11
-term4<-(x2-mu2)^2/s22
-term5<--2*rho*((x1-mu1)*(x2-mu2))/(sqrt(s11)*sqrt(s22))
-term1*exp(term2*(term3+term4-term5))
-} # setting up the function of the multivariate normal density
-
-```
-
-
-```{r debug-compare-methods-computing-density-2d, include = FALSE, eval = FALSE}
-# using a simple dataset to check whether the dmvnorm and f functions generate the same density results -- in toy set 1, they seem to yield the same result, but in toy set 2, they are somewhat different. This inconsistence becomes very problematic in the following chunk where the categorization function is calculated.
-
-toyset = 2
-
-# toy set 1
-if(toyset == 1){
-  "x1" = seq(-3,3,length=41)
-  "x2" = seq(-3,3,length=41)
-  mu1= 1
-  mu2 = 2
-  s11 = 1
-  s12 = 0
-  s22 = 1
-  rho<- s12/(sqrt(s11)*sqrt(s22))
-}
-
-
-# toy set 2 -- these are the numbers from /d/ category in the native model for English data (using corrected cues, all 3 steps)
-if(toyset == 2){
-  "x1" = seq(-200,200,length=41)
-  "x2" = seq(-200,200,length=41)
-  mu1= 97.753843
-  mu2 = -64.981084
-  s11 = 3060.1355
-  s12 = -461.45234
-  s22 = 627.9008
-  rho<- s12/(sqrt(s11)*sqrt(s22))
-}
-
-
-
-temp1 = t(outer(x1,x2,f))
-temp2 <- mvtnorm::dmvnorm(expand.grid("x1" = x1, "x2" = x2), mean = c(mu1,mu2), sigma = matrix(c(s11,s12,s12,s22),2))
-temp2 = t(matrix(temp2, nrow = length(x1), ncol=length(x2)))
-
-# check if they yield the same results
-temp1 == temp2
-
-df1 <- list(x1,x2,temp1)
-names(df1) = c("x", "y", "z") 
-
-df2 <- list(x1,x2,temp2)
-names(df2) = c("x", "y", "z") 
-
-plot_ly(x = df1$y, y = df1$x, z = df1$z) %>% add_surface(opacity = 0.5, colorscale = list(c(0, 1), c("red", "red"))) %>%
-  add_surface(x = df2$x, y = df2$y, z = df2$z, opacity = 0.5, colorscale = list(c(0, 1), c("black", "black")))
-
-```
-
-
-
-
-```{r compute-IO-training-model-density-2d, include = FALSE, eval = FALSE}
-
-debug_mode = "no"
-toyset = 2
-
-current_cues= c("rvowel", "rclosure") # name which two cues are to be plotted on the x-y plane
-current_NativeLanguage = "English" # choose the dataset (English vs. Swedish)
-current_Accent = "native" # choose the model (native vs. non-native)
-current_dim = "2d" # name whether to use 3d multivariate gaussian distributions or just the 2d bivariate distributions (the two cues shown on the x-y plane)
-
-for (i in 1:length(levels(factor(d.model.parameters.train$Model.Sound)))){
-  current_sound = levels(factor(d.model.parameters.train$Model.Sound))[i]
-  current_data <- d.model.parameters.train %>% 
-                 filter(Model.NativeLanguage == current_NativeLanguage & Model.Accent == current_Accent &
-                          Model.Sound == current_sound) %>%
-                 ungroup()
-  mu1<- current_data$C1 # setting the expected value of x1
-  mu2<- current_data$C2 # setting the expected value of x2
-  s11<- current_data$C1_C1 # setting the variance of x1
-  s12<- current_data$C1_C2 # setting the covariance between x1 and x2
-  s22<- current_data$C2_C2 # setting the variance of x2
-  rho<- s12/(sqrt(s11)*sqrt(s22)) # setting the correlation coefficient between x1 and x2
-
-  x1<-seq(-200,200,length=41)  # generating the vector series x1
-  x2<-seq(-200,200,length=41) # copying x1 to x2
-
-  
-  if (debug_mode == "yes" & toyset == 2) {
-    "x1" = seq(-200,200,length=41)
-    "x2" = seq(-200,200,length=41)
-  
-    # use the following to debug
-    if (current_sound == "/d/"){
-    mu1= 97.753843
-    mu2 = -64.981084
-    s11 = 3060.1355
-    s12 = -461.45234
-    s22 = 627.9008
-    rho<- s12/(sqrt(s11)*sqrt(s22))
-    }
-    
-    if (current_sound == "/t/"){
-    mu1=  10.950940
-    mu2 = -3.080302
-    s11 = 1210.8542
-    s12 = -174.16150
-    s22 = 925.1336
-    rho<- s12/(sqrt(s11)*sqrt(s22))
-    }
-  }
-  
-  if (debug_mode == "yes" & toyset == 1) {
-    #use the following to debug
-    if (current_sound == "/d/"){
-    
-    "x1" = seq(-3,3,length=41)
-    "x2" = seq(-3,3,length=41)
-    
-    mu1= 2
-    mu2 = 2
-    s11 = 1
-    s12 = 0
-    s22 = 1
-    rho<- s12/(sqrt(s11)*sqrt(s22))
-    }
-    
-    
-    if (current_sound == "/t/"){
-    
-    "x1" = seq(-3,3,length=41)
-    "x2" = seq(-3,3,length=41)
-    
-    mu1=  -1
-    mu2 = -1
-    s11 = 1
-    s12 = 0
-    s22 = 1
-    rho<- s12/(sqrt(s11)*sqrt(s22))
-    }
-  }
-  
-  # use 'f' function to calculate bivariate gaussian density
-  #this should be equivalent to dmvnorm when only bivariate gaussian distributions are considered
-  z<-t(outer(x1,x2,f)) # calculating the density values; transpose the matrix generated by 'outer': x is the first cue, y is the 2nd cue
-  df = list(x1,x2,z)
-  names(df) = c("x1", "x2", "z")
-  
-
-  # use 'dmvnorm' function to calculate bivariate gaussian density
-  if (current_dim == "2d") {
-  # if using bivariate gaussian distribution
-  df3 <- expand.grid("x1" = x1, "x2" = x2)
-  df3$z <- mvtnorm::dmvnorm(as.matrix(df3), mean = c(mu1,mu2), sigma = matrix(c(s11,s12, s12,s22),2))
-  }
-  
-  # using 3d multivariate gaussian distribution
-  if (current_dim == "3d") {
-
-  # add information about cue 3
-  x3 <-seq(-200,200,length=41)
-  mu3 <- current_data$C3
-  s13 <- current_data$C1_C3
-  s23 <- current_data$C2_C3
-  s33 <- current_data$C3_C3
-  
-  df3 <- expand.grid("x1" = x1, "x2" = x2, "x3" = x3)
-  df3$z <- dmvnorm(as.matrix(df3), mean = c(mu1,mu2, mu3), sigma = matrix(c(s11,s12,s13, s12,s22, s23, s13,s23,s33),3))
-  df3 %<>%
-    distinct(x1, x2, .keep_all = T)
-  }
-  
-  temp2 = t(matrix(df3$z, nrow = length(x1), ncol=length(x2)))
-  df3 <- list(x1,x2,temp2)
-  names(df3) = c("x1", "x2", "z") 
-
-  # if calculating 3d multivariate gaussian distribution, then use 'dmvnorm' method; otherwise, use the 'f' method
-  if (current_dim == "3d") {
-  df = df3
-  }
-  
- if (current_sound == "/d/"){
-    d.bivn = df
-    d.bivn3 = df3
-    # add ellipse at the bottom
-    # d.ellipse <- ellipse(mu=c(mu1, mu2), sigma = matrix(c(s11, rho*sqrt(s11)*sqrt(s22), rho*sqrt(s11)*sqrt(s22), s22), 2), alpha = .05, npoints = 250, newplot = F, draw = F)
-    # d.d.ellipse = cbind(as.data.frame(d.ellipse[,1]), as.data.frame(d.ellipse[,2]))
-    # colnames(d.d.ellipse) = c("Dur", "F0")
-    # print(mu2)
-    
-    d.prob = df$z
-    d.prob3 = df3$z
-  }
-  if (current_sound == "/t/"){
-    t.bivn = df
-    t.bivn3 = df3
-    # add ellipse at the bottom
-    # t.ellipse <- ellipse(mu=c(mu1, mu2), sigma = matrix(c(s11, rho*sqrt(s11)*sqrt(s22), rho*sqrt(s11)*sqrt(s22), s22), 2, 2), alpha = .05, npoints = 250, , newplot = F, draw = F)
-    # d.t.ellipse = cbind(as.data.frame(t.ellipse[,1]), as.data.frame(t.ellipse[,2]))
-    # colnames(d.t.ellipse) = c("Dur", "F0")
-    # print(mu2)
-    # 
-    t.prob = df$z
-    t.prob3 = df3$z
-  }
-}
-# d.d.ellipse$z = 0
-# d.t.ellipse$z = 0
-
-# create categorization function
-# using the 'f' method
-resp.prob = d.prob/(d.prob + t.prob)
-df.resp = list(df$x1,df$x2,resp.prob)
-names(df.resp) = c(current_cues[1], current_cues[2], "d_prop")
-# using the 'dmvnorm' method
-resp.prob3 = d.prob3/(d.prob3 + t.prob3)
-df.resp3 = list(df3$x1,df3$x2,resp.prob3)
-names(df.resp3) = c(current_cues[1], current_cues[2], "d_prop")
-
-```
-
-
-```{r debug-compare-methods-computing-IO-training-model-density-2d, include = FALSE, eval = FALSE}
-
-##------------------
-# debug: for bivariate distributions, why does the dmvnorm method yields a different result than the 'f' method (calculating density using the formula directly)
-##------------------
-# compare the category density functions
-p.density.compare <- plot_ly(x = d.bivn$x1, y = d.bivn$x2, z = d.bivn$z) %>% add_surface(opacity = 0.5, colorscale = list(c(0, 1), c("red", "red"))) %>%
-  add_surface(x = t.bivn$x1, y = t.bivn$x2, z = t.bivn$z, opacity = 0.5, colorscale = list(c(0, 1), c("red", "red"))) %>% # plot the density estimated by 'f' function
-  add_surface(x = d.bivn3$x1, y = d.bivn3$x2, z = d.bivn3$z, opacity = 0.5, colorscale = list(c(0, 1), c("black", "black"))) %>%
-  add_surface(x = t.bivn3$x1, y = t.bivn3$x2, z = t.bivn3$z, opacity = 0.5, colorscale = list(c(0, 1), c("black", "black"))) # plot the density estimated by 'dmvnorm' function
-
-# compare the categorization functions
-p.categorization.compare <- plot_ly(x = df.resp$rvowel, y = df.resp$rclosure, z = df.resp$d_prop) %>% add_surface(opacity = 0.5, colorscale = list(c(0, 1), c("red", "red"))) %>%
-  add_surface(x = df.resp3$rvowel, y = df.resp3$rclosure, z = df.resp3$d_prop, opacity = 0.5, colorscale = list(c(0, 1), c("black", "black")))
-
-```
-
-
-```{r fig-ideal-observers-training-density, fig.cap="(ref:ideal-observers-training-density)", fig.height=4.5, out.width="75%", include = FALSE, eval = FALSE}
-
-color <- rep(0, length(df$z))
-
-p.category.density = plot_ly(data = d.IO.test %>%
-                 filter(NativeLanguage == current_NativeLanguage &
-                          Accent == "non-native"),
-            x= ~rvowel, 
-            y= ~rclosure, 
-            z= 0,
-            opacity = 0.5, # if the invidiual tokens are to be shown, change opacity
-            color= ~Sound,
-            colors = colors.Category,
-            type="scatter3d", mode="markers") %>%
-        # marker = list(color= ~posterior, colorscale = c('#FFE1A1', '#683531')))
-add_surface(x = d.bivn$x1, y = d.bivn$x2, z = d.bivn$z, 
-              opacity = 0.5,
-              name="/d/ category",
-            #  colors = c('red', 'blue'),
-              colorscale = list(c(0, 1), c(colors.Category[1], colors.Category[1])),
-              surfacecolor=color,
-              cauto=F,
-              cmax=1,
-              cmin=0) %>%
-  add_surface(x = t.bivn$x1, y = t.bivn$x2, z = t.bivn$z, 
-              opacity = 0.5,
-              name="/t/ category",
-            #  colors = c('red', 'blue'),
-              colorscale = list(c(0, 1), c(colors.Category[2], colors.Category[2])),
-              surfacecolor=color,
-              cauto=F,
-              cmax=1,
-              cmin=0) 
-
-# use if showing the 2d ellipse at the bottom plane
-# %>%
-#   add_trace(x = d.d.ellipse$F0, y = d.d.ellipse$Dur, z = t(d.d.ellipse$z), opacity = 1, color = colors.Category[1], size = 0.1) %>%
-#   add_trace(x = d.t.ellipse$F0, y = d.t.ellipse$Dur, z = t(d.t.ellipse$z), opacity = 1, color = colors.Category[2], size = 0.1) 
-
-p.category.density
-```
-
-
-```{r fig-ideal-observers-categorization, fig.cap="(ref:ideal-observers-categorization-function)", fig.height=4.5, out.width="75%",include = FALSE, eval = FALSE}
-# plot categorization surface
-p.categorization.function <- plot_ly(data = d.IO.test %>%
-                 filter(NativeLanguage == current_NativeLanguage &
-                          Accent == "non-native"),
-            x= ~rvowel, 
-            y= ~rclosure, 
-            z= 0,
-            opacity = 0.5, # if the invidiual tokens are to be shown, change opacity
-            color= ~Sound,
-            colors = colors.Category,
-            type="scatter3d", mode="markers") %>% add_surface(x = df.resp$rvowel, y = df.resp$rclosure, z = df.resp$d_prop, opacity = 0.5,colorscale = list(c(0, 1), c(colors.Category[2], colors.Category[1]))) 
-
-p.categorization.function
-```
 
 ## Testing the four ideal observers
 
