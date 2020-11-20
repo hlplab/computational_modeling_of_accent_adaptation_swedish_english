@@ -1,5 +1,5 @@
 ---
-title: "Supplementary Information for PAPER TITLE_testing with raw measures: Step 1 & 2 (n_syllable only; English and Swedish both use old correction method step 2) & 3; talkers with high release; correct by speaker"
+title: "Supplementary Information for PAPER TITLE_testing with raw measures: Step 1 & 2 (n_syllable only; English and Swedish both use new correction method step 2; apply NN data to N data) ; talkers with high release; correct by speaker"
 author: "Tan, M., Xie, X., Jaeger, T. F."
 date: \today
 header-includes:
@@ -1417,17 +1417,20 @@ correct_syllable_duration = function(syllable_duration,
   data.fit %<>%
     filter(Sound == "/d/")
   
-  if (language == "English")
-    data.fit %<>%
+  # if (language == "English") # for both languages, the model is fit on the NN data and applied to N data
+    data.fit %<>% 
     filter(Accent == "non-native")
   
   data.fit$y = as_vector(data.fit[, syllable_duration])
   
+  
   # Fit separate effects for each language
   f = formula(
     case_when(
-      language == "English" ~ "y ~ 1 + number_syllables + has_stress",
-      language == "Swedish" ~ "y ~ 1 + Accent / (number_syllables + has_stress)",
+      # language == "English" ~ "y ~ 1 + number_syllables + has_stress",
+      # language == "Swedish" ~ "y ~ 1 + Accent / (number_syllables + has_stress)",
+       language == "English" ~ "y ~ 1 + number_syllables + has_stress",
+       language == "Swedish" ~ "y ~ 1 + number_syllables + has_stress",
       T ~ NA_character_))
   
   l = lm(f, data = data.fit)
@@ -1455,12 +1458,12 @@ correct_for_word_length = function(cue.name,
   # Fit separate effects for each accent
   f = formula(
     case_when(
-      # language == "English" & accent == "native" ~ "y ~ 1 + rsyllable_duration", 
-      # language == "English" & accent == "non-native" ~ "y ~ 1 + number_syllables + has_stress + rsyllable_duration",
-      # language == "Swedish" ~ "y ~ 1 + number_syllables + has_stress + rsyllable_duration",
-      language == "English" & accent == "native" ~ "y ~ 1 + number_syllables", 
-      language == "English" & accent == "non-native" ~ "y ~ 1 + number_syllables",
-      language == "Swedish" ~ "y ~ 1 + number_syllables",
+      language == "English" & accent == "native" ~ "y ~ 1 + rsyllable_duration",
+      language == "English" & accent == "non-native" ~ "y ~ 1 + number_syllables + has_stress + rsyllable_duration",
+      language == "Swedish" ~ "y ~ 1 + number_syllables + has_stress + rsyllable_duration",
+      # language == "English" & accent == "native" ~ "y ~ 1 + number_syllables", 
+      # language == "English" & accent == "non-native" ~ "y ~ 1 + number_syllables",
+      # language == "Swedish" ~ "y ~ 1 + number_syllables",
       T ~ NA_character_))
   
   l = lm(f, data = data.fit)
@@ -1552,14 +1555,14 @@ d.stims %<>%  unnest(data, rvowel, rclosure, rburst)
 d.stims.unchanged <- d.stims
 
 my.resids.length = function(var.name, data.fit, data.pred) {
-  # data.fit should be exposure /d/ and test /d/ words only
+  # data.fit should be exposure /d/ and test /d/ words from NN data only
   # data.pre should be all words: exposure /d/ + test /d/ + test /t/
   if (is.null(data.pred)) data.pred = data.fit
   
   data.fit.df = as.data.frame(data.fit)
   y = data.fit.df[,var.name]
   
-  l = lm(y ~ 1 + number_syllables, data = data.fit)
+  l = lm(y ~ 1 + number_syllables + has_stress + rsyllable_duration, data = data.fit)
   print(summary(l))
   return(as.data.frame(data.pred[,var.name] - predict(l, newdata = data.pred)))
 }
@@ -1613,6 +1616,12 @@ d.stims.swedish.step2 <- d.stims %>%
 
 d.stims <- rbind(d.stims.english.step2, d.stims.swedish.step2)
 
+#sanity check
+d.sum1 <- d.stims %>%
+  group_by(NativeLanguage, Accent, Talker, Sound) %>%
+  summarise(rvowel = mean(rvowel), 
+            rclosure = mean(rclosure),
+            rburst = mean(rburst))
 ```
 
 Figures \@ref(fig:native-english-cue-before-and-after-length-correction) to \@ref(fig:non-native-swedish-cue-before-and-after-length-correction) show the distribution of cues to the /t/ and /d/ categories before and after correction for supra-segmental context for the English and Swedish experiment, respectively.
