@@ -205,6 +205,7 @@ get_axes = function(.data, cues) {
 
 8) text editing: **MARYANN**:
 
+ * Update the database figure for the IO methods section based on the zoom meeting we had.
  * some references show up as "(Peterson and Lehiste (1960); ....)" I.e., parentheses within parentheses. It should be "(Peterson and Lehiste, 1960; ...)"
  * Lindblom is in all caps LINDBLOM
  * there are still MANY references that have not been bibbed. 
