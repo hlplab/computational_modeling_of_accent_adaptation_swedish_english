@@ -179,22 +179,30 @@ get_axes = function(.data, cues) {
 # TO DO
 
 1) Final clean-up:
-1a) Check whether warnings are addressed, and then (after) set to silent.
-1b) Run final compilation with echo = F.
 
-2) Check that all remaining Maryan,Xin,Florian comments have been addressed. In particular, do we want to add a section on the alternative Swedish recordings?
+ * Check whether warnings are addressed, and then (after) set to silent.
+ * Run final compilation with echo = F.
+ * Check that all remaining Maryan,Xin,Florian comments have been addressed. 
 
-3) Check why in English non-native data the stress-final n-coda words get pulled out of the rest of the cloud. that seems wrong.
-4) Add test to result section of ideal observers
-5) Remove spurious regression line plot. THIS IS DUE TO WEIRD DEFAULT IN PLOT_MODEL, WHICH FOR A SINGLE PREDICTOR ALSO PLOTS THE REGRESSION LINE.
-5) Consider adding perception noise to IOs to simulate various subjects. In any case, *explain in IO result section why IO results are more categorical than human responses** (lack of noise is one plausible reason).
-6) Add model comparisons that assess whether the models that match the exposure condition (`Model.Accent.matchesGroup == yes`) perform better than those that don't.
-7) REMOVE CATEGORY DENSITY CODE.
+2) Data analysis
+ 
+ * Check why in English non-native data the stress-final n-coda words get pulled out of the rest of the cloud. that seems wrong.
+ * Add statistical test to result section of ideal observers
+ * XIN: Remove spurious regression line plot. THIS IS DUE TO WEIRD DEFAULT IN PLOT_MODEL, WHICH FOR A SINGLE PREDICTOR ALSO PLOTS THE REGRESSION LINE.
+ * Add model comparisons that assess whether the models that match the exposure condition (`Model.Accent.matchesGroup == yes`) perform better than those that don't.
+ * REMOVE CATEGORY DENSITY CODE. (XIN what does this refer to?)
 
-8) MARYANN:
-8a) some references show up as "(see for example (Tan et al 2020))" I.e., parentheses within parentheses. Fix?
-8b) reference should only show up at the end of the entire document, not at the bottom of each screen.
-8c) let's change our terminology to "L2-accented" and "L1-accented" speech, following what we did in Xie et al under review." "native" and "non-native" can be used in the abstract, title, or once in the intro but not beyond. We also aim to avoid "foreign-accented". If the changes lead to indirect, convoluted language for particular instances let's discuss those instances. We don't want to make the paper less accessible but we do want to acknowledge that some people find the terms native and non-native (and foreign-accented) to be problematic.
+3) Potential additional analyses:
+ 
+ * Consider adding perception noise to IOs to simulate various subjects. In any case, *explain in IO result section why IO results are more categorical than human responses** (lack of noise is one plausible reason).
+ * In particular, do we want to add a section on the alternative Swedish recordings?
+
+8) text editing: MARYANN:
+
+ * some references show up as "(see for example (Tan et al 2020))" I.e., parentheses within parentheses.
+ * reference luce1985contextual is not found
+ * if possible, references should only show up at the end of the entire document, not at the bottom of each screen.
+ * let's change our terminology to "L2-accented" and "L1-accented" speech, following what we did in Xie et al under review." "native" and "non-native" can be used in the abstract, title, or once in the intro but not beyond. We also aim to avoid "foreign-accented". If the changes lead to indirect, convoluted language for particular instances let's discuss those instances. We don't want to make the paper less accessible but we do want to acknowledge that some people find the terms native and non-native (and foreign-accented) to be problematic.
 
 # Overview
 
@@ -234,7 +242,7 @@ Compared to the English experiment, the Swedish experiment had substantially few
 The decision to recruit a smaller number of participants was made because 1) the Swedish experiment was conceived as pilot experiment for a larger series of experiments still to be conducted, and 2) other previous studies had found significant effects with a similarly small number of participants (12 participants for each of two conditions in @eisner2013constraints).
 
 ### What are the expected consequences of this difference?
-Power analyses presented in Section \@ref(sec:bootstrap) strongly suggest that a) the English and Swedish experiment indeed differed in the statistical power they provided, and b) that the difference in statistical power is *highly unlikely* to explain the difference in results between the two experiments.
+Power analyses presented in Section \@ref(sec:bootstrap) find that a) the English and Swedish experiment indeed differed in the statistical power they provided, and b) that the difference in statistical power is *highly unlikely* to explain the difference in results between the two experiments.
 
 
 ## Recording of materials {#sec:recording}
@@ -260,7 +268,7 @@ The two recording equipment and environments were similar across the two experim
 
 The differences in the instructions during recording, however, mightaffect how native-like the recordings of the L2 speaker sound. In previous analyses, we have found that the recording procedure indeed had a strong effect on the pronunciations of the non-native speaker (Tan, Xie, \& Jaeger, 2019). Specifically, we found that the category means of /d/ and /t/ in either of the two recording conditions differed significantly from the native pronunciations of the native speaker whose recordings were used in the assisted condition. However, the recordings in the unassisted condition differed significantly more from the native-accented speech, both in terms of the number of cue dimensions along which the non-native speech differed from native speech and in terms of the degree of difference (for details, see Tan et al., 2019).
 
-It is therefore possible that the decision to use stimuli from the assisted recording condition caused the null effect of /d/-exposure. This would not, however, make the analyses we present here any less relevant for future work. *Any* experiment on speech perception is based on a finite set of speech stimuli. These stimuli can be more or less representative of 'typical' speech from that talker or speech community. In no case, however, is any single experiment going to reflect the range of speech styles and talker types that are present in the speech community. While this raises interesting questions about the generalizability of research on speech perception (for discussion, see REF-Xie et al., 2020), these questions are orthogonal to the more modest goal we pursue here: to predict, for a given set of exposure and test stimuli, what consequences exposure is likely to have on listeners' perception and categorization responses during test. This is the question the ideal observer analyses in Sections \@ref(sec:IO-methods) and \@ref(sec:IO-methods) address.
+It is therefore possible that the decision to use stimuli from the assisted recording condition caused the null effect of /d/-exposure. This would not, however, make the analyses we present here any less relevant for future work. *Any* experiment on speech perception is based on a finite set of speech stimuli. These stimuli can be more or less representative of 'typical' speech from that talker or speech community. In no case, however, is any single experiment going to reflect the range of speech styles and talker types that are present in the speech community. While this raises interesting questions about the generalizability of research on speech perception (for discussion, see REF-Xie et al., 2020), these questions are orthogonal to the more modest goal we pursue here: to predict, for a given set of exposure and test stimuli, what consequences exposure is likely to have on listeners' perception and categorization responses during test. This is the question the ideal observer analyses in Sections \@ref(sec:IO-methods) and \@ref(sec:IO-results) address.
 <!-- Maryann, Xin: commented out for now but we might add this in later: In Section \@ref(sec:unassisted), we report a comparison of the IO's predictions for the foreign-accented stimuli recorded in the unnassisted condition and those recorded in the assisted condition. This comparison predicts that a perception experiment with the recordings from the unassisted condition would be substantially more likely to elicit a benefit of /d/-exposure. -->
 
 
