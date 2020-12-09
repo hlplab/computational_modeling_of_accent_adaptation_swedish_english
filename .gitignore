@@ -8,6 +8,7 @@
 *.js
 *.css
 *.pdf
+*.tex
 *.log
 *.tmp
 scripts/Supplementary-information_files/
