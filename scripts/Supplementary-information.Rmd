@@ -1681,7 +1681,7 @@ plot_corrected_cues(
 
 
 ### Step 3: Align all data sets with the non-native test /t/ 
-```{r step 3 align to /t/ category from non-native test words}
+```{r step 3 align to /t/ category from non-native test words, eval=FALSE}
 # Get difference between non-native and native /t/ means (separately for each native talker)
 d.diff.t =
   d.stims %>%
