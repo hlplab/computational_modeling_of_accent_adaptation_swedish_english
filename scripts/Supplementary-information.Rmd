@@ -1181,9 +1181,7 @@ d.stims =
 ```
 
 
-
 ```{r create proportional measures for production data, include=FALSE, eval = FALSE}
-
 d.stims.original <- d.stims
 
 d.stims %<>%
@@ -1191,8 +1189,6 @@ d.stims %<>%
   mutate(duration.prop = duration/syllable_duration) %>%
   select(-duration) %>%
   spread(Measure, duration.prop)
-
-
 ```
 
 The realization of phonetic cues is known to be strongly influenced by phonological context [e.g., @ladefoged1957information; @lindblom1967role], and human listeners are known to effectively discount these effects---a process often referred to as *normalization* [e.g., @mann1980influence; @mann1981influence; @mcmurray2011information]. Additionally, some of the cues to syllable-final /d/ voicing are simultaneously used to signal other contrasts. This is most obviously the case for vowel duration in Swedish. Swedish has a phonological contrast between long and short vowels (e.g., *vit*---'white, comm. gend.' vs. *vitt*---'white, neuter'). Vowel duration is an important cue to this contrast. 
@@ -1289,7 +1285,7 @@ d.stims %<>%
                              language = .y))) 
 
 d.stims %<>%
-  unnest(data, rvowel, rclosure, rburst) %>%
+  unnest(c(data, rvowel, rclosure, rburst)) %>%
   # Make copy of most recent correction step and store it separately 
   mutate(
     rvowel.step1 = rvowel,
@@ -1507,7 +1503,7 @@ d.stims %<>%
                                                                data.fit = .x, 
                                                                language = .y)))
 d.stims %<>% 
-  unnest(data, rsyllable_duration) 
+  unnest(c(data, rsyllable_duration))
 ```
 
 <!-- Florian: this needs work. check whether it really makes sense to separate out syllable duration/speech rate effects from compensatory lengthening of the cues b/c of complexity of the syllable if these two groups of effects are estimated on the same data. Also check effects of number of segments per syllable --> 
@@ -1543,7 +1539,7 @@ d.stims %<>%
                                 accent = ..3)))
 
 
-d.stims %<>%  unnest(data, rvowel, rclosure, rburst) 
+d.stims %<>%  unnest(c(data, rvowel, rclosure, rburst))
 
  d.stims %<>%  rename(
     rvowel.step2 = rvowel1,
@@ -1553,8 +1549,7 @@ d.stims %<>%  unnest(data, rvowel, rclosure, rburst)
   mutate(
     rvowel = rvowel.step2,
     rclosure = rclosure.step2,
-    rburst = rburst.step2
-  )
+    rburst = rburst.step2)
 
 # xxx2 <- d.stims %>% filter(Talker == "M5") 
 ```
@@ -1610,10 +1605,10 @@ d.stims.swedish.step2 <- d.stims %>%
                                    filter(Sound == "/d/"), data.pred = .)),
          rclosure.step2 = purrr::map(data, ~my.resids.length("rclosure", data.fit = d.stims %>%
   filter(NativeLanguage == "Swedish") %>% filter(Accent == "non-native") %>%
-                                   filter(Sound == "/d/"),data.pred = .)),
+                                   filter(Sound == "/d/"), data.pred = .)),
          rburst.step2 = purrr::map(data, ~my.resids.length("rburst", data.fit = d.stims %>%
   filter(NativeLanguage == "Swedish") %>% filter(Accent == "non-native") %>%
-                                   filter(Sound == "/d/"),data.pred = .))
+                                   filter(Sound == "/d/"), data.pred = .))
   ) %>%
   unnest() %>%
   rename(rvowel.step2 = rvowel1,
