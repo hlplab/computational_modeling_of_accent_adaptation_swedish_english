@@ -1199,7 +1199,7 @@ $$corrected\_cue = cue - (\beta_1 context_1 + \beta_2 context_2 + ... + \beta_k 
 where the $\beta$s are the maximum likelihood coefficients of the following linear model: 
 
 $$lm(cue \sim context_1 + context_2 + ... + context_k)$$
-We apply this model to the present data while considering talker, segmental and supra-segmental phonotactic contexts. A number of properties of the data that is available to us complicate this context-correcting process, requiring us to estimate context effects sequentially on subsets of the data (see \@ref(fig:summary-cue-correction)). This is not ideal but does not bias our results. Next, we describe the three steps in \@ref(fig:summary-cue-correction), laying out for each step the assumptions we make and what consequences they might have for the training and testing of the ideal observers, as well as the comparison of interest between the native and non-native ideal observers across the experiment on English and Swedish.
+We apply this model to the present data while considering talker, segmental and supra-segmental phonotactic contexts. A number of properties of the data that is available to us complicate this context-correcting process, requiring us to estimate context effects sequentially on subsets of the data (see \@ref(fig:summary-cue-correction)). This is not an ideal situation but one that many researchers aiming to predictively model speech perception across L1 and L2 accents will have to face. In the following sections, we motivate and describe the three steps in \@ref(fig:summary-cue-correction), laying out for each step the assumptions we make and what consequences they might have for the training and testing of the ideal observers, as well as the comparison of interest between the native and non-native ideal observers across the experiment on English and Swedish.
 
 <!-- These steps involved a number of researchers' degrees of freedom. In other words, there often were several reasonable approaches that made slightly different assumptions about the data, and we had to choose one. Sometimes the data we had access to limited our choices. Whenever possible, however, we were guided by the goal to train and test two ideal observers that differed maximally in how much they knew about the foreign-accented speech: the native ideal observer reflecting a native listener without any knowledge about the foreign-accented speech, and the non-native ideal observer reflecting a native listener with maximal knowledge about the foreign-accented speech. -->
 
@@ -1253,6 +1253,14 @@ correct_for_segmental_context = function(cue.name,
   return(unlist(data.predict[, cue.name] - predict(l, newdata = data.predict)))
 }
 ```
+
+
+<!-- this needs revision -->
+
+<!-- integrate
+We assume that native listeners' expectations for phonotactic contexts are primarily based on native (L1) input, and thus aim to estimate those expectations from native data whenever possible. This contrasts with expectations about the talker, which by their very nature involve adaptation to the specific talker.
+//-->
+
 
 It is possible that native and non-native speakers differ in how their pronunciations are affected by segmental context. There are at least two reasons to believe that this might be the case. First, effects of segmental context are known to be at least partially conventionalized [@lahiri1991mental], and thus would have to be learned by non-native speakers. Second, it is possible that non-native speakers react differently to being recorded, choosing different speech registers. In a study conducted over the @Li2020database database of native and Mandardin-accented English, @xie2020comparing found that effects of phonological context were often reduced in the foreign-accented speech. 
 
