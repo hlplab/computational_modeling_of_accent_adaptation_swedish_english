@@ -1157,6 +1157,7 @@ d.stims =
       rename(
         Talker = Speaker,
         has_stress = phon_ctxt_stress,
+        number_segments = num_of_segments,
         number_syllables = syllable
       ) %>%
       mutate(NativeLanguage = "English",
