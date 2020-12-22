@@ -1098,6 +1098,7 @@ d.stims =
     coda_has_lateral = phon_ctxt_l,
     coda_has_nasal = phon_ctxt_n,
     number_syllables = syllable,
+    number_segments = num_of_segments,
     Accent = language,
     Item.WordID = Item.Word,
     Item.Word = Word) %>%
@@ -1127,6 +1128,7 @@ d.stims =
     read.csv("../data/English/English_production_exposure+test_Xie et al 2017.csv") %>%
       rename(
         has_stress = phon_ctxt_stress,
+        number_segments = num_of_segments,
         number_syllables = syllable
       ) %>%
       mutate(
