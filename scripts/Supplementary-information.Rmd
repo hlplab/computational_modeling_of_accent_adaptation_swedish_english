@@ -1230,7 +1230,7 @@ correct_for_segmental_context = function(cue.name,
   data.predict = data.fit
   data.fit %<>%
     # Predict from test data and Li et al.
-    filter(Block.Type != "exposure")
+    filter(Accent == "native" & Block.Type != "exposure")
   
   data.fit$y = as_vector(data.fit[, cue.name])
 
@@ -1241,10 +1241,12 @@ correct_for_segmental_context = function(cue.name,
       #   y ~ 1 + Accent /  (onset_has_nasal + coda_has_nasal + onset_has_rhotic + coda_has_lateral) + (1 + onset_has_nasal + coda_has_nasal + onset_has_rhotic + coda_has_lateral| Talker), 
       #   data = data.fit)
       lm(
-        y ~ 1 + (coda_has_nlr + onset_has_nlr), 
-        data = data.fit) else
+         y ~ 1 + (number_segments + Talker),
+       # y ~ 1 + (coda_has_nlr + onset_has_nlr), 
+       data = data.fit) else
       lm(
-        y ~ 1 + (has_long_vowel + coda_has_nasal), 
+        y ~ 1 + (has_long_vowel + number_segments),
+       # y ~ 1 + (has_long_vowel + coda_has_nasal), 
        # y ~ 1 + Accent / (has_long_vowel + coda_has_nasal), 
         data = data.fit)
 
@@ -1282,7 +1284,7 @@ Across the two languages, there were a total of six linear regressions, summariz
 ```{r step 1 correct for segmental context}
 
 d.stims %<>%
-  group_by(NativeLanguage, Talker) %>%
+  group_by(NativeLanguage) %>%
   nest() %>%
   mutate(
     rvowel = map2(
