@@ -1078,8 +1078,6 @@ Annotations were completed in Praat [@boersma2001praat] using visual examination
 
 ## Correction for phonological context
 
-<!-- Xin: should we perhaps code vowel lenght, coda lateral and rhotic for the English data or are there good reasons to believe that these variables don't matter for the English data? Or perhaps we don't have enough of those contexts? (there seemed to be quite a few, but they might not be balanced across data parts in a way that let's us estimate their effect?)  ANSWER: these variables are coded and loaded into d.stims. We can model them anytime-->
-
 ```{r load production data, include=FALSE}
 d.stims = 
   # Swedish data from Tan et al. (2019)
@@ -1152,7 +1150,7 @@ d.stims =
   # contains data from **native** talkers.
   full_join(
     read.csv("../data/English/English_production_Li et al 2020.csv") %>%
-      filter(!(Speaker %in% c("E12", "E3", "E7", "E9"))) %>%
+      filter(!(Speaker %in% c("E12", "E3", "E7", "E9"))) %>%  # apply this if only speakers with a high ratio of burst releases are included
       select(-Word) %>%
       rename(
         Talker = Speaker,
@@ -1182,16 +1180,6 @@ d.stims =
 ```
 
 
-```{r create proportional measures for production data, include=FALSE, eval = FALSE}
-d.stims.original <- d.stims
-
-d.stims %<>%
-  gather(Measure, duration, vowel:burst) %>%
-  mutate(duration.prop = duration/syllable_duration) %>%
-  select(-duration) %>%
-  spread(Measure, duration.prop)
-```
-
 The realization of phonetic cues is known to be strongly influenced by phonological context [e.g., @ladefoged1957information; @lindblom1967role], and human listeners are known to effectively discount these effects---a process often referred to as *normalization* [e.g., @mann1980influence; @mann1981influence; @mcmurray2011information]. Additionally, some of the cues to syllable-final /d/ voicing are simultaneously used to signal other contrasts. This is most obviously the case for vowel duration in Swedish. Swedish has a phonological contrast between long and short vowels (e.g., *vit*---'white, comm. gend.' vs. *vitt*---'white, neuter'). Vowel duration is an important cue to this contrast. 
 
 We thus obtained context-corrected phonetic cues by estimating (via linear regression) and removing (via residualization) the effects of phonological context from vowel, closure, and burst duration. By both training and testing the ideal observer on context-corrected cues, we aim to compare likes with likes. The literature contains many competing approaches to normalization [for a recent review, see @weatherholtz2017]. Here we follow the *C-CuRE* model [@mcmurray2011], which captures the intuition behind many previous proposals---that listeners interpret cues relative the cue value that is *expected* in the present phonological context (*C-CuRE* stands for "computing cues relative to expectation"). C-CuRE-corrected cues have been found to provide a good fit against human categorization of English fricatives [@mcmurray2011, @mcmurray2015; though other studies have found that C-CuRE does not fully capture listeners' ability to correct for talker-specific characteristics, @kleinschmidt2019, @xie2021]. <!--Maryann: Xin's paper with Chigusa and Dave's paper in LCN --> Beyond studies that have directly evaluated the empirical coverage of C-CuRE, it is common to center (and sometimes standardize) cues when dealing with speech from multiple talkers (REFS). <!-- Maryann? --> This essentially what C-Cure does. 
@@ -1217,7 +1205,7 @@ knitr::include_graphics("../figures/table_correction_steps.png")
 ```{r step 1 functions to correct for segmental context}
 # Correct for phonological context. For the specified cue (cue.name), we use linear regression 
 # to predict its values from the phonological context. The linear regression is fit against the
-# /d/ and /t/ test words (data.fit) for the specified experiment (language). 
+# /d/ and /t/ test words from the native talker(s) (data.fit) for the specified experiment (language). 
 # The predictions of this linear regression are then substracted from *all* data (data.predict: 
 # exposure /d/ + test /d/ + test /t/). 
 
@@ -1229,7 +1217,7 @@ correct_for_segmental_context = function(cue.name,
 ) {
   data.predict = data.fit
   data.fit %<>%
-    # Predict from test data and Li et al.
+    # Predict from test data from the native talker (Swedish); the /d/ and /t/ words from Li et al. (English)
     filter(Accent == "native" & Block.Type != "exposure")
   
   data.fit$y = as_vector(data.fit[, cue.name])
@@ -1255,7 +1243,7 @@ correct_for_segmental_context = function(cue.name,
             title = paste("Effects of segmental context on", cue.name, "duration for the", language, "test data"),
             axis.title = c(paste("Change in", cue.name, "duration (in msec)"), "")))
 
-   return(unlist(tidy(l)[[2,2]]))
+   return(unlist(tidy(l)[[2,2]])) # select the estimate of number_segments
 
   #return(unlist(data.predict[, cue.name] - predict(l, newdata = data.predict)))
 }
