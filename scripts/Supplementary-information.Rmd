@@ -1245,7 +1245,7 @@ correct_for_segmental_context = function(cue.name,
        # y ~ 1 + (coda_has_nlr + onset_has_nlr), 
        data = data.fit) else
       lm(
-        y ~ 1 + (has_long_vowel + number_segments),
+        y ~ 1 + (number_segments + has_long_vowel),
        # y ~ 1 + (has_long_vowel + coda_has_nasal), 
        # y ~ 1 + Accent / (has_long_vowel + coda_has_nasal), 
         data = data.fit)
@@ -1255,7 +1255,9 @@ correct_for_segmental_context = function(cue.name,
             title = paste("Effects of segmental context on", cue.name, "duration for the", language, "test data"),
             axis.title = c(paste("Change in", cue.name, "duration (in msec)"), "")))
 
-  return(unlist(data.predict[, cue.name] - predict(l, newdata = data.predict)))
+   return(unlist(tidy(l)[[2,2]]))
+
+  #return(unlist(data.predict[, cue.name] - predict(l, newdata = data.predict)))
 }
 ```
 
@@ -1286,30 +1288,31 @@ Across the two languages, there were a total of six linear regressions, summariz
 d.stims %<>%
   group_by(NativeLanguage) %>%
   nest() %>%
-  mutate(
-    rvowel = map2(
+   mutate(
+    offset_vowel = map2(
       data, NativeLanguage,
       ~ correct_for_segmental_context("vowel", 
                              data.fit = .x,
                              language = .y)),
-    rclosure = map2(
+    offset_closure = map2(
       data, NativeLanguage, 
       ~ correct_for_segmental_context("closure", 
                              data.fit = .x,
                              language = .y)),
-    rburst = map2(
+    offset_burst = map2(
       data, NativeLanguage, 
       ~ correct_for_segmental_context("burst", 
                              data.fit = .x, 
                              language = .y))) 
 
+
 d.stims %<>%
-  unnest(c(data, rvowel, rclosure, rburst)) %>%
+  unnest(c(data, offset_vowel, offset_closure, offset_burst)) 
   # Make copy of most recent correction step and store it separately 
-  mutate(
-    rvowel.step1 = rvowel,
-    rclosure.step1 = rclosure,
-    rburst.step1 = rburst) 
+  # mutate(
+  #   rvowel.step1 = rvowel,
+  #   rclosure.step1 = rclosure,
+  #   rburst.step1 = rburst) 
 ```
 
  
