@@ -1538,6 +1538,8 @@ d.stims %<>%
       ~ correct_for_word_length("burst", 
                              data.fit = .x,
                              language = .y)))
+
+d.stims %<>% unnest(c(data, NativeLanguage, offset_vowel2, offset_closure2, offset_burst2))
 ```
 
 
