@@ -1529,9 +1529,7 @@ d.stims %<>%
       data, NativeLanguage,
       ~ correct_for_word_length("vowel", 
                              data.fit = .x,
-                             language = .y)))
-
-,
+                             language = .y))),
     
     offset_closure2 = map2(
       data, NativeLanguage,
