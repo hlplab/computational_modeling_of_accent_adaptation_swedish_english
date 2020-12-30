@@ -1502,14 +1502,14 @@ correct_for_word_length = function(cue.name,
   data.fit$y = as_vector(data.fit[, cue.name])
   l = lm(y ~ 1 + (number_syllables + has_stress), data = data.fit, 
          offset = case_when(
-      cue.name == "vowel"  ~ offset_vowel,
-      cue.name == "closure"  ~ offset_closure,
-      cue.name == "burst"  ~ offset_burst,
-      T ~ NA_character_))
+      cue.name == "vowel"  ~ data.fit$offset_vowel,
+      cue.name == "closure"  ~ data.fit$offset_closure,
+      cue.name == "burst"  ~ data.fit$offset_burst,
+      T ~ NA_real_))
   
-  print(plot_model(l, 
+  print(plot_model(l,
                    show.p = T, show.values = T,
-                   title = paste("Effects of supra-segmental context on", gsub("^r", "", cue.name), "duration for the", accent, language, "test data"),
+                   title = paste("Effects of supra-segmental context on", gsub("^r", "", cue.name), "duration for the non-native", language, "test data"),
                    axis.title = c(paste("Change in", cue.name, "duration (in msec)"), "")))
 
   return(unlist(tidy(l)[[2,2]]))
@@ -1520,16 +1520,13 @@ correct_for_word_length = function(cue.name,
 ```{r fitting for word length effects}
 d.stims %<>%
   group_by(NativeLanguage) %>%
-  nest() 
-
-
-d.stims %<>%
+  nest() %>%
    mutate(
     offset_vowel2 = map2(
       data, NativeLanguage,
       ~ correct_for_word_length("vowel", 
                              data.fit = .x,
-                             language = .y))),
+                             language = .y)),
     
     offset_closure2 = map2(
       data, NativeLanguage,
