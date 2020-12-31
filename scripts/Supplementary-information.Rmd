@@ -1509,7 +1509,7 @@ correct_for_word_length = function(cue.name,
   
   print(plot_model(l,
                    show.p = T, show.values = T,
-                   title = paste("Effects of supra-segmental context on", gsub("^r", "", cue.name), "duration for the non-native", language, "test data"),
+                   title = paste("Effects of supra-segmental context on", gsub("^r", "", cue.name), "duration for the non-native", language, "/d/-final words"),
                    axis.title = c(paste("Change in", cue.name, "duration (in msec)"), "")))
 
   return(unlist(tidy(l)[[2,2]]))
