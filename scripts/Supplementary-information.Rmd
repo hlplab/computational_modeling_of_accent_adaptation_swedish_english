@@ -1206,8 +1206,8 @@ knitr::include_graphics("../figures/table_correction_steps.png")
 # Correct for phonological context. For the specified cue (cue.name), we use linear regression 
 # to predict its values from the phonological context. The linear regression is fit against the
 # /d/ and /t/ test words from the native talker(s) (data.fit) for the specified experiment (language). 
-# The predictions of this linear regression are then substracted from *all* data (data.predict: 
-# exposure /d/ + test /d/ + test /t/). 
+# The predictions for all terms of this linear regression (except Talker and the intercept) are then 
+# returned *all* data (data.predict: exposure /d/ + test /d/ + test /t/). 
 
 # We do not include coda fricative, rhotic, or lateral since these variables
 # did not vary within test within the test stimuli.
@@ -1215,37 +1215,53 @@ correct_for_segmental_context = function(cue.name,
                           data.fit,
                           language = c("English", "Swedish")
 ) {
+  message("NB: correct_for_segmental_context() assumes that the input data contains only one native language at a time.")
   data.predict = data.fit
   data.fit %<>%
     # Predict from test data from the native talker (Swedish); the /d/ and /t/ words from Li et al. (English)
-    filter(Accent == "native" & Block.Type != "exposure")
+    filter(
+      Accent == "native",
+      Block.Type != "exposure")
   
   data.fit$y = as_vector(data.fit[, cue.name])
 
   # Fit separate effects for each language
+  # @Maryann TO DO: check whether any of the following improve the model:
+  #     onset_has_nasal
+  #     coda_has_nasal
+  #     onset_has_rhotic
+  #     coda_has_rhotic
+  #     onset_has_lateral
+  #     coda_has_lateral
   l = 
     if(language == "English") 
-      # lmer(
-      #   y ~ 1 + Accent /  (onset_has_nasal + coda_has_nasal + onset_has_rhotic + coda_has_lateral) + (1 + onset_has_nasal + coda_has_nasal + onset_has_rhotic + coda_has_lateral| Talker), 
-      #   data = data.fit)
+      # English has multiple native talkers, and so we add Talker as a (additive) predictor,
+      # following the treatment of talker context in the C-CuRE model
       lm(
-         y ~ 1 + (number_segments + Talker),
-       # y ~ 1 + (coda_has_nlr + onset_has_nlr), 
-       data = data.fit) else
+        y ~ 1 + number_segments + Talker,
+        data = data.fit) else
+      # Swedish only has one native talker
       lm(
-        y ~ 1 + (number_segments + has_long_vowel),
-       # y ~ 1 + (has_long_vowel + coda_has_nasal), 
-       # y ~ 1 + Accent / (has_long_vowel + coda_has_nasal), 
+        y ~ 1 + number_segments + has_long_vowel,
         data = data.fit)
-
+  
   print(plot_model(l, type = "est",
                   show.p = T, show.values = T, show.data = T,
             title = paste("Effects of segmental context on", cue.name, "duration for the", language, "test data"),
             axis.title = c(paste("Change in", cue.name, "duration (in msec)"), "")))
 
-   return(unlist(tidy(l)[[2,2]])) # select the estimate of number_segments
-
-  #return(unlist(data.predict[, cue.name] - predict(l, newdata = data.predict)))
+  # Return linear predictor for all terms except for the intercept for all of the original data.
+  # This is the offset based on Step 1 that can be used in subsequent steps. Note that the Talker
+  # term is intentionally *not* included since we only want the segmental terms.
+  return(
+    rowSums(predict.lm(
+      l, 
+      # Set Talker to a known Talker level (it will be ignored but this is necessary for the predict
+      # function to work)
+      newdata = data.predict %>% 
+        mutate(Talker = first(data.fit$Talker)), 
+      type = "terms", 
+      terms = setdiff(labels(terms(l)), "Talker"))))
 }
 ```
 
@@ -1272,30 +1288,28 @@ The phonological contexts that were included as predictors in the linear regress
 Across the two languages, there were a total of six linear regressions, summarized in the next six figures. Each figure shows the predicted effect (in msecs) and confidence interval for all predictors. Significance is indicated through stars. For some cues and contexts, the simple effects of phonological context did not differ much between native and non-native speech. A notable exception is the effect of onset nasals, which was substantial in native-accented English but completely absent in Mandarin-accented English. Another exception was the effect of phonological vowel length in the Swedish data, which was *more* pronounced in the Flemish-accented talker compared to the native-accented talker. 
 
 ```{r step 1 correct for segmental context}
-
 d.stims %<>%
   group_by(NativeLanguage) %>%
   nest() %>%
    mutate(
-    offset_vowel = map2(
+    offset_segmenta_context_vowel = map2(
       data, NativeLanguage,
       ~ correct_for_segmental_context("vowel", 
                              data.fit = .x,
                              language = .y)),
-    offset_closure = map2(
+    offset_segmenta_context_closure = map2(
       data, NativeLanguage, 
       ~ correct_for_segmental_context("closure", 
                              data.fit = .x,
                              language = .y)),
-    offset_burst = map2(
+    offset_segmenta_context_burst = map2(
       data, NativeLanguage, 
       ~ correct_for_segmental_context("burst", 
                              data.fit = .x, 
                              language = .y))) 
 
-
 d.stims %<>%
-  unnest(c(data, offset_vowel, offset_closure, offset_burst)) 
+  unnest(c(data, offset_segmenta_context_vowel, offset_segmenta_context_closure, offset_segmenta_context_burst)) 
   # Make copy of most recent correction step and store it separately 
   # mutate(
   #   rvowel.step1 = rvowel,
