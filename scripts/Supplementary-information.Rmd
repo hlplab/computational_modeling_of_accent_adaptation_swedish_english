@@ -1209,22 +1209,17 @@ knitr::include_graphics("../figures/table_correction_steps.png")
 # The predictions for all terms of this linear regression (except Talker and the intercept) are then 
 # returned *all* data (data.predict: exposure /d/ + test /d/ + test /t/). 
 
+# @Maryann: is this still true?
 # We do not include coda fricative, rhotic, or lateral since these variables
 # did not vary within test within the test stimuli.
-correct_for_segmental_context = function(cue.name, 
-                          data.fit,
-                          language = c("English", "Swedish")
+get_segmenal_model = function(
+  data.fit,
+  cue.name = c("vowel", "closure", "burst"), 
+  language = c("English", "Swedish"),
+  plot = F
 ) {
-  message("NB: correct_for_segmental_context() assumes that the input data contains only one native language at a time.")
-  data.predict = data.fit
-  data.fit %<>%
-    # Predict from test data from the native talker (Swedish); the /d/ and /t/ words from Li et al. (English)
-    filter(
-      Accent == "native",
-      Block.Type != "exposure")
-  
+  message("NB: get_segmental_model() assumes that the input data contains only one native language at a time.")
   data.fit$y = as_vector(data.fit[, cue.name])
-
   # Fit separate effects for each language
   # @Maryann TO DO: check whether any of the following improve the model:
   #     onset_has_nasal
@@ -1245,10 +1240,29 @@ correct_for_segmental_context = function(cue.name,
         y ~ 1 + number_segments + has_long_vowel,
         data = data.fit)
   
-  print(plot_model(l, type = "est",
-                  show.p = T, show.values = T, show.data = T,
-            title = paste("Effects of segmental context on", cue.name, "duration for the", language, "test data"),
-            axis.title = c(paste("Change in", cue.name, "duration (in msec)"), "")))
+  if (plot) 
+    print(plot_model(l, type = "est",
+                     show.p = T, show.values = T, show.data = T,
+                     title = paste("Effects of segmental context on", cue.name, "duration for the", language, "test data"),
+                     axis.title = c(paste("Change in", cue.name, "duration (in msec)"), "")))
+  
+  return(l)
+}
+
+get_predictions_for_segmental_context = function(
+  data.fit,
+  cue.name = c("vowel", "closure", "burst"), 
+  language = c("English", "Swedish"),
+  plot = F
+) {
+  data.predict = data.fit
+  data.fit %<>%
+    # Predict from test data from the native talker (Swedish); the /d/ and /t/ words from Li et al. (English)
+    filter(
+      Accent == "native",
+      Block.Type != "exposure")
+
+  l = get_segmenal_model(data.fit, cue.name, language, plot = plot)
 
   # Return linear predictor for all terms except for the intercept for all of the original data.
   # This is the offset based on Step 1 that can be used in subsequent steps. Note that the Talker
@@ -1262,6 +1276,23 @@ correct_for_segmental_context = function(cue.name,
         mutate(Talker = first(data.fit$Talker)), 
       type = "terms", 
       terms = setdiff(labels(terms(l)), "Talker"))))
+}
+
+correct_for_segmental_context = function(
+  data.fit,
+  cue.name = c("vowel", "closure", "burst"), 
+  language = c("English", "Swedish"),
+  plot = T
+) {
+  # Return residuals after correcting for Talker, intercept, and segmental offset terms from Step 1
+  # (for correction, all data is used and so both English and Swedish have multiple talkers)
+  return(
+    residuals(
+      lm(
+        y ~ 1 + Talker, 
+        offset = get_predictions_for_segmental_context(data.fit, cue.name, language, plot = plot),
+        data = data.fit %>%
+          mutate(y = as_vector(data.fit[, cue.name])))))
 }
 ```
 
@@ -1292,29 +1323,41 @@ d.stims %<>%
   group_by(NativeLanguage) %>%
   nest() %>%
    mutate(
-    offset_segmenta_context_vowel = map2(
+    offset_segmental_context_vowel = map2(
+      data, NativeLanguage,
+      ~ get_predictions_for_segmental_context("vowel", 
+                             data.fit = .x,
+                             language = .y)),
+    offset_segmental_context_closure = map2(
+      data, NativeLanguage, 
+      ~ get_predictions_for_segmental_context("closure", 
+                             data.fit = .x,
+                             language = .y)),
+    offset_segmental_context_burst = map2(
+      data, NativeLanguage, 
+      ~ get_predictions_for_segmental_context("burst", 
+                             data.fit = .x, 
+                             language = .y)),
+    rvowel.step1 = map2(
       data, NativeLanguage,
       ~ correct_for_segmental_context("vowel", 
                              data.fit = .x,
                              language = .y)),
-    offset_segmenta_context_closure = map2(
+    rclosure.step1 = map2(
       data, NativeLanguage, 
       ~ correct_for_segmental_context("closure", 
                              data.fit = .x,
                              language = .y)),
-    offset_segmenta_context_burst = map2(
+    rburst.step1 = map2(
       data, NativeLanguage, 
       ~ correct_for_segmental_context("burst", 
                              data.fit = .x, 
                              language = .y))) 
 
 d.stims %<>%
-  unnest(c(data, offset_segmenta_context_vowel, offset_segmenta_context_closure, offset_segmenta_context_burst)) 
-  # Make copy of most recent correction step and store it separately 
-  # mutate(
-  #   rvowel.step1 = rvowel,
-  #   rclosure.step1 = rclosure,
-  #   rburst.step1 = rburst) 
+  unnest(c(data, 
+           offset_segmental_context_vowel, offset_segmental_context_closure, offset_segmental_context_burst,
+           rvowel.step1, rclosure.step1, rburst.step1)) 
 ```
 
  
@@ -1327,8 +1370,6 @@ Figures \@ref(fig:native-english-cue-before-and-after-segment-correction) to \@r
 # Make pipe to transform d.stim into long format for plotting (used a few times below)
 make_long = . %>%
   distinct() %>%
-  # Remove duplicate of most recent step
-  select(-c("rvowel", "rclosure", "rburst")) %>%
   # Convert into long format for plotting, with one row for each correction step as well 
   # as uncorrected cues
   pivot_longer(
