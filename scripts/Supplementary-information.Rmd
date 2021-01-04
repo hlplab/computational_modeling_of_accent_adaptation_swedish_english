@@ -1209,10 +1209,10 @@ knitr::include_graphics("../figures/table_correction_steps.png")
 # The predictions for all terms of this linear regression (except Talker and the intercept) are then 
 # returned *all* data (data.predict: exposure /d/ + test /d/ + test /t/). 
 
-# @Maryann: is this still true?
+# @Maryann: is this still true? 
 # We do not include coda fricative, rhotic, or lateral since these variables
 # did not vary within test within the test stimuli.
-get_segmenal_model = function(
+get_segmental_model = function(
   data.fit,
   cue.name = c("vowel", "closure", "burst"), 
   language = c("English", "Swedish"),
@@ -1233,11 +1233,11 @@ get_segmenal_model = function(
       # English has multiple native talkers, and so we add Talker as a (additive) predictor,
       # following the treatment of talker context in the C-CuRE model
       lm(
-        y ~ 1 + number_segments + Talker,
+        y ~ 1 + number_segments + Talker + coda_has_nasal + onset_has_rhotic,
         data = data.fit) else
       # Swedish only has one native talker
       lm(
-        y ~ 1 + number_segments + has_long_vowel,
+        y ~ 1 + number_segments + has_long_vowel + coda_has_nasal,
         data = data.fit)
   
   if (plot) 
@@ -1262,7 +1262,7 @@ get_predictions_for_segmental_context = function(
       Accent == "native",
       Block.Type != "exposure")
 
-  l = get_segmenal_model(data.fit, cue.name, language, plot = plot)
+  l = get_segmental_model(data.fit, cue.name, language, plot = plot)
 
   # Return linear predictor for all terms except for the intercept for all of the original data.
   # This is the offset based on Step 1 that can be used in subsequent steps. Note that the Talker
