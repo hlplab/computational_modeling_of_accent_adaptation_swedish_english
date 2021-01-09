@@ -1551,7 +1551,7 @@ correct_for_word_length = function(cue.name,
 get_word_length_model = function(
   data.fit,
   cue.name = c("vowel", "closure", "burst"),
-  language = c("English", "Swedish"),
+  #language = c("English", "Swedish"),
   plot = F
 ) {
 l = lm(
@@ -1578,12 +1578,12 @@ get_predictions_for_word_length = function(
 ) {
   data.predict = data.fit
   data.fit %<>%
-    # Predict from non-native /d/ words from
+    # Predict from non-native /d/ words (same for both English & Swedish)
     filter(
       Accent == "non-native",
       Sound == "/d/")
  
-  l = get_word_length_model(data.fit, cue.name, language, plot = plot)
+  l = get_word_length_model(data.fit, cue.name, plot = plot)
   return(
     rowSums(predict.lm(
       l,
