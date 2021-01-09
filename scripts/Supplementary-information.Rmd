@@ -1550,69 +1550,59 @@ correct_for_word_length = function(cue.name,
 ```{r step 2 functions to fit for word length effects}
 get_word_length_model = function(
   data.fit,
-  cue.name = c("vowel", "closure", "burst"), 
+  cue.name = c("vowel", "closure", "burst"),
   language = c("English", "Swedish"),
   plot = F
 ) {
-  
-  l = lm(
-        y ~ 1 + number_syllables + has_stress, data = data.fit, 
+l = lm(
+        y ~ 1 + number_syllables + has_stress, data = data.fit,
          offset = case_when(
       cue.name == "vowel"  ~ data.fit$offset_segmental_context_vowel,
       cue.name == "closure"  ~ data.fit$offset_segmental_context_closure,
       cue.name == "burst"  ~ data.fit$offset_segmental_context_burst))
-  
-  if (plot) 
+ 
+  if (plot)
     print(plot_model(l, type = "est",
                      show.p = T, show.values = T, show.data = T,
                      title = paste("Effects of word length context on", cue.name, "duration for the", language, "test data"),
                      axis.title = c(paste("Change in", cue.name, "duration (in msec)"), "")))
-  
+ 
   return(l)
 }
-
-get_predictions_for_word_length_context = function(
+ 
+get_predictions_for_word_length = function(
   data.fit,
-  cue.name = c("vowel", "closure", "burst"), 
+  cue.name = c("vowel", "closure", "burst"),
   language = c("English", "Swedish"),
   plot = F
 ) {
   data.predict = data.fit
   data.fit %<>%
-    # Predict from test data from the native talker (Swedish); the /d/ and /t/ words from Li et al. (English)
+    # Predict from non-native /d/ words from
     filter(
       Accent == "non-native",
       Sound == "/d/")
-
+ 
   l = get_word_length_model(data.fit, cue.name, language, plot = plot)
-
-  # Return linear predictor for all terms except for the intercept for all of the original data.
-  # This is the offset based on Step 1 that can be used in subsequent steps. Note that the Talker
-  # term is intentionally *not* included since we only want the segmental terms.
   return(
     rowSums(predict.lm(
-      l, 
-      # Set Talker to a known Talker level (it will be ignored but this is necessary for the predict
-      # function to work)
-      newdata = data.predict %>% 
-        mutate(Talker = first(data.fit$Talker)), 
-      type = "terms", 
+      l,
+      newdata = data.predict,
+      type = "terms",
       terms = setdiff(labels(terms(l)), "Talker"))))
 }
-
-correct_for_segmental_context = function(
+ 
+correct_for_word_length = function(
   data.fit,
-  cue.name = c("vowel", "closure", "burst"), 
+  cue.name = c("vowel", "closure", "burst"),
   language = c("English", "Swedish"),
   plot = T
 ) {
-  # Return residuals after correcting for Talker, intercept, and segmental offset terms from Step 1
-  # (for correction, all data is used and so both English and Swedish have multiple talkers)
   return(
     residuals(
       lm(
-        y ~ 1 + Talker, 
-        offset = get_predictions_for_segmental_context(data.fit, cue.name, language, plot = plot),
+        y ~ 1 + Talker,
+        offset = get_predictions_for_word_length(data.fit, cue.name, language, plot = plot),     #not sure how to change this
         data = data.fit %>%
           mutate(y = as_vector(data.fit[, cue.name])))))
 }
