@@ -1229,17 +1229,18 @@ get_segmental_model = function(
   #     onset_has_lateral
   #     coda_has_lateral
   l = 
-    if(language == "English") 
+    if(language == "English") {
       # English has multiple native talkers, and so we add Talker as a (additive) predictor,
       # following the treatment of talker context in the C-CuRE model
       lm(
         y ~ 1 + number_segments + Talker + coda_has_nasal + onset_has_rhotic,
-        data = data.fit) else
+        data = data.fit) 
+    } else {
       # Swedish only has one native talker
       lm(
         y ~ 1 + number_segments + has_long_vowel + coda_has_nasal,
         data = data.fit)
-  
+    }
   if (plot) 
     print(plot_model(l, type = "est",
                      show.p = T, show.values = T, show.data = T,
@@ -1263,6 +1264,7 @@ get_predictions_for_segmental_context = function(
       Block.Type != "exposure")
 
   l = get_segmental_model(data.fit, cue.name, language, plot = plot)
+  newdata <- data.predict %>% mutate(Talker = first(data.fit$Talker))
 
   # Return linear predictor for all terms except for the intercept for all of the original data.
   # This is the offset based on Step 1 that can be used in subsequent steps. Note that the Talker
@@ -1272,8 +1274,7 @@ get_predictions_for_segmental_context = function(
       l, 
       # Set Talker to a known Talker level (it will be ignored but this is necessary for the predict
       # function to work)
-      newdata = data.predict %>% 
-        mutate(Talker = first(data.fit$Talker)), 
+      newdata = newdata, 
       type = "terms", 
       terms = setdiff(labels(terms(l)), "Talker"))))
 }
@@ -1547,95 +1548,156 @@ correct_for_word_length = function(cue.name,
 ```
 
 
-```{r step 2 functions to fit for word length effects}
-get_word_length_model = function(
+```{r step 2 functions to correct for supra-segmental context}
+# explore how to do this in long format
+d.stims.pivoted<- d.stims %>% pivot_longer(cols = c(offset_segmental_context_vowel,
+                      offset_segmental_context_closure,
+                      offset_segmental_context_burst),
+             names_to = c(".value", "segmental_context"),
+                names_pattern = "(offset_segmental)_context_(.*)"
+             )
+
+get_suprasegmental_model = function(
   data.fit,
   cue.name = c("vowel", "closure", "burst"),
-  #language = c("English", "Swedish"),
+  language = c("English", "Swedish"),
   plot = F
 ) {
-l = lm(
-        y ~ 1 + number_syllables + has_stress, data = data.fit,
-         offset = case_when(
-      cue.name == "vowel"  ~ data.fit$offset_segmental_context_vowel,
-      cue.name == "closure"  ~ data.fit$offset_segmental_context_closure,
-      cue.name == "burst"  ~ data.fit$offset_segmental_context_burst))
+
+# doing conditional filtering below because making dataframe long multiplies the cue names columns by 3. Don't want to fit the regression model with 3 times the cue values. Please recode if you know a more efficient way to do it.
+  if(cue.name == "vowel") {
+    data.fit %<>% filter(segmental_context == "vowel")
+  } else if(cue.name == "closure") {
+    data.fit %<>% filter(segmental_context == "closure")
+  } else {
+      data.fit %<>% filter(segmental_context == "burst")
+  }
+  
+  data.fit$y = as_vector(data.fit[, cue.name])
+  
+l = lm(y ~ 1 + number_syllables + has_stress,
+       data = data.fit,
+       offset = data.fit$offset_segmental
+       )
  
   if (plot)
     print(plot_model(l, type = "est",
                      show.p = T, show.values = T, show.data = T,
-                     title = paste("Effects of word length context on", cue.name, "duration for the", language, "test data"),
+                     title = paste("Effects of word suprasegmental context on", cue.name, "duration for the", language, "test data"),
                      axis.title = c(paste("Change in", cue.name, "duration (in msec)"), "")))
  
   return(l)
 }
  
-get_predictions_for_word_length = function(
-  data.fit,
-  cue.name = c("vowel", "closure", "burst"),
+get_predictions_for_suprasegmental_context = function(
+  data.fit, 
+  cue.name = c("vowel", "closure", "burst"), 
   language = c("English", "Swedish"),
   plot = F
-) {
+                                                    ) 
+  {
   data.predict = data.fit
   data.fit %<>%
-    # Predict from non-native /d/ words (same for both English & Swedish)
+    # Predict from non-native /d/ words (respectively for English & Swedish)
     filter(
-      Accent == "non-native",
-      Sound == "/d/")
- 
-  l = get_word_length_model(data.fit, cue.name, plot = plot)
+           Accent == "non-native",
+           Sound == "/d/"
+          )
+
+  l = get_suprasegmental_model(data.fit, cue.name, language, plot = plot)
+  newdata <- data.predict
+  
   return(
-    rowSums(predict.lm(
-      l,
-      newdata = data.predict,
-      type = "terms",
-      terms = setdiff(labels(terms(l)), "Talker"))))
-}
+    rowSums(
+      predict.lm(l,
+                 newdata = newdata,
+                 type = "terms", # terms of a model also includes offset maybe  --does terms include offset or not, if a linear model includes offsets check whether terms include offset or not  
+                 terms = labels(terms(l))
+                )
+           )
+        )
+   }
  
-correct_for_word_length = function(
-  data.fit,
-  cue.name = c("vowel", "closure", "burst"),
-  language = c("English", "Swedish"),
-  plot = T
-) {
+correct_for_suprasegmental_context = function(data.fit,
+                                              cue.name = c("vowel", "closure", "burst"),
+                                              language = c("English", "Swedish"),
+                                              plot = T
+                                             ) {
   return(
     residuals(
       lm(
         y ~ 1 + Talker,
-        offset = get_predictions_for_word_length(data.fit, cue.name, language, plot = plot),     #not sure how to change this
-        data = data.fit %>%
-          mutate(y = as_vector(data.fit[, cue.name])))))
+        offset = get_predictions_for_suprasegmental_context(data.fit, 
+                                                 cue.name, 
+                                                 language, 
+                                                 plot = plot) +               
+        get_predictions_for_segmental_context(data.fit, 
+                                                 cue.name, 
+                                                 language, 
+                                                 plot = plot),
+        data = data.fit %>% mutate(y = as_vector(data.fit[, cue.name]))
+         )
+              )
+         )
 }
+# if offset from 1 is not included in the predictions then edit there again. 
 
-
-
+# step 3 depends on whether terms of l will give offset or not, if offset is included in the terms, step 3 only needs offsets from second step if not then 
 
 ```
 
 
-```{r fitting for word length effects}
-d.stims %<>%
-  group_by(NativeLanguage) %>%
-  nest() %>%
-   mutate(
-    offset_vowel2 = map2(
+```{r correcting for suprasegmental effects}
+d.stims.nested <- d.stims.pivoted %>%
+group_by(NativeLanguage) %>%
+  nest() 
+
+
+
+   d.stims.nested %<>% mutate(
+    offset_suprasegmental_context_vowel = map2(
       data, NativeLanguage,
-      ~ correct_for_word_length("vowel", 
+      ~ get_predictions_for_suprasegmental_context("vowel", 
                              data.fit = .x,
                              language = .y)),
     
-    offset_closure2 = map2(
+    offset_suprasegmental_context_closure = map2(
       data, NativeLanguage,
-      ~ correct_for_word_length("closure", 
+      ~ get_predictions_for_suprasegmental_context("closure", 
                              data.fit = .x,
                              language = .y)),
-    offset_burst2 = map2(
+    offset_suprasegmental_context_burst = map2(
       data, NativeLanguage,
-      ~ correct_for_word_length("burst", 
-                             data.fit = .x,
-                             language = .y)))
+      ~ get_predictions_for_suprasegmental_context("burst", 
+                            data.fit = .x,
+                             language = .y)),
 
-d.stims %<>% unnest(c(data, NativeLanguage, offset_vowel2, offset_closure2, offset_burst2))
+  rvowel.step2 = map2(
+      data, NativeLanguage,
+      ~ correct_for_suprasegmental_context("vowel", 
+                             data.fit = .x,
+                             language = .y)),
+    rclosure.step2 = map2(
+      data, NativeLanguage, 
+      ~ correct_for_suprasegmental_context("closure", 
+                             data.fit = .x,
+                             language = .y)),
+    rburst.step2 = map2(
+      data, NativeLanguage, 
+      ~ correct_for_suprasegmental_context("burst", 
+                             data.fit = .x, 
+                             language = .y))) 
+
+d.stims.nested %<>%
+  unnest(c(data, 
+           offset_suprasegmental_context_vowel, 
+           offset_suprasegmental_context_closure, 
+           offset_suprasegmental_context_burst,
+           rvowel.step2, 
+           rclosure.step2, 
+           rburst.step2)
+         )
+
 ```
 
 
