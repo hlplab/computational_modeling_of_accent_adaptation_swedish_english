@@ -1577,7 +1577,7 @@ get_suprasegmental_model = function(
   
 l = lm(y ~ 1 + number_syllables + has_stress,
        data = data.fit,
-       offset = data.fit$offset_segmental
+       # offset = offset_segmental
        )
  
   if (plot)
@@ -1611,7 +1611,7 @@ get_predictions_for_suprasegmental_context = function(
     rowSums(
       predict.lm(l,
                  newdata = newdata,
-                 type = "terms", # terms of a model also includes offset maybe  --does terms include offset or not, if a linear model includes offsets check whether terms include offset or not  
+                 type = "terms", 
                  terms = labels(terms(l))
                 )
            )
