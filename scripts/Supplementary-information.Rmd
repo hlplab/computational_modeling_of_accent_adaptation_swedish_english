@@ -1617,7 +1617,8 @@ get_predictions_for_suprasegmental_context = function(
            )
         )
    }
- 
+# I compared the predict function with and without an offset. The number of terms are the same but term values are different when the model does not include the offset. Presumably this means that the offset is added to the terms 
+
 correct_for_suprasegmental_context = function(data.fit,
                                               cue.name = c("vowel", "closure", "burst"),
                                               language = c("English", "Swedish"),
@@ -1640,9 +1641,7 @@ correct_for_suprasegmental_context = function(data.fit,
               )
          )
 }
-# if offset from 1 is not included in the predictions then edit there again. 
 
-# step 3 depends on whether terms of l will give offset or not, if offset is included in the terms, step 3 only needs offsets from second step if not then 
 
 ```
 
@@ -1651,8 +1650,6 @@ correct_for_suprasegmental_context = function(data.fit,
 d.stims.nested <- d.stims.pivoted %>%
 group_by(NativeLanguage) %>%
   nest() 
-
-
 
    d.stims.nested %<>% mutate(
     offset_suprasegmental_context_vowel = map2(
