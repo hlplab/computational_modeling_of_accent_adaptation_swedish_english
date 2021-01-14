@@ -68,6 +68,7 @@ library(assertthat)
 library(daver)
 # devtools::install_github("kleinschmidt/phondisttools")
 library(phondisttools)
+library(rms)
 ```
 
 ```{r constants and environments}
@@ -1209,9 +1210,6 @@ knitr::include_graphics("../figures/table_correction_steps.png")
 # The predictions for all terms of this linear regression (except Talker and the intercept) are then 
 # returned *all* data (data.predict: exposure /d/ + test /d/ + test /t/). 
 
-# @Maryann: is this still true? 
-# We do not include coda fricative, rhotic, or lateral since these variables
-# did not vary within test within the test stimuli.
 get_segmental_model = function(
   data.fit,
   cue.name = c("vowel", "closure", "burst"), 
@@ -1220,27 +1218,23 @@ get_segmental_model = function(
 ) {
   message("NB: get_segmental_model() assumes that the input data contains only one native language at a time.")
   data.fit$y = as_vector(data.fit[, cue.name])
-  # Fit separate effects for each language
-  # @Maryann TO DO: check whether any of the following improve the model:
-  #     onset_has_nasal
-  #     coda_has_nasal
-  #     onset_has_rhotic
-  #     coda_has_rhotic
-  #     onset_has_lateral
-  #     coda_has_lateral
-  l = 
-    if(language == "English") {
-      # English has multiple native talkers, and so we add Talker as a (additive) predictor,
-      # following the treatment of talker context in the C-CuRE model
-      lm(
-        y ~ 1 + number_segments + Talker + coda_has_nasal + onset_has_rhotic,
-        data = data.fit) 
-    } else {
-      # Swedish only has one native talker
-      lm(
-        y ~ 1 + number_segments + has_long_vowel + coda_has_nasal,
-        data = data.fit)
-    }
+  # Fit separate effects for each language & cue based on best model fit
+ f = formula(
+    case_when(
+       language == "English" & cue.name == "vowel" ~ 
+         "y ~ 1 + number_segments + Talker + coda_has_lateral + coda_has_nasal +     onset_has_rhotic",
+       language == "English" & cue.name == "closure" ~
+         "y ~ 1 + number_segments + Talker + coda_has_lateral + onset_has_rhotic + onset_has_lateral",
+       language == "English" & cue.name == "burst" ~
+         "y ~ 1 + number_segments + Talker + coda_has_lateral",
+       language == "Swedish" & (cue.name == "vowel" | cue.name == "closure")  ~ 
+         "y ~ 1 + number_segments + has_long_vowel + coda_has_nasal",
+       language == "Swedish" & cue.name == "burst" ~
+         "y ~ 1 + number_segments + has_long_vowel",
+      T ~ NA_character_))
+  
+  l = lm(f, data = data.fit)
+  
   if (plot) 
     print(plot_model(l, type = "est",
                      show.p = T, show.values = T, show.data = T,
@@ -1304,6 +1298,22 @@ correct_for_segmental_context = function(
 We assume that native listeners' expectations for phonotactic contexts are primarily based on native (L1) input, and thus aim to estimate those expectations from native data whenever possible. This contrasts with expectations about the talker, which by their very nature involve adaptation to the specific talker.
 //-->
 
+<!-- to be added once we are sure that C-CuRE normalisation is best.
+In determining the linear regression model for estimating the effects of segmental context we used the ```validation()``` function available in the rms package for R [@Harrell2020rms]. Each cue was regressed onto the full combination of contextual factors that could explain how the cue durations vary. The predictors considered for English were 
+
+*number of segments
+*Talker
+*onset has lateral
+*coda has lateral
+*onset has nasal
+*coda has nasal
+*onset has rhotic
+
+The validation employed a group cross-validation method with the backward step-down approach for each training sample. The final models for the respective cues were as follows:
+```vowel ~ 1 +
+```closure ~ 1 +
+```burst ~ 1 + 
+//-->
 
 It is possible that native and non-native speakers differ in how their pronunciations are affected by segmental context. There are at least two reasons to believe that this might be the case. First, effects of segmental context are known to be at least partially conventionalized [@lahiri1991mental], and thus would have to be learned by non-native speakers. Second, it is possible that non-native speakers react differently to being recorded, choosing different speech registers. In a study conducted over the @Li2020database database of native and Mandardin-accented English, @xie2020comparing found that effects of phonological context were often reduced in the foreign-accented speech. 
 
@@ -1549,7 +1559,7 @@ correct_for_word_length = function(cue.name,
 
 
 ```{r step 2 functions to correct for supra-segmental context}
-# explore how to do this in long format
+# make data long to facilitate easier step 2 process. keep the long form different from d.stims.long which was used for plotting. Results in 3108 rows and duplicated 
 d.stims.pivoted<- d.stims %>% pivot_longer(cols = c(offset_segmental_context_vowel,
                       offset_segmental_context_closure,
                       offset_segmental_context_burst),
@@ -1564,7 +1574,7 @@ get_suprasegmental_model = function(
   plot = F
 ) {
 
-# doing conditional filtering below because making dataframe long multiplies the cue names columns by 3. Don't want to fit the regression model with 3 times the cue values. Please recode if you know a more efficient way to do it.
+# doing conditional filtering below because making dataframe long multiplies the cue names columns by 3. Don't want to fit the regression model with 3 times the cue values. 
   if(cue.name == "vowel") {
     data.fit %<>% filter(segmental_context == "vowel")
   } else if(cue.name == "closure") {
@@ -1577,13 +1587,13 @@ get_suprasegmental_model = function(
   
 l = lm(y ~ 1 + number_syllables + has_stress,
        data = data.fit,
-       # offset = offset_segmental
+       offset = offset_segmental
        )
  
   if (plot)
     print(plot_model(l, type = "est",
                      show.p = T, show.values = T, show.data = T,
-                     title = paste("Effects of word suprasegmental context on", cue.name, "duration for the", language, "test data"),
+                     title = paste("Effects of suprasegmental context on", cue.name, "duration for the", language, "test data"),
                      axis.title = c(paste("Change in", cue.name, "duration (in msec)"), "")))
  
   return(l)
@@ -1635,7 +1645,7 @@ correct_for_suprasegmental_context = function(data.fit,
         get_predictions_for_segmental_context(data.fit, 
                                                  cue.name, 
                                                  language, 
-                                                 plot = plot),
+                                                 plot = F),
         data = data.fit %>% mutate(y = as_vector(data.fit[, cue.name]))
          )
               )
@@ -1647,11 +1657,11 @@ correct_for_suprasegmental_context = function(data.fit,
 
 
 ```{r correcting for suprasegmental effects}
-d.stims.nested <- d.stims.pivoted %>%
+d.stims.pivoted %<>%
 group_by(NativeLanguage) %>%
   nest() 
 
-   d.stims.nested %<>% mutate(
+   d.stims.pivoted %<>% mutate(
     offset_suprasegmental_context_vowel = map2(
       data, NativeLanguage,
       ~ get_predictions_for_suprasegmental_context("vowel", 
@@ -1685,7 +1695,7 @@ group_by(NativeLanguage) %>%
                              data.fit = .x, 
                              language = .y))) 
 
-d.stims.nested %<>%
+d.stims.pivoted %<>%
   unnest(c(data, 
            offset_suprasegmental_context_vowel, 
            offset_suprasegmental_context_closure, 
@@ -1695,6 +1705,17 @@ d.stims.nested %<>%
            rburst.step2)
          )
 
+# remove the offset columns from the dataframe. 
+d.stims.pivoted %<>% select(c(-offset_segmental, -offset_suprasegmental_context_vowel, 
+                             -offset_suprasegmental_context_closure, -offset_suprasegmental_context_burst, -segmental_context))
+# remove the duplicate rows. There should be 1036 rows but R retained 7 duplicates (1043 rows). Can't figure out the problem.
+d.stims <- d.stims.pivoted %>% distinct()
+# store the step2 values as r<cue>
+d.stims %<>% mutate(
+  rvowel = rvowel.step2,
+    rclosure = rclosure.step2,
+    rburst = rburst.step2
+)
 ```
 
 
