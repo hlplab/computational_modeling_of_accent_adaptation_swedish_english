@@ -1222,7 +1222,7 @@ get_segmental_model = function(
  f = formula(
     case_when(
        language == "English" & cue.name == "vowel" ~ 
-         "y ~ 1 + number_segments + Talker + coda_has_lateral + coda_has_nasal +     onset_has_rhotic",
+         "y ~ 1 + number_segments + Talker + coda_has_lateral + coda_has_nasal + onset_has_rhotic",
        language == "English" & cue.name == "closure" ~
          "y ~ 1 + number_segments + Talker + coda_has_lateral + onset_has_rhotic + onset_has_lateral",
        language == "English" & cue.name == "burst" ~
@@ -1330,9 +1330,12 @@ The phonological contexts that were included as predictors in the linear regress
 Across the two languages, there were a total of six linear regressions, summarized in the next six figures. Each figure shows the predicted effect (in msecs) and confidence interval for all predictors. Significance is indicated through stars. For some cues and contexts, the simple effects of phonological context did not differ much between native and non-native speech. A notable exception is the effect of onset nasals, which was substantial in native-accented English but completely absent in Mandarin-accented English. Another exception was the effect of phonological vowel length in the Swedish data, which was *more* pronounced in the Flemish-accented talker compared to the native-accented talker. 
 
 ```{r step 1 correct for segmental context}
-d.stims %<>%
+# storing changes in separate dataframes so that d.stims is not affected. Allows better tracking.
+d.stims.step1 <- d.stims %>%
   group_by(NativeLanguage) %>%
-  nest() %>%
+  nest() 
+
+d.stims.step1 %<>% 
    mutate(
     offset_segmental_context_vowel = map2(
       data, NativeLanguage,
@@ -1365,7 +1368,7 @@ d.stims %<>%
                              data.fit = .x, 
                              language = .y))) 
 
-d.stims %<>%
+d.stims.step1 %<>%
   unnest(c(data, 
            offset_segmental_context_vowel, offset_segmental_context_closure, offset_segmental_context_burst,
            rvowel.step1, rclosure.step1, rburst.step1)) 
@@ -1395,7 +1398,7 @@ make_long = . %>%
   )
 
 d.stims.long = 
-  d.stims %>%
+  d.stims.step1 %>%
   make_long()
 
 # Animations can be manipulated via animation_opts() but it seems that 
@@ -1560,12 +1563,12 @@ correct_for_word_length = function(cue.name,
 
 ```{r step 2 functions to correct for supra-segmental context}
 # make data long to facilitate easier step 2 process. keep the long form different from d.stims.long which was used for plotting. Results in 3108 rows and duplicated 
-d.stims.pivoted<- d.stims %>% pivot_longer(cols = c(offset_segmental_context_vowel,
-                      offset_segmental_context_closure,
-                      offset_segmental_context_burst),
-             names_to = c(".value", "segmental_context"),
-                names_pattern = "(offset_segmental)_context_(.*)"
-             )
+# d.stims.pivoted<- d.stims.step1 %>% pivot_longer(cols = c(offset_segmental_context_vowel,
+#                       offset_segmental_context_closure,
+#                       offset_segmental_context_burst),
+#              names_to = c(".value", "segmental_context"),
+#                 names_pattern = "(offset_segmental)_context_(.*)"
+#              )
 
 get_suprasegmental_model = function(
   data.fit,
@@ -1574,20 +1577,28 @@ get_suprasegmental_model = function(
   plot = F
 ) {
 
-# doing conditional filtering below because making dataframe long multiplies the cue names columns by 3. Don't want to fit the regression model with 3 times the cue values. 
+# doing conditional filtering below because making dataframe long multiplies the cue names rows by 3. Don't want to fit the regression model with 3 times the cue values. 
+  # if(cue.name == "vowel") {
+  #   data.fit %<>% filter(segmental_context == "vowel")
+  # } else if(cue.name == "closure") {
+  #   data.fit %<>% filter(segmental_context == "closure")
+  # } else {
+  #     data.fit %<>% filter(segmental_context == "burst")
+  # }
+  
   if(cue.name == "vowel") {
-    data.fit %<>% filter(segmental_context == "vowel")
+    offset = data.fit$offset_segmental_context_vowel
   } else if(cue.name == "closure") {
-    data.fit %<>% filter(segmental_context == "closure")
+    offset = data.fit$offset_segmental_context_closure
   } else {
-      data.fit %<>% filter(segmental_context == "burst")
+    offset = data.fit$offset_segmental_context_burst
   }
   
   data.fit$y = as_vector(data.fit[, cue.name])
   
 l = lm(y ~ 1 + number_syllables + has_stress,
        data = data.fit,
-       offset = offset_segmental
+       offset = offset
        )
  
   if (plot)
@@ -1627,7 +1638,7 @@ get_predictions_for_suprasegmental_context = function(
            )
         )
    }
-# I compared the predict function with and without an offset. The number of terms are the same but term values are different when the model does not include the offset. Presumably this means that the offset is added to the terms 
+# I compared the correct_for_suprasegmental_context() function with and without an offset. The number of terms extracted are the same but term values are different when the model does not include the offset. Presumably this means that the offset is added to the terms 
 
 correct_for_suprasegmental_context = function(data.fit,
                                               cue.name = c("vowel", "closure", "burst"),
@@ -1657,11 +1668,11 @@ correct_for_suprasegmental_context = function(data.fit,
 
 
 ```{r correcting for suprasegmental effects}
-d.stims.pivoted %<>%
+d.stims.step2 <- d.stims.step1 %>%
 group_by(NativeLanguage) %>%
   nest() 
 
-   d.stims.pivoted %<>% mutate(
+   d.stims.step2 %<>% mutate(
     offset_suprasegmental_context_vowel = map2(
       data, NativeLanguage,
       ~ get_predictions_for_suprasegmental_context("vowel", 
@@ -1695,7 +1706,7 @@ group_by(NativeLanguage) %>%
                              data.fit = .x, 
                              language = .y))) 
 
-d.stims.pivoted %<>%
+d.stims.step2 %<>%
   unnest(c(data, 
            offset_suprasegmental_context_vowel, 
            offset_suprasegmental_context_closure, 
@@ -1706,12 +1717,19 @@ d.stims.pivoted %<>%
          )
 
 # remove the offset columns from the dataframe. 
-d.stims.pivoted %<>% select(c(-offset_segmental, -offset_suprasegmental_context_vowel, 
-                             -offset_suprasegmental_context_closure, -offset_suprasegmental_context_burst, -segmental_context))
+# d.stims.pivoted %<>% select(c(-offset_segmental, -offset_suprasegmental_context_vowel, 
+                             # -offset_suprasegmental_context_closure, -offset_suprasegmental_context_burst, -segmental_context))
+# d.stims.step2.no.offset <- d.stims.step2 %>% 
+#   select(c(-offset_segmental, 
+#            -offset_suprasegmental_context_vowel,
+#            -offset_suprasegmental_context_closure, 
+#            -offset_suprasegmental_context_burst, 
+#            -segmental_context))
+
 # remove the duplicate rows. There should be 1036 rows but R retained 7 duplicates (1043 rows). Can't figure out the problem.
-d.stims <- d.stims.pivoted %>% distinct()
+# d.stims.step3 <- d.stims.step2.no.offset %>% distinct()
 # store the step2 values as r<cue>
-d.stims %<>% mutate(
+d.stims.step2 %<>% mutate(
   rvowel = rvowel.step2,
     rclosure = rclosure.step2,
     rburst = rburst.step2
