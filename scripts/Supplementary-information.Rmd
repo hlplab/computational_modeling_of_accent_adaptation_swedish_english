@@ -1638,7 +1638,7 @@ get_predictions_for_suprasegmental_context = function(
            )
         )
    }
-# I compared the correct_for_suprasegmental_context() function with and without an offset. The number of terms extracted are the same but term values are different when the model does not include the offset. Presumably this means that the offset is added to the terms 
+# I compared the correct_for_suprasegmental_context() function with and without an offset. The number of terms extracted are the same but term values are different when the model does not include the offset. Presumably the offset is added to the terms 
 
 correct_for_suprasegmental_context = function(data.fit,
                                               cue.name = c("vowel", "closure", "burst"),
@@ -1649,15 +1649,15 @@ correct_for_suprasegmental_context = function(data.fit,
     residuals(
       lm(
         y ~ 1 + Talker,
-        offset = get_predictions_for_suprasegmental_context(data.fit, 
+        data = data.fit %>% mutate(y = as_vector(data.fit[, cue.name])),
+        offset = get_predictions_for_segmental_context(data.fit, 
                                                  cue.name, 
                                                  language, 
-                                                 plot = plot) +               
-        get_predictions_for_segmental_context(data.fit, 
+                                                 plot = plot) + 
+          get_predictions_for_suprasegmental_context(data.fit, 
                                                  cue.name, 
                                                  language, 
-                                                 plot = F),
-        data = data.fit %>% mutate(y = as_vector(data.fit[, cue.name]))
+                                                 plot = plot)
          )
               )
          )
@@ -1728,12 +1728,6 @@ d.stims.step2 %<>%
 
 # remove the duplicate rows. There should be 1036 rows but R retained 7 duplicates (1043 rows). Can't figure out the problem.
 # d.stims.step3 <- d.stims.step2.no.offset %>% distinct()
-# store the step2 values as r<cue>
-d.stims.step2 %<>% mutate(
-  rvowel = rvowel.step2,
-    rclosure = rclosure.step2,
-    rburst = rburst.step2
-)
 ```
 
 
@@ -1888,7 +1882,7 @@ Figures \@ref(fig:native-english-cue-before-and-after-length-correction) to \@re
 
 ```{r prepare for cue plot after step 1 and 2, include=FALSE}
 d.stims.long = 
-  d.stims %>%
+  d.stims.step2 %>% select(c(-contains("offset"))) %>% 
   make_long()
 ```
 
@@ -2048,6 +2042,12 @@ plot_corrected_cues(
 
 
 ```{r store corrected production data, include=FALSE}
+# storing the final residualised values from step 2 as r<cue>
+d.stims <- d.stims.step2 %>% mutate(
+  rvowel = rvowel.step2,
+    rclosure = rclosure.step2,
+    rburst = rburst.step2
+)
 save(d.stims, file = "../data/data_production_corrected for phonetic context_both languages.Rdata")
 ```
 
