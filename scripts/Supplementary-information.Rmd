@@ -1234,10 +1234,9 @@ get_predictions_for_segmental_context = function(
 ) {
   data.predict = data.fit
   data.fit %<>%
-    # Predict from test data from the native talker (Swedish); the /d/ and /t/ words from Li et al. (English)
-    filter(
-      Accent == "native" & Block.Type != "exposure"
-      )
+    # Predict from test data from the native talker (Swedish); 
+    # the /d/ and /t/ words from Li et al. (English)
+    filter(Accent == "native" & Block.Type != "exposure")
 
   l = get_segmental_model(data.fit, cue.name, language, plot = plot)
   newdata <- data.predict %>% mutate(Talker = first(data.fit$Talker))
@@ -1317,7 +1316,7 @@ Across the two languages, there were a total of six linear regressions, summariz
 # storing changes in separate dataframes so that d.stims is not affected. Allows better tracking.
 d.stims.step1 <- d.stims %>%
   group_by(NativeLanguage) %>%
-  nest() 
+  nest()
 
 d.stims.step1 %<>% 
    mutate(
@@ -1326,13 +1325,11 @@ d.stims.step1 %<>%
       ~ get_predictions_for_segmental_context("vowel", 
                              data.fit = .x,
                              language = .y)),
-    
     offset_segmental_context_closure = map2(
       data, NativeLanguage, 
       ~ get_predictions_for_segmental_context("closure", 
                              data.fit = .x,
                              language = .y)),
-    
     offset_segmental_context_burst = map2(
       data, NativeLanguage, 
       ~ get_predictions_for_segmental_context("burst", 
@@ -1489,7 +1486,7 @@ get_suprasegmental_model = function(
   language = c("English", "Swedish"),
   plot = F
 ) {
-
+  # get offset for the specific cue that is being corrected
   if(cue.name == "vowel") {
     offset = data.fit$offset_segmental_context_vowel
   } else if(cue.name == "closure") {
@@ -1499,18 +1496,16 @@ get_suprasegmental_model = function(
   }
   
   data.fit$y = as_vector(data.fit[, cue.name])
+  l = lm(y ~ 1 + number_syllables + has_stress,
+         data = data.fit,
+         offset = offset)
   
-l = lm(y ~ 1 + number_syllables + has_stress,
-       data = data.fit,
-       offset = offset
-       )
- 
   if (plot)
     print(plot_model(l,  type = "est",
                      show.p = T, show.values = T, show.data = T,
                      title = paste("Effects of suprasegmental context on", cue.name, "duration for the", language, "test data"),
                      axis.title = c(paste("Change in", cue.name, "duration (in msec)"), "")))
- 
+  
   return(l)
 }
  
@@ -1520,101 +1515,100 @@ get_predictions_for_suprasegmental_context = function(
   language = c("English", "Swedish"),
   plot = F
 ) {
-    l = get_suprasegmental_model(data.fit, cue.name, language, plot = plot)
+  l = get_suprasegmental_model(data.fit, cue.name, language, plot = plot)
 
   data.predict = data.fit
   # Predict from non-native /d/ words (respectively for English & Swedish)
-  data.fit %<>% filter(Accent == "non-native" & Sound == "/d/"
-                       )
-  newdata <- data.predict
+  data.fit %<>% filter(Accent == "non-native" & Sound == "/d/")
+  
   return(
     rowSums(
       predict.lm(l,
-                 newdata = newdata,
+                 newdata = data.predict,
                  type = "terms", 
-                 terms = labels(terms(l))
-                )
-           )
-        )
+                 terms = labels(terms(l)))))
 }
 
 # I compared the get_predictions() function with and without an offset. The number of terms extracted are the same but term values are different when the model does not include the offset. Presumably the offset is added to the terms 
-correct_for_suprasegmental_context = function(data.fit,
-                                              cue.name = c("vowel", "closure", "burst"),
-                                              language = c("English", "Swedish"),
-                                              plot = T
-                                             ) {
+correct_for_suprasegmental_context = function(
+  data.fit,
+  cue.name = c("vowel", "closure", "burst"),
+  language = c("English", "Swedish"),
+  plot = T
+) {
   return(
     residuals(
       lm(
         y ~ 1 + Talker,
-        offset = get_predictions_for_segmental_context(data.fit, 
-                                                       cue.name, 
-                                                       language, 
-                                                       plot = F) + 
-          get_predictions_for_suprasegmental_context(data.fit, 
-                                                     cue.name, 
-                                                     language, 
-                                                     plot = plot),
-        data = data.fit %>% mutate(y = as_vector(data.fit[, cue.name]))
-         )
-      )
-  )
+        offset = get_predictions_for_segmental_context(
+          data.fit, 
+          cue.name, 
+          language, 
+          plot = F) + 
+          get_predictions_for_suprasegmental_context(
+            data.fit, 
+            cue.name, 
+            language, 
+            plot = plot),
+        data = data.fit %>% 
+          mutate(y = as_vector(data.fit[, cue.name])))))
 }
-
-
 ```
 
 
 ```{r correcting for suprasegmental effects}
+d.stims.step2 <- 
+  d.stims.step1 %>% 
+  group_by(NativeLanguage) %>% 
+  nest() 
 
-
-d.stims.step2 <- d.stims.step1 %>% group_by(NativeLanguage) %>% nest() 
-
-   d.stims.step2 %<>% mutate(
-    offset_suprasegmental_context_vowel = map2(
-      data, NativeLanguage,
-      ~ get_predictions_for_suprasegmental_context("vowel", 
-                             data.fit = .x,
-                             language = .y)),
-    
-    offset_suprasegmental_context_closure = map2(
-      data, NativeLanguage,
-      ~ get_predictions_for_suprasegmental_context("closure", 
-                             data.fit = .x,
-                             language = .y)),
-    
-    offset_suprasegmental_context_burst = map2(
-      data, NativeLanguage,
-      ~ get_predictions_for_suprasegmental_context("burst", 
-                            data.fit = .x,
-                             language = .y)),
-
+d.stims.step2 %<>% mutate(
+  offset_suprasegmental_context_vowel = map2(
+    data, NativeLanguage,
+    ~ get_predictions_for_suprasegmental_context(
+      "vowel", 
+      data.fit = .x,
+      language = .y)),
+  offset_suprasegmental_context_closure = map2(
+    data, NativeLanguage,
+    ~ get_predictions_for_suprasegmental_context(
+      "closure", 
+      data.fit = .x,
+      language = .y)),
+  offset_suprasegmental_context_burst = map2(
+    data, NativeLanguage,
+    ~ get_predictions_for_suprasegmental_context(
+      "burst", 
+      data.fit = .x,
+      language = .y)),
   rvowel.step2 = map2(
-      data, NativeLanguage,
-      ~ correct_for_suprasegmental_context("vowel", 
-                             data.fit = .x,
-                             language = .y)),
-    rclosure.step2 = map2(
-      data, NativeLanguage, 
-      ~ correct_for_suprasegmental_context("closure", 
-                             data.fit = .x,
-                             language = .y)),
-    rburst.step2 = map2(
-      data, NativeLanguage, 
-      ~ correct_for_suprasegmental_context("burst", 
-                             data.fit = .x, 
-                             language = .y))) 
+    data, NativeLanguage,
+    ~ correct_for_suprasegmental_context(
+      "vowel", 
+      data.fit = .x,
+      language = .y)),
+  rclosure.step2 = map2(
+    data, NativeLanguage, 
+    ~ correct_for_suprasegmental_context(
+      "closure", 
+      data.fit = .x,
+      language = .y)),
+  rburst.step2 = map2(
+    data, NativeLanguage, 
+    ~ correct_for_suprasegmental_context(
+      "burst", 
+      data.fit = .x, 
+      language = .y))) 
 
 d.stims.step2 %<>%
-  unnest(c(data, 
-           offset_suprasegmental_context_vowel, 
-           offset_suprasegmental_context_closure, 
-           offset_suprasegmental_context_burst,
-           rvowel.step2, 
-           rclosure.step2, 
-           rburst.step2)
-         )
+  unnest(
+    c(data, 
+      offset_suprasegmental_context_vowel, 
+      offset_suprasegmental_context_closure, 
+      offset_suprasegmental_context_burst,
+      rvowel.step2, 
+      rclosure.step2, 
+      rburst.step2))
 ```
 
 Supra-segmental factors like---lexical stress and speech rate---are also known to affect the phonetic realization of sounds. For example, segments tend to have longer durations in stressed, compared to unstressed, syllables [@lindblom1963spectrographic; @van1987effects]. Processes like compensatory lengthening/shortening [@peterson1960duration; @lindblom1973some; @fowler1981relationship] can also cause segments to be longer in syllables with fewer segments @klatt1976linguistic, and words with fewer syllables (Warner et al., 2004). Additionally, local changes in speech rate are likely to affect durational measures like the ones used here [e.g. @crystal1982segmental; @gahl2012reduce]. Given that non-native speakers tend to speak more slowly, it is necessary to control for cue duration variation caused by differences in speaking rate. We thus removed effects of speech rate, lexical stress, and syllable/word complexity on vowel, closure, and burst duration.
@@ -1639,7 +1633,8 @@ Figures \@ref(fig:native-english-cue-before-and-after-suprasegmental-correction)
 
 ```{r prepare for cue plot after step 1 and 2, include=FALSE}
 d.stims.long = 
-  d.stims.step2 %>% select(c(-contains("offset"))) %>% 
+  d.stims.step2 %>% 
+  select(c(-contains("offset"))) %>% 
   make_long()
 ```
 
@@ -1647,7 +1642,9 @@ d.stims.long =
 (ref:native-english-cue-before-and-after-length-correction) Native-accented English words with syllable-final /d/ or /t/ before and after correction for supra-segmental context.
 
 ```{r native-english-cue-before-and-after-suprasegmental-correction, fig.cap="(ref:native-english-cue-before-and-after-suprasegmental-correction)", out.width="75%", fig.show='hold', eval = FALSE}
-plot_corrected_cues(d.stims.long %>% filter(NativeLanguage == "English", Accent == "native"))
+plot_corrected_cues(
+  d.stims.long %>% 
+    filter(NativeLanguage == "English", Accent == "native"))
 ```
 
 #### English (non-native)
