@@ -1163,7 +1163,7 @@ d.stims =
 ```
 
 
-The realization of phonetic cues is known to be strongly influenced by phonological context [e.g., @ladefoged1957information; @lindblom1967role], and human listeners are known to effectively discount these effects---a process often referred to as *normalization* [e.g., @mann1980influence; @mann1981influence; @mcmurray2011information]. Additionally, some of the cues to syllable-final /d/ voicing are simultaneously used to signal other contrasts. This is most obviously the case for vowel duration in Swedish. Swedish has a phonological contrast between long and short vowels (e.g., *vit*---'white, comm. gend.' vs. *vitt*---'white, neuter'). Vowel duration is an important cue to this contrast. 
+The realization of phonetic cues is known to be strongly influenced by phonological context [e.g., @ladefoged1957information; @lindblom1967role], and human listeners are known to effectively discount these effects---a process often referred to as *normalization* [e.g., @mann1980influence; @mann1981influence; @johnson200815, @mcmurray2011information]. Additionally, some of the cues to syllable-final /d/ voicing are simultaneously used to signal other contrasts. This is most obviously the case for vowel duration in Swedish. Swedish has a phonological contrast between long and short vowels (e.g., *vit*---'white, comm. gend.' vs. *vitt*---'white, neuter'). Vowel duration is an important cue to this contrast. 
 
 We thus obtained context-corrected phonetic cues by estimating (via linear regression) and removing (via residualization) the effects of phonological context from vowel, closure, and burst duration. By both training and testing the ideal observer on context-corrected cues, we aim to compare likes with likes. The literature contains many competing approaches to normalization [for a recent review, see @weatherholtz2016speech, @flynn2011comparing, @clopper2009computational, and @adank2004comparison]. Here we follow the *C-CuRE* model [@mcmurray2011information], which captures the intuition behind many previous proposals---that listeners interpret cues relative the cue value that is *expected* in the present phonological context (*C-CuRE* stands for "computing cues relative to expectation"). C-CuRE-corrected cues have been found to provide a good fit against human categorization of English fricatives [@mcmurray2011information, @mcmurray2015; though other studies have found that C-CuRE does not fully capture listeners' ability to correct for talker-specific characteristics, @kleinschmidt2019structure, @xie2021encoding]. Beyond studies that have directly evaluated the empirical coverage of C-CuRE, it is common to center (and sometimes standardize) cues when dealing with speech from multiple talkers [@lobanov1971classification, @nearey1978phonetic, @johnson200815. This is essentially what C-Cure does. 
 
@@ -1173,7 +1173,7 @@ $$corrected\_cue = cue - (\beta_1 context_1 + \beta_2 context_2 + ... + \beta_k 
 where the $\beta$s are the maximum likelihood coefficients of the following linear model: 
 
 $$lm(cue \sim context_1 + context_2 + ... + context_k)$$
-We apply this model to the present data while considering talker, segmental and supra-segmental phonotactic contexts. A number of properties of the data that is available to us complicate this context-correcting process, requiring us to estimate context effects sequentially on subsets of the data (see \@ref(fig:summary-cue-correction)). This is not an ideal situation but one that many researchers aiming to predictively model speech perception across L1 and L2 accents will have to face. In the following sections, we motivate and describe the three steps in \@ref(fig:summary-cue-correction), laying out for each step the assumptions we make and what consequences they might have for the training and testing of the ideal observers, as well as the comparison of interest between the native and non-native ideal observers across the experiment on English and Swedish.
+We apply this model to the present data while considering talker, segmental and supra-segmental phonotactic contexts. A number of properties of the data that were available to us complicate this context-correcting process, requiring us to estimate context effects sequentially on subsets of the data (see \@ref(fig:summary-cue-correction)). This is not an ideal situation but one that many researchers aiming to predictively model speech perception across L1 and L2 accents will have to face. In the following sections, we motivate and describe the three steps in \@ref(fig:summary-cue-correction), laying out for each step the assumptions we make and what consequences they might have for the training and testing of the ideal observers, as well as the comparison of interest between the native and non-native ideal observers across the experiment on English and Swedish.
 
 <!-- These steps involved a number of researchers' degrees of freedom. In other words, there often were several reasonable approaches that made slightly different assumptions about the data, and we had to choose one. Sometimes the data we had access to limited our choices. Whenever possible, however, we were guided by the goal to train and test two ideal observers that differed maximally in how much they knew about the foreign-accented speech: the native ideal observer reflecting a native listener without any knowledge about the foreign-accented speech, and the non-native ideal observer reflecting a native listener with maximal knowledge about the foreign-accented speech. -->
 
@@ -1282,7 +1282,7 @@ We assume that native listeners' expectations for phonotactic contexts are prima
 //-->
 
 <!-- to be added once we are sure that C-CuRE normalisation is best.
-In determining the linear regression model for estimating the effects of segmental context we used the ```validation()``` function available in the rms package for R [@Harrell2020rms]. Each cue was regressed onto the full combination of contextual factors that could explain how the cue durations vary. The predictors considered for English were 
+In determining the linear regression model for estimating the effects of segmental context we used the ```validation()``` function available in the rms package for R [@Harrell2020rms]. Each cue was regressed onto the full combination of contextual factors that could explain its variability. The predictors considered for English were 
 
 *number of segments
 *Talker
@@ -1292,10 +1292,12 @@ In determining the linear regression model for estimating the effects of segment
 *coda has nasal
 *onset has rhotic
 
-The validation employed a group cross-validation method with the backward step-down approach for each training sample. The final models for the respective cues were as follows:
-```vowel ~ 1 +
-```closure ~ 1 +
-```burst ~ 1 + 
+The validation employed a group cross-validation method with the backward step-down approach for each training sample. The final models for the respective cues for English were as follows:
+```vowel ~ 1 + number_segments + Talker + coda_has_lateral + coda_has_nasal + onset_has_rhotic```
+```closure ~ 1 + number_segments + Talker + coda_has_lateral + onset_has_lateral + onset_has_rhotic``` 
+```burst ~ 1 + number_segments + Talker + coda_has_lateral```
+
+For Swedish phonological vowel length and the presence of a nasal were expected to have significant effects on vowel and closure durations. The model for the respective cues were ```cue ~ 1 + number_segments + has_long_vowel + coda_has_nasal```
 //-->
 
 It is possible that native and non-native speakers differ in how their pronunciations are affected by segmental context. There are at least two reasons to believe that this might be the case. First, effects of segmental context are known to be at least partially conventionalized [@lahiri1991mental], and thus would have to be learned by non-native speakers. Second, it is possible that non-native speakers react differently to being recorded, choosing different speech registers. In a study conducted over the @Li2020database database of native and Mandardin-accented English, @xie2020comparing found that effects of phonological context were often reduced in the foreign-accented speech. 
@@ -1551,7 +1553,7 @@ correct_for_suprasegmental_context = function(data.fit,
         offset = get_predictions_for_segmental_context(data.fit, 
                                                        cue.name, 
                                                        language, 
-                                                       plot = plot) + 
+                                                       plot = F) + 
           get_predictions_for_suprasegmental_context(data.fit, 
                                                      cue.name, 
                                                      language, 
@@ -1566,10 +1568,7 @@ correct_for_suprasegmental_context = function(data.fit,
 
 
 ```{r correcting for suprasegmental effects}
-# d.stims.step1.english <- d.stims.step1 %>% filter(NativeLanguage == "English")
-# d.stims.step1.english.s2 <- as_tibble(get_predictions_for_suprasegmental_context("vowel", 
-#                              data.fit = d.stims.step1.english,
-#                              language = "English"))
+
 
 d.stims.step2 <- d.stims.step1 %>% group_by(NativeLanguage) %>% nest() 
 
