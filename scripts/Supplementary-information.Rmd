@@ -1021,23 +1021,6 @@ In line with our main analysis, this bootstrap result suggests that the effect o
 Finally, we can ask how often the bootstrapped English data returned $t$-values for the two-way interaction that were as large or larger than the $t$-value observed in the original Swedish data. In short, how likely would we be to observe the actual Swedish results if they reflected the same effect as present in the English sample. This was the case on only `r d.bootstrap$p.simple.larger_than_original`\% of all bootstrap samples.
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 # Methods of ideal observer analyses {#sec:IO-methods}
 
 For both the English and the Swedish data, we compare the predictions of a native model and a non-native model. The native models are meant to predict the behavior of listeners without exposure to the foreign-accented /d/, i.e., listeners in the control condition. The non-native models are meant to predict the behavior of listeners with exposure to the foreign-accented /d/, i.e. listeners in the /d/-exposure condition. 
@@ -1070,7 +1053,6 @@ Of note, the words that were used as training data for the native /d/ were not t
 The procedure for the Swedish data was identical with one exception. We did not find any Swedish database comparable to @Li2020database. We thus had access to only the recordings of one gender and age-matched native-accented speaker, judged to have standard Swedish pronunciation. This was the speaker recorded to provide the native pronunciations for the foreign-accented talker (see \@ref(sec:recording)). Instead of estimating a prototypical native talker of Swedish, we thus use the speech from the only native talker we had recordings of to estimate the /d/ and /t/ categories for the native Swedish IO. Thus, unlike for the English IOs, the words that were recorded to estimate the native and non-native Swedish categories were the same. 
 
 As for the English data, the non-native Swedish IO's /t/ category was the same as for the native Swedish IO.
-
 
 ## Annotation and extraction of cues
 Tokens were annotated for their duration of vowel, closure, and burst. These three cues are considered primary cues to syllable-final voicing [e.g., @hillenbrand1984perception; @lisker1957closure; @luce1985contextual]. It is therefore likely, but not guaranteed, that the three cues would explain a substantial part of variation in participants' ratings during test. The results of the ideal observer analyses reported below support this assumption: performance of the non-native IO was high for both experiments. This suggests that /d/ and /t/ in both the English and the Swedish data formed clusters that were separable within the 3D space defined by the three cues.
@@ -1183,7 +1165,7 @@ d.stims =
 
 The realization of phonetic cues is known to be strongly influenced by phonological context [e.g., @ladefoged1957information; @lindblom1967role], and human listeners are known to effectively discount these effects---a process often referred to as *normalization* [e.g., @mann1980influence; @mann1981influence; @mcmurray2011information]. Additionally, some of the cues to syllable-final /d/ voicing are simultaneously used to signal other contrasts. This is most obviously the case for vowel duration in Swedish. Swedish has a phonological contrast between long and short vowels (e.g., *vit*---'white, comm. gend.' vs. *vitt*---'white, neuter'). Vowel duration is an important cue to this contrast. 
 
-We thus obtained context-corrected phonetic cues by estimating (via linear regression) and removing (via residualization) the effects of phonological context from vowel, closure, and burst duration. By both training and testing the ideal observer on context-corrected cues, we aim to compare likes with likes. The literature contains many competing approaches to normalization [for a recent review, see @weatherholtz2017]. Here we follow the *C-CuRE* model [@mcmurray2011], which captures the intuition behind many previous proposals---that listeners interpret cues relative the cue value that is *expected* in the present phonological context (*C-CuRE* stands for "computing cues relative to expectation"). C-CuRE-corrected cues have been found to provide a good fit against human categorization of English fricatives [@mcmurray2011, @mcmurray2015; though other studies have found that C-CuRE does not fully capture listeners' ability to correct for talker-specific characteristics, @kleinschmidt2019, @xie2021]. <!--Maryann: Xin's paper with Chigusa and Dave's paper in LCN --> Beyond studies that have directly evaluated the empirical coverage of C-CuRE, it is common to center (and sometimes standardize) cues when dealing with speech from multiple talkers (REFS). <!-- Maryann? --> This essentially what C-Cure does. 
+We thus obtained context-corrected phonetic cues by estimating (via linear regression) and removing (via residualization) the effects of phonological context from vowel, closure, and burst duration. By both training and testing the ideal observer on context-corrected cues, we aim to compare likes with likes. The literature contains many competing approaches to normalization [for a recent review, see @weatherholtz2016speech, @flynn2011comparing, @clopper2009computational, and @adank2004comparison]. Here we follow the *C-CuRE* model [@mcmurray2011information], which captures the intuition behind many previous proposals---that listeners interpret cues relative the cue value that is *expected* in the present phonological context (*C-CuRE* stands for "computing cues relative to expectation"). C-CuRE-corrected cues have been found to provide a good fit against human categorization of English fricatives [@mcmurray2011information, @mcmurray2015; though other studies have found that C-CuRE does not fully capture listeners' ability to correct for talker-specific characteristics, @kleinschmidt2019structure, @xie2021encoding]. Beyond studies that have directly evaluated the empirical coverage of C-CuRE, it is common to center (and sometimes standardize) cues when dealing with speech from multiple talkers [@lobanov1971classification, @nearey1978phonetic, @johnson200815. This is essentially what C-Cure does. 
 
 The C-CuRE model employed in those studies has the additional advantage that it is computationally tractable, as the effects of different contexts are assumed to be additive (i.e., the model does not contain interactions between the effects of contexts on cues). Specifically, the C-CuRE-corrected cues are simply the residuals of a linear model that predicts the cue from the linear combination of contexts:
 
@@ -1218,20 +1200,20 @@ get_segmental_model = function(
 ) {
   message("NB: get_segmental_model() assumes that the input data contains only one native language at a time.")
   data.fit$y = as_vector(data.fit[, cue.name])
-  # Fit separate effects for each language & cue based on best model fit
+  # Fit separate effects for each language & cue based on best model fit determined by validate() in rms package
  f = formula(
     case_when(
        language == "English" & cue.name == "vowel" ~ 
          "y ~ 1 + number_segments + Talker + coda_has_lateral + coda_has_nasal + onset_has_rhotic",
        language == "English" & cue.name == "closure" ~
-         "y ~ 1 + number_segments + Talker + coda_has_lateral + onset_has_rhotic + onset_has_lateral",
+         "y ~ 1 + number_segments + Talker + coda_has_lateral + onset_has_lateral + onset_has_rhotic ",
        language == "English" & cue.name == "burst" ~
          "y ~ 1 + number_segments + Talker + coda_has_lateral",
        language == "Swedish" & (cue.name == "vowel" | cue.name == "closure")  ~ 
          "y ~ 1 + number_segments + has_long_vowel + coda_has_nasal",
        language == "Swedish" & cue.name == "burst" ~
-         "y ~ 1 + number_segments + has_long_vowel",
-      T ~ NA_character_))
+         "y ~ 1 + number_segments + has_long_vowel", #according to validate none of the predictors affect burst. To determine whether we should leave burst values uncorrected.
+       T ~ NA_character_))
   
   l = lm(f, data = data.fit)
   
@@ -1255,7 +1237,8 @@ get_predictions_for_segmental_context = function(
     # Predict from test data from the native talker (Swedish); the /d/ and /t/ words from Li et al. (English)
     filter(
       Accent == "native",
-      Block.Type != "exposure")
+      Block.Type != "exposure"
+      )
 
   l = get_segmental_model(data.fit, cue.name, language, plot = plot)
   newdata <- data.predict %>% mutate(Talker = first(data.fit$Talker))
@@ -1342,11 +1325,13 @@ d.stims.step1 %<>%
       ~ get_predictions_for_segmental_context("vowel", 
                              data.fit = .x,
                              language = .y)),
+    
     offset_segmental_context_closure = map2(
       data, NativeLanguage, 
       ~ get_predictions_for_segmental_context("closure", 
                              data.fit = .x,
                              language = .y)),
+    
     offset_segmental_context_burst = map2(
       data, NativeLanguage, 
       ~ get_predictions_for_segmental_context("burst", 
@@ -1504,15 +1489,6 @@ get_suprasegmental_model = function(
   plot = F
 ) {
 
-# doing conditional filtering below because making dataframe long multiplies the cue names rows by 3. Don't want to fit the regression model with 3 times the cue values. 
-  # if(cue.name == "vowel") {
-  #   data.fit %<>% filter(segmental_context == "vowel")
-  # } else if(cue.name == "closure") {
-  #   data.fit %<>% filter(segmental_context == "closure")
-  # } else {
-  #     data.fit %<>% filter(segmental_context == "burst")
-  # }
-  
   if(cue.name == "vowel") {
     offset = data.fit$offset_segmental_context_vowel
   } else if(cue.name == "closure") {
@@ -1529,7 +1505,7 @@ l = lm(y ~ 1 + number_syllables + has_stress,
        )
  
   if (plot)
-    print(plot_model(l, type = "est",
+    print(plot_model(l,  type = "est",
                      show.p = T, show.values = T, show.data = T,
                      title = paste("Effects of suprasegmental context on", cue.name, "duration for the", language, "test data"),
                      axis.title = c(paste("Change in", cue.name, "duration (in msec)"), "")))
@@ -1542,31 +1518,26 @@ get_predictions_for_suprasegmental_context = function(
   cue.name = c("vowel", "closure", "burst"), 
   language = c("English", "Swedish"),
   plot = F
-                                                    ) 
-  {
-  data.predict = data.fit
-  data.fit %<>%
-    # Predict from non-native /d/ words (respectively for English & Swedish)
-    filter(
-           Accent == "non-native",
-           Sound == "/d/"
-          )
+) {
+    l = get_suprasegmental_model(data.fit, cue.name, language, plot = plot)
 
-  l = get_suprasegmental_model(data.fit, cue.name, language, plot = plot)
-  newdata <- data.predict
-  
+  data.predict = data.fit
+  # Predict from non-native /d/ words (respectively for English & Swedish)
+  data.fit %<>% filter(Accent == "non-native",
+                       Sound == "/d/"
+                       )
   return(
     rowSums(
       predict.lm(l,
-                 newdata = newdata,
+                 newdata = data.predict,
                  type = "terms", 
                  terms = labels(terms(l))
                 )
            )
         )
-   }
-# I compared the correct_for_suprasegmental_context() function with and without an offset. The number of terms extracted are the same but term values are different when the model does not include the offset. Presumably the offset is added to the terms 
+}
 
+# I compared the get_predictions() function with and without an offset. The number of terms extracted are the same but term values are different when the model does not include the offset. Presumably the offset is added to the terms 
 correct_for_suprasegmental_context = function(data.fit,
                                               cue.name = c("vowel", "closure", "burst"),
                                               language = c("English", "Swedish"),
@@ -1578,16 +1549,16 @@ correct_for_suprasegmental_context = function(data.fit,
         y ~ 1 + Talker,
         data = data.fit %>% mutate(y = as_vector(data.fit[, cue.name])),
         offset = get_predictions_for_segmental_context(data.fit, 
-                                                 cue.name, 
-                                                 language, 
-                                                 plot = plot) + 
+                                                       cue.name, 
+                                                       language, 
+                                                       plot = plot) + 
           get_predictions_for_suprasegmental_context(data.fit, 
-                                                 cue.name, 
-                                                 language, 
-                                                 plot = plot)
+                                                     cue.name, 
+                                                     language, 
+                                                     plot = plot)
          )
-              )
-         )
+      )
+  )
 }
 
 
@@ -1595,9 +1566,12 @@ correct_for_suprasegmental_context = function(data.fit,
 
 
 ```{r correcting for suprasegmental effects}
-d.stims.step2 <- d.stims.step1 %>%
-group_by(NativeLanguage) %>%
-  nest() 
+# d.stims.step1.english <- d.stims.step1 %>% filter(NativeLanguage == "English")
+# d.stims.step1.english.s2 <- as_tibble(get_predictions_for_suprasegmental_context("vowel", 
+#                              data.fit = d.stims.step1.english,
+#                              language = "English"))
+
+d.stims.step2 <- d.stims.step1 %>% group_by(NativeLanguage) %>% nest() 
 
    d.stims.step2 %<>% mutate(
     offset_suprasegmental_context_vowel = map2(
@@ -1611,6 +1585,7 @@ group_by(NativeLanguage) %>%
       ~ get_predictions_for_suprasegmental_context("closure", 
                              data.fit = .x,
                              language = .y)),
+    
     offset_suprasegmental_context_burst = map2(
       data, NativeLanguage,
       ~ get_predictions_for_suprasegmental_context("burst", 
@@ -1642,21 +1617,7 @@ d.stims.step2 %<>%
            rclosure.step2, 
            rburst.step2)
          )
-
-# remove the offset columns from the dataframe. 
-# d.stims.pivoted %<>% select(c(-offset_segmental, -offset_suprasegmental_context_vowel, 
-                             # -offset_suprasegmental_context_closure, -offset_suprasegmental_context_burst, -segmental_context))
-# d.stims.step2.no.offset <- d.stims.step2 %>% 
-#   select(c(-offset_segmental, 
-#            -offset_suprasegmental_context_vowel,
-#            -offset_suprasegmental_context_closure, 
-#            -offset_suprasegmental_context_burst, 
-#            -segmental_context))
-
-# remove the duplicate rows. There should be 1036 rows but R retained 7 duplicates (1043 rows). Can't figure out the problem.
-# d.stims.step3 <- d.stims.step2.no.offset %>% distinct()
 ```
-
 
 Supra-segmental factors like---lexical stress and speech rate---are also known to affect the phonetic realization of sounds. For example, segments tend to have longer durations in stressed, compared to unstressed, syllables [@lindblom1963spectrographic; @van1987effects]. Processes like compensatory lengthening/shortening [@peterson1960duration; @lindblom1973some; @fowler1981relationship] can also cause segments to be longer in syllables with fewer segments @klatt1976linguistic, and words with fewer syllables (Warner et al., 2004). Additionally, local changes in speech rate are likely to affect durational measures like the ones used here [e.g. @crystal1982segmental; @gahl2012reduce]. Given that non-native speakers tend to speak more slowly, it is necessary to control for cue duration variation caused by differences in speaking rate. We thus removed effects of speech rate, lexical stress, and syllable/word complexity on vowel, closure, and burst duration.
 
@@ -1671,15 +1632,10 @@ The models were estimated using only the /d/-final words, since the syllable-fin
 
 The following plots summarize the effects on syllable duration.
 
-
-
 <!-- Florian: this needs work. check whether it really makes sense to separate out syllable duration/speech rate effects from compensatory lengthening of the cues b/c of complexity of the syllable if these two groups of effects are estimated on the same data. Also check effects of number of segments per syllable --> 
 In a second step, we estimated the effects of speaking rate (residualized syllable duration) and of phonological factors (word length, lexical stress) on cue duration. We fitted separate linear regressions: English native: `lm(cue ~ 1 + rsyllable_duration)`, English non-native: `lm(cue ~ 1 + number_syllables + has_stress + rsyllable_duration)`, and Swedish (fitted for each accent separately): `lm(cue ~ 1 +  number_syllables + has_stress + rsyllable_duration)`, using /d/-final words. 
 
-
 These regressions were applied to all the test and the training data for the predicted effects by *language and accent*. This resulted in nine linear regressions: one regression for each of the three cues in the Swedish data, one regression for each of the three cues in the English native data, and one for each of the three cues in the English non-native data.
-
-
 
 Figures \@ref(fig:native-english-cue-before-and-after-suprasegmental-correction) to \@ref(fig:non-native-swedish-cue-before-and-after-suprasegmental-correction) show the distribution of cues to the /t/ and /d/ categories before and after correction for supra-segmental context for the English and Swedish experiment, respectively.
 
@@ -1693,9 +1649,7 @@ d.stims.long =
 (ref:native-english-cue-before-and-after-length-correction) Native-accented English words with syllable-final /d/ or /t/ before and after correction for supra-segmental context.
 
 ```{r native-english-cue-before-and-after-suprasegmental-correction, fig.cap="(ref:native-english-cue-before-and-after-suprasegmental-correction)", out.width="75%", fig.show='hold', eval = FALSE}
-plot_corrected_cues(
-   d.stims.long %>% 
-          filter(NativeLanguage == "English", Accent == "native"))
+plot_corrected_cues(d.stims.long %>% filter(NativeLanguage == "English", Accent == "native"))
 ```
 
 #### English (non-native)
@@ -1728,7 +1682,7 @@ plot_corrected_cues(
 
 
 ```{r store corrected production data, include=FALSE}
-# storing the final residualised values from step 2 as r<cue>
+# store the final residualised values from step 2 as r<cue>
 d.stims <- d.stims.step2 %>% mutate(
   rvowel = rvowel.step2,
     rclosure = rclosure.step2,
@@ -1736,8 +1690,6 @@ d.stims <- d.stims.step2 %>% mutate(
 )
 save(d.stims, file = "../data/data_production_corrected for phonetic context_both languages.Rdata")
 ```
-
-
 
 
 
