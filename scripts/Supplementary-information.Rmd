@@ -1236,8 +1236,7 @@ get_predictions_for_segmental_context = function(
   data.fit %<>%
     # Predict from test data from the native talker (Swedish); the /d/ and /t/ words from Li et al. (English)
     filter(
-      Accent == "native",
-      Block.Type != "exposure"
+      Accent == "native" & Block.Type != "exposure"
       )
 
   l = get_segmental_model(data.fit, cue.name, language, plot = plot)
@@ -1525,13 +1524,13 @@ get_predictions_for_suprasegmental_context = function(
 
   data.predict = data.fit
   # Predict from non-native /d/ words (respectively for English & Swedish)
-  data.fit %<>% filter(Accent == "non-native",
-                       Sound == "/d/"
+  data.fit %<>% filter(Accent == "non-native" & Sound == "/d/"
                        )
+  newdata <- data.predict
   return(
     rowSums(
       predict.lm(l,
-                 newdata = data.predict,
+                 newdata = newdata,
                  type = "terms", 
                  terms = labels(terms(l))
                 )
@@ -1549,7 +1548,6 @@ correct_for_suprasegmental_context = function(data.fit,
     residuals(
       lm(
         y ~ 1 + Talker,
-        data = data.fit %>% mutate(y = as_vector(data.fit[, cue.name])),
         offset = get_predictions_for_segmental_context(data.fit, 
                                                        cue.name, 
                                                        language, 
@@ -1557,7 +1555,8 @@ correct_for_suprasegmental_context = function(data.fit,
           get_predictions_for_suprasegmental_context(data.fit, 
                                                      cue.name, 
                                                      language, 
-                                                     plot = plot)
+                                                     plot = plot),
+        data = data.fit %>% mutate(y = as_vector(data.fit[, cue.name]))
          )
       )
   )
