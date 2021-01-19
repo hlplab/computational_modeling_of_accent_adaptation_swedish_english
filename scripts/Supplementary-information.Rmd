@@ -1239,7 +1239,6 @@ get_predictions_for_segmental_context = function(
     filter(Accent == "native" & Block.Type != "exposure")
 
   l = get_segmental_model(data.fit, cue.name, language, plot = plot)
-  newdata <- data.predict %>% mutate(Talker = first(data.fit$Talker))
 
   # Return linear predictor for all terms except for the intercept for all of the original data.
   # This is the offset based on Step 1 that can be used in subsequent steps. Note that the Talker
@@ -1249,7 +1248,8 @@ get_predictions_for_segmental_context = function(
       l, 
       # Set Talker to a known Talker level (it will be ignored but this is necessary for the predict
       # function to work)
-      newdata = newdata, 
+      newdata = data.predict %>% 
+        mutate(Talker = first(data.fit$Talker)), 
       type = "terms", 
       terms = setdiff(labels(terms(l)), "Talker"))))
 }
