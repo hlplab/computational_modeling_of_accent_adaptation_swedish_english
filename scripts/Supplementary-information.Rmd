@@ -1515,12 +1515,12 @@ get_predictions_for_suprasegmental_context = function(
   language = c("English", "Swedish"),
   plot = F
 ) {
-  l = get_suprasegmental_model(data.fit, cue.name, language, plot = plot)
-
   data.predict = data.fit
+  
   # Predict from non-native /d/ words (respectively for English & Swedish)
   data.fit %<>% filter(Accent == "non-native" & Sound == "/d/")
-  
+  l = get_suprasegmental_model(data.fit, cue.name, language, plot = plot)
+
   return(
     rowSums(
       predict.lm(l,
