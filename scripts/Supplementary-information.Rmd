@@ -1165,7 +1165,7 @@ d.stims =
 
 The realization of phonetic cues is known to be strongly influenced by phonological context [e.g., @ladefoged1957information; @lindblom1967role], and human listeners are known to effectively discount these effects---a process often referred to as *normalization* [e.g., @mann1980influence; @mann1981influence; @johnson200815, @mcmurray2011information]. Additionally, some of the cues to syllable-final /d/ voicing are simultaneously used to signal other contrasts. This is most obviously the case for vowel duration in Swedish. Swedish has a phonological contrast between long and short vowels (e.g., *vit*---'white, comm. gend.' vs. *vitt*---'white, neuter'). Vowel duration is an important cue to this contrast. 
 
-We thus obtained context-corrected phonetic cues by estimating (via linear regression) and removing (via residualization) the effects of phonological context from vowel, closure, and burst duration. By both training and testing the ideal observer on context-corrected cues, we aim to compare likes with likes. The literature contains many competing approaches to normalization [for a recent review, see @weatherholtz2016speech; @flynn2011comparing; @clopper2009computational; and @adank2004comparison]. Here we follow the *C-CuRE* model [@mcmurray2011information], which captures the intuition behind many previous proposals---that listeners interpret cues relative the cue value that is *expected* in the present phonological context (*C-CuRE* stands for "computing cues relative to expectation"). C-CuRE-corrected cues have been found to provide a good fit against human categorization of English fricatives [@mcmurray2011information; @mcmurray2016comes; though other studies have found that C-CuRE does not fully capture listeners' ability to correct for talker-specific characteristics, @kleinschmidt2019structure; @xie2021encoding]. Beyond studies that have directly evaluated the empirical coverage of C-CuRE, it is common to center (and sometimes standardize) cues when dealing with speech from multiple talkers [@lobanov1971classification; @nearey1978phonetic; @johnson200815. This is essentially what C-Cure does. 
+We thus obtained context-corrected phonetic cues by estimating (via linear regression) and removing (via residualization) the effects of phonological context from vowel, closure, and burst duration. By both training and testing the ideal observer on context-corrected cues, we aim to compare likes with likes. The literature contains many competing approaches to normalization [for a recent review, see @weatherholtz2016speech; @flynn2011comparing; @clopper2009computational; and @adank2004comparison]. Here we follow the *C-CuRE* model [@mcmurray2011information], which captures the intuition behind many previous proposals---that listeners interpret cues relative the cue value that is *expected* in the present phonological context (*C-CuRE* stands for "computing cues relative to expectation"). C-CuRE-corrected cues have been found to provide a good fit against human categorization of English fricatives [@mcmurray2011information; @mcmurray2016comes; though other studies have found that C-CuRE does not fully capture listeners' ability to correct for talker-specific characteristics, [@kleinschmidt2019structure; @xie2021encoding]. Beyond studies that have directly evaluated the empirical coverage of C-CuRE, it is common to center (and sometimes standardize) cues when dealing with speech from multiple talkers [@lobanov1971classification; @nearey1978phonetic; @johnson200815]. This is essentially what C-Cure does. 
 
 The C-CuRE model employed in those studies has the additional advantage that it is computationally tractable, as the effects of different contexts are assumed to be additive (i.e., the model does not contain interactions between the effects of contexts on cues). Specifically, the C-CuRE-corrected cues are simply the residuals of a linear model that predicts the cue from the linear combination of contexts:
 
@@ -1641,7 +1641,7 @@ d.stims.long =
 #### English (native)
 (ref:native-english-cue-before-and-after-length-correction) Native-accented English words with syllable-final /d/ or /t/ before and after correction for supra-segmental context.
 
-```{r native-english-cue-before-and-after-suprasegmental-correction, fig.cap="(ref:native-english-cue-before-and-after-suprasegmental-correction)", out.width="75%", fig.show='hold', eval = FALSE}
+```{r native-english-cue-before-and-after-suprasegmental-correction, fig.cap="(ref:native-english-cue-before-and-after-suprasegmental-correction)", out.width="75%", fig.show='hold'}
 plot_corrected_cues(
   d.stims.long %>% 
     filter(NativeLanguage == "English", Accent == "native"))
@@ -1650,7 +1650,7 @@ plot_corrected_cues(
 #### English (non-native)
 (ref:non-native-english-cue-before-and-after-suprasegmental-correction) Mandarin-accented English words with syllable-final /d/ or /t/ before and after correction for supra-segmental context.
 
-```{r non-native-english-cue-before-and-after-suprasegmental-correction, fig.cap="(ref:non-native-english-cue-before-and-after-suprasegmental-correction)", out.width="75%", fig.show='hold', eval = FALSE}
+```{r non-native-english-cue-before-and-after-suprasegmental-correction, fig.cap="(ref:non-native-english-cue-before-and-after-suprasegmental-correction)", out.width="75%", fig.show='hold'}
 plot_corrected_cues(
    d.stims.long %>% 
           filter(NativeLanguage == "English", Accent == "non-native"))
@@ -1660,7 +1660,7 @@ plot_corrected_cues(
 #### Swedish (native)
 (ref:native-swedish-cue-before-and-after-suprasegmental-correction) Native-accented Swedish words with syllable-final /d/ or /t/ before and after correction for supra-segmental context.
 
-```{r native-swedish-cue-before-and-after-suprasegmental-correction, fig.cap="(ref:native-swedish-cue-before-and-after-suprasegmental-correction)", out.width="75%", fig.show='hold', eval = FALSE}
+```{r native-swedish-cue-before-and-after-suprasegmental-correction, fig.cap="(ref:native-swedish-cue-before-and-after-suprasegmental-correction)", out.width="75%", fig.show='hold'}
 plot_corrected_cues(
    d.stims.long %>% 
           filter(NativeLanguage == "Swedish", Accent == "native"))
@@ -1669,7 +1669,7 @@ plot_corrected_cues(
 #### Swedish (non-native)
 (ref:non-native-swedish-cue-before-and-after-suprasegmental-correction) Flemish-accented Swedish words with syllable-final /d/ or /t/ before and after correction for supra-segmental context.
 
-```{r non-native-swedish-cue-before-and-after-suprasegmental-correction, fig.cap="(ref:non-native-swedish-cue-before-and-after-suprasegmental-correction)", out.width="75%", fig.show='hold', eval = FALSE}
+```{r non-native-swedish-cue-before-and-after-suprasegmental-correction, fig.cap="(ref:non-native-swedish-cue-before-and-after-suprasegmental-correction)", out.width="75%", fig.show='hold'}
 plot_corrected_cues(
    d.stims.long %>% 
           filter(NativeLanguage == "Swedish", Accent == "non-native"))
