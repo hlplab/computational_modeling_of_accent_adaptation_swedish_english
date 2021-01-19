@@ -2258,7 +2258,7 @@ ggscatter(data = d.test.IO %>%
 
 ### Do ideal observers predict human /d/-goodness rating responses?
 
-For this first analysis, we predict human responses across all native languages and exposure conditions from the ideal observers that meant for those languages and exposure conditions. That is, we predict human ratings in the /d/-exposure group from the non-native ideal observer, and human ratings in the control group from the native ideal observer. Specifically, we use a linear mixed-effects regression, predicting human /d/-gooodness ratings from the posterior probabiltiy of /d/ predicted by the ideal observers, while also including random intercepts by minimal pair. SAY STH ABOUT BY PARTICIAPNT (DIDN'T CONVERGE B/C OF Z-SCORING AND THERE NOT BEING MUCH VARIANCE LEFT)
+For this first analysis, we predict human responses across all native languages and exposure conditions from the ideal observers that meant for those languages and exposure conditions. That is, we predict human ratings in the /d/-exposure group from the non-native ideal observer, and human ratings in the control group from the native ideal observer. Specifically, we use a linear mixed-effects regression, predicting human /d/-goodness ratings from the posterior probability of /d/ predicted by the ideal observers, while also including random intercepts by minimal pair. SAY STH ABOUT BY PARTICIAPNT (DIDN'T CONVERGE B/C OF Z-SCORING AND THERE NOT BEING MUCH VARIANCE LEFT)
 
 ```{r item-level-regression-between-ID-rating-tasks}
 d.test.IO %<>%
@@ -2282,6 +2282,17 @@ summary(lmer.IOtoRating.full)
 ```
 
 ### Do ideal observers that are intended to capture the exposure condition predict human /d/-goodness rating responses *better* than ideal observers intended for another exposure condition?
+
+```{r item-level-regression-between-models}
+contrasts(d.test.IO$Model.Accent.matchesGroup) = cbind("Yes.vs.No" = c(-1, 1))
+lmer.IOtoRating.ModelComparison =
+  lmer(
+    Rating.Response.d.zscored ~ 1 + (Model.Posterior.d * Model.Accent.matchesGroup) / NativeLanguage + 
+      (1 | Item.MinimalPair), 
+                     data = d.test.IO)
+summary(lmer.IOtoRating.ModelComparison)
+```
+
 
 ### Visualize predictions of ideal observers in original cue space
 
