@@ -1668,12 +1668,15 @@ plot_corrected_cues(
 
 ```{r store corrected production data, include=FALSE}
 # store the final residualised values from step 2 as r<cue>
-d.stims <- d.stims.step2 %>% mutate(
-  rvowel = rvowel.step2,
+d.stims <- d.stims.step2 %>% 
+  mutate(
+    rvowel = rvowel.step2,
     rclosure = rclosure.step2,
     rburst = rburst.step2)
 
-save(d.stims, file = "../data/data_production_corrected for phonetic context_both languages.Rdata")
+save(
+  d.stims, 
+  file = "../data/data_production_corrected for phonetic context_both languages.Rdata")
 ```
 
 
