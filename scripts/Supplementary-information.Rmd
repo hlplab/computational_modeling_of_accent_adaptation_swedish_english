@@ -2239,7 +2239,6 @@ ggscatter(data = d.test.IO %>%
               Model.Posterior.d = mean(Model.Posterior.d),
               Model.Rating.d.zscored = mean(Model.Rating.d.zscored),
               Rating.Response.d.zscored = mean(Rating.Response.d.zscored)), 
-          # x = Model.Rating.d.zscored, 
           x = "Model.Posterior.d", y = "Rating.Response.d.zscored", color = "Group",
           cor.method = "pearson",
           xlab = "Ideal observer posterior of /d/", ylab = "human mean /d/-goodness rating") + 
@@ -2252,23 +2251,22 @@ ggscatter(data = d.test.IO %>%
   facet_grid(NativeLanguage + Group ~ Model.Accent.matchesGroup, 
              # margins = c("NativeLanguage"),
              labeller = "label_both") 
-
 ```
 
 
 ### Do ideal observers predict human /d/-goodness rating responses?
 
-For this first analysis, we predict human responses across all native languages and exposure conditions from the ideal observers that meant for those languages and exposure conditions. That is, we predict human ratings in the /d/-exposure group from the non-native ideal observer, and human ratings in the control group from the native ideal observer. Specifically, we use a linear mixed-effects regression, predicting human /d/-goodness ratings from the posterior probability of /d/ predicted by the ideal observers, while also including random intercepts by minimal pair. SAY STH ABOUT BY PARTICIAPNT (DIDN'T CONVERGE B/C OF Z-SCORING AND THERE NOT BEING MUCH VARIANCE LEFT)
+For this first analysis, we predict human responses across all native languages and exposure conditions from the ideal observers that meant for those languages and exposure conditions. That is, we predict human ratings in the /d/-exposure group from the non-native ideal observer, and human ratings in the control group from the native ideal observer. Specifically, we use a linear mixed-effects regression, predicting human /d/-goodness ratings from the posterior probability of /d/ predicted by the ideal observers, while also including random intercepts by minimal pair. SAY STH ABOUT BY PARTICIAPNT (DIDN'T CONVERGE B/C OF Z-SCORING AND THERE NOT BEING MUCH VARIANCE LEFT). NOW with Participant intercepts.
 
 ```{r item-level-regression-between-ID-rating-tasks}
 d.test.IO %<>%
   applyContrasts()
 
 lmer.IOtoRating =
-  lmer(Rating.Response.d.zscored ~ 1 + Model.Posterior.d + (1 | Item.MinimalPair), 
+  lmer(Rating.Response.d.zscored ~ 1 + Model.Posterior.d + 
+         (1 | Item.MinimalPair) +  (1 | Participant), 
                      data = d.test.IO %>%
-                       filter(Model.Accent.matchesGroup == "yes")
-                       )
+                       filter(Model.Accent.matchesGroup == "yes"))
 summary(lmer.IOtoRating)
 ```
 
@@ -2285,10 +2283,12 @@ summary(lmer.IOtoRating.full)
 
 ```{r item-level-regression-between-models}
 contrasts(d.test.IO$Model.Accent.matchesGroup) = cbind("Yes.vs.No" = c(-1, 1))
+d.test.IO$cModel.Posterior.d = d.test.IO$Model.Posterior.d - mean(d.test.IO$Model.Posterior.d)
+
 lmer.IOtoRating.ModelComparison =
   lmer(
-    Rating.Response.d.zscored ~ 1 + (Model.Posterior.d * Model.Accent.matchesGroup) / NativeLanguage + 
-      (1 | Item.MinimalPair), 
+    Rating.Response.d.zscored ~ 1 + NativeLanguage / (cModel.Posterior.d * Model.Accent.matchesGroup) + 
+      (1 | Item.MinimalPair) + (1 | Participant), 
                      data = d.test.IO)
 summary(lmer.IOtoRating.ModelComparison)
 ```
