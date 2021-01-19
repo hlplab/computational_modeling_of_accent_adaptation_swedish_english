@@ -807,7 +807,7 @@ emm = emmeans(lmer.rating,  ~ Group : Sound | NativeLanguage,
                        lmer.df = "Satterthwaite", lmerTest.limit = 10000)
                        # relevant only if lmer.df is set to Kenward-Rogers
                        # pbkrtest.limit = 10000)
-lmer.rating.simple = contrast(emm, interaction = c("consec", "consec"))
+lmer.rating.simple = emmeans::contrast(emm, interaction = c("consec", "consec"))
 ```
 
 Next, we consider---and ultimately rule out---three possible explanations for the difference in results between the two experiment. Following that, we present ideal observer analyses that assess whether the distributions of phonetic properties in the exposure and test stimuli predict the differences in listeners' goodness ratings.
