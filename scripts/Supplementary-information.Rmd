@@ -1163,9 +1163,9 @@ d.stims =
 ```
 
 
-The realization of phonetic cues is known to be strongly influenced by phonological context [e.g., @ladefoged1957information; @lindblom1967role], and human listeners are known to effectively discount these effects---a process often referred to as *normalization* [e.g., @mann1980influence; @mann1981influence; @johnson200815, @mcmurray2011information]. Additionally, some of the cues to syllable-final /d/ voicing are simultaneously used to signal other contrasts. This is most obviously the case for vowel duration in Swedish. Swedish has a phonological contrast between long and short vowels (e.g., *vit*---'white, comm. gend.' vs. *vitt*---'white, neuter'). Vowel duration is an important cue to this contrast. 
+The realization of phonetic cues is known to be strongly influenced by phonological context [e.g., @ladefoged1957information; @lindblom1967role], and human listeners are known to effectively discount these effects---a process often referred to as *normalization* [e.g., @mann1980influence; @mann1981influence; @johnson200815; @mcmurray2011information]. Additionally, some of the cues to syllable-final /d/ voicing are simultaneously used to signal other contrasts. This is most obviously the case for vowel duration in Swedish. Swedish has a phonological contrast between long and short vowels (e.g., *vit*---'white, comm. gend.' vs. *vitt*---'white, neuter'). Vowel duration is an important cue to this contrast. 
 
-We thus obtained context-corrected phonetic cues by estimating (via linear regression) and removing (via residualization) the effects of phonological context from vowel, closure, and burst duration. By both training and testing the ideal observer on context-corrected cues, we aim to compare likes with likes. The literature contains many competing approaches to normalization [for a recent review, see @weatherholtz2016speech; @flynn2011comparing; @clopper2009computational; and @adank2004comparison]. Here we follow the *C-CuRE* model [@mcmurray2011information], which captures the intuition behind many previous proposals---that listeners interpret cues relative the cue value that is *expected* in the present phonological context (*C-CuRE* stands for "computing cues relative to expectation"). C-CuRE-corrected cues have been found to provide a good fit against human categorization of English fricatives [@mcmurray2011information; @mcmurray2016comes; though other studies have found that C-CuRE does not fully capture listeners' ability to correct for talker-specific characteristics, [@kleinschmidt2019structure; @xie2021encoding]. Beyond studies that have directly evaluated the empirical coverage of C-CuRE, it is common to center (and sometimes standardize) cues when dealing with speech from multiple talkers [@lobanov1971classification; @nearey1978phonetic; @johnson200815]. This is essentially what C-Cure does. 
+We thus obtained context-corrected phonetic cues by estimating (via linear regression) and removing (via residualization) the effects of phonological context from vowel, closure, and burst duration. By both training and testing the ideal observer on context-corrected cues, we aim to compare likes with likes. The literature contains many competing approaches to normalization [for a recent review, see @weatherholtz2016speech; @flynn2011comparing; @clopper2009computational; and @adank2004comparison]. Here we follow the *C-CuRE* model [@mcmurray2011information], which captures the intuition behind many previous proposals---that listeners interpret cues relative the cue value that is *expected* in the present phonological context (*C-CuRE* stands for "computing cues relative to expectation"). C-CuRE-corrected cues have been found to provide a good fit against human categorization of English fricatives [@mcmurray2011information; @mcmurray2016comes] though other studies have found that C-CuRE does not fully capture listeners' ability to correct for talker-specific characteristics, [@kleinschmidt2019structure; @xie2021encoding]. Beyond studies that have directly evaluated the empirical coverage of C-CuRE, it is common to center (and sometimes standardize) cues when dealing with speech from multiple talkers [@lobanov1971classification; @nearey1978phonetic; @johnson200815]. This is essentially what C-Cure does. 
 
 The C-CuRE model employed in those studies has the additional advantage that it is computationally tractable, as the effects of different contexts are assumed to be additive (i.e., the model does not contain interactions between the effects of contexts on cues). Specifically, the C-CuRE-corrected cues are simply the residuals of a linear model that predicts the cue from the linear combination of contexts:
 
@@ -1472,14 +1472,6 @@ plot_corrected_cues(
 
 
 ```{r step 2 functions to correct for supra-segmental context}
-# make data long to facilitate easier step 2 process. keep the long form different from d.stims.long which was used for plotting. Results in 3108 rows and duplicated 
-# d.stims.pivoted<- d.stims.step1 %>% pivot_longer(cols = c(offset_segmental_context_vowel,
-#                       offset_segmental_context_closure,
-#                       offset_segmental_context_burst),
-#              names_to = c(".value", "segmental_context"),
-#                 names_pattern = "(offset_segmental)_context_(.*)"
-#              )
-
 get_suprasegmental_model = function(
   data.fit,
   cue.name = c("vowel", "closure", "burst"),
@@ -1529,7 +1521,6 @@ get_predictions_for_suprasegmental_context = function(
                  terms = labels(terms(l)))))
 }
 
-# I compared the get_predictions() function with and without an offset. The number of terms extracted are the same but term values are different when the model does not include the offset. Presumably the offset is added to the terms 
 correct_for_suprasegmental_context = function(
   data.fit,
   cue.name = c("vowel", "closure", "burst"),
