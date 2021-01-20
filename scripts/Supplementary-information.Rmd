@@ -207,16 +207,13 @@ get_axes = function(.data, cues) {
 8) text editing: **MARYANN**:
 
  * Update the database figure for the IO methods section based on the zoom meeting we had.
- * some references show up as "(Peterson and Lehiste (1960); ....)" I.e., parentheses within parentheses. It should be "(Peterson and Lehiste, 1960; ...)"
- * Lindblom is in all caps LINDBLOM
- * there are still MANY references that have not been bibbed. 
- * reference luce1985contextual is not found
+
  * if possible, references should only show up at the end of the entire document, not at the bottom of each screen.
  * let's change our terminology to "L2-accented" and "L1-accented" speech, following what we did in Xie et al under review." "native" and "non-native" can be used in the abstract, title, or once in the intro but not beyond. We also aim to avoid "foreign-accented". If the changes lead to indirect, convoluted language for particular instances let's discuss those instances. We don't want to make the paper less accessible but we do want to acknowledge that some people find the terms native and non-native (and foreign-accented) to be problematic.
 
 # Overview
 
-This supplementary information describes the results and methods of the perception experiments on Mandarin-accented English and Flemish-accented Swedish, as well as the development and evaluation of the ideal observer models. The experiment on Mandarin-accented English [@xie2017more] found an effect of exposure to the foreign-accented sound (syllable-final /d/) on subsequent /d/- and /t/-goodness ratings. This effect has been replicated in two other paradigms (categorization and priming) using the same stimuli Xie et al. [-@xie2017more]. Additionally, an earlier priming study found the same type of benefit for exposure to syllable-final /d/ in Dutch-accented English (Dutch, like Flemish, exhibits final devoicing, partially or completely neutralizing stop voicing in the syllable final position). In contrast to these previous studies, the experiment on Flemish-accented Swedish did *not* find a significant effect of exposure on subsequent /d/ and /t/-goodness ratings.
+This supplementary information describes the results and methods of the perception experiments on Mandarin-accented English and Flemish-accented Swedish, as well as the development and evaluation of the ideal observer models. The experiment on Mandarin-accented English [@xie2017more] found an effect of exposure to the foreign-accented sound (syllable-final /d/) on subsequent /d/- and /t/-goodness ratings. This effect has been replicated in two other paradigms (categorization and priming) using the same stimuli Xie et al. [@xie2017more]. Additionally, an earlier priming study found the same type of benefit for exposure to syllable-final /d/ in Dutch-accented English (Dutch, like Flemish, exhibits final devoicing, partially or completely neutralizing stop voicing in the syllable final position). In contrast to these previous studies, the experiment on Flemish-accented Swedish did *not* find a significant effect of exposure on subsequent /d/ and /t/-goodness ratings.
 
 We begin by summarizing the methods and results of the two experiments. We find that the native Swedish listeners had an easier time understanding the Flemish-accented speaker than the American listeners had understanding the Mandarin-accented English speaker. This showed in the lexical decision accuracy during exposure, as well as the goodness ratings during test. Throughout the presentation, we review methodological differences between the two experiments and whether they are likely to explain the difference in results. The upshot of this review is that the Swedish null result seems to be *at least in part* driven by the phonetic characteristics of the Flemish-accented speech in our recordings---specifically, that the phonetic distribution of syllable-final /d/ in the Flemish-accented recordings deviated less from typical native Swedish than the phonetic distributions of syllable-final /d/ in the Mandarin-accented recordings deviated from typical American English. Such a difference in the 'non-nativeness' between the Flemish- and Mandarin-accented recordings could be particular to the specific recordings used in the experiment, reflect the talker-specific pronunciation of the speaker we recorded (e.g., due differences in L2 proficiency), or reflect more general differences between Flemish-accented Swedish and Mandarin-accented English. 
 
@@ -734,7 +731,7 @@ d.test %>%
 ```
 
 
-The /d/- and /t/-goodness ratings could range from 1 to 7. The two types of ratings were highly inversely correlated (see Figure \@ref(fig:rating-to-rating-correlation)). To simplify data analysis, we thus converted  all goodness ratings into /d/-goodness ratings. For /t/-goodness ratings, this means that we subtracted them from 8 (i.e., if a token was given a /t/-goodness of 3, it is tranformed to have a /d/-goodness of 5). This decision does not affect the results: all results remain the same if the original ratings are analyzed while including `rating.for` (/d/- vs. /t/-goodness) and all its interactions as a predictor in the analysis. Following @xie2017more, we then z-scored /d/-goodness ratings within participants, by subtracting the participant's mean and dividing by the participant's standard deviation. 
+The /d/- and /t/-goodness ratings could range from 1 to 7. The two types of ratings were highly inversely correlated (see Figure \@ref(fig:rating-to-rating-correlation)). To simplify data analysis, we thus converted  all goodness ratings into /d/-goodness ratings. For /t/-goodness ratings, this means that we subtracted them from 8 (i.e., if a token was given a /t/-goodness of 3, it is transformed to have a /d/-goodness of 5). This decision does not affect the results: all results remain the same if the original ratings are analyzed while including `rating.for` (/d/- vs. /t/-goodness) and all its interactions as a predictor in the analysis. Following @xie2017more, we then z-scored /d/-goodness ratings within participants, by subtracting the participant's mean and dividing by the participant's standard deviation. 
 
 ### Results {#sec:results}
 
@@ -770,7 +767,7 @@ p.results.perception.bySubject = insertLayer(p.results.perception, after = 0,
 p.results.perception.bySubject
 ```
 
-Figure \@ref(fig:ratings-results) shows the z-scored /d/-goodness ratings from both experiments. To compare participants' ratings for the /d,t/-final test words across the two experiments, we conducted a linear mixed-effects regression (Baayen et al., 2008) over the combined data from both experiments. The regression predicted z-scored /d/-goodness ratings based on the sound category (sum-coded: 1 = word recording intended to end in /d/ vs. -1 = word recording intended to end in /t/), exposure group (sum-coded: 1 =  /d/-exposure vs. -1 = control), the experiment (sum-coded: 1 = Swedish vs. -1 = English), and all their interactions. The regression contained the maximal random effect structure justified by the design (random by-participant intercepts and slope for sound; random by-item intercepts and slopes for sound, exposure group, and their interaction).^[Even this simplified model estimated the variance of the by-participant intercepts to be zero (see below), presumably because the z-scoring of ratings within participant already removed that variance. If all by-participant random effects are excluded, the results reported below do not change. If non-zscored ratings are analyzed instead (unlike in previous work), the three-way interaction is no longer significant ($p = .11$).]
+Figure \@ref(fig:ratings-results) shows the z-scored /d/-goodness ratings from both experiments. To compare participants' ratings for the /d,t/-final test words across the two experiments, we conducted a linear mixed-effects regression [@baayen2008mixed] over the combined data from both experiments. The regression predicted z-scored /d/-goodness ratings based on the sound category (sum-coded: 1 = word recording intended to end in /d/ vs. -1 = word recording intended to end in /t/), exposure group (sum-coded: 1 =  /d/-exposure vs. -1 = control), the experiment (sum-coded: 1 = Swedish vs. -1 = English), and all their interactions. The regression contained the maximal random effect structure justified by the design (random by-participant intercepts and slope for sound; random by-item intercepts and slopes for sound, exposure group, and their interaction).^[Even this simplified model estimated the variance of the by-participant intercepts to be zero (see below), presumably because the z-scoring of ratings within participant already removed that variance. If all by-participant random effects are excluded, the results reported below do not change. If non-zscored ratings are analyzed instead (unlike in previous work), the three-way interaction is no longer significant ($p = .11$).]
 
 For the by-participant random effects, we had to remove the random slope for sound in order for the model to converge without perfect correlations. All other random correlations are included in the model. Table \@ref(tab:ratings-analysis) summarizes the results. We find a highly significanct main effect of sound, so that foreign-accented productions of /d/ were judged to have higher /d/-goodness than foreign-accented productions of /t/ ($\hat{\beta} = .55, t = 19.3, p < .0001$). The two-way interaction between native language and sound was also higly significant ($\hat{\beta} = .11, t = 3.8, p < .0003$), so that the differences between the /d/-goodness ratings for /d/ and /t/ was larger for the Flemish-accented Swedish speaker than the Mandarin-accented English speaker. One possible interpretation of this is that the Flemish-accented Swedish speaker deviated less from the expectations native Swedish listeners than the Mandarin-accented English speaker deviated from the expectations of American listeners. 
 
@@ -1071,9 +1068,9 @@ d.stims =
   # Remove the 4 items because -rd and -rt are pronounced differently in Swedish than d/t in other context
   # (the same items were removed from the perception data)
   filter(! Word %in% c("voart", "voard", "hoart", "hoard")) %>%
-  select(-mimic, -phon_ctxt_canonical_vl, -MinimalPairID, -Item.Filename) %>%
+  select(-mimic, -phon_ctxt_vl, -MinimalPairID, -Item.Filename) %>% 
   rename(
-    has_long_vowel = phon_ctxt_vl,
+    has_long_vowel = phon_ctxt_canonical_vl,
     has_stress = phon_ctxt_stress,
     coda_has_rhotic = phon_ctxt_r,
     coda_has_lateral = phon_ctxt_l,
@@ -1095,7 +1092,6 @@ d.stims =
              paste0(Item.MinimalPair, ifelse(Sound == "/d/", "d", "t"))), 
     NativeLanguage = "Swedish",
     Talker = ifelse(Accent == "native", "S1", "F1"),
-    # Maryann, please check whether this list is complete and correct and then 
     has_long_vowel = ifelse(has_long_vowel == "short", "no", "yes"),
     onset_has_nasal = ifelse(Item.Word %in% 
                                c("skillnad", "vemod", "nomad", "haarmed", 
@@ -1134,6 +1130,7 @@ d.stims =
   full_join(
     read.csv("../data/English/English_production_Li et al 2020.csv") %>%
       filter(!(Speaker %in% c("E12", "E3", "E7", "E9"))) %>%  # apply this if only speakers with a high ratio of burst releases are included
+      filter(coda_has_nasal == "no") %>% 
       select(-Word) %>%
       rename(
         Talker = Speaker,
@@ -1204,15 +1201,15 @@ get_segmental_model = function(
  f = formula(
     case_when(
        language == "English" & cue.name == "vowel" ~ 
-         "y ~ 1 + number_segments + Talker + coda_has_lateral + coda_has_nasal + onset_has_rhotic",
+         "y ~ 1 + number_segments + coda_has_lateral + onset_has_rhotic + Talker ",
        language == "English" & cue.name == "closure" ~
-         "y ~ 1 + number_segments + Talker + coda_has_lateral + onset_has_lateral + onset_has_rhotic ",
+         "y ~ 1 + number_segments + coda_has_lateral + onset_has_lateral + onset_has_rhotic + Talker  ",
        language == "English" & cue.name == "burst" ~
-         "y ~ 1 + number_segments + Talker + coda_has_lateral",
+         "y ~ 1 + number_segments + coda_has_lateral + Talker",
        language == "Swedish" & (cue.name == "vowel" | cue.name == "closure")  ~ 
          "y ~ 1 + number_segments + has_long_vowel + coda_has_nasal",
        language == "Swedish" & cue.name == "burst" ~
-         "y ~ 1 + number_segments + has_long_vowel", #according to validate none of the predictors affect burst. To determine whether we should leave burst values uncorrected.
+         "y ~ 1 + number_segments + has_long_vowel",
        T ~ NA_character_))
   
   l = lm(f, data = data.fit)
@@ -2247,7 +2244,7 @@ ggscatter(data = d.test.IO %>%
 
 ### Do ideal observers predict human /d/-goodness rating responses?
 
-For this first analysis, we predict human responses across all native languages and exposure conditions from the ideal observers that meant for those languages and exposure conditions. That is, we predict human ratings in the /d/-exposure group from the non-native ideal observer, and human ratings in the control group from the native ideal observer. Specifically, we use a linear mixed-effects regression, predicting human /d/-goodness ratings from the posterior probability of /d/ predicted by the ideal observers, while also including random intercepts by minimal pair. SAY STH ABOUT BY PARTICIAPNT (DIDN'T CONVERGE B/C OF Z-SCORING AND THERE NOT BEING MUCH VARIANCE LEFT). NOW with Participant intercepts.
+For this first analysis, we predict human responses across all native languages and exposure conditions from the ideal observers that are meant for those languages and exposure conditions. That is, we predict human ratings in the /d/-exposure group from the non-native ideal observer, and human ratings in the control group from the native ideal observer. Specifically, we use a linear mixed-effects regression, predicting human /d/-goodness ratings from the posterior probability of /d/ predicted by the ideal observers, while also including random intercepts by minimal pair. SAY STH ABOUT BY PARTICIAPNT (DIDN'T CONVERGE B/C OF Z-SCORING AND THERE NOT BEING MUCH VARIANCE LEFT). NOW with Participant intercepts.
 
 ```{r item-level-regression-between-ID-rating-tasks}
 d.test.IO %<>%
@@ -2259,15 +2256,26 @@ lmer.IOtoRating =
                      data = d.test.IO %>%
                        filter(Model.Accent.matchesGroup == "yes"))
 summary(lmer.IOtoRating)
+
+tab_model(lmer.IOtoRating,
+          show.r2 = F,
+          title = "(\\#tab:ratings-IO-analysis) Results of linear mixed-effects regression of /d/-goodness ratings on ideal observer posterior /d/ predictions.",
+          pred.labels = pred.labels,
+          dv.labels = "/d/-goodness rating (z-scored)")
 ```
 
-Next, we asked whether this effect was solely driven by differences between the native languages, the exposure group, or sound. To this end, we refit the above mode while also including the full factorial interactions of native language (sum-coded: English = -1 vs. Swedish = 1), exposure group (sum-coded: control = -1 vs. /d/-exposure = 1), and sound category (sum-coded: /t/ = -1 vs. /d/ = 1), as well as the maximal by-item random effect structure (random intercept and slopes for exposure group, sound category, and their interaction) and by-participant random intercepts (more complex random effect structures by participant did not converge). <!-- Maryann, Xin: Check whether the next sentence holds--> In this analysis, the ideal observers' posterior probability was no longer a significant predictor of human /d/-goodness ratings:
+Next, we asked whether this effect was solely driven by differences between the native languages, the exposure group, or sound. To this end, we refit the above model while also including the full factorial interactions of native language (sum-coded: English = -1 vs. Swedish = 1), exposure group (sum-coded: control = -1 vs. /d/-exposure = 1), and sound category (sum-coded: /t/ = -1 vs. /d/ = 1), as well as the maximal by-item random effect structure (random intercept and slopes for exposure group, sound category, and their interaction) and by-participant random intercepts (more complex random effect structures by participant did not converge). <!-- Maryann, Xin: Check whether the next sentence holds--> In this analysis, the ideal observers' posterior probability was no longer a significant predictor of human /d/-goodness ratings:
 
 ```{r}
 lmer.IOtoRating.full <- lmer(Rating.Response.d.zscored ~ 1 + NativeLanguage * Group * Sound + Model.Posterior.d  + (1 + Group * Sound | Item.MinimalPair) + (1 | Participant), 
                      data = d.test.IO %>%
                        filter(Model.Accent.matchesGroup == "yes"))
 summary(lmer.IOtoRating.full)
+tab_model(lmer.IOtoRating.full,
+          show.r2 = F,
+          title = "(\\#tab:ratings-IO-analysis) Results of linear mixed-effects regression of /d/-goodness ratings on ideal observer posterior /d/ predictions with full interactions of native language, exposure group and sound.",
+          pred.labels = pred.labels,
+          dv.labels = "/d/-goodness rating (z-scored)")
 ```
 
 ### Do ideal observers that are intended to capture the exposure condition predict human /d/-goodness rating responses *better* than ideal observers intended for another exposure condition?
