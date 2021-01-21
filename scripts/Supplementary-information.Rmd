@@ -69,6 +69,7 @@ library(daver)
 # devtools::install_github("kleinschmidt/phondisttools")
 library(phondisttools)
 library(rms)
+library(kableExtra)
 ```
 
 ```{r constants and environments}
@@ -1175,7 +1176,16 @@ We apply this model to the present data while considering talker, segmental and 
 <!-- These steps involved a number of researchers' degrees of freedom. In other words, there often were several reasonable approaches that made slightly different assumptions about the data, and we had to choose one. Sometimes the data we had access to limited our choices. Whenever possible, however, we were guided by the goal to train and test two ideal observers that differed maximally in how much they knew about the foreign-accented speech: the native ideal observer reflecting a native listener without any knowledge about the foreign-accented speech, and the non-native ideal observer reflecting a native listener with maximal knowledge about the foreign-accented speech. -->
 
 ```{r summary-cue-correction, fig.cap="(ref:summary-cue-correction)", out.width="100%"}
-knitr::include_graphics("../figures/table_correction_steps.png")
+correction_table <- as_tibble(read_csv("../data/correction_procedure_table.csv")) 
+correction_table %>% 
+  kbl() %>% 
+  kable_styling(bootstrap_options = "striped") %>% 
+  column_spec(1, bold = T, border_right = T) %>% 
+  column_spec(2, bold = F, border_right = T) %>% 
+  column_spec(3, bold = F, border_right = T) %>% 
+  column_spec(4, bold = F, border_right = T, width = "9em") %>% 
+  column_spec(5, bold = F, border_right = T, width = "6em")
+#knitr::include_graphics("../figures/table_correction_steps.png")
 ```
 
 (ref:summary-cue-correction) Summary of steps in the cue value correction procedure. For the native Swedish data, the test words are the native recordings of the same words used in the foreign-accented test phase of the Swedish experiment. For the native English data, the test words are the native recordings of the mono-syllabic words with final /d,t/ in @Li2020database.
@@ -1203,7 +1213,7 @@ get_segmental_model = function(
        language == "English" & cue.name == "vowel" ~ 
          "y ~ 1 + number_segments + coda_has_lateral + onset_has_rhotic + Talker ",
        language == "English" & cue.name == "closure" ~
-         "y ~ 1 + number_segments + coda_has_lateral + onset_has_lateral + onset_has_rhotic + Talker  ",
+         "y ~ 1 + number_segments + coda_has_lateral + onset_has_lateral + onset_has_rhotic + Talker",
        language == "English" & cue.name == "burst" ~
          "y ~ 1 + number_segments + coda_has_lateral + Talker",
        language == "Swedish" & (cue.name == "vowel" | cue.name == "closure")  ~ 
@@ -2255,7 +2265,6 @@ lmer.IOtoRating =
          (1 | Item.MinimalPair) +  (1 | Participant), 
                      data = d.test.IO %>%
                        filter(Model.Accent.matchesGroup == "yes"))
-summary(lmer.IOtoRating)
 
 tab_model(lmer.IOtoRating,
           show.r2 = F,
@@ -2270,7 +2279,7 @@ Next, we asked whether this effect was solely driven by differences between the 
 lmer.IOtoRating.full <- lmer(Rating.Response.d.zscored ~ 1 + NativeLanguage * Group * Sound + Model.Posterior.d  + (1 + Group * Sound | Item.MinimalPair) + (1 | Participant), 
                      data = d.test.IO %>%
                        filter(Model.Accent.matchesGroup == "yes"))
-summary(lmer.IOtoRating.full)
+
 tab_model(lmer.IOtoRating.full,
           show.r2 = F,
           title = "(\\#tab:ratings-IO-analysis) Results of linear mixed-effects regression of /d/-goodness ratings on ideal observer posterior /d/ predictions with full interactions of native language, exposure group and sound.",
@@ -2289,7 +2298,12 @@ lmer.IOtoRating.ModelComparison =
     Rating.Response.d.zscored ~ 1 + NativeLanguage / (cModel.Posterior.d * Model.Accent.matchesGroup) + 
       (1 | Item.MinimalPair) + (1 | Participant), 
                      data = d.test.IO)
-summary(lmer.IOtoRating.ModelComparison)
+
+tab_model(lmer.IOtoRating.ModelComparison,
+          show.r2 = F,
+          title = "(\\#tab:ratings-IO-model-comparison) Results of linear mixed-effects regression of /d/-goodness ratings on matching vs non-matching ideal observer models.",
+          pred.labels = pred.labels,
+          dv.labels = "/d/-goodness rating (z-scored)")
 ```
 
 
@@ -2427,23 +2441,28 @@ plot_IO_test(d.IO, d.IO.test, language = c("Swedish"), cues = selected_cues, sho
 
 # Appendix: List of stimuli {#sec:stimuli}
 
-## Exposure
+## Exposure word list
 
 ### English
 ```{r wordlist-English}
 read_csv("../data/English/English_wordlist_exposure.csv") %>% 
   replace_na(list(`Critical (/d/-Exposure)` = "-", `Critical (Control)` = "-" , `Filler` = "-" )) %>%
-  knitr::kable(booktabs = TRUE, caption = 'English - Exposure')
+  kbl() %>% 
+  kable_styling(bootstrap_options = "striped", full_width = F, position = "center")
+  
+  #knitr::kable(booktabs = TRUE, caption = 'English - Exposure')
 ```
 
 ### Swedish
 ```{r wordlist-Swedish}
 read_csv("../data/Swedish/Swedish_wordlist_exposure.csv") %>% 
   replace_na(list(`Critical (/d/-Exposure)` = "-", `Critical (Control)` = "-" , `Filler` = "-" )) %>%
-  knitr::kable(booktabs = TRUE, caption = 'Swedish - Exposure')
+   kbl() %>% 
+   kable_styling(bootstrap_options = "striped", full_width = F, position = "center")
+ # knitr::kable(booktabs = TRUE, caption = 'Swedish - Exposure')
 ```
 
-## Test
+## Test word list
 
 ### English
 ```{r test-wordlist-English}
@@ -2454,14 +2473,18 @@ read_csv("../data/English/English_perception_rating_test_Xie et al 2017.csv") %>
     values_from = Word) %>%
   select(-MinimalPairID) %>%
   rename_all(.funs = function(x) paste0("/", x, "/-final")) %>%
-  knitr::kable(booktabs = TRUE, caption = 'English - Test')
+   kbl() %>% 
+   kable_styling(bootstrap_options = "striped", full_width = F, position = "center")
+  #knitr::kable(booktabs = TRUE, caption = 'English - Test')
 ```
 
 
 ### Swedish
 ```{r test-wordlist-Swedish}
 read_csv("../data/Swedish/Swedish_wordlist_test.csv") %>%
-  knitr::kable(booktabs = TRUE, caption = 'Swedish - Test')
+   kbl() %>% 
+   kable_styling(bootstrap_options = "striped", full_width = F, position = "center")
+  #knitr::kable(booktabs = TRUE, caption = 'Swedish - Test')
 ```
 
 
