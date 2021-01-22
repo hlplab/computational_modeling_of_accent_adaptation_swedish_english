@@ -207,9 +207,7 @@ get_axes = function(.data, cues) {
 
 8) text editing: **MARYANN**:
 
- * Update the database figure for the IO methods section based on the zoom meeting we had.
 
- * if possible, references should only show up at the end of the entire document, not at the bottom of each screen.
  * let's change our terminology to "L2-accented" and "L1-accented" speech, following what we did in Xie et al under review." "native" and "non-native" can be used in the abstract, title, or once in the intro but not beyond. We also aim to avoid "foreign-accented". If the changes lead to indirect, convoluted language for particular instances let's discuss those instances. We don't want to make the paper less accessible but we do want to acknowledge that some people find the terms native and non-native (and foreign-accented) to be problematic.
 
 # Overview
@@ -1179,13 +1177,12 @@ We apply this model to the present data while considering talker, segmental and 
 correction_table <- as_tibble(read_csv("../data/correction_procedure_table.csv")) 
 correction_table %>% 
   kbl() %>% 
-  kable_styling(bootstrap_options = "striped") %>% 
+  kable_styling(bootstrap_options = c("striped", "condensed"), full_width = F) %>% 
   column_spec(1, bold = T, border_right = T) %>% 
   column_spec(2, bold = F, border_right = T) %>% 
   column_spec(3, bold = F, border_right = T) %>% 
   column_spec(4, bold = F, border_right = T, width = "9em") %>% 
   column_spec(5, bold = F, border_right = T, width = "6em")
-#knitr::include_graphics("../figures/table_correction_steps.png")
 ```
 
 (ref:summary-cue-correction) Summary of steps in the cue value correction procedure. For the native Swedish data, the test words are the native recordings of the same words used in the foreign-accented test phase of the Swedish experiment. For the native English data, the test words are the native recordings of the mono-syllabic words with final /d,t/ in @Li2020database.
