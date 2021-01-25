@@ -2399,7 +2399,7 @@ plot_IO_test = function(
 }
 ```
 
-ADD TEXT HERE THAT REFERS TO Figure \@ref(fig:plot-3d-test-IO-English) and Figure \@ref(fig:plot-3d-test-IO-Swedish).
+Figure \@ref(fig:plot-3d-test-IO-English) and \@ref(fig:plot-3d-test-IO-Swedish) visualises the posterior predictions of the native and non-native Ideal Observers for English and Swedish for each token in the 3D cue space.
 
 (ref:plot-3d-test-IO-English) XXX
 
