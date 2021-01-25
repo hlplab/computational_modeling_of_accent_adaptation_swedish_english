@@ -2302,7 +2302,6 @@ tab_model(lmer.IOtoRating.ModelComparison,
           title = "(\\#tab:ratings-IO-model-comparison) Results of linear mixed-effects regression of /d/-goodness ratings on matching vs non-matching ideal observer models.",
           pred.labels = pred.labels,
           dv.labels = "/d/-goodness rating (z-scored)")
-summary(lmer.IOtoRating.ModelComparison)
 ```
 
 
@@ -2428,14 +2427,6 @@ plot_IO_test(d.IO, d.IO.test, language = c("English"), cues = selected_cues, sho
 plot_IO_test(d.IO, d.IO.test, language = c("Swedish"), cues = selected_cues, show.difference = T)
 ```
 
-
-
-```{r compare-old-current-ideal-observers-accuracy, eval = FALSE}
-# write.csv(d.current, "d.current.csv")
-# write.csv(d.old.wide, "d.old.csv")
-# saveRDS(d.current.model, "d.current.model.rds")
-# write.csv(d.old.model, "d.old.model.csv")
-```
 
 
 # Appendix: List of stimuli {#sec:stimuli}
