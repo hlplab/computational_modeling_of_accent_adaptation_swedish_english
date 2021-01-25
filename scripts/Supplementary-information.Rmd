@@ -1070,7 +1070,7 @@ d.stims =
   # Remove the 4 items because -rd and -rt are pronounced differently in Swedish than d/t in other context
   # (the same items were removed from the perception data)
   filter(! Word %in% c("voart", "voard", "hoart", "hoard")) %>%
-  select(-mimic, -phon_ctxt_vl, -MinimalPairID, -Item.Filename) %>% 
+  select(-mimic, -MinimalPairID, -Item.Filename) %>% 
   rename(
     has_long_vowel = phon_ctxt_canonical_vl,
     has_stress = phon_ctxt_stress,
@@ -1556,11 +1556,10 @@ correct_for_suprasegmental_context = function(
 Supra-segmental factors like---lexical stress and speech rate---are also known to affect the phonetic realization of sounds. For example, segments tend to have longer durations in stressed, compared to unstressed, syllables [@lindblom1963spectrographic; @van1987effects]. Processes like compensatory lengthening/shortening [@peterson1960duration; @lindblom1973some; @fowler1981relationship] can also cause segments to be longer in syllables with fewer segments @klatt1976linguistic, and words with fewer syllables (Warner et al., 2004). Additionally, local changes in speech rate are likely to affect durational measures like the ones used here [e.g. @crystal1982segmental; @gahl2012reduce]. Given that non-native speakers tend to speak more slowly, it is necessary to control for cue duration variation caused by differences in speaking rate. We thus removed effects of speech rate, lexical stress, and syllable/word complexity on vowel, closure, and burst duration.
 
 <!-- Maryann: UPDATE THIS PART -->
-XXX
+The models were estimated using only the /d/-final words by the non-native talkers <!--why is it for Swedish we didn't use the /d/ words from the native? We have multi-syllabic /d/. To be consistent with english?-->, since the syllable-final /t/ (by design) only occurred in the mono-syllabic test words. We estimated the effects of the number of syllables in the word and the presence or absence of stress of the final syllable; the supra-segmental model was```cue ~ 1 + number_syllables + has_stress```. We then took the sum of both those predictor terms as an offset term of the supra-segmental model. All the data for both English and Swedish were corrected for the segmental (offset term from step 1) and supra-segmental effects by obtaining the residuals from a linear regression with Talker as a predictor and both offset terms: ```cue ~ 1 + Talker + offset_segmental + offset_suprasegmental``.  Our procedure thus assumes that supra-segemental effects are identical for both syllable-final /d/ and /t/. However, even if this assumption turned out to be wrong, it does not introduce any obvious bias with regard to the ideal observer comparisons.
   
-The models were estimated using only the /d/-final words, since the syllable-final /t/ (by design) only occurred in the mono-syllabic test words. The resulting linear regression fits were then used to predict the syllable duration of both /d/- and /t/-final words. We take the residualised syllable duration as a measure for speaking rate, beyond influences from phonological factors within an accent. Our procedure thus assumes that supra-segemntal effects are identical for both syllable-final /d/ and /t/. However, even if this assumption turned out to be wrong, it does not introduce any obvious bias with regard to the ideal observer comparisons. 
 
-The following plots summarize the supra-segmental effects on vowel, closure, and burst duration.
+The following plots summarize the segmental and supra-segmental effects on vowel, closure, and burst duration.
 
 ```{r correcting for suprasegmental effects}
 d.stims.step2 <- 
@@ -2290,11 +2289,11 @@ tab_model(lmer.IOtoRating.full,
 
 ```{r item-level-regression-between-models}
 contrasts(d.test.IO$Model.Accent.matchesGroup) = cbind("Yes.vs.No" = c(-1, 1))
-d.test.IO$cModel.Posterior.d = d.test.IO$Model.Posterior.d - mean(d.test.IO$Model.Posterior.d)
+d.test.IO$Model.Posterior.d = d.test.IO$Model.Posterior.d - mean(d.test.IO$Model.Posterior.d)
 
 lmer.IOtoRating.ModelComparison =
   lmer(
-    Rating.Response.d.zscored ~ 1 + NativeLanguage / (cModel.Posterior.d * Model.Accent.matchesGroup) + 
+    Rating.Response.d.zscored ~ 1 + NativeLanguage / (Model.Posterior.d * Model.Accent.matchesGroup) + 
       (1 | Item.MinimalPair) + (1 | Participant), 
                      data = d.test.IO)
 
@@ -2303,6 +2302,7 @@ tab_model(lmer.IOtoRating.ModelComparison,
           title = "(\\#tab:ratings-IO-model-comparison) Results of linear mixed-effects regression of /d/-goodness ratings on matching vs non-matching ideal observer models.",
           pred.labels = pred.labels,
           dv.labels = "/d/-goodness rating (z-scored)")
+summary(lmer.IOtoRating.ModelComparison)
 ```
 
 
