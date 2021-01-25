@@ -2289,11 +2289,11 @@ tab_model(lmer.IOtoRating.full,
 
 ```{r item-level-regression-between-models}
 contrasts(d.test.IO$Model.Accent.matchesGroup) = cbind("Yes.vs.No" = c(-1, 1))
-d.test.IO$Model.Posterior.d = d.test.IO$Model.Posterior.d - mean(d.test.IO$Model.Posterior.d)
+d.test.IO$cModel.Posterior.d = d.test.IO$Model.Posterior.d - mean(d.test.IO$Model.Posterior.d)
 
 lmer.IOtoRating.ModelComparison =
   lmer(
-    Rating.Response.d.zscored ~ 1 + NativeLanguage / (Model.Posterior.d * Model.Accent.matchesGroup) + 
+    Rating.Response.d.zscored ~ 1 + NativeLanguage / (cModel.Posterior.d * Model.Accent.matchesGroup) + 
       (1 | Item.MinimalPair) + (1 | Participant), 
                      data = d.test.IO)
 
