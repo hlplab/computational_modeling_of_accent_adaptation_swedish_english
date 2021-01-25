@@ -139,7 +139,7 @@ vowel,closure,burst,language,phon_ctxt_stress,phon_ctxt_canonical_vl,mimic,Block
 0.283587805,0.171268134,0.12634737,native,yes,long,irrelevant,test,14,mot,/t/,no,no,no,TTF_14_mot,1,S14,TTF_14_mot,0.720651853,3
 0.266677157,0.190609599,0.11468144,native,yes,long,irrelevant,test,15,not,/t/,no,no,no,TTF_15_not,1,S15,TTF_15_not,0.695261401,3
 0.126075116,0.15683705,0.090296699,native,yes,short,irrelevant,test,16,font,/t/,no,no,yes,TTF_16_font,1,S16,TTF_16_font,0.745754879,4
-0.201855854,0.183953409,0.087368221,native,yes,long,irrelevant,test,17,sket,/t/,no,no,no,TTF_17_sket,1,S17,TTF_17_sket,0.694570328,3
+0.264955,0.183953409,0.087368221,native,yes,long,irrelevant,test,17,sket,/t/,no,no,no,TTF_17_sket,1,S17,TTF_17_sket,0.694570328,3
 0.270284878,0.182915776,0.088112569,native,yes,long,irrelevant,test,18,skjut,/t/,no,no,no,TTF_18_skjut,1,S18,TTF_18_skjut,0.706052952,3
 0.268178288,0.193070827,0.112751176,native,yes,long,irrelevant,test,19,skoet,/t/,no,no,no,TTF_19_skoet,1,S19,TTF_19_skoet,0.739148563,3
 0.281271388,0.206289733,0.117319936,native,yes,long,irrelevant,test,20,got,/t/,no,no,no,TTF_20_got,1,S20,TTF_20_got,0.652340498,3
