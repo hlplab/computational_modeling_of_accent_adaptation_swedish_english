@@ -2327,11 +2327,6 @@ plot_IO_test = function(
   # If difference should be plotted instead
   if (show.difference) {
     .data.test %<>%
-      select(
-        -starts_with("Model_"),
-        -starts_with("Model.Likelihood"), 
-        -starts_with("Model.Categorization"),
-        -c(Model.Posterior.d, Model.Posterior.t)) %>%
       pivot_wider(
         names_from = Model.Accent,
         values_from = Model.Posterior.Intended
