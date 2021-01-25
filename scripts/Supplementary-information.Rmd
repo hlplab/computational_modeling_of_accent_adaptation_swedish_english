@@ -2264,11 +2264,13 @@ lmer.IOtoRating =
                      data = d.test.IO %>%
                        filter(Model.Accent.matchesGroup == "yes"))
 
+pred.labels = c("Intercept", "Model.Posterior.d")
 tab_model(lmer.IOtoRating,
           show.r2 = F,
           title = "(\\#tab:ratings-IO-analysis) Results of linear mixed-effects regression of /d/-goodness ratings on ideal observer posterior /d/ predictions.",
           pred.labels = pred.labels,
           dv.labels = "/d/-goodness rating (z-scored)")
+summary(lmer.IOtoRating)
 ```
 
 Next, we asked whether this effect was solely driven by differences between the native languages, the exposure group, or sound. To this end, we refit the above model while also including the full factorial interactions of native language (sum-coded: English = -1 vs. Swedish = 1), exposure group (sum-coded: control = -1 vs. /d/-exposure = 1), and sound category (sum-coded: /t/ = -1 vs. /d/ = 1), as well as the maximal by-item random effect structure (random intercept and slopes for exposure group, sound category, and their interaction) and by-participant random intercepts (more complex random effect structures by participant did not converge). <!-- Maryann, Xin: Check whether the next sentence holds--> In this analysis, the ideal observers' posterior probability was no longer a significant predictor of human /d/-goodness ratings:
@@ -2278,6 +2280,15 @@ lmer.IOtoRating.full <- lmer(Rating.Response.d.zscored ~ 1 + NativeLanguage * Gr
                      data = d.test.IO %>%
                        filter(Model.Accent.matchesGroup == "yes"))
 
+pred.labels = c("Intercept",
+                "Native language (Swedish vs. English)",
+                "Group (/d/-exposure vs. control)",
+                "Sound (/d/ vs /t/)",
+                "Native language : Group",
+                "Native language : Sound",
+                "Group : Sound",
+                "Native language : Group : Sound",
+                "Model.Posterior.d")
 tab_model(lmer.IOtoRating.full,
           show.r2 = F,
           title = "(\\#tab:ratings-IO-analysis) Results of linear mixed-effects regression of /d/-goodness ratings on ideal observer posterior /d/ predictions with full interactions of native language, exposure group and sound.",
@@ -2297,6 +2308,10 @@ lmer.IOtoRating.ModelComparison =
       (1 | Item.MinimalPair) + (1 | Participant), 
                      data = d.test.IO)
 
+pred.labels = c("Intercept",
+                "NativeLanguage (Swedish vs English)",
+                "Model.Posterior.d",
+                "Model.Accent.matchesGroup")
 tab_model(lmer.IOtoRating.ModelComparison,
           show.r2 = F,
           title = "(\\#tab:ratings-IO-model-comparison) Results of linear mixed-effects regression of /d/-goodness ratings on matching vs non-matching ideal observer models.",
