@@ -1946,7 +1946,7 @@ IO_categorization = function(
     mutate(
       Model.Posterior.d = Model.Likelihood.d / (Model.Likelihood.d + Model.Likelihood.t),
       Model.Posterior.t = Model.Likelihood.t / (Model.Likelihood.d + Model.Likelihood.t),
-      Model.Posterior = ifelse(Sound == "/d/", Model.Posterior.d, Model.Posterior.t),
+      Model.Posterior.Intended = ifelse(Sound == "/d/", Model.Posterior.d, Model.Posterior.t),
       Model.Categorization = ifelse(Model.Posterior.d >= .5, "/d/", "/t/")
     ) %>%
     mutate(
@@ -2030,7 +2030,7 @@ Figure \@ref(fig:ideal-observers-posterior) summarizes the predicted posterior p
 ```{r ideal-observers-posterior, fig.cap="(ref:ideal-observers-posterior)", fig.height=4.5, out.width="75%"}
 p.post = d.IO.test %>%
   ggplot(aes(x= Sound, 
-           y = Model.Posterior, 
+           y = Model.Posterior.Intended, 
            color = Model.Accent, 
            fill = Model.Accent)) +
   scale_x_discrete("Intended sound category") +
@@ -2322,7 +2322,7 @@ plot_IO_test = function(
   .data.test %<>% 
     { if ("Model.Accent.matchesGroup" %in% names(.)) filter(., Model.Accent.matchesGroup == "yes") else . } %>%
           group_by(NativeLanguage, Item.Word, Item.WordID, Item.MinimalPair, Model.Accent, Sound) %>%
-          summarise_at(c(cues, "Model.Posterior"), first)
+          summarise_at(c(cues, "Model.Posterior.Intended"), first)
   
   # If difference should be plotted instead
   if (show.difference) {
@@ -2330,14 +2330,14 @@ plot_IO_test = function(
       select(
         -starts_with("Model_"),
         -starts_with("Model.Likelihood"), 
-        -starts_with("Model.Posterior."), 
-        -starts_with("Model.Categorization")) %>%
+        -starts_with("Model.Categorization"),
+        -c(Model.Posterior.d, Model.Posterior.t)) %>%
       pivot_wider(
         names_from = Model.Accent,
-        values_from = Model.Posterior
+        values_from = Model.Posterior.Intended
       ) %>%
       # Using difference. Could use ratio instead
-      mutate(Model.Difference = `non-native` - native)
+      mutate(Model.Posterior.Intended.Difference = `non-native` - native)
   }
 
   
@@ -2360,7 +2360,7 @@ plot_IO_test = function(
         x= ~vowel,
         y= ~closure,
         z= ~burst,
-        marker = list(color = ~Model.Difference, colorscale = 'RdBu', cmin = -1, cmax = 1, showscale = T),
+        marker = list(color = ~Model.Posterior.Intended.Difference, colorscale = 'RdBu', cmin = -1, cmax = 1, showscale = T),
         symbol= ~Sound,
         symbols = shapes.Category,
         opacity = .8,
@@ -2377,7 +2377,7 @@ plot_IO_test = function(
       x= ~vowel,
       y= ~closure,
       z= ~burst,
-      color= ~Model.Posterior,
+      color= ~Model.Posterior.Intended,
       symbol= ~Sound,
       symbols = shapes.Category,
       frame= ~Model.Accent,
