@@ -51,25 +51,28 @@ library(bookdown)       # r markdown references to figures, tables, sections reg
 library(tidyverse)      # There is only one universe
 library(magrittr)       # Pipes!
 library(stringi)
+
+library(knitr) 
+library(kableExtra)     # more control over table formatting
+
 library(lme4)           # mixed-effects analyses
 library(lmerTest)       # p-values in LMMs
-library(sjPlot)         # HTML tables of mixed models
-library(knitr)          
-library(emmeans)        # simple effects in LMMs
 library(broom.mixed)    # easy extraction of information from LMMs
-library(ggplot2)        # plotting
+library(sjPlot)         # HTML tables of mixed models
+library(emmeans)        # simple effects in LMMs
+library(rms)
+
 library(cowplot)        # multi-plot figures
 library(plotly)         # 3D plotting 
 library(shiny)          # tabs
 library(ggpubr)
 library(gridExtra)
+
 library(assertthat)
 # devtools::install_github('kleinschmidt/daver')
 library(daver)
 # devtools::install_github("kleinschmidt/phondisttools")
 library(phondisttools)
-library(rms)
-library(kableExtra)
 ```
 
 ```{r constants and environments}
@@ -1987,7 +1990,7 @@ To derive predictions about human behavior from the posterior category probabili
 ```{r integrate-test-data-with-modeling-results, include=FALSE}
 # Bind stimulus information and predictions of ideal observer
 # (this is the tibble to use for visualization of predictions -- each test data point occurs only once)
-d.IO.test = 
+d.IO.test <- 
     d.stims %>%
       filter(Block.Type == "test", Accent == "non-native") %>%
       IO_categorization(d.IO) %>%
@@ -2085,7 +2088,6 @@ This scaling solely serves the purpose of visualization. Since it is a linear tr
 Figure \@ref(fig:ID-to-ratings) shows the item-level correlation in participants' rating and categorization responses across the two experiments. At least for the range of test stimuli in @xie2017more, the link between ratings and categorization indeed seems to be linear.
 
 ```{r load categorization experiments, results='hide'}
-
 # load English ID data
 d.english.ID <- read.csv("../data/English/English_perception_identification_Xie et al 2017.csv")
 
@@ -2177,7 +2179,7 @@ There is a clear difference between the English and Swedish data, but the predic
 
 (ref:IO-ratings-results-byItem) **Ideal observer /d/-goodness ratings** during test (z-scored) predicted by the native and non-native ideal observers. Shown for both the English and Swedish data. Errorbars show 95\% bootstrapped confidence intervals over by-item predictions (since there aren't multiple subjects). To facilitate comparison to the human data, predicted ratings were derived from each ideal observer by projecting its predicted posterior probability of /d/ linearly onto the range of the human z-scored /d/-goodness ratings (see Section \@ref(sec:IO-methods-link)). This was done only for the purpose of visualizations---all analyses presented below directly predict human ratings from the ideal observers' posterior probabilities.
 
-(ref:ratings-results-byItem) **Human /d/-goodness ratings** during test (z-scored) by native language and exposure group. To faciltiate comparison of the human data to the ideal observer models in Figure \@ref(fig:IO-ratings-results), we first aggregate the human data by exposure condition and *item*, averaging across all subjects. These are the individual points shown in the figure. The bars show the mean of these by-item means, and the error interval shows the 95\% confidence interval over the by-item means. This contrasts with Figure \@ref(fig:ratings-results) in Section \@ref(sec:results), where we plotted the mean and confidence interval of by-subject means. 
+(ref:ratings-results-byItem) **Human /d/-goodness ratings** during test (z-scored) by native language and exposure group. To faciltiate comparison of the human data to the ideal observer models in Figure \@ref(fig:IO-ratings-results-byItem), we first aggregate the human data by exposure condition and *item*, averaging across all subjects. These are the individual points shown in the figure. The bars show the mean of these by-item means, and the error interval shows the 95\% confidence interval over the by-item means. This contrasts with Figure \@ref(fig:ratings-results) in Section \@ref(sec:results), where we plotted the mean and confidence interval of by-subject means. 
 
 
 ```{r IO-ratings-results-byItem, fig.cap="(ref:IO-ratings-results-byItem)", fig.height=4.5, out.width='75%'}
