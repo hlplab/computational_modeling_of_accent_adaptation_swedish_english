@@ -1285,29 +1285,31 @@ This raises questions as to how we should estimate effects of phonological conte
 
 As we opted to follow the established procedure outlined in C-CuRE, we computed estimates with native speaker data only as this follows from its principle that native speaker expectations of phonological context effects are derived from native (L1) input and thus aim to estimate those expectations from native data whenever possible. This contrasts with expectations about the talker, which by their very nature involve adaptation to the specific talker.
 
-For Swedish, we *estimated* (fit) the effects of segmental context from the native recordings of the /d/- and /t/-final words from the test block of the behavioural experiment. We then *corrected* (residualized) all data used to test and train the ideal observer, for the predicted effects.We did not include words from the training data in the fitting of the regression, because test and training words differed in terms of word length (corrected for in Step 2 below). Our procedure thus assumes that the effect of segmental context is identical regardless of word length. However, even if this assumption turned out to be wrong, it does not introduce any obvious bias with regard to the ideal observer comparisons. 
+For Swedish, we *estimated* (fit) the effects of segmental context from the native recordings of the /d/- and /t/-final words from the test block of the behavioural experiment. We then *corrected* (residualized) all data used to test and train the ideal observer, for the predicted effects. We did not include words from the training data in the fitting of the regression, because test and training words differed in terms of word length (corrected for in Step 2 below). Our procedure thus assumes that the effect of segmental context is identical regardless of word length. However, even if this assumption turned out to be wrong, it does not introduce any obvious bias with regard to the ideal observer comparisons. 
 
 For English, we followed the same procedure with two exceptions. First, recordings of the /d/- and /t/-final words from the experimental test block were available only from the non-native talker. We instead fitted the effects of phonological context with words from @Li2020database. As mentioned above, the words in @Li2020database. were slightly different from those in @xie2017more's test block. However, both sets of words were mono-syllabic sets of minimal pairs and included the same type of segmental contexts.
 
 All effects were treatment coded and estimated with linear regression models that were the best fit for each cue and language. To achieve this we used the ```validation()``` function available in the rms package for R [@Harrell2020rms]. Each cue was regressed onto the full combination of predictors that could possibly affect its realisation. The predictors considered for English were:
 
-- number of segments
-- onset has lateral
-- coda has lateral
-- onset has nasal
-- coda has nasal
-- onset has rhotic and
-- Talker
+- number_of_segments
+- onset_has_lateral
+- coda_has_lateral
+- onset_has_nasal
+- coda_has_nasal
+- onset_has_rhotic, and
+- Talker (the database of @Li2020database comprised multiple talkers)
 
-The model comparisons employed a group cross-validation method with the backward step-down approach for each training sample. The final models for the respective cues for English were as follows:
+The model comparisons employed a group cross-validation method with the backward step-down approach for each training sample. The final best-fitting models for the respective cues for English were as follows:
 
 - ```vowel ~ 1 + number_segments +  coda_has_lateral + onset_has_rhotic + Talker```
 - ```closure ~ 1 + number_segments + coda_has_lateral + onset_has_lateral + onset_has_rhotic + Talker ``` 
 - ```burst ~ 1 + number_segments + coda_has_lateral + Talker```
 
-For Swedish, phonological vowel length (phonologically long vs. short vowel, e.g., *sladd*---'cord' vs. *ved*---'wood) and a presence of a following nasal were expected to have significant effects on vowel and closure durations. The model for the vowel and closure cues was ```cue ~ 1 + number_segments + has_long_vowel + coda_has_nasal```. While those predictors did not affect burst duration we chose to keep the model consistent for burst as well since the estimated effects were insignificant, practically and statistically.
+For Swedish, phonological vowel length (phonologically long vs. short vowel, e.g., *sladd*---'cord' vs. *ved*---'wood) and a presence of a following nasal were expected to have significant effects on vowel and closure durations. The best-fitting model for the vowel and closure cues was ```cue ~ 1 + number_segments + has_long_vowel + coda_has_nasal```. While those predictors did not affect burst duration we chose to keep the model consistent for burst as well since the estimated effects were insignificant, practically and statistically.
   
 In both languages, the correction procedures involved first estimating the phonological context effects for each cue and subsequently obtaining the sum of estimated linear predictor for all terms (estimated coefficient*predictor) except for the intercept and Talker. This sum of predicted terms was then added as an offset term to a separate linear regression of each cue by Talker: ```cue ~ 1 + Talker + offset_segmental_context``` from which the residual cue values are obtained. Effectively, the predicted phonological context effects were taken as constant values to be subtracted from all data.
+
+Across the two languages, there were a total of six linear regressions, summarized in the next six figures. Each figure shows the predicted effect (in msecs) and confidence interval for all predictors. Significance is indicated through stars.
 
 ```{r step 1 correct for segmental context}
 # storing changes in separate dataframes so that d.stims is not affected. Allows better tracking.
@@ -1545,8 +1547,9 @@ correct_for_suprasegmental_context = function(
 
 Supra-segmental factors like---lexical stress and speech rate---are also known to affect the phonetic realization of sounds. For example, segments tend to have longer durations in stressed, compared to unstressed, syllables [@lindblom1963spectrographic; @van1987effects]. Processes like compensatory lengthening/shortening [@peterson1960duration; @lindblom1973some; @fowler1981relationship] can also cause segments to be longer in syllables with fewer segments @klatt1976linguistic, and words with fewer syllables [@rietveld1987effect]. Additionally, local changes in speech rate are likely to affect durational measures like the ones used here [e.g. @crystal1982segmental; @gahl2012reduce]. Given that non-native speakers tend to speak more slowly, it is necessary to control for cue duration variation caused by differences in speaking rate. We thus removed effects of speech rate, lexical stress, and syllable/word complexity on vowel, closure, and burst duration.
 
-<!-- Maryann: UPDATE THIS PART -->
-The models were estimated using only the /d/-final words by the non-native talkers, since the syllable-final /t/ (by design) only occurred as mono-syllabic test words. We estimated the effects of the number of syllables in the word and the presence or absence of stress of the final syllable; the supra-segmental model was```cue ~ 1 + number_syllables + has_stress```. We then took the sum of both those predictor terms as an offset term of the supra-segmental model. All the data for both English and Swedish were corrected for the segmental (offset term from step 1) and supra-segmental effects by obtaining the residuals from a linear regression with Talker as a predictor and both offset terms: ```cue ~ 1 + Talker + offset_segmental + offset_suprasegmental``.  Our procedure thus assumes that supra-segemental effects are identical for both syllable-final /d/ and /t/. However, even if this assumption turned out to be wrong, it does not introduce any obvious bias with regard to the ideal observer comparisons.
+The models were estimated using only the /d/-final words, since the syllable-final /t/ (by design) only occurred as mono-syllabic test words. Furthermore, recordings of multi-syllabic /d/-words in our English database were only available for the non-native talker, forcing us to fit the models with non-native data. While the Swedish database had native recordings of multi-syllabic /d/-words we also used the non-native data to keep the models consistent and comparable. Using non-native data for this purpose is not ideal given that C-CuRE is fundamentally meant to estimate the expected cue values based on native realisations.
+
+We estimated the effects of the number of syllables in the word and the presence or absence of stress of the final syllable; the supra-segmental model was```cue ~ 1 + number_syllables + has_stress```. We then took the sum of both those predictor terms as an offset term of the supra-segmental model. All the data for both English and Swedish were corrected for the segmental (offset term from step 1) and supra-segmental effects by obtaining the residuals from a linear regression with Talker as a predictor and both offset terms: ```cue ~ 1 + Talker + offset_segmental + offset_suprasegmental``.  Our procedure thus assumes that supra-segemental effects are identical for both syllable-final /d/ and /t/. However, even if this assumption turned out to be wrong, it does not introduce any obvious bias with regard to the ideal observer comparisons.
   
 
 The following plots summarize the segmental and supra-segmental effects on vowel, closure, and burst duration.
