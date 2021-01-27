@@ -1679,7 +1679,7 @@ draw_training_data = function(
     group_by(NativeLanguage, Talker, Sound) %>%
     droplevels() %>% 
     # For the native data, one can sample with replacement since this is really meant to represent 
-    # knowledge from a much large base of experience
+    # knowledge from a much larger base of experience
     sample_n(30, replace = T) %>%
     mutate(Used_for.Model.Accent = "native") %>%
     ungroup() %>%
@@ -2037,7 +2037,7 @@ p.post +
 
 As in our previous work, we assume that the ideal observer employs Luce's choice rule (also known as probability matching) to categorize inputs. Under this assumption, the ideal observer responds by sampling from its posterior. If the posterior probability of a /d/ is, say, .45 for a given stimulus, the observer will on average respond "d" on 45\% of all trials and "t" on 55\% of all trials. This choice rule does thus not introduce any additional degrees of freedom. 
 
-Figure \@ref(fig:ideal-observers-accuracy) shows the predicted accuracy for a hypothetical categorization task over the test stimuli for the English and Swedish experiment. Critically, the non-native ideal observer achieves high accuracy over the foreign-accented test stimuli, consistently higher than the native ideal observer.
+Figure \@ref(fig:ideal-observers-accuracy) shows the predicted accuracy for a hypothetical categorization task over the test stimuli for the English and Swedish experiment. Critically, the non-native ideal observer patterns consistently with human responses from the /d/-exposure groups; we elaborate on this in section (ref:Group-level comparison between human and model-predicted ratings). Critically, the ideal observers for English, achieves high accuracy over the foreign-accented test stimuli, consistently higher than the native ideal observer.
 
 (ref:ideal-observers-accuracy) Predicted accuracy of native and non-native ideal observers for the foreign-accented /d/- and /t/ words during test.
 
@@ -2158,12 +2158,11 @@ Figure \@ref(fig:IO-ratings-results-byItem) plots the predictions of the ideal o
 There is a clear difference between the English and Swedish data, but the predictions of the non-native vs. native ideal observers qualitatively match the patterns of human ratings in the /d/-exposure vs. control conditions:
 
   + For the Swedish data, the Ideal Observers show no difference between the native model and the non-native model; mirroring this, the human data show no difference between the /d/-exposure and the control groups. 
-  + For the English data, the Ideal Observers predict significantly bettter performance from the non-native model over the native model for both /d/ and /t/; this pattern was also reflected in the higher ratings for the intended category (for both /d/ and /t/) in the human ratings.
+  + For the English data, the Ideal Observers predict significantly better performance from the non-native model over the native model for both /d/ and /t/; this pattern was also reflected in the higher ratings for the intended category (for both /d/ and /t/) in the human ratings.
 
-(ref:IO-ratings-results-byItem) **Ideal observer /d/-goodness ratings** during test (z-scored) predicted by the native and non-native ideal observers. Shown for both the English and Swedish data. Errorbars show 95\% bootstrapped confidence intervals over by-item predictions (since there aren't multiple subjects). To facilitate comparison to the human data, predicted ratings were derived from each ideal observer by projecting its predicted posterior probability of /d/ linearly onto the range of the human z-scored /d/-goodness ratings (see Section \@ref(sec:IO-methods-link)). This was done only for the purpose of visualizations---all analyses presented below directly predict human ratings from the ideal observers' posterior probabilities.
+(ref:IO-ratings-results-byItem) **Ideal observer /d/-goodness ratings** during test (z-scored) predicted by the native and non-native ideal observers. Shown for both the English and Swedish data. Error bars show 95\% bootstrapped confidence intervals over by-item predictions (since there aren't multiple subjects). To facilitate comparison to the human data, predicted ratings were derived from each ideal observer by projecting its predicted posterior probability of /d/ linearly onto the range of the human z-scored /d/-goodness ratings (see Section \@ref(sec:IO-methods-link)). This was done only for the purpose of visualization---all analyses presented below directly predict human ratings from the ideal observers' posterior probabilities.
 
-(ref:ratings-results-byItem) **Human /d/-goodness ratings** during test (z-scored) by native language and exposure group. To faciltiate comparison of the human data to the ideal observer models in Figure \@ref(fig:IO-ratings-results-byItem), we first aggregate the human data by exposure condition and *item*, averaging across all subjects. These are the individual points shown in the figure. The bars show the mean of these by-item means, and the error interval shows the 95\% confidence interval over the by-item means. This contrasts with Figure \@ref(fig:ratings-results) in Section \@ref(sec:results), where we plotted the mean and confidence interval of by-subject means. 
-
+(ref:ratings-results-byItem) **Human /d/-goodness ratings** during test (z-scored) by native language and exposure group. To facilitate comparison of the human data to the ideal observer models in Figure \@ref(fig:IO-ratings-results-byItem), we first aggregate the human data by exposure condition and *item*, averaging across all subjects. These are the individual points shown in the figure. The bars show the mean of these by-item means, and the error interval shows the 95\% confidence interval over the by-item means. This contrasts with Figure \@ref(fig:ratings-results) in Section \@ref(sec:results), where we plotted the mean and confidence interval of by-subject means. 
 
 ```{r IO-ratings-results-byItem, fig.cap="(ref:IO-ratings-results-byItem)", fig.height=4.5, out.width='75%'}
 p.results.perception.bySubject %+%
@@ -2197,11 +2196,11 @@ p.results.perception.bySubject %+%
 
 Second, at the item level, we hope to predict human responses from the posterior of each token. Ideally, we expect to see a consistent correlation between IO predictions and human data across the two categories (/d/ and /t/). This ideal situation is based on the following assumptions:
 
-  1. we have enough participant data. 
-  2. models use all cues that human have access to---likely to lead to lines shifted apart (assuming also the other assumptions are orthogonal to this particular assumption.
-  3. the space in which we assess performance are the same as human participant use.
-  4. cues are multi-Gaussian distributions.
-  5. the link function between the IO prediction and human response is correct.
+  1. We have enough participant data. 
+  2. Models use all cues that human have access to---likely to lead to lines shifted apart (assuming also the other assumptions are orthogonal to this particular assumption.
+  3. The space in which we assess performance is the same as that used by human participants.
+  4. Cues are multi-Gaussian distributions.
+  5. The link function between the IO predictions and human responses is correct.
   
   
 1. Are there correlations between human ratings and ideal observers predictions? 
@@ -2254,7 +2253,6 @@ tab_model(lmer.IOtoRating,
           title = "(\\#tab:ratings-IO-analysis) Results of linear mixed-effects regression of /d/-goodness ratings on ideal observer posterior /d/ predictions.",
           pred.labels = pred.labels,
           dv.labels = "/d/-goodness rating (z-scored)")
-summary(lmer.IOtoRating)
 ```
 
 Next, we asked whether this effect was solely driven by differences between the native languages, the exposure group, or sound. To this end, we refit the above model while also including the full factorial interactions of native language (sum-coded: English = -1 vs. Swedish = 1), exposure group (sum-coded: control = -1 vs. /d/-exposure = 1), and sound category (sum-coded: /t/ = -1 vs. /d/ = 1), as well as the maximal by-item random effect structure (random intercept and slopes for exposure group, sound category, and their interaction) and by-participant random intercepts (more complex random effect structures by participant did not converge). <!-- Maryann, Xin: Check whether the next sentence holds--> In this analysis, the ideal observers' posterior probability was no longer a significant predictor of human /d/-goodness ratings:
@@ -2294,8 +2292,12 @@ lmer.IOtoRating.ModelComparison =
 
 pred.labels = c("Intercept",
                 "NativeLanguage (Swedish vs English)",
-                "Model.Posterior.d",
-                "Model.Accent.matchesGroup")
+                "English:Model.Posterior.d",
+                "Swedish:Model.Posterior.d",
+                "English:Model.Accent.match (Yes vs No)",
+                "Swedish:Model.Accent.match (Yes vs No)",
+                "English:Model.Posterior.d:Model.Accent.match (Yes vs No)",
+                "Swedish:Model.Posterior.d:Model.Accent.match (Yes vs No)")
 tab_model(lmer.IOtoRating.ModelComparison,
           show.r2 = F,
           title = "(\\#tab:ratings-IO-model-comparison) Results of linear mixed-effects regression of /d/-goodness ratings on matching vs non-matching ideal observer models.",
