@@ -2207,7 +2207,7 @@ Second, at the item level, we hope to predict human responses from the posterior
 2. Are the correlations stronger for the consistent pairing (consistence coded as "yes": /d/-exposure and non-native model; control and native model)? 
 
 
-TO DO REFER TO AND EXPLAIN Figure (fig:IO-ratings-results-correlation-byItem)
+Figure \@ref(fig:IO-ratings-results-correlation-byItem) shows the correlation between ideal observer posterior predictions and human /d/-goodness ratings of each item in both the English and Swedish experiments. The left column shows the correlation of human ratings with a mismatched ideal observer model, that is, an ideal observer that was modelled for the opposing condition. The column on the right shows the correlation with ideal observers for that intended condition. The mismatching ideal observers showed little correlational difference for the Swedish data--they were strongly correlated either way. 
 
 (ref:IO-ratings-results-correlation-byItem) Item-by-item correlations between ideal observer-predicted ratings and human ratings of /d/-goodness for the /t,d/-final test words from the English and Swedish experiment. Data for both participants groups (/d/-exposure vs. control) are shown.
 
