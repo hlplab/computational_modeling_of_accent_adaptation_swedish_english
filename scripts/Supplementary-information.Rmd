@@ -2273,12 +2273,12 @@ pred.labels = c("Intercept",
                 "Model.Posterior.d")
 tab_model(lmer.IOtoRating.full,
           show.r2 = F,
-          title = "(\\#tab:ratings-IO-analysis) Results of linear mixed-effects regression of /d/-goodness ratings on ideal observer posterior /d/ predictions with full interactions of native language, exposure group and sound.",
+          title = "(\\#tab:ratings-IO-analysis-full) Results of linear mixed-effects regression of /d/-goodness ratings on ideal observer posterior /d/ predictions with full interactions of native language, exposure group and sound.",
           pred.labels = pred.labels,
           dv.labels = "/d/-goodness rating (z-scored)")
 ```
 
-### Do ideal observers that are intended to capture the exposure condition predict human /d/-goodness rating responses *better* than ideal observers intended for another exposure condition?
+### Do ideal observers that model an exposure condition predict human /d/-goodness rating responses *better* than ideal observers intended for a different exposure condition?
 
 ```{r item-level-regression-between-models}
 contrasts(d.test.IO$Model.Accent.matchesGroup) = cbind("Yes.vs.No" = c(-1, 1))
