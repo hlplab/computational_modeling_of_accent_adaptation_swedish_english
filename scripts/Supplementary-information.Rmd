@@ -2320,9 +2320,9 @@ plot_IO_test = function(
   # If .data.test contains more than one instance per unique combination of stimulus & model, summarize it down to one observation 
   # per stimulus & model
   .data.test %<>% 
-    { if ("Model.Accent.matchesGroup" %in% names(.)) filter(., Model.Accent.matchesGroup == "yes") else . } %>%
-          group_by(NativeLanguage, Item.Word, Item.WordID, Item.MinimalPair, Model.Accent, Sound) %>%
-          summarise_at(c(cues, "Model.Posterior.Intended"), first)
+    filter(Model.Accent.matchesGroup == "yes") %>%
+    group_by(NativeLanguage, Item.Word, Item.WordID, Item.MinimalPair, Model.Accent, Sound) %>%
+    summarise_at(c(cues, "Model.Posterior.Intended"), first)
   
   # If difference should be plotted instead
   if (show.difference) {
