@@ -267,7 +267,6 @@ It is therefore possible that the decision to use stimuli from the assisted reco
 
 
 
-
 ## Exposure stimuli and procedure
 
 During exposure, participants performed a lexical decision task. Recordings were played over headphones at a comfortable volume. Participants were instructed to decide whether the word they heard was a real word or not. Order of presentation was randomized across participans.
@@ -1164,9 +1163,7 @@ where the $\beta$s are the maximum likelihood coefficients of the following line
 
 $$lm(cue \sim context_1 + context_2 + ... + context_k)$$
 
-We apply this model to the present data while considering talker, segmental and supra-segmental phonotactic contexts. A number of properties of the English and Swedish production data complicate this procedure, requiring us to estimate context effects sequentially on subsets of the data (see \@ref(fig:summary-cue-correction)). This is not an ideal situation but one that many researchers aiming to predictively model speech perception across L1 and L2 accents will have to face. 
-
-Table \@ref(fig:summary-cue-correction) summarizes the two separate steps we used to estimate effects of segmental and supra-segmental context, which were then combined with correction for talker context. The following sections describe and motivate these steps in detail. Since our goal here is to compare the predicted effect of /d/-exposure and control exposure across the two experiments on English and Swedish, we apply the same steps to the production data of both languages.
+We apply this model to the present data while considering talker, segmental and supra-segmental phonotactic contexts. A number of properties of the English and Swedish production data complicate this procedure, requiring us to estimate context effects sequentially on subsets of the data (see \@ref(fig:summary-cue-correction)). This is not an ideal situation but one that many researchers aiming to predictively model speech perception across L1 and L2 accents will have to face. Table \@ref(fig:summary-cue-correction) summarizes the two separate steps we used to estimate effects of segmental and supra-segmental context, which were then combined with correction for talker context. The following sections describe and motivate these steps in detail. Since our goal here is to compare the predicted effect of /d/-exposure and control exposure across the two experiments on English and Swedish, we apply the same steps to the production data of both languages.
 
 ```{r summary-cue-correction, fig.cap="(ref:summary-cue-correction)", out.width="100%"}
 correction_table <- as_tibble(read_csv("../data/correction_procedure_table.csv")) 
