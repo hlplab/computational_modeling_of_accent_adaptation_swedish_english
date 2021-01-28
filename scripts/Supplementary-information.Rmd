@@ -282,7 +282,6 @@ It is therefore possible that the decision to use stimuli from the assisted reco
 
 
 
-
 ## Exposure stimuli and procedure
 
 During exposure, participants performed a lexical decision task. Recordings were played over headphones at a comfortable volume. Participants were instructed to decide whether the word they heard was a real word or not. Order of presentation was randomized across participans.
@@ -1164,7 +1163,7 @@ $$corrected\_cue = cue - (\beta_1 context_1 + \beta_2 context_2 + ... + \beta_k 
 where the $\beta$s are the maximum likelihood coefficients of the following linear model: 
 
 $$lm(cue \sim context_1 + context_2 + ... + context_k)$$
-We apply this model to the present data while considering talker, segmental and supra-segmental phonotactic contexts. A number of properties of the data that were available to us complicate this context-correcting process, requiring us to estimate context effects sequentially on subsets of the data (see \@ref(fig:summary-cue-correction)). This is not an ideal situation but one that many researchers aiming to predictively model speech perception across L1 and L2 accents will have to face. In the following sections, we motivate and describe the two steps in \@ref(fig:summary-cue-correction), laying out for each step the assumptions we make and what consequences they might have for the training and testing of the ideal observers, as well as the comparison of interest between the native and non-native ideal observers across the experiment on English and Swedish.
+We apply this model to the present data while considering talker, segmental and supra-segmental phonotactic contexts. A number of properties of the data that were available to us complicate this context-correcting process, requiring us to estimate context effects sequentially on subsets of the data (see \@ref(tab:summary-cue-correction)). This is not an ideal situation but one that many researchers aiming to predictively model speech perception across L1 and L2 accents will have to face. In the following sections, we motivate and describe the two steps in \@ref(tab:summary-cue-correction), laying out for each step the assumptions we make and what consequences they might have for the training and testing of the ideal observers, as well as the comparison of interest between the native and non-native ideal observers across the experiment on English and Swedish.
 
 <!-- These steps involved a number of researchers' degrees of freedom. In other words, there often were several reasonable approaches that made slightly different assumptions about the data, and we had to choose one. Sometimes the data we had access to limited our choices. Whenever possible, however, we were guided by the goal to train and test two ideal observers that differed maximally in how much they knew about the foreign-accented speech: the native ideal observer reflecting a native listener without any knowledge about the foreign-accented speech, and the non-native ideal observer reflecting a native listener with maximal knowledge about the foreign-accented speech. -->
 
