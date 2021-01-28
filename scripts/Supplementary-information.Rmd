@@ -189,27 +189,12 @@ get_axes = function(.data, cues) {
  * Run final compilation with echo = F.
  * Check that all remaining Maryan,Xin,Florian comments have been addressed. 
 
-2) Data analysis
- 
- * Check why in English non-native data the stress-final n-coda words get pulled out of the rest of the cloud. that seems wrong.
- * Add statistical test to result section of ideal observers
- * Add model comparisons that assess whether the models that match the exposure condition (`Model.Accent.matchesGroup == yes`) perform better than those that don't.
- * Questions to **discuss next**:
-   * I think we should replace step 3 and instead find a way to limit the alignment to correction for differences in speech rate?
- * Questions for **XIN**: 
-   * Why does Step 1 use has_rln for English but has_nasal for Swedish? can we make this more uniform? Or do we happen to know that it's only nasals that matter for swedish but all of rln that matter for English?
-   * Step 2 seems broken in the most recent version.
-   * Remove spurious regression line plot. This might require changing the plot function or catching the special case in which there is only one predictor (since plot_model defaults to plotting the regression line with just one predictor, it seems)
-   * Do you know what this comment refers to: remove category density code 
-   * Can we make sure remove any notes or code changes that were meant to be temporary? I already cut some text that seems to have been intended as notes for ourselves, rather than others. I didn't change code, but now that we're aiming to make the "proportional_measure" branch the main branch, can we clean up?
-  
-3) Potential additional analyses:
+2) Potential additional analyses:
  
  * Consider adding perception noise to IOs to simulate various subjects. In any case, *explain in IO result section why IO results are more categorical than human responses* (lack of noise is one plausible reason).
  * In particular, do we want to add a section on the alternative Swedish recordings?
 
-8) text editing: **MARYANN**:
-
+3) text editing: **MARYANN**:
 
  * let's change our terminology to "L2-accented" and "L1-accented" speech, following what we did in Xie et al under review." "native" and "non-native" can be used in the abstract, title, or once in the intro but not beyond. We also aim to avoid "foreign-accented". If the changes lead to indirect, convoluted language for particular instances let's discuss those instances. We don't want to make the paper less accessible but we do want to acknowledge that some people find the terms native and non-native (and foreign-accented) to be problematic.
 
