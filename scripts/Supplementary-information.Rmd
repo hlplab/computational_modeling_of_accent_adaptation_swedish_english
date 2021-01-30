@@ -2381,15 +2381,15 @@ plot_IO_test(d.IO, d.test.IO, language = c("Swedish"), cues = selected_cues, sho
 
 <!-- For the English data, the L2 ideal observer correlates with human ratings in *both* exposure conditions, whereas the native ideal observer did not correlate with human ratings in either exposure condition. That is, the L2 ideal observer performed better in predicting human ratings regardless of whether it matched the exposure condition. This is unexpected. While the correlation with human ratings was numerically highest when the ideal observer's assumptions matched the exposure condition, follow-up analyses reported below found that this difference was not significant. For the Swedish data, both the native and the L2 ideal observers exhibited significant correlations of with human ratings. The magnitude of these correlations did not differ depending on whether the ideal observer matched the exposure condition. In short, while the ideal observers correctly predict the qualitative pattern found in the human results, the item-level analyses suggest that the ideal observers either predict the correct qualitative patterns for the wrong reasons, or that the ideal observers ....XXXX  -->
 
-<!-- <!-- This ideal situation is based on the following assumptions: --> -->
+<!-- This ideal situation is based on the following assumptions: -->
 
-<!-- <!--   1. We have enough participant data.  --> -->
-<!-- <!--   2. Models use all cues that human have access to---likely to lead to lines shifted apart (assuming also the other assumptions are orthogonal to this particular assumption. --> -->
-<!-- <!--   3. The space in which we assess performance is the same as that used by human participants. --> -->
-<!-- <!--   4. Cues are multi-Gaussian distributions. --> -->
-<!-- <!--   5. The link function between the IO predictions and human responses is correct. --> -->
-<!-- <!-- 1. Are there correlations between human ratings and ideal observers predictions?  --> -->
-<!-- <!-- 2. Are the correlations stronger for the consistent pairing (consistence coded as "yes": /d/-exposure and L2 model; control and native model)?  --> -->
+<!--   1. We have enough participant data.  -->
+<!--   2. Models use all cues that human have access to---likely to lead to lines shifted apart (assuming also the other assumptions are orthogonal to this particular assumption. -->
+<!--   3. The space in which we assess performance is the same as that used by human participants. -->
+<!--   4. Cues are multi-Gaussian distributions. -->
+<!--   5. The link function between the IO predictions and human responses is correct. -->
+<!-- 1. Are there correlations between human ratings and ideal observers predictions?  -->
+<!-- 2. Are the correlations stronger for the consistent pairing (consistence coded as "yes": /d/-exposure and L2 model; control and native model)?  -->
 
 
 <!-- (ref:IO-ratings-results-correlation-byItem) Item-by-item correlations between ideal observer-predicted ratings and human ratings of /d/-goodness for the /t,d/-final test words from the English and Swedish experiment. Data for both participants groups (/d/-exposure vs. control) are shown. -->
