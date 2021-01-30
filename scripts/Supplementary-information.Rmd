@@ -194,10 +194,6 @@ get_axes = function(.data, cues) {
  * Consider adding perception noise to IOs to simulate various subjects. In any case, *explain in IO result section why IO results are more categorical than human responses* (lack of noise is one plausible reason).
  * In particular, do we want to add a section on the alternative Swedish recordings?
 
-3) text editing: **MARYANN**:
-
- * let's change our terminology to "L2-accented" and "L1-accented" speech, following what we did in Xie et al under review." "native" and "non-native" can be used in the abstract, title, or once in the intro but not beyond. We also aim to avoid "foreign-accented". If the changes lead to indirect, convoluted language for particular instances let's discuss those instances. We don't want to make the paper less accessible but we do want to acknowledge that some people find the terms native and non-native (and foreign-accented) to be problematic.
-
 # Overview
 
 This supplementary information describes the results and methods of the perception experiments on Mandarin-accented English and Flemish-accented Swedish, as well as the development and evaluation of the ideal observer models. The experiment on Mandarin-accented English [@xie2017more] found an effect of exposure to the L2-accented sound (syllable-final /d/) on subsequent /d/- and /t/-goodness ratings. This effect has been replicated in two other paradigms (categorization and priming) using the same stimuli Xie et al. [@xie2017more]. Additionally, an earlier priming study found the same type of benefit for exposure to syllable-final /d/ in Dutch-accented English (Dutch, like Flemish, exhibits final devoicing, partially or completely neutralizing stop voicing in the syllable final position). In contrast to these previous studies, the experiment on Flemish-accented Swedish did *not* find a significant effect of exposure on subsequent /d/ and /t/-goodness ratings.
@@ -2161,7 +2157,7 @@ p.results.perception.bySubject %+%
   ylim(-1.25, 1.25)
 ```
 
-The ideal observers' predictions differ from the human ratings in a number of ways. First, the human data is more gradient than predicted by the ideal observers. This is most evidence for the Swedish data. One likely explanation for this is that the simple ideal observer models we employ here do not account for perceptual noise [cf. @feldman2009]. <!--MARYANN: can you fill in? --> Second, the differences between the different ideal observers are more pronounced than for the z-scored human ratings. This is the case both across languages, and across exposure conditions within each language.
+The ideal observers' predictions differ from the human ratings in a number of ways. First, the human data is more gradient than predicted by the ideal observers. This is most evidence for the Swedish data. One likely explanation for this is that the simple ideal observer models we employ here do not account for perceptual noise [cf. @feldman2009influence]. Second, the differences between the different ideal observers are more pronounced than for the z-scored human ratings. This is the case both across languages, and across exposure conditions within each language.
 
 The ideal observers do, however, predict the qualitative patterns in the human goodness ratings:
 
@@ -2262,7 +2258,7 @@ tab_model(lmer.IOtoRating.ModelComparison,
 
 In short, we did *not* find evidence that ideal observer that match the exposure condition of human participants did significantly better in predicting human goodness ratings. One possible reason for this becomes apparent when we visualize that predictions of the ideal observers. Figure \@ref(fig:plot-3d-test-IO-English) and \@ref(fig:plot-3d-test-IO-Swedish) visualises the posterior predictions of the L1 and L2 ideal observers for all test token. Figure \@ref(fig:plot-3d-test-IO-English-difference) and Figure \@ref(fig:plot-3d-test-IO-Swedish-difference) show the *difference* between the predictions of the L1 and L2 ideal observers. These latter figures thus highlight the test tokens that can distinguish between the L1 and L2 models. 
 
-On the one hand, the results are encouraging: the L2 model predicts the intended (L2) category better for both English but not for Swedish, paralleling the results for human ratings. On the other hand, these plots also show clear limitations of the present approach: for many test tokens, the L1 and L2 ideal observers make basically identical predictions, limiting our ability to distinguish between the two models. This provides a straightforward explanation as to why ideal observers that match the exposure condition do not provide a better fit against human ratings: the L1 and L2 model do not differ sufficiently much in their predictions. We note that this is not *necessarily* a limitation of the ideal observers but might rather reflect a limitation of experiments that use natural speech stimuli as test tokens. These natural speech stimuli were not chosen so as to maximize the statistical power to detect differences between the exposure groups (or ideal observers) but rather reflect the natural distribution of the relevant L2 accent.
+On the one hand, the results are encouraging: the L2 model predicts the intended (L2) category better for English but not for Swedish, paralleling the results for human ratings. On the other hand, these plots also show clear limitations of the present approach: for many test tokens, the L1 and L2 ideal observers make basically identical predictions, limiting our ability to distinguish between the two models. This provides a straightforward explanation as to why ideal observers that match the exposure condition do not provide a better fit against human ratings: the L1 and L2 models do not differ sufficiently enough in their predictions. We note that this is not *necessarily* a limitation of the ideal observers but rather might reflect a limitation of experiments that use natural speech stimuli as test tokens. These natural speech stimuli were not chosen so as to maximize the statistical power to detect differences between the exposure groups (or ideal observers) but rather reflect the natural distribution of the relevant L2 accent.
 
 ```{r functions to plot-ideal-observers-results-3D}
 plot_IO_test = function(
@@ -2359,6 +2355,7 @@ plot_IO_test = function(
 
 ```{r plot-3d-test-IO-English, fig.cap="(ref:plot-3d-test-IO-English)", fig.height=4.5, out.width="75%"}
 plot_IO_test(d.IO, d.test.IO, language = "English", cues = selected_cues)
+
 ``` 
 
 
