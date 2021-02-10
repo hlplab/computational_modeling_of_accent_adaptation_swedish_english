@@ -1,5 +1,5 @@
 ---
-title: "Supplementary Information for PAPER TITLE_testing with raw measures: Step 1 & 2 (n_syllable only; English and Swedish both use new correction method step 2; apply NN data to N data) & 3; talkers with high release; correct by speaker"
+title: "Supplementary Information for PAPER TITLE"
 author: "Tan, M., Xie, X., Jaeger, T. F."
 date: \today
 header-includes:
@@ -2285,7 +2285,7 @@ plot_IO_test = function(
         values_from = Model.Posterior.Intended
       ) %>%
       # Using difference. Could use ratio instead
-      mutate(Model.Posterior.Intended.Difference = `non-native` - native)
+      mutate(Model.Posterior.Intended.Difference = `/d/-exposure` - control)
   }
 
   # Unnest data if that hasn't already happened
@@ -2417,8 +2417,34 @@ plot_IO_test(d.IO, d.test.IO, language = c("Swedish"), cues = selected_cues, sho
 
 # Belief updating (DRAFT)
 
-```{r}
-d.exposure
+```{r belief-updating-setup}
+d.IO.training %>%
+  # Make priors from control model's training data
+  filter(Used_for.Model.Group == "control") %>%
+  rename(
+    NativeLanguage = Used_for.Model.NativeLanguage,
+    category = Used_for.Model.Sound) %>%
+  make_NIW_prior_from_data(
+    groups = "NativeLanguage",
+    cues = c("rvowel", "rclosure", "rburst")) %>%
+  select(-c(kappa, nu)) %>%
+  # Consider a range of prior strengths
+  crossing(
+    kappa = 2^(0:9),
+    nu = 2^(3:9)) %>%
+  mutate(
+    prior_kappa = kappa,
+    prior_nu = nu) %>%
+  # Update each prior with exposure data from /d/-exposure group
+  group_by(NativeLanguage, prior_kappa, prior_nu) %>%
+  group_split()
+  update_NIW_beliefs_incrementally(
+    exposure = d.IO.training %>%
+      filter(Used_for.Model.Group == "/d/-exposure") %>%
+      rename(
+        NativeLanguage = Used_for.Model.NativeLanguage,
+        category = Used_for.Model.Sound),
+    add_noise = NULL)
 ```
 
 # Appendix: List of stimuli {#sec:stimuli}
