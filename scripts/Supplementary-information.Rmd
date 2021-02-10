@@ -2418,33 +2418,48 @@ plot_IO_test(d.IO, d.test.IO, language = c("Swedish"), cues = selected_cues, sho
 # Belief updating (DRAFT)
 
 ```{r belief-updating-setup}
-d.IO.training %>%
-  # Make priors from control model's training data
-  filter(Used_for.Model.Group == "control") %>%
-  rename(
-    NativeLanguage = Used_for.Model.NativeLanguage,
-    category = Used_for.Model.Sound) %>%
-  make_NIW_prior_from_data(
-    groups = "NativeLanguage",
-    cues = c("rvowel", "rclosure", "rburst")) %>%
-  select(-c(kappa, nu)) %>%
-  # Consider a range of prior strengths
-  crossing(
-    kappa = 2^(0:9),
-    nu = 2^(3:9)) %>%
-  mutate(
-    prior_kappa = kappa,
-    prior_nu = nu) %>%
-  # Update each prior with exposure data from /d/-exposure group
-  group_by(NativeLanguage, prior_kappa, prior_nu) %>%
-  group_split()
-  update_NIW_beliefs_incrementally(
-    exposure = d.IO.training %>%
-      filter(Used_for.Model.Group == "/d/-exposure") %>%
-      rename(
-        NativeLanguage = Used_for.Model.NativeLanguage,
-        category = Used_for.Model.Sound),
-    add_noise = NULL)
+if (!file.exists("../models/IBBU_updates.RData")) {
+  d.IBBU <-
+    d.IO.training %>%
+    # Make priors from control model's training data
+    filter(Used_for.Model.Group == "control") %>%
+    rename(
+      NativeLanguage = Used_for.Model.NativeLanguage,
+      category = Used_for.Model.Sound) %>%
+    make_NIW_prior_from_data(
+      groups = "NativeLanguage",
+      cues = c("rvowel", "rclosure", "rburst")) %>%
+    select(-c(kappa, nu)) %>%
+    # Consider a range of prior strengths
+    crossing(
+      kappa = 2^(0:9),
+      nu = 2^(3:9)) %>%
+    mutate(
+      prior_kappa = kappa,
+      prior_nu = nu) %>%
+    # Update each prior with exposure data from /d/-exposure group
+    group_by(NativeLanguage, prior_kappa, prior_nu) %>%
+    group_map(
+      ~ update_NIW_beliefs_incrementally(
+        .x, 
+        # Select exposure data to be only /d/-exposure data for /d/ category 
+        # for the matching NativeLanguage
+        exposure = d.IO.training %>%
+          filter(
+            Used_for.Model.NativeLanguage == .y$NativeLanguage,
+            Used_for.Model.Sound == "/d/",
+            Used_for.Model.Group == "/d/-exposure") %>%
+          rename(
+            NativeLanguage = Used_for.Model.NativeLanguage,
+            category = Used_for.Model.Sound),
+        add_noise = NULL),
+      .keep = T) %>% 
+    reduce(rbind)
+  save(d.IBBU, file = "../models/IBBU_updates.RData", compress = T)
+} else {
+  message("Loading previously calculated incremental Bayesian belief updates. If you have made changes to the training data of the ideal observers, delete the file IBBU_updates.RData under models/ and then rerun this code.")
+  load("../models/IBBU_updates.RData")
+}
 ```
 
 # Appendix: List of stimuli {#sec:stimuli}
