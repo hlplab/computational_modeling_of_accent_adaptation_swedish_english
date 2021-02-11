@@ -2462,7 +2462,7 @@ if (!file.exists("../models/IBBU_updates.RData")) {
 }
 ```
 
-Does super quick updating indeed provide the best fit against the *ground truth* (not yet the human responses)? This is not guaranteed because the training and test data (for /d/) is not the same.
+Does super quick updating indeed provide the best fit against the *ground truth* (not yet the human responses)? This is not guaranteed because the training and test data (for /d/) is not the same. Plotting the posterior probability of the correct category under the IBBU model for English (top) and Swedish (bottom).
 
 ```{r IBBU-sanity-check}
 d.IBBU.test <-
@@ -2520,7 +2520,7 @@ d.IBBU.test %>%
   scale_fill_viridis_b("Posterior probability\nof correct category\nunder IBBU") 
 ```
 
-Predicting participants' responses.
+Predicting participants' responses for English (top) and Swedish (bottom).
 
 ```{r}
 d.test.IBBU <-
