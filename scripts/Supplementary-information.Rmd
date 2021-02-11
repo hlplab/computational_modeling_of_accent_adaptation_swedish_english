@@ -2511,78 +2511,74 @@ d.IBBU.test %>%
   filter(NativeLanguage == "English") %>%
   ggplot(aes(x = prior_kappa, y = prior_nu, fill = IBBU.Posterior.Intended.AllData)) +
   geom_raster() +
-  scale_fill_viridis_b() 
+  scale_fill_viridis_b("Posterior probability\nof correct category\nunder IBBU") 
 
 d.IBBU.test %>%
   filter(NativeLanguage == "Swedish") %>%
   ggplot(aes(x = prior_kappa, y = prior_nu, fill = IBBU.Posterior.Intended.AllData)) +
   geom_raster() +
-  scale_fill_viridis_b() 
+  scale_fill_viridis_b("Posterior probability\nof correct category\nunder IBBU") 
 ```
+
+Predicting participants' responses.
 
 ```{r}
-x = d.test.IO %>%
-    select(
-      NativeLanguage, Item.MinimalPair, Sound, rvowel, rclosure, rburst) %>%
-    distinct() %>%
-    filter(NativeLanguage == "English", Item.MinimalPair == "E1", Sound == "/d/") %>%
-    make_vector_column(
-      cols = c("rvowel", "rclosure", "rburst"),
-      vector_col = "x")  %>%
-    pull(x) %>%
-  reduce(rbind) %>% 
-  matrix(nrow = 1)
+d.test.IBBU <-
+  d.IBBU %>%
+  # select final (updated) IOs
+  filter(observation.n == 30) %>%
+  # Get test data (after removing IO information and removing duplicate rows)
+  full_join(
+    # Get test data (after removing IO information and removing duplicate rows)
+    d.test.IO %>%
+      select(
+        NativeLanguage, 
+        Item.MinimalPair, Sound, Rating.Response.d.zscored,
+        rvowel, rclosure, rburst) %>%
+      distinct()) %>%
+  make_vector_column(
+    cols = c("rvowel", "rclosure", "rburst"),
+    vector_col = "x") %>%
+  arrange(NativeLanguage, prior_kappa, prior_nu, Item.MinimalPair, Sound, category) %>%
+  group_by(NativeLanguage, prior_kappa, prior_nu) %>%
+  select(Item.MinimalPair, Sound, x, Rating.Response.d.zscored, 
+         category, m, S, kappa, nu, lapse_rate) %>%
+  nest(belief = c(category, m, S, kappa, nu, lapse_rate)) %>%
+  nest(data = c(Item.MinimalPair, Sound, x, Rating.Response.d.zscored)) %>%
+  # Get posterior probability of /d/ for each data point
+  mutate(IBBU.Posterior.d = map2(
+    data, 
+    belief, 
+    ~ get_posterior_predictive_from_NIW_belief(.x$x, .y, log = F) %>%
+      mutate(ID = rep(1:(nrow(.)/2), 2)) %>%
+      group_by(ID) %>%
+      pivot_wider(
+        values_from = pp,
+        names_from = category) %>%
+      transmute(posterior = `/d/` / (`/d/` + `/t/`)) %>%
+      pull(posterior))) %>%
+  # Get posterior probabiltiy of correct category 
+  # (and then collapse to overall probability of data)
+  mutate(
+    IBBU.Posterior.Correlation = unlist(map2(
+      data,
+      IBBU.Posterior.d,
+      ~ cor(.x$Rating.Response.d.zscored, .y))))
 
-belief = d.IBBU %>% filter(NativeLanguage == "English", prior_kappa == 1, prior_nu == 8, observation.n == 30)
+d.test.IBBU %>%
+  filter(NativeLanguage == "English") %>%
+  ggplot(aes(x = prior_kappa, y = prior_nu, fill = IBBU.Posterior.Correlation)) +
+  geom_raster() +
+  scale_fill_viridis_b("Correlation between\nIBBU posterior\nand participant ratings") 
 
-get_categorization_from_NIW_belief(x, belief, decision_rule = "proportional")
-  
-category = "category"
-log = F
-library(foreach)
-  pp = foreach(c = category.label) %do% {
-    b = belief %>%
-      filter(category == "/d/")
-    
-    print(b)
-
-    get_posterior_predictive(
-      x = x,
-      m = b$m[[1]], S = b$S[[1]], kappa = b$kappa[[1]], nu = b$nu[[1]], log = log) %>%
-      as_tibble() %>%
-      rename_all(~ if (log) "lpp" else "pp") %>%
-      mutate(!! sym(category) := c)
-  }
-
-  assert_that(all(is.vector(x) | is.matrix(x) | is_tibble(x) | is.list(x), is.vector(m) | is.matrix(m), is.matrix(S)))
-   if (is_tibble(x)) x %<>% as.matrix() else
-    if (is.list(x)) x %<>% reduce(rbind) %<>% as.matrix() else
-      if (is.vector(x)) x %<>% matrix(nrow = 1)
-  if (is.matrix(m)) m = as.vector(m)
-assert_that(all(is.number(kappa), is.number(nu)))
-  assert_that(is.flag(log))
-  D = dim(S)[1]
-  assert_that(nu >= D,
-              msg = "nu must be at least as large as the number of dimensions of the multivariate
-              Normal.")
-  assert_that(dim(S)[2] == D,
-              msg = "S is not a square matrix, and thus not a Scatter matrix")
-  assert_that(length(m) == dim(x)[2],
-              msg = paste("m and input are not of compatible dimensions. m is of length", length(m), "but input has", dim(x)[2], "columns."))
-  assert_that(length(m) == D,
-              msg = "S and m are not of compatible dimensions.")
-
-# # Join IBBU models and full test data 
-# # (to get posterior probability of test ratings re-interpreted as posterior probabilities)
-# d.test.IBBU <-
-#   d.IBBU %>%
-#   # select final (updated) IOs
-#   filter(observation.n == 30) %>%
-#   full_join(d.test) %>%
-#   mutate(
-#     Posterior = pmap(
-#       list(get_categorization_from_NIW_belief())
+d.test.IBBU %>%
+  filter(NativeLanguage == "Swedish") %>%
+  ggplot(aes(x = prior_kappa, y = prior_nu, fill = IBBU.Posterior.Correlation)) +
+  geom_raster() +
+  scale_fill_viridis_b("Correlation between\nIBBU posterior\nand participant ratings") 
 ```
+
+
 
 # Appendix: List of stimuli {#sec:stimuli}
 
