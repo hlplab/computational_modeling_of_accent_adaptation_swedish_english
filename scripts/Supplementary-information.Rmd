@@ -2426,14 +2426,25 @@ if (!file.exists("../models/IBBU_updates.RData")) {
     rename(
       NativeLanguage = Used_for.Model.NativeLanguage,
       category = Used_for.Model.Sound) %>%
+    # Assume kappa = nu = 8 in generating the prior
+    # (this choice is arbitrary but needs to be taken into account below when different nus are 
+    # considered since the scatter matrix S_0 is set to yield the sample Sigma given the assumed 
+    # nu),
     make_NIW_prior_from_data(
       groups = "NativeLanguage",
-      cues = c("rvowel", "rclosure", "rburst")) %>%
+      cues = c("rvowel", "rclosure", "rburst"),
+      kappa = 8, 
+      nu = 8) %>%
     select(-c(kappa, nu)) %>%
     # Consider a range of prior strengths
     crossing(
       kappa = 2^(0:9),
       nu = 2^(3:9)) %>%
+    # Correct the S_0 for each nu so that it's still the case that the expected covariance 
+    # matrix Sigma matches the sample covariance matrix.
+    mutate(
+      S = map2(S, nu, ~ get_Sigma_from_S(.x, 8) %>% get_S_from_Sigma(nu = .y))) %>%
+    # Make a copy of kappa and nu and keep it around as a grouping variable (factor)
     mutate(
       prior_kappa = factor(kappa),
       prior_nu = factor(nu)) %>%
@@ -2590,7 +2601,6 @@ read_csv("../data/English/English_wordlist_exposure.csv") %>%
   replace_na(list(`Critical (/d/-Exposure)` = "-", `Critical (Control)` = "-" , `Filler` = "-" )) %>%
   kbl() %>% 
   kable_styling(bootstrap_options = "striped", full_width = F, position = "center")
-  
   #knitr::kable(booktabs = TRUE, caption = 'English - Exposure')
 ```
 
