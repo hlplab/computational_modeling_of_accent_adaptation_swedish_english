@@ -184,18 +184,18 @@ get_axes = function(.data, cues) {
 ```
 
 
-# TO DO
+<!-- # TO DO -->
 
-1) Final clean-up:
+<!-- 1) Final clean-up: -->
 
- * Check whether warnings are addressed, and then (after) set to silent.
- * Run final compilation with echo = F.
- * Check that all remaining Maryan,Xin,Florian comments have been addressed. 
+<!--  * Check that all remaining Maryan,Xin,Florian comments have been addressed.  -->
+<!--  * Check whether warnings are addressed, and then (after) set to silent. -->
+<!--  * Run final compilation with echo = F. -->
 
-2) Potential additional analyses:
- 
- * Consider adding perception noise to IOs to simulate various subjects. In any case, *explain in IO result section why IO results are more categorical than human responses* (lack of noise is one plausible reason).
- * In particular, do we want to add a section on the alternative Swedish recordings?
+<!-- 2) Potential additional analyses: -->
+
+<!--  * Consider adding perception noise to IOs to simulate various subjects. In any case, *explain in IO result section why IO results are more categorical than human responses* (lack of noise is one plausible reason). -->
+<!--  * In particular, do we want to add a section on the alternative Swedish recordings? -->
 
 # Overview
 
