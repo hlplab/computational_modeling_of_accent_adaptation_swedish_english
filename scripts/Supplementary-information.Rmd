@@ -1,5 +1,5 @@
 ---
-title: "Supplementary Information for PAPER TITLE_testing with raw measures: Step 1 & 2 (n_syllable only; English and Swedish both use new correction method step 2; apply NN data to N data) & 3; talkers with high release; correct by speaker"
+title: "Supplementary Information for PAPER TITLE"
 author: "Tan, M., Xie, X., Jaeger, T. F."
 date: \today
 header-includes:
@@ -34,6 +34,7 @@ output:
       search: yes
 documentclass: book
 always_allow_html: true
+citation_package: BibTex
 bibliography: [refs.bib]
 link-citations: yes
 csl: frontiers-in-psychology.csl
@@ -73,6 +74,8 @@ library(assertthat)
 library(daver)
 # devtools::install_github("kleinschmidt/phondisttools")
 library(phondisttools)
+# devtools::install_github("hlplab/MVBeliefUpdatr")
+library(MVBeliefUpdatr)
 ```
 
 ```{r constants and environments}
@@ -114,9 +117,9 @@ applyFactorLevels = function(d) {
     { if ("Used_for.Model.NativeLanguage" %in% names(d)) mutate(., Used_for.Model.NativeLanguage = 
                                                                 factor(Used_for.Model.NativeLanguage, 
                                                                        levels = levels.NativeLanguage)) else . } %>%
-    { if ("Used_for.Model.Accent" %in% names(d)) mutate(., Used_for.Model.Accent = 
-                                                          factor(Used_for.Model.Accent, 
-                                                                 levels = levels.Accent)) else . } %>%
+    { if ("Used_for.Model.Group" %in% names(d)) mutate(., Used_for.Model.Group = 
+                                                          factor(Used_for.Model.Group, 
+                                                                 levels = levels.Group)) else . } %>%
     { if ("Used_for.Model.Sound" %in% names(d)) mutate(., Used_for.Model.Sound = 
                                                          factor(Used_for.Model.Sound, 
                                                                 levels = levels.Category)) else . }
@@ -180,19 +183,6 @@ get_axes = function(.data, cues) {
 }
 ```
 
-
-# TO DO
-
-1) Final clean-up:
-
- * Check whether warnings are addressed, and then (after) set to silent.
- * Run final compilation with echo = F.
- * Check that all remaining Maryan,Xin,Florian comments have been addressed. 
-
-2) Potential additional analyses:
- 
- * Consider adding perception noise to IOs to simulate various subjects. In any case, *explain in IO result section why IO results are more categorical than human responses* (lack of noise is one plausible reason).
- * In particular, do we want to add a section on the alternative Swedish recordings?
 
 # Overview
 
@@ -258,7 +248,7 @@ The two recording equipment and environments were similar across the two experim
 
 The differences in the instructions during recording, however, might affect how native-like the recordings of the non-native speaker sound. In previous analyses, we have found that the recording procedure indeed had a strong effect on the pronunciations of the non-native speaker (Tan, Xie, \& Jaeger, 2019). Specifically, we found that the category means of /d/ and /t/ in either of the two recording conditions differed significantly from the native pronunciations of the native speaker whose recordings were used in the assisted condition. However, the recordings in the unassisted condition differed significantly more from the native-accented speech, both in terms of the number of cue dimensions along which the non-native speech differed from native speech and in terms of the degree of difference (for details, see @tan2019analysing).
 
-It is therefore possible that the decision to use stimuli from the assisted recording condition caused the null effect of /d/-exposure. This would not, however, make the analyses we present here any less relevant for future work. *Any* experiment on speech perception is based on a finite set of speech stimuli. These stimuli can be more or less representative of 'typical' speech from that talker or speech community. In no case, however, is any single experiment going to reflect the range of speech styles and talker types that are present in the speech community. While this raises interesting questions about the generalisability of research on speech perception (for discussion, see @Xie2020comparing), these questions are orthogonal to the more modest goal we pursue here: to predict, for a given set of exposure and test stimuli, what consequences exposure is likely to have on listeners' perception and categorization responses during test. This is the question the ideal observer analyses in Sections \@ref(sec:IO-methods) and \@ref(sec:IO-results) address.
+It is therefore possible that the decision to use stimuli from the assisted recording condition caused the null effect of /d/-exposure. This would not, however, make the analyses we present here any less relevant for future work. *Any* experiment on speech perception is based on a finite set of speech stimuli. These stimuli can be more or less representative of 'typical' speech from that talker or speech community. In no case, however, is any single experiment going to reflect the range of speech styles and talker types that are present in the speech community. While this raises interesting questions about the generalisability of research on speech perception (for discussion, see @xie2020comparing), these questions are orthogonal to the more modest goal we pursue here: to predict, for a given set of exposure and test stimuli, what consequences exposure is likely to have on listeners' perception and categorization responses during test. This is the question the ideal observer analyses in Sections \@ref(sec:IO-methods) and \@ref(sec:IO-results) address.
 <!-- Maryann, Xin: commented out for now but we might add this in later: In Section \@ref(sec:unassisted), we report a comparison of the IO's predictions for the non-native-accented stimuli recorded in the unnassisted condition and those recorded in the assisted condition. This comparison predicts that a perception experiment with the recordings from the unassisted condition would be substantially more likely to elicit a benefit of /d/-exposure. -->
 
 
@@ -1006,29 +996,29 @@ Finally, we can ask how often the bootstrapped English data returned $t$-values 
 
 # Methods of ideal observer analyses {#sec:IO-methods}
 
-For both the English and the Swedish data, we compare the predictions of a native model and a non-native model. The native models are meant to predict the behavior of listeners without exposure to the non-native-accented /d/, i.e., listeners in the control condition. The non-native models are meant to predict the behavior of listeners with exposure to the non-native-accented /d/, i.e. listeners in the /d/-exposure condition. 
+For both the English and the Swedish data, we compare the predictions of a control model and a /d/-exposure model. The control models are meant to predict the behavior of listeners without exposure to the non-native-accented /d/, i.e., listeners in the control condition. The /d/-exposure models are meant to predict the behavior of listeners with exposure to the non-native-accented /d/, i.e. listeners in the /d/-exposure condition. 
 
-To this end, we train and test a total of four ideal observers: the native and non-native English models, and the native and non-native Swedish models. Both the native and non-native ideal observer are *tested* on the same non-native-accented minimal pair stimuli from the test phase of the experiments. Below we refer to these as the **test data**. The two models are, however, *trained* on different inputs. To avoid confusion with the set of exposure words used in the experiments, we refer to sets of words used during the training of the ideal observers as the **training data**.  In particular, the native and non-native IOs were *trained on different /d/ tokens*: The non-native IOs were trained on the non-native-accented words with syllable-final /d/ from the /d/-exposure condition. The native IOs were trained on native-accented syllable-final /d/ productions from another database. This training is meant to parallel and capture the difference between the /d/- and control exposure in the experiments.
+To this end, we train and test a total of four ideal observers: the control and /d/-exposure English models, and the control and /d/-exposure Swedish models. Both the control and /d/-exposure ideal observers are *tested* on the same non-native-accented minimal pair stimuli from the test phase of the experiments. Below we refer to these as the **test data**. The two models are, however, *trained* on different inputs. To avoid confusion with the set of exposure words used in the experiments, we refer to sets of words used during the training of the ideal observers as the **training data**.  In particular, the control and /d/-exposures were *trained on different /d/ tokens*: The /d/-exposure IOs were trained on the non-native-accented words with syllable-final /d/ from the /d/-exposure condition. The control IOs were trained on native-accented syllable-final /d/ productions from another database. This training is meant to parallel and capture the difference between the /d/- and control exposure in the experiments.
 
-To derive predictions from the ideal observers it is also necessary to train each ideal observer on data from the /t/ category. Since /t/ was never (or hardly ever) observed in either exposure condition, both the native and non-native model were trained on *native* /t/. In other words, our non-native ideal observer makes the simplifying assumption that the /d/-exposure condition did not convey any information about the /t/ category, so that listeners in the /d/-exposure condition change their beliefs about the /d/ category, but do not change their beliefs about the /t/ category. This simplifying assumption is almost certainly wrong since, for example, talkers' means for different categories tend to correlate [@chodroff2017structure; @chodroff2018predictability]. Such between-category correlations are also observed in the native-English database we used [@Li2020database; see below for details]. However, it is unlikely to bias our results: here we ask whether the predictions of native and non-native ideal observers differ for the English and the Swedish data. Critically, we apply the same simplifying assumption to both the English and the Swedish ideal observers. Any difference we find between the predictions for English and Swedish can therefore not be due to this simplifying assumption.
+To derive predictions from the ideal observers it is also necessary to train each ideal observer on data from the /t/ category. Since /t/ was never (or hardly ever) observed in either exposure condition, both the control and /d/-exposure model were trained on *native* /t/. In other words, our /d/-exposure ideal observer makes the simplifying assumption that the /d/-exposure condition did not convey any information about the /t/ category, so that listeners in the /d/-exposure condition change their beliefs about the /d/ category, but do not change their beliefs about the /t/ category. This simplifying assumption is almost certainly wrong since, for example, talkers' means for different categories tend to correlate [@chodroff2017structure; @chodroff2018predictability]. Such between-category correlations are also observed in the native-English database we used [@Li2020database; see below for details]. However, it is unlikely to bias our results: here we ask whether the predictions of control and /d/-exposure ideal observers differ for the English and the Swedish data. Critically, we apply the same simplifying assumption to both the English and the Swedish ideal observers. Any difference we find between the predictions for English and Swedish can therefore not be due to this simplifying assumption.
 
-Figure \@ref(fig:ideal-observer-and-data) summarizes what speech databases we used to train the ideal observers---i.e., to estimate the mean $\mu$ and covariance matrix $\Sigma$ of the multivariate Gaussian distributions for the /d/ and /t/ categories in each of the four ideal observers. The dotted lines in Figure \@ref(fig:ideal-observer-and-data) indicate for each category (/d/, /t/) in each model (native vs. non-native x English vs. Swedish), which database it was trained on.
+Figure \@ref(fig:ideal-observer-and-data) summarizes what speech databases we used to train the ideal observers---i.e., to estimate the mean $\mu$ and covariance matrix $\Sigma$ of the multivariate Gaussian distributions for the /d/ and /t/ categories in each of the four ideal observers. The dotted lines in Figure \@ref(fig:ideal-observer-and-data) indicate for each category (/d/, /t/) in each model (control vs. /d/-exposure x English vs. Swedish), which database it was trained on.
 
-In the following sections, we walk through the steps summarized in Figure \@ref(fig:ideal-observer-and-data). As shown in the figure, we draw on multiple databases. We emphasize that this was a matter of *necessity* rather than choice, and that other researcher who seek to model speech perception across non-native accents and languages (natives) will likely find themselves in a similar position, requiring trade-offs between available databases and the often disproportionate effort that would be required to obtain better data. Below, we hope to illustrate the steps that are necessary to prepare phonetic data from multiple disparate speech databases to facilitate unbiased model comparison across accents and languages. Specifically, the speech materials in the databases we employ here differ along dimensions that are not of theoretical interest to us, but that could affect the performance of the ideal observers. For example, if we train the ideal observers on the vowel, closure, and burst duration of multi-syllabic words and then test them on the vowel, closure, and burst duration of the mono-syllabic test items (of the English and Swedish experiment), this might make the comparison of the native and non-native models' performance on the test items uninformative. We thus prepared the training and test data by correcting for effects of phonological context, as we describe next. Following that, we describe the training and test procedure for the ideal observers.
+In the following sections, we walk through the steps summarized in Figure \@ref(fig:ideal-observer-and-data). As shown in the figure, we draw on multiple databases. We emphasize that this was a matter of *necessity* rather than choice, and that other researchers who seek to model speech perception across non-native accents and languages (natives) will likely find themselves in a similar position, requiring trade-offs between available databases and the often disproportionate effort that would be required to obtain better data. Below, we hope to illustrate the steps that are necessary to prepare phonetic data from multiple disparate speech databases to facilitate unbiased model comparison across accents and languages. Specifically, the speech materials in the databases we employ here differ along dimensions that are not of theoretical interest to us, but that could affect the performance of the ideal observers. For example, if we train the ideal observers on the vowel, closure, and burst duration of multi-syllabic words and then test them on the vowel, closure, and burst duration of the mono-syllabic test items (of the English and Swedish experiment), this might make the comparison of the control and /d/-exposure models' performance on the test items uninformative. We thus prepared the training and test data by correcting for effects of phonological context, as we describe next. Following that, we describe the training and test procedure for the ideal observers.
 
-(ref:ideal-observer-and-data) Four ideal observer models---an *native* and *non-native* ideal observer each for the English and the Swedish data---were fit and cross-validated against production data from native- and non-native-accented English and Swedish. In the databases (top and bottom), native speech is shown in gray; non-native speech is shown in red. We use the same colors to distinguish between the native and non-native *model*. Each ideal observer has two components: the /d/ and the /t/ category. Training of the ideal observer refers to estimating the mean $\mu$ and covariance matrix $\Sigma$ of these two categories.
+(ref:ideal-observer-and-data) Four ideal observer models---a *control* and */d/-exposure* ideal observer each for the English and the Swedish data---were fit and cross-validated against production data from native and non-native English and Swedish. In the databases (top and bottom), native speech is shown in gray; non-native speech is shown in red. We use the same colors to distinguish between the control and /d/-exposure *model*. Each ideal observer has two components: the /d/ and the /t/ category. Training of the ideal observer refers to estimating the mean $\mu$ and covariance matrix $\Sigma$ of these two categories.
 
 ```{r ideal-observer-and-data, fig.cap="(ref:ideal-observer-and-data)", out.width="100%"}
 knitr::include_graphics("../figures/IdealObserverAndData.png")
 ```
 
 ## Phonetically annotated production data
-The ideal observers require estimates of the distribution of the relevant phonetic cues for the syllable-final contrast between /d/ and /t/. Specifically, we need to estimate these distributions for `typical' native-accented productions of /t/ (for both the native and non-native IOs), the native-accented production of /d/ (for the native IO), and the non-native-accented production of /d/ (for the non-native IO). Next, we describe the databases, annotation procedure, and additional steps taken to obtain these estimates.
+The ideal observers require estimates of the distribution of the relevant phonetic cues for the syllable-final contrast between /d/ and /t/. Specifically, we need to estimate these distributions for `typical' native-accented productions of /t/ (for both the native and /d/-exposure IOs), the native-accented production of /d/ (for the native IO), and the non-native-accented production of /d/ (for the /d/-exposure IO). Next, we describe the databases, annotation procedure, and additional steps taken to obtain these estimates.
 
 ### English
 For the native English IO, the /d/ and /t/ training data came from a database of 10 male native talkers of American English [@Li2020database]. To the best of our knowledge, this is the largest database of syllable-final stop voicing in native-accented American English for which vowel, closure, and burst duration are annotated. The 10 talkers had the same sex and spanned a similar age range (18-35) as the Mandarin-accented talker in @xie2017more. The recording procedure was the same as in @xie2017more. We used the data of the 10 male native speakers in @Li2020database to estimate the mean and covariance for a *prototypical* native talker's /d/ and /t/. Specifically, we took the prototypical category mean to be the mean of 10 talkers' category means, and the prototypical category covariance to be the mean of the 10 talkers' covariance matrices. This provides an---admittedly very coarse-grained---point estimate of an native listeners' beliefs about a prototypical native talker's /d/ and /t/ categories.
 
-For the non-native English IO, the /t/ training data was the same as the /t/ training data for the native English IO. This reflects our simplifying assumption that the /d/-exposure condition did not contain any information about the non-native /t/ (see above). The /d/ training data for the non-native English IO were the 30 critical words with syllable-final /d/ used during the non-native-accented exposure in @xie2017more. Note that we intentionally did *not* use data from additional non-native talkers in Li et al.'s database: the non-native IO is intended to approximate the beliefs held by an native listener who has perfectly adapted to the non-native-accented /d/ distribution during exposure. 
+For the non-native English IO, the /t/ training data was the same as the /t/ training data for the native English IO. This reflects our simplifying assumption that the /d/-exposure condition did not contain any information about the non-native /t/ (see above). The /d/ training data for the English /d/-exposure IO were the 30 critical words with syllable-final /d/ used during the non-native-accented exposure in @xie2017more. Note that we intentionally did *not* use data from additional non-native talkers in @Li2020database's      database: the /d/-exposure IO is intended to approximate the beliefs held by an native listener who has perfectly adapted to the non-native-accented /d/ distribution during exposure. 
 
 Of note, the words that were used as training data for the native /d/ were not the same as those used as training data for the non-native /d/. The training data for the native /d/ were all mono-syllabic words with syllable-final /d/ from @Li2020database. Below, we report how we corrected for effects of phonological context and syllable length.
 
@@ -1038,7 +1028,7 @@ The procedure for the Swedish data was identical with one exception. We did not 
 As for the English data, the non-native Swedish IO's /t/ category was the same as for the native Swedish IO.
 
 ## Annotation and extraction of cues
-Tokens were annotated for their duration of vowel, closure, and burst. These three cues are considered primary cues to syllable-final voicing [e.g., @hillenbrand1984perception; @lisker1957closure; @luce1985contextual]. It is therefore likely, but not guaranteed, that the three cues would explain a substantial part of variation in participants' ratings during test. The results of the ideal observer analyses reported below support this assumption: performance of the non-native IO was high for both experiments. This suggests that /d/ and /t/ in both the English and the Swedish data formed clusters that were separable within the 3D space defined by the three cues.
+Tokens were annotated for their duration of vowel, closure, and burst. These three cues are considered primary cues to syllable-final voicing [e.g., @hillenbrand1984perception; @lisker1957closure; @luce1985contextual]. It is therefore likely, but not guaranteed, that the three cues would explain a substantial part of variation in participants' ratings during test. The results of the ideal observer analyses reported below support this assumption: performance of the /d/-exposure IO was high for both experiments. This suggests that /d/ and /t/ in both the English and the Swedish data formed clusters that were separable within the 3D space defined by the three cues.
 
 Annotations were completed in Praat [@boersma2001praat] using visual examination of spectrograms, and listening judgments. Cue boundaries were marked following conventions [@flege1992production]. Vowel duration was measured from the beginning of the first periodic portion of each waveform to the zero-crossing where the amplitude decreased abruptly and the waveform became sinusoidal. Burst was measured from stop release to the first zero crossing point where the amplitude became near zero. Closure was measured as the time between vowel offset and burst onset (for stops following nasals, closure onset was marked by an abrupt decline in amplitude of the nasal). All data were annotated by phonetically trained researchers: Maryann Tan for the Swedish data; Ruolan (Leslie) Li for the data from @Li2020database; Xin Xie for the data from @xie2017more.
 
@@ -1151,26 +1141,27 @@ The realization of phonetic cues is known to be strongly influenced by phonologi
 
 We thus obtained context-corrected phonetic cues by estimating (via linear regression) and removing (via residualization) the effects of phonological context from vowel, closure, and burst duration. By both training and testing the ideal observer on context-corrected cues, we aim to compare like with like. The literature contains many competing approaches to normalization [for a recent review, see @weatherholtz2016speech; @flynn2011comparing; @clopper2009computational; and @adank2004comparison]. Here we follow the *C-CuRE* model [@mcmurray2011information], which captures the intuition behind many previous proposals---that listeners interpret cues relative to the cue value that is *expected* in the present phonological context (*C-CuRE* stands for "computing cues relative to expectation"). C-CuRE-corrected cues have been found to provide a good fit against human categorization of English fricatives [@mcmurray2011information; @apfelbaum2015relative] though other studies have found that C-CuRE does not fully capture listeners' ability to correct for talker-specific characteristics, [@kleinschmidt2019structure; @xie2021encoding]. C-CuRE *centers* cues relative to their context by subtracting the context-specific mean of the cue (i.e., the cue's expected value) from each token's cue value. This centering operation is shared with many other common normalization approaches [@lobanov1971classification; @nearey1978phonetic; @johnson200815], though we note that several of these approaches additionally involve standardizing. 
 
-The C-CuRE model has the additional advantage that it is computationally tractable, as the effects of different contexts are assumed to be additive (i.e., the model does not contain interactions between the effects of contexts on cues). Specifically, the C-CuRE-corrected cues are simply the residuals of a linear model that predicts the cue from the linear combination of contexts:
+C-CuRE has the additional advantage that it is computationally tractable, as the effects of different contexts are assumed to be additive (i.e., C-CuRE does not consider interactions between the effects of contexts on cues). Specifically, the C-CuRE-corrected cues are simply the residuals of a linear regression that predicts the cue from the linear combination of contexts:
 
 $$corrected\_cue = cue - (\beta_1 context_1 + \beta_2 context_2 + ... + \beta_k context_k)$$
 
-where the $\beta$s are the maximum likelihood coefficients of the following linear model: 
+where the $\beta$s are the maximum likelihood coefficients of the following linear regression: 
 
 $$lm(cue \sim context_1 + context_2 + ... + context_k)$$
 
-We apply this model to the present data while considering talker, segmental and supra-segmental phonotactic contexts. A number of properties of the English and Swedish production data complicate this procedure, requiring us to estimate context effects sequentially on subsets of the data (see \@ref(fig:summary-cue-correction)). This is not an ideal situation but one that many researchers aiming to predictively model speech perception across native and non-native accents will have to face. Table \@ref(fig:summary-cue-correction) summarizes the two separate steps we used to estimate effects of segmental and supra-segmental context, which were then combined with correction for talker context. The following sections describe and motivate these steps in detail. Since our goal here is to compare the predicted effect of /d/-exposure and control exposure across the two experiments on English and Swedish, we apply the same steps to the production data of both languages.
+We apply C-CuRE to the present data while considering talker, segmental and supra-segmental phonotactic contexts. A number of properties of the English and Swedish production data complicate this procedure, requiring us to estimate context effects sequentially on subsets of the data (see Table \@ref(tab:summary-cue-correction)). This is not an ideal situation but one that many researchers aiming to predictively model speech perception across native and non-native accents will have to face. Table \@ref(tab:summary-cue-correction) summarizes the two separate steps we used to estimate effects of segmental and supra-segmental context, which were then combined with correction for talker context. The following sections describe and motivate these steps in detail. Since our goal here is to compare the predicted effect of /d/-exposure and control exposure across the two experiments on English and Swedish, we apply the same steps to the production data of both languages.
 
-```{r summary-cue-correction, fig.cap="(ref:summary-cue-correction)", out.width="100%"}
+```{r summary-cue-correction, out.width="100%"}
 correction_table <- as_tibble(read_csv("../data/correction_procedure_table.csv")) 
 correction_table %>% 
-  kbl() %>% 
+  kbl(caption = "Summary of cue correction procedure") %>% 
   kable_styling(bootstrap_options = c("striped", "condensed"), full_width = F) %>% 
   column_spec(1, bold = T, border_right = T) %>% 
   column_spec(2, bold = F, border_right = T) %>% 
   column_spec(3, bold = F, border_right = T) %>% 
   column_spec(4, bold = F, border_right = T, width = "9em") %>% 
-  column_spec(5, bold = F, border_right = T, width = "6em")
+  column_spec(5, bold = F, border_right = T, width = "6em") 
+  
 ```
 
 (ref:summary-cue-correction) Summary of steps in the cue value correction procedure. For the native Swedish data, the test words are the native recordings of the same words used in the non-native-accented test phase of the Swedish experiment. For the native English data, the test words are the native recordings of the mono-syllabic words with final /d,t/ in @Li2020database. For the non-native data, the /d/ words are the non-native recordings of the /d/-final exposure and test words in the respective experiments.
@@ -1283,7 +1274,7 @@ We considered the following segmental contexts:
  - onset_has_rhotic, 
  - phonological vowel length (only relevant to Swedish)
  
-as well as the talker context (only relevant for English since the database of @Li2020database comprised multiple native talkers). All predictors were treatment coded. Given the high number of possible predictors and to avoid over-fitting, we employed cross-validated backward step-down model reduction to determine which predictors had significant effects on which cues in which language. Specifically, we used the ```validate()``` function from the R package package ```rms'for R``` [@Harrell2020rms]. This resulted in 3 (vowel, closure, burst duration) * 2 (English, Swedish) linear regression models summarized in the following figures. Each figure shows the predicted effect (in msecs) and confidence interval for all predictors. Significance is indicated through stars.
+as well as the talker context (only relevant for English since the database of @Li2020database comprised multiple native talkers). All predictors were treatment coded. Given the high number of possible predictors and to avoid over-fitting, we employed cross-validated backward step-down model reduction to determine which predictors had significant effects on which cues in which language. Specifically, we used the ```validate()``` function from the R package package ```rms'for R``` [@Harrell2020rms]. This resulted in 3 (vowel, closure, burst duration) * 2 (English, Swedish) linear regressions summarized in the following figures. Each figure shows the predicted effect (in msecs) and confidence interval for all predictors. Significance is indicated through stars.
 
 ```{r step 1 correct for segmental context}
 # storing changes in separate dataframes so that d.stims is not affected. Allows better tracking.
@@ -1520,9 +1511,9 @@ correct_for_suprasegmental_context = function(
 
 Supra-segmental factors like---lexical stress and speech rate---are also known to affect the phonetic realization of sounds. For example, segments tend to have longer durations in stressed, compared to unstressed, syllables [@lindblom1963spectrographic; @van1987effects] and in words with fewer syllables [@rietveld1987effect]. We thus removed effects of lexical stress, and syllable/word complexity on vowel, closure, and burst duration.
 
-The models were estimated using only the /d/-final words, since the syllable-final /t/ (by design) only occurred as mono-syllabic test words. Furthermore, recordings of multi-syllabic /d/-words in our English database were only available for the non-native talker, forcing us to fit the models with non-native data.^[While the Swedish database had native recordings of multi-syllabic /d/-words we used the non-native data to keep the modeling maximally parallel across the two languages.] Using non-native data for this purpose is not ideal given that C-CuRE is fundamentally meant to estimate the expected cue values based on native realizations but it was the only choice available to us. Our procedure thus assumes that supra-segemental effects are identical for both syllable-final /d/ and /t/. 
+The linear regressions were estimated using only the /d/-final words, since the syllable-final /t/ (by design) only occurred as mono-syllabic test words. Furthermore, recordings of multi-syllabic /d/-words in our English database were only available for the non-native talker, forcing us to fit the regressions with non-native data.^[While the Swedish database had native recordings of multi-syllabic /d/-words we used the non-native data to keep the modeling maximally parallel across the two languages.] Using non-native data for this purpose is not ideal given that C-CuRE is fundamentally meant to estimate the expected cue values based on native realizations but it was the only choice available to us. Our procedure thus assumes that supra-segemental effects are identical for both syllable-final /d/ and /t/. 
 
-The resulting linear regression for both languages was ```cue ~ 1 + number_syllables + has_stress`+ offset(segmental_context)```, where the offset term is the sum of all segmental context effects found to be significant in Step 1 (for that language and cue). Note that there was no need to include Talker as a predictor in this model because both the English and the Swedish data only contained one non-native talker. The following figures summarize the effects of supra-segmental context for the resulting 3 (vowel, closure, burst duration) * 2 (English, Swedish) linear regression models. Each figure shows the predicted effect (in msecs) and confidence interval for all predictors. Significance is indicated through stars.
+The resulting linear regression for both languages was ```cue ~ 1 + number_syllables + has_stress`+ offset(segmental_context)```, where the offset term is the sum of all segmental context effects found to be significant in Step 1 (for that language and cue). Note that there was no need to include Talker as a predictor in this regression because both the English and the Swedish data only contained one non-native talker. The following figures summarize the effects of supra-segmental context for the resulting 3 (vowel, closure, burst duration) * 2 (English, Swedish) linear regressions. Each figure shows the predicted effect (in msecs) and confidence interval for all predictors. Significance is indicated through stars.
 
 ```{r correcting for suprasegmental effects}
 d.stims.step2 <- 
@@ -1652,7 +1643,7 @@ selected_cues = c("rvowel", "rclosure", "rburst")
 draw_training_data = function(
   .data
 ) {
-  # Draw English and Swedish training data for /t/ and /d/ category of native models
+  # Draw English and Swedish training data for /t/ and /d/ category of control models
   .data %>%
     filter(Used_for == "training", Accent == "native") %>%
     group_by(NativeLanguage, Talker, Sound) %>%
@@ -1660,29 +1651,29 @@ draw_training_data = function(
     # For the native data, one can sample with replacement since this is really meant to represent 
     # knowledge from a much larger base of experience
     sample_n(30, replace = T) %>%
-    mutate(Used_for.Model.Accent = "native") %>%
+    mutate(Used_for.Model.Group = "control") %>%
     ungroup() %>%
-    # Duplicate this training data for the /t/ category of non-native models
+    # Duplicate this training data for the /t/ category of /d/-exposure models
     { . ->> temp } %>% 
     rbind(temp %>% 
             filter(Sound == "/t/") %>%
-            mutate(Used_for.Model.Accent = "non-native")) %>%
-    # Draw English and Swedish training data for /d/ category of non-native model
+            mutate(Used_for.Model.Group = "/d/-exposure")) %>%
+    # Draw English and Swedish training data for /d/ category of /d/-exposure model
     full_join(
       .data %>%
         filter(Used_for == "training", Accent == "non-native" & Sound == "/d/") %>% 
         droplevels() %>% 
         group_by(NativeLanguage, Talker, Item.Word) %>%
         sample_n(1) %>%
-        mutate(Used_for.Model.Accent = "non-native")
+        mutate(Used_for.Model.Group = "/d/-exposure")
     ) %>% 
     ungroup() %>%
     rename(
       Used_for.Model.NativeLanguage = NativeLanguage,
       Used_for.Model.Sound = Sound) %>%
-    mutate_at(vars(Used_for, Used_for.Model.NativeLanguage, Used_for.Model.Accent, Used_for.Model.Sound,
+    mutate_at(vars(Used_for, Used_for.Model.NativeLanguage, Used_for.Model.Group, Used_for.Model.Sound,
            Talker,Item.Word), factor) %>%
-    select(Used_for, Used_for.Model.NativeLanguage, Used_for.Model.Accent, Used_for.Model.Sound,
+    select(Used_for, Used_for.Model.NativeLanguage, Used_for.Model.Group, Used_for.Model.Sound,
            Talker,Item.Word, 
            vowel, closure, burst, 
            rvowel, rclosure, rburst) %>%
@@ -1694,7 +1685,7 @@ guess_groups = function(.data) {
   groups = c()
   
   if (length(unique(.data$Used_for.Model.NativeLanguage)) > 1) groups = append(groups, "Used_for.Model.NativeLanguage") 
-  if (length(unique(.data$Used_for.Model.Accent)) > 1) groups = append(groups, "Used_for.Model.Accent") 
+  if (length(unique(.data$Used_for.Model.Group)) > 1) groups = append(groups, "Used_for.Model.Group") 
   if (length(unique(.data$Used_for.Model.Sound)) > 1) groups = append(groups, "Used_for.Model.Sound") 
   if (length(unique(.data$Talker)) > 1) groups = append(groups, "Talker") 
 
@@ -1784,7 +1775,7 @@ plot_IO = function(
       colors = colors.Category,
       inherit = F,
       opacity = alpha, 
-      frame = ~Model.Accent,
+      frame = ~Model.Group,
       x= ~vowel, y= ~closure, z= ~burst,
       showlegend = F, mode="markers")
   
@@ -1825,7 +1816,7 @@ plot_IO_training =
       x= ~vowel, y= ~closure, z= ~burst,
         color= ~Used_for.Model.Sound,
         colors = colors.Category,
-        frame = ~Used_for.Model.Accent,
+        frame = ~Used_for.Model.Group,
         opacity = .1,
         showlegend = T,
         type="scatter3d", mode="markers") 
@@ -1844,21 +1835,21 @@ plot_IO_training =
 
 For the non-native /d/ category, we used all 30 tokens observed during non-native exposure. For the native /d/ and /t/, we sampled 30 tokens with replacement for each talker. The non-native /t/ category was identical to the native /t/ category (for each draw of a training set). In summary, we use the following training data:
 
-- **native** model: 
+- **control** ideal observers: 
   + Exposure /d/ comes from the *native* talker's exposure /d/ (30 tokens)
   + Exposure /t/ comes from the native talker's test /t/ (downsampled to 30 tokens)
   + Test /d/ and /t/ comes from the non-native talker's test /d/ and /t/
 
-- **non-native** model: 
+- **/d/-exposure** ideal observers: 
   + Exposure /d/ comes from the *non-native* talker's exposure /d/ (30 tokens)
   + Exposure /t/ comes from the native talker's test /t/ (downsampled to 30 tokens)
   + Test /d/ and /t/ comes from the non-native talker's test /d/ and /t/
 
-We then calculated the mean $\mu$ and covariance matrix $\Sigma$ for each unique combination of native language (English, Swedish), model type (native, non-native), sound category (/d/, /t/), and talker. For the native English /d/ and /t/, for which we had 10 talkers' worth of data, we then calculated the mean of the by-talker $\mu$s and $\Sigma$s. Put differently, we marginalize (average over) the 10 different ideal observers for English, to create an ideal observer based on expectations about the 'prototypical' native talker of English. The result of this procedure was one estimate of $\mu$ and $\Sigma$ for each unique combination of native language (English, Swedish), model type (native, non-native), and sound category (/d/, /t/). Together the pairs of $\mu$s and $\Sigma$s for /d/ and /t/ form an ideal observer, for a total of four ideal observers (native and non-native English, native and non-native Swedish). Figures \@ref(fig:plot-IO-3D-English) and \@ref(fig:plot-IO-3D-Swedish) visualize the resulting four ideal observers, along with the training data that was used to train these four models.
+We then calculated the mean $\mu$ and covariance matrix $\Sigma$ for each unique combination of native language (English, Swedish), model type (control, /d/-exposure), sound category (/d/, /t/), and talker. For the native English /d/ and /t/, for which we had 10 talkers' worth of data, we then calculated the mean of the by-talker $\mu$s and $\Sigma$s. Put differently, we marginalize (average over) the 10 different ideal observers for English, to create an ideal observer based on expectations about the 'prototypical' native talker of English. The result of this procedure was one estimate of $\mu$ and $\Sigma$ for each unique combination of native language (English, Swedish), model type (control, /d/-exposure), and sound category (/d/, /t/). Together the pairs of $\mu$s and $\Sigma$s for /d/ and /t/ form an ideal observer, for a total of four ideal observers (native and non-native English, native and non-native Swedish). Figures \@ref(fig:plot-IO-3D-English) and \@ref(fig:plot-IO-3D-Swedish) visualize the resulting four ideal observers, along with the training data that was used to train these four models.
 
-(ref:plot-IO-3D-English) English native and non-native ideal observer visualized in 3D cue space. Points show the data used for *training* the model.
+(ref:plot-IO-3D-English) English control and /d/-exposure ideal observer visualized in 3D cue space. Points show the data used for *training* the model.
 
-(ref:plot-IO-3D-Swedish) Swedish native and non-native ideal observer visualized in 3D cue space. Points show the data used for *training* the model.
+(ref:plot-IO-3D-Swedish) Swedish control and /d/-exposure ideal observer visualized in 3D cue space. Points show the data used for *training* the model.
 
 ```{r plot-IO-3D-English, fig.cap="(ref:plot-IO-3D-English)", out.width="75%", fig.show='hold'}
 d.IO.training = d.stims %>%
@@ -1930,7 +1921,7 @@ IO_ratings = function(.data) {
     Rating.Response.d.zscored ~ Model.Posterior.d,
     data = .data %>%
       # Only use posterior from models that match the exposure group
-      filter(Model.Accent.matchesGroup == "yes") %>%
+      filter(Model.Group.matchesParticipant.Group == "yes") %>%
       # Group data by Native language, group
       group_by(NativeLanguage, Group, Item.WordID) %>%
       summarise(
@@ -1944,7 +1935,7 @@ IO_ratings = function(.data) {
 }
 ```
 
-By applying the native and non-native ideal observers to the stimuli from the test phase of the English and Swedish perception experiments, we can calculate the posterior category probabilities, $p(sound | cues, model)$, for each of those test stimuli. Specifically, we apply the English models to the English test data, and the Swedish models to the Swedish test data. The resulting posterior category probabilities are shown in Section \@ref(sec:IO-methods-posterior-probabilities).
+By applying the control and /d/-exposure ideal observers to the stimuli from the test phase of the English and Swedish perception experiments, we can calculate the posterior category probabilities, $p(sound | cues, model)$, for each of those test stimuli. Specifically, we apply the English models to the English test data, and the Swedish models to the Swedish test data. The resulting posterior category probabilities are shown in Section \@ref(sec:IO-methods-posterior-probabilities).
 
 To derive predictions about human behavior from the posterior category probabilities of the ideal observer, it is necessary to specify a linking hypothesis. Previous work has done so for *categorization* tasks [e.g., @clayards2008perception; @kleinschmidt2011bayesian; @kleinschmidt2012continuum; @kleinschmidt2016re; @kronrod2016unified]. We follow these previous works and assume Luce's choice rule---also known as probability matching---and visualize the predictions for categorization tasks in Section \@ref(sec:IO-methods-categorization). Then we specify the linking hypothesis for goodness ratings in Section \@ref(sec:IO-methods-link). To reduce researchers' degrees of freedom, we simply assume a linear link between posterior probabilities and goodness ratings. This essentially makes the same assumptions as Luce's choice rule makes for categorization. We validate the linking hypothesis against human data from another experiment [Experiments 2 and 3 of @xie2017more]. 
 
@@ -1967,34 +1958,32 @@ d.test.IO =
   left_join(d.IO.test) %>%
   # Is the model meant for this exposure group? 
   mutate(
-    Model.Accent.matchesGroup = factor(case_when(
+    Model.Group.matchesParticipant.Group = factor(case_when(
       NativeLanguage != Model.NativeLanguage ~ NA_character_,
-      Group == "control" & Model.Accent == "native" ~"yes",
-      Group == "control" & Model.Accent == "non-native" ~"no",
-      Group == "/d/-exposure" & Model.Accent == "non-native" ~"yes",
-      Group == "/d/-exposure" & Model.Accent == "native" ~"no",
+      Group == Model.Group ~ "yes",
+      Group != Model.Group ~ "no",
       T ~ NA_character_
     ), levels = c("no", "yes"))) %>%
   IO_ratings()
 save(d.test.IO, file = "../data/data_perception_test phase plus IO predictions_both languages.Rdata")
 
 # Combinations of Native languages, exposure groups, and model properties
-# d.IO.test %>% select(NativeLanguage, Model.NativeLanguage, Model.Accent) %>% distinct()
-# d.test.IO %>% select(NativeLanguage, Model.NativeLanguage, Group, Model.Accent) %>% distinct()
+# d.IO.test %>% select(NativeLanguage, Model.NativeLanguage, Model.Group) %>% distinct()
+# d.test.IO %>% select(NativeLanguage, Model.NativeLanguage, Group, Model.Group) %>% distinct()
 ```
 
 ### Posterior probabilities {#sec:IO-methods-posterior-probabilities}
 
-Figure \@ref(fig:ideal-observers-posterior) summarizes the predicted posterior probability of /d/ under both the native and non-native ideal observer.
+Figure \@ref(fig:ideal-observers-posterior) summarizes the predicted posterior probability of /d/ under both the control and /d/-exposure ideal observer.
 
-(ref:ideal-observers-posterior) Posterior probabilities of /d/ and /t/ predicted by the native and non-native ideal observers for the non-native-accented /d/- and /t/ words during test.
+(ref:ideal-observers-posterior) Posterior probabilities of /d/ and /t/ predicted by the control and /d/-exposure ideal observers for the non-native-accented /d/- and /t/ words during test.
 
 ```{r ideal-observers-posterior, fig.cap="(ref:ideal-observers-posterior)", fig.height=4.5, out.width="75%"}
 p.post = d.IO.test %>%
   ggplot(aes(x= Sound, 
            y = Model.Posterior.Intended, 
-           color = Model.Accent, 
-           fill = Model.Accent)) +
+           color = Model.Group, 
+           fill = Model.Group)) +
   scale_x_discrete("Intended sound category") +
   scale_y_continuous("Posterior probability of /d/") +
   scale_color_manual("Ideal observer", values = colors.Accent) +
@@ -2005,7 +1994,7 @@ p.post = d.IO.test %>%
         panel.grid.minor.x = element_blank())
 
 p.post + 
-    stat_summary(aes(group = Model.Accent), fun.data = mean_cl_boot, geom = "pointrange", 
+    stat_summary(aes(group = Model.Group), fun.data = mean_cl_boot, geom = "pointrange", 
                alpha = .8, size = .8, 
                position = position_dodge(.3))
 ```
@@ -2015,18 +2004,18 @@ p.post +
 
 As in our previous work, we assume that the ideal observer employs Luce's choice rule (also known as probability matching) to categorize inputs. Under this assumption, the ideal observer responds by sampling from its posterior. If the posterior probability of a /d/ is, say, .45 for a given stimulus, the observer will on average respond "d" on 45\% of all trials and "t" on 55\% of all trials. This choice rule does thus not introduce any additional degrees of freedom. 
 
-Figure \@ref(fig:ideal-observers-accuracy) shows the predicted accuracy for a hypothetical categorization task over the test stimuli for the English and Swedish experiment. Critically, the non-native ideal observer patterns consistently with human responses from the /d/-exposure groups; we elaborate on this in section (ref:Group-level comparison between human and model-predicted ratings). Notably, the ideal observers for English, achieves high accuracy over the non-native-accented test stimuli, consistently higher than the native ideal observer.
+Figure \@ref(fig:ideal-observers-accuracy) shows the predicted accuracy for a hypothetical categorization task over the test stimuli for the English and Swedish experiment. Critically, the /d/-exposure ideal observer patterns consistently with human responses from the /d/-exposure groups; we elaborate on this in section (ref:Group-level comparison between human and model-predicted ratings). Notably, the ideal observers for English, achieves high accuracy over the non-native-accented test stimuli, consistently higher than the control ideal observer.
 
-(ref:ideal-observers-accuracy) Predicted accuracy of native and non-native ideal observers for the non-native-accented /d/- and /t/ words during test.
+(ref:ideal-observers-accuracy) Predicted accuracy of control and /d/-exposure ideal observers for the non-native-accented /d/- and /t/ words during test.
 
 ```{r ideal-observers-accuracy, fig.cap="(ref:ideal-observers-accuracy)", fig.height=4.5, out.width="75%"}
 p <- p.post %+% 
   (d.IO.test) +
   geom_hline(yintercept = 1/2, color = "gray") +
-  stat_summary(aes(color = Model.Accent), fun = mean, geom = "bar",
+  stat_summary(aes(color = Model.Group), fun = mean, geom = "bar",
                alpha = .6, fill = NA,
                position = position_dodge(.93)) +
-  stat_summary(aes(group = Model.Accent), fun.data = mean_cl_boot, geom = "linerange", 
+  stat_summary(aes(group = Model.Group), fun.data = mean_cl_boot, geom = "linerange", 
                alpha = .8, size = .8, color = "black",
                position = position_dodge(.93)) +
   scale_y_continuous("Accuracy") 
@@ -2129,15 +2118,15 @@ We evaluate the ideal observers against human responses in two ways. First, we q
 
 Figure \@ref(fig:IO-ratings-results-byItem) plots the predictions of the ideal observers. Figure \@ref(fig:ratings-results-byItem) replots the human rating results for the English and Swedish experiments from Figure \@ref(fig:ratings-results) in Section \@ref(sec:results). However, unlike the original Figure \@ref(fig:ratings-results), Figure \@ref(fig:ratings-results-byItem) shows by-item (rather than by-subject) means. This is done to facilitate comparison to the ideal observer predictions, which---by necessity---are predictions about individual items. 
 
-(ref:IO-ratings-results-byItem) **Ideal observer /d/-goodness ratings** during test (z-scored) predicted by the native and non-native ideal observers. Error bars show 95\% bootstrapped confidence intervals over by-item predictions (since there aren't multiple subjects). To facilitate comparison to the human data, predicted ratings were derived from each ideal observer by projecting its predicted posterior probability of /d/ linearly onto the range of the human z-scored /d/-goodness ratings (see Section \@ref(sec:IO-methods-link)). This was done only for the purpose of visualization---all analyses presented below directly predict human ratings from the ideal observers' posterior probabilities.
+(ref:IO-ratings-results-byItem) **Ideal observer /d/-goodness ratings** during test (z-scored) predicted by the control and /d/-exposure ideal observers. Error bars show 95\% bootstrapped confidence intervals over by-item predictions (since there aren't multiple subjects). To facilitate comparison to the human data, predicted ratings were derived from each ideal observer by projecting its predicted posterior probability of /d/ linearly onto the range of the human z-scored /d/-goodness ratings (see Section \@ref(sec:IO-methods-link)). This was done only for the purpose of visualization---all analyses presented below directly predict human ratings from the ideal observers' posterior probabilities.
 
-(ref:ratings-results-byItem) **Human /d/-goodness ratings** during test (z-scored) by native language and exposure group. To facilitate comparison of the human data to the ideal observer models in Figure \@ref(fig:IO-ratings-results-byItem), we first aggregate the human data by exposure condition and *item*, averaging across all subjects. These are the individual points shown in the figure. The bars show the mean of these by-item means, and the error interval shows the 95\% confidence interval over the by-item means. This contrasts with Figure \@ref(fig:ratings-results) in Section \@ref(sec:results), where we plotted the mean and confidence interval of by-subject means. 
+(ref:ratings-results-byItem) **Human /d/-goodness ratings** during test (z-scored) by native language and exposure group. To facilitate comparison of the human data to the ideal observers in Figure \@ref(fig:IO-ratings-results-byItem), we first aggregate the human data by exposure condition and *item*, averaging across all subjects. These are the individual points shown in the figure. The bars show the mean of these by-item means, and the error interval shows the 95\% confidence interval over the by-item means. This contrasts with Figure \@ref(fig:ratings-results) in Section \@ref(sec:results), where we plotted the mean and confidence interval of by-subject means. 
 
 ```{r IO-ratings-results-byItem, fig.cap="(ref:IO-ratings-results-byItem)", fig.height=4.5, out.width='75%'}
 p.results.perception.bySubject %+%
   (d.test.IO %>%
-     filter(Model.Accent.matchesGroup == "yes") %>%
-     group_by(Language, NativeLanguage, Group, Sound, Item.WordID, Model.Accent) %>%
+     filter(Model.Group.matchesParticipant.Group == "yes") %>%
+     group_by(Language, NativeLanguage, Group, Sound, Item.WordID, Model.Group) %>%
      summarise(Rating.mean = mean(Model.Posterior.d * 2 - 1))) +
   scale_y_continuous("Ideal observer predicted\n/d/-goodness rating (z-score aligned)") +
   scale_fill_manual("Ideal observer",
@@ -2157,17 +2146,17 @@ p.results.perception.bySubject %+%
   ylim(-1.25, 1.25)
 ```
 
-The ideal observers' predictions differ from the human ratings in a number of ways. First, the human data is more gradient than predicted by the ideal observers. This is most evidence for the Swedish data. One likely explanation for this is that the simple ideal observer models we employ here do not account for perceptual noise [cf. @feldman2009influence]. Second, the differences between the different ideal observers are more pronounced than for the z-scored human ratings. This is the case both across languages, and across exposure conditions within each language.
+The ideal observers' predictions differ from the human ratings in a number of ways. First, the human data is more gradient than predicted by the ideal observers. This is most evidence for the Swedish data. One likely explanation for this is that the simple ideal observers we employ here do not account for perceptual noise [cf. @feldman2009influence]. Second, the differences between the different ideal observers are more pronounced than for the z-scored human ratings. This is the case both across languages, and across exposure conditions within each language.
 
 The ideal observers do, however, predict the qualitative patterns in the human goodness ratings:
 
- + For the English data, the ideal observers predict significantly higher ratings from the non-native model over the native model for both /d/ and /t/. 
+ + For the English data, the ideal observers predict significantly higher ratings from the /d/-exposure model over the control model for both /d/ and /t/. 
   
- + For the Swedish data, the ideal observers predict no difference between the native and non-native model for /d/ but higher ratings for the the *native* model for /t/. This qualitatively mirrors the asymmetry between /d/ and /t/ observed in the human ratings, though the effect for /t/ is only marginal for the human ratings.
+ + For the Swedish data, the ideal observers predict no difference between the control and /d/-exposure model for /d/ but higher ratings for the the *control* model for /t/. This qualitatively mirrors the asymmetry between /d/ and /t/ observed in the human ratings, though the effect for /t/ is only marginal for the human ratings.
 
 ## Item-level comparison between human and model-predicted ratings
 
-We first predicted human responses across all native languages and exposure conditions from the ideal observers that are meant for those languages and exposure conditions. That is, we predict human ratings in the /d/-exposure group from the non-native ideal observer, and human ratings in the control group from the native ideal observer. Specifically, we use a linear mixed-effects regression, predicting human /d/-goodness ratings from the posterior probability of /d/ predicted by the ideal observers, while also including the maximal converging random effect structure (random intercepts by participant and minimal pair). 
+We first predicted human responses across all native languages and exposure conditions from the ideal observers that are meant for those languages and exposure conditions. That is, we predict human ratings in the /d/-exposure group from the /d/-exposure ideal observer, and human ratings in the control group from the control ideal observer. Specifically, we use a linear mixed-effects regression, predicting human /d/-goodness ratings from the posterior probability of /d/ predicted by the ideal observers, while also including the maximal converging random effect structure (random intercepts by participant and minimal pair). 
 
 This analysis is summarized in Table \@ref(tab:ratings-IO-analysis) and found a highly significant effect of ideal observer predicted posterior probabilities on the z-scored human goodness ratings ($\hat{\beta} = 1.14, t = 35.1, p < .0001$). 
 
@@ -2179,7 +2168,7 @@ lmer.IOtoRating =
   lmer(Rating.Response.d.zscored ~ 1 + Model.Posterior.d + 
          (1 | Item.MinimalPair) +  (1 | Participant), 
                      data = d.test.IO %>%
-                       filter(Model.Accent.matchesGroup == "yes"))
+                       filter(Model.Group.matchesParticipant.Group == "yes"))
 # summary(lmer.IOtoRating)
 
 pred.labels = c("Intercept", "IO-predicted posterior of /d/")
@@ -2203,11 +2192,11 @@ tab_model(lmer.IOtoRating,
 <!-- ```{r} -->
 <!-- # summary(lmer(Rating.Response.d.zscored ~ 1 + NativeLanguage * Group + Model.Posterior.d  + (1 + Group * Sound | Item.MinimalPair) + (1 | Participant), -->
 <!-- #                      data = d.test.IO %>% -->
-<!-- #                        filter(Model.Accent.matchesGroup == "yes"))) -->
+<!-- #                        filter(Model.Group.matchesParticipant.Group == "yes"))) -->
 
 <!-- lmer.IOtoRating.full <- lmer(Rating.Response.d.zscored ~ 1 + NativeLanguage * Group * Sound + Model.Posterior.d  + (1 + Group * Sound | Item.MinimalPair) + (1 | Participant), -->
 <!--                      data = d.test.IO %>% -->
-<!--                        filter(Model.Accent.matchesGroup == "yes")) -->
+<!--                        filter(Model.Group.matchesParticipant.Group == "yes")) -->
 
 <!-- pred.labels = c("Intercept", -->
 <!--                 "Native language (Swedish vs. English)", -->
@@ -2227,17 +2216,17 @@ tab_model(lmer.IOtoRating,
 
 ### Do ideal observers that model an exposure condition predict human /d/-goodness rating responses *better* than ideal observers intended for a different exposure condition?
 
-Next, we asked whether ideal observers that match the exposure conditions (i.e., the native ideal observer for the control condition and the non-native ideal observer for the /d/-exposure condition) provide a better fit against human ratings than ideal observers that do not. This would provide the strongest item-level evidence that the ideal observers we constructed capture the effects of exposure in the English and Swedish experiments. To this end, we repeated the linear mixed-effects analysis while including the posterior predictions for both matching and non-matching ideal observers in the analysis and letting them interact with an indicator variable (sum-coded: non-matching = -1 vs. matching = 1) and the native language (sum-coded: English = -1 vs. Swedish = 1). The analysis again contained random intercepts by participant and minimal pair.
+Next, we asked whether ideal observers that match the exposure conditions (i.e., the control ideal observer for the control condition and the /d/-exposure ideal observer for the /d/-exposure condition) provide a better fit against human ratings than ideal observers that do not. This would provide the strongest item-level evidence that the ideal observers we constructed capture the effects of exposure in the English and Swedish experiments. To this end, we repeated the linear mixed-effects analysis while including the posterior predictions for both matching and non-matching ideal observers in the analysis and letting them interact with an indicator variable (sum-coded: non-matching = -1 vs. matching = 1) and the native language (sum-coded: English = -1 vs. Swedish = 1). The analysis again contained random intercepts by participant and minimal pair.
 
 This analysis replicates the effect of ideal observer predicted posterior probabilities on the z-scored human goodness ratings ($\hat{\beta} = 1.16, t = 49.3, p < .0001$). This effect interacted with native language ($\hat{\beta} = 0.15, t = 6.4, p < .0001$), indicating a stronger effect for Swedish. A simple effect analysis reported in Table \@ref(tab:ratings-IO-model-comparison) confirmed that the effect of ideal observer predicted posterior probabilities was highly significant for both languages. No other effect, including any of the interactions with the indicator variable, reached significance.   
 
 ```{r item-level-regression-between-models}
-contrasts(d.test.IO$Model.Accent.matchesGroup) = cbind("Yes.vs.No" = c(-1, 1))
+contrasts(d.test.IO$Model.Group.matchesParticipant.Group) = cbind("Yes.vs.No" = c(-1, 1))
 d.test.IO$cModel.Posterior.d = d.test.IO$Model.Posterior.d - mean(d.test.IO$Model.Posterior.d)
 
 lmer.IOtoRating.ModelComparison =
   lmer(
-    Rating.Response.d.zscored ~ 1 + NativeLanguage / (cModel.Posterior.d * Model.Accent.matchesGroup) + 
+    Rating.Response.d.zscored ~ 1 + NativeLanguage / (cModel.Posterior.d * Model.Group.matchesParticipant.Group) + 
       (1 | Item.MinimalPair) + (1 | Participant), 
                      data = d.test.IO)
 
@@ -2256,9 +2245,9 @@ tab_model(lmer.IOtoRating.ModelComparison,
           dv.labels = "/d/-goodness rating (z-scored)")
 ```
 
-In short, we did *not* find evidence that ideal observer that match the exposure condition of human participants did significantly better in predicting human goodness ratings. One possible reason for this becomes apparent when we visualize that predictions of the ideal observers. Figure \@ref(fig:plot-3d-test-IO-English) and \@ref(fig:plot-3d-test-IO-Swedish) visualises the posterior predictions of the native and non-native ideal observers for all test token. Figure \@ref(fig:plot-3d-test-IO-English-difference) and Figure \@ref(fig:plot-3d-test-IO-Swedish-difference) show the *difference* between the predictions of the native and non-native ideal observers. These latter figures thus highlight the test tokens that can distinguish between the native and non-native models. 
+In short, we did *not* find evidence that ideal observers that match the exposure condition of human participants did significantly better in predicting human goodness ratings. One possible reason for this becomes apparent when we visualize the predictions of the ideal observers. Figure \@ref(fig:plot-3d-test-IO-English) and \@ref(fig:plot-3d-test-IO-Swedish) visualises the posterior predictions of the control and /d/-exposure ideal observers for all test token. Figure \@ref(fig:plot-3d-test-IO-English-difference) and Figure \@ref(fig:plot-3d-test-IO-Swedish-difference) show the *difference* between the predictions of the control and /d/-exposure ideal observers. These latter figures thus highlight the test tokens that can distinguish between the control and /d/-exposure models. 
 
-On the one hand, the results are encouraging: the non-native model predicts the intended (non-native) category better for English but not for Swedish, paralleling the results for human ratings. On the other hand, these plots also show clear limitations of the present approach: for many test tokens, the native and non-native ideal observers make basically identical predictions, limiting our ability to distinguish between the two models. This provides a straightforward explanation as to why ideal observers that match the exposure condition do not provide a better fit against human ratings: the native and non-native models do not differ sufficiently enough in their predictions. We note that this is not *necessarily* a limitation of the ideal observers but rather might reflect a limitation of experiments that use natural speech stimuli as test tokens. These natural speech stimuli were not chosen so as to maximize the statistical power to detect differences between the exposure groups (or ideal observers) but rather reflect the natural distribution of the relevant non-native accent.
+On the one hand, the results are encouraging: the /d/-exposure model predicts the intended (non-native) category better for English but not for Swedish, paralleling the results for human ratings. On the other hand, these plots also show clear limitations of the present approach: for many test tokens, the control and /d/-exposure ideal observers make basically identical predictions, limiting our ability to distinguish between the two models. This provides a straightforward explanation as to why ideal observers that match the exposure condition do not provide a better fit against human ratings: the control and /d/-exposure models do not differ sufficiently enough in their predictions. We note that this is not *necessarily* a limitation of the ideal observers but rather might reflect a limitation of experiments that use natural speech stimuli as test tokens. These natural speech stimuli were not chosen so as to maximize the statistical power to detect differences between the exposure groups (or ideal observers) but rather reflect the natural distribution of the relevant non-native accent.
 
 ```{r functions to plot-ideal-observers-results-3D}
 plot_IO_test = function(
@@ -2273,19 +2262,19 @@ plot_IO_test = function(
   # If .data.test contains more than one instance per unique combination of stimulus & model, summarize it down to one observation 
   # per stimulus & model
   .data.test %<>% 
-    filter(Model.Accent.matchesGroup == "yes") %>%
-    group_by(NativeLanguage, Item.Word, Item.WordID, Item.MinimalPair, Model.Accent, Sound) %>%
+    filter(Model.Group.matchesParticipant.Group == "yes") %>%
+    group_by(NativeLanguage, Item.Word, Item.WordID, Item.MinimalPair, Model.Group, Sound) %>%
     summarise_at(c(cues, "Model.Posterior.Intended"), first)
   
   # If difference should be plotted instead
   if (show.difference) {
     .data.test %<>%
       pivot_wider(
-        names_from = Model.Accent,
+        names_from = Model.Group,
         values_from = Model.Posterior.Intended
       ) %>%
       # Using difference. Could use ratio instead
-      mutate(Model.Posterior.Intended.Difference = `non-native` - native)
+      mutate(Model.Posterior.Intended.Difference = `/d/-exposure` - control)
   }
 
   # Unnest data if that hasn't already happened
@@ -2327,7 +2316,7 @@ plot_IO_test = function(
       color= ~Model.Posterior.Intended,
       symbol= ~Sound,
       symbols = shapes.Category,
-      frame= ~Model.Accent,
+      frame= ~Model.Group,
       opacity = .8,
         showlegend = T,
         type="scatter3d", mode="markers")
@@ -2347,18 +2336,15 @@ plot_IO_test = function(
 
 (ref:plot-3d-test-IO-English) Ideal observer predicted posterior probabilities for all test tokens of the experiment on English. Shapes indicate the intended sound category and color indicates whether the posterior probability of that *intended* category was low or high. 
 
-(ref:plot-3d-test-IO-English-difference) Difference between non-native and native ideal observer predicted posterior probabilities of the *intended* category for all test tokens of the experiment on English. The posterior probability predicted by the native ideal observer is subtracted from the posterior probability predicted by the non-native ideal observer. Positive value thus indicate test tokens for which the non-native ideal observer makes better predictions.
+(ref:plot-3d-test-IO-English-difference) Difference between non-native and control ideal observer predicted posterior probabilities of the *intended* category for all test tokens of the experiment on English. The posterior probability predicted by the control ideal observer is subtracted from the posterior probability predicted by the /d/-exposure ideal observer. Positive value thus indicate test tokens for which the /d/-exposure ideal observer makes better predictions.
 
 (ref:plot-3d-test-IO-Swedish) Ideal observer predicted posterior probabilities for all test tokens of the experiment on Swedish Shapes indicate the intended sound category and color indicates whether the posterior probability of that *intended* category was low or high. 
 
-(ref:plot-3d-test-IO-Swedish-difference) Difference between non-native and native ideal observer predicted posterior probabilities for all test tokens of the experiment on Swedish. 
+(ref:plot-3d-test-IO-Swedish-difference) Difference between non-native and control ideal observer predicted posterior probabilities for all test tokens of the experiment on Swedish. 
 
 ```{r plot-3d-test-IO-English, fig.cap="(ref:plot-3d-test-IO-English)", fig.height=4.5, out.width="75%"}
 plot_IO_test(d.IO, d.test.IO, language = "English", cues = selected_cues)
-
 ``` 
-
-
 
 ```{r plot-3d-test-IO-English-difference, fig.cap="(ref:plot-3d-test-IO-English-difference)", fig.height=4.5, out.width="75%"}
 plot_IO_test(d.IO, d.test.IO, language = c("English"), cues = selected_cues, show.difference = T)
@@ -2379,7 +2365,7 @@ plot_IO_test(d.IO, d.test.IO, language = c("Swedish"), cues = selected_cues, sho
 
 <!-- Figure \@ref(fig:IO-ratings-results-correlation-byItem) shows the correlation between ideal observer posterior predictions and human /d/-goodness ratings of each item in both the English and Swedish experiments. The left column shows the correlation of human ratings with a mismatched ideal observer model, that is, an ideal observer that was modelled for the opposing condition. The column on the right shows the correlation with ideal observers for that intended condition.  -->
 
-<!-- For the English data, the non-native ideal observer correlates with human ratings in *both* exposure conditions, whereas the native ideal observer did not correlate with human ratings in either exposure condition. That is, the non-native ideal observer performed better in predicting human ratings regardless of whether it matched the exposure condition. This is unexpected. While the correlation with human ratings was numerically highest when the ideal observer's assumptions matched the exposure condition, follow-up analyses reported below found that this difference was not significant. For the Swedish data, both the native and the non-native ideal observers exhibited significant correlations of with human ratings. The magnitude of these correlations did not differ depending on whether the ideal observer matched the exposure condition. In short, while the ideal observers correctly predict the qualitative pattern found in the human results, the item-level analyses suggest that the ideal observers either predict the correct qualitative patterns for the wrong reasons, or that the ideal observers ....XXXX  -->
+<!-- For the English data, the /d/-exposure ideal observer correlates with human ratings in *both* exposure conditions, whereas the control ideal observer did not correlate with human ratings in either exposure condition. That is, the /d/-exposure ideal observer performed better in predicting human ratings regardless of whether it matched the exposure condition. This is unexpected. While the correlation with human ratings was numerically highest when the ideal observer's assumptions matched the exposure condition, follow-up analyses reported below found that this difference was not significant. For the Swedish data, both the native and the /d/-exposure ideal observers exhibited significant correlations of with human ratings. The magnitude of these correlations did not differ depending on whether the ideal observer matched the exposure condition. In short, while the ideal observers correctly predict the qualitative pattern found in the human results, the item-level analyses suggest that the ideal observers either predict the correct qualitative patterns for the wrong reasons, or that the ideal observers ....XXXX  -->
 
 <!-- This ideal situation is based on the following assumptions: -->
 
@@ -2389,14 +2375,14 @@ plot_IO_test(d.IO, d.test.IO, language = c("Swedish"), cues = selected_cues, sho
 <!--   4. Cues are multi-Gaussian distributions. -->
 <!--   5. The link function between the IO predictions and human responses is correct. -->
 <!-- 1. Are there correlations between human ratings and ideal observers predictions?  -->
-<!-- 2. Are the correlations stronger for the consistent pairing (consistence coded as "yes": /d/-exposure and non-native model; control and native model)?  -->
+<!-- 2. Are the correlations stronger for the consistent pairing (consistence coded as "yes": /d/-exposure and /d/-exposure model; control and control model)?  -->
 
 
 <!-- (ref:IO-ratings-results-correlation-byItem) Item-by-item correlations between ideal observer-predicted ratings and human ratings of /d/-goodness for the /t,d/-final test words from the English and Swedish experiment. Data for both participants groups (/d/-exposure vs. control) are shown. -->
 
 <!-- ```{r IO-ratings-results-correlation-byItem, fig.cap = "(ref:IO-ratings-results-correlation-byItem)", fig.height = 9, out.width="100%"} -->
 <!-- ggscatter(data = d.test.IO %>% -->
-<!--             group_by(Language, NativeLanguage, Group, Model.Accent, Model.Accent.matchesGroup, Item.Word, Sound) %>% -->
+<!--             group_by(Language, NativeLanguage, Group, Model.Group, Model.Group.matchesParticipant.Group, Item.Word, Sound) %>% -->
 <!--             summarise( -->
 <!--               Model.Posterior.d = mean(Model.Posterior.d), -->
 <!--               Model.Rating.d.zscored = mean(Model.Rating.d.zscored), -->
@@ -2410,7 +2396,7 @@ plot_IO_test(d.IO, d.test.IO, language = c("Swedish"), cues = selected_cues, sho
 <!--     breaks = c("/d/-exposure", "control", ""), -->
 <!--     values = append(colors.Group, "black") -->
 <!--   ) + -->
-<!--   facet_grid(NativeLanguage + Group ~ Model.Accent.matchesGroup,  -->
+<!--   facet_grid(NativeLanguage + Group ~ Model.Group.matchesParticipant.Group,  -->
 <!--              # margins = c("NativeLanguage"), -->
 <!--              labeller = "label_both")  -->
 <!-- ``` -->
@@ -2418,6 +2404,177 @@ plot_IO_test(d.IO, d.test.IO, language = c("Swedish"), cues = selected_cues, sho
 
 
 
+# Belief updating (DRAFT)
+
+We use incremental Bayesan belief updating to .... MORE HERE.
+
+We set the prior $m_0$ and $S_0$ for the /t/ and /d/ categories based on the category mean $\mu$ and covariance $\Sigma$ observed for the native data (i.e., the control model) and then consider a range of values for the strengths of the prior beliefs about the mean ($\kappa$) and covariance ($\nu$). Specifically, for each $\nu$, $S_0$ is set so that the *expected value* of the covariance matrix $\Sigma$ is identical to the observed category covariance in the native data. We consider $\kappa$ = 1, 2, 4, ..., 512 and $\nu$ = 8, 16, ..., 512 (the model is only well defined for $\nu > D + 1$, where $D$ is the number of cues).
+
+```{r belief-updating-setup}
+if (!file.exists("../models/IBBU_updates.RData")) {
+  d.IBBU <-
+    d.IO.training %>%
+    # Make priors from control model's training data
+    filter(Used_for.Model.Group == "control") %>%
+    rename(
+      NativeLanguage = Used_for.Model.NativeLanguage,
+      category = Used_for.Model.Sound) %>%
+    # Assume kappa = nu = 8 in generating the prior
+    # (this choice is arbitrary but needs to be taken into account below when different nus are 
+    # considered since the scatter matrix S_0 is set to yield the sample Sigma given the assumed 
+    # nu),
+    make_NIW_prior_from_data(
+      groups = "NativeLanguage",
+      cues = c("rvowel", "rclosure", "rburst"),
+      kappa = 8, 
+      nu = 8) %>%
+    select(-c(kappa, nu)) %>%
+    # Consider a range of prior strengths
+    crossing(
+      kappa = 2^(0:9),
+      nu = 2^(3:9)) %>%
+    # Correct the S_0 for each nu so that it's still the case that the expected covariance 
+    # matrix Sigma matches the sample covariance matrix.
+    mutate(
+      S = map2(S, nu, ~ get_Sigma_from_S(.x, 8) %>% get_S_from_Sigma(nu = .y))) %>%
+    # Make a copy of kappa and nu and keep it around as a grouping variable (factor)
+    mutate(
+      prior_kappa = factor(kappa),
+      prior_nu = factor(nu)) %>%
+    # Update each prior with exposure data from /d/-exposure group
+    group_by(NativeLanguage, prior_kappa, prior_nu) %>%
+    group_map(
+      ~ update_NIW_beliefs_incrementally(
+        .x, 
+        # Select exposure data to be only /d/-exposure data for /d/ category 
+        # for the matching NativeLanguage
+        exposure = d.IO.training %>%
+          filter(
+            Used_for.Model.NativeLanguage == .y$NativeLanguage,
+            Used_for.Model.Sound == "/d/",
+            Used_for.Model.Group == "/d/-exposure") %>%
+          rename(
+            NativeLanguage = Used_for.Model.NativeLanguage,
+            category = Used_for.Model.Sound),
+        add_noise = NULL),
+      .keep = T) %>% 
+    reduce(rbind)
+  save(d.IBBU, file = "../models/IBBU_updates.RData", compress = T)
+} else {
+  message("Loading previously calculated incremental Bayesian belief updates. If you have made changes to the training data of the ideal observers, delete the file IBBU_updates.RData under models/ and then rerun this code.")
+  load("../models/IBBU_updates.RData")
+}
+```
+
+Does super quick updating indeed provide the best fit against the *ground truth* (not yet the human responses)? This is not guaranteed because the training and test data (for /d/) is not the same. Plotting the posterior probability of the correct category under the IBBU model for English (top) and Swedish (bottom).
+
+```{r IBBU-sanity-check}
+d.IBBU.test <-
+  d.IBBU %>%
+  # select final (updated) IOs
+  filter(observation.n == 30) %>%
+  full_join(
+    # Get test data (after removing IO information and removing duplicate rows)
+    d.test.IO %>%
+      select(
+        NativeLanguage, Item.MinimalPair, Sound, rvowel, rclosure, rburst) %>%
+      distinct()) %>%
+  make_vector_column(
+    cols = c("rvowel", "rclosure", "rburst"),
+    vector_col = "x") %>%
+  arrange(NativeLanguage, prior_kappa, prior_nu, Item.MinimalPair, Sound, category) %>%
+  group_by(NativeLanguage, prior_kappa, prior_nu) %>%
+  select(Item.MinimalPair, Sound, x, category, m, S, kappa, nu, lapse_rate) %>%
+  nest(belief = c(category, m, S, kappa, nu, lapse_rate)) %>%
+  nest(data = c(Item.MinimalPair, Sound, x)) %>%
+  # Get posterior probability of /d/ for each data point
+  mutate(IBBU.Posterior.d = map2(
+    data, 
+    belief, 
+    ~ get_posterior_predictive_from_NIW_belief(.x$x, .y, log = F) %>%
+      mutate(ID = rep(1:(nrow(.)/2), 2)) %>%
+      group_by(ID) %>%
+      pivot_wider(
+        values_from = pp,
+        names_from = category) %>%
+      transmute(posterior = `/d/` / (`/d/` + `/t/`)) %>%
+      pull(posterior))) %>%
+  # Get posterior probabiltiy of correct category 
+  # (and then collapse to overall probability of data)
+  mutate(
+    IBBU.Posterior.Intended = map2(
+      data,
+      IBBU.Posterior.d,
+      ~ ifelse(.x$Sound == "/d/", .y, 1 - .y)), 
+    IBBU.Posterior.Intended.AllData = unlist(map(
+      IBBU.Posterior.Intended,
+      ~ prod(.x)^(1/length(.x)) %>% unlist())))
+    #~ get_categorization_from_NIW_belief(.x$x, .y, decision_rule = "proportional")))
+
+d.IBBU.test %>%
+  ggplot(aes(x = prior_kappa, y = prior_nu, fill = IBBU.Posterior.Intended.AllData)) +
+  geom_raster(interpolate = T) +
+  scale_fill_viridis_b("Avg. posterior probability\nof correct category\nunder IBBU") +
+  facet_wrap(~ NativeLanguage)
+```
+
+Predicting participants' responses for English (top) and Swedish (bottom).
+
+```{r}
+d.test.IBBU <-
+  d.IBBU %>%
+  # select final (updated) IOs
+  filter(observation.n == 30) %>%
+  # Get test data (after removing IO information and removing duplicate rows)
+  full_join(
+    # Get test data (after removing IO information and removing duplicate rows)
+    d.test.IO %>%
+      select(
+        NativeLanguage, 
+        Item.MinimalPair, Sound, Rating.Response.d.zscored,
+        rvowel, rclosure, rburst) %>%
+      distinct()) %>%
+  make_vector_column(
+    cols = c("rvowel", "rclosure", "rburst"),
+    vector_col = "x") %>%
+  arrange(NativeLanguage, prior_kappa, prior_nu, Item.MinimalPair, Sound, category) %>%
+  group_by(NativeLanguage, prior_kappa, prior_nu) %>%
+  select(Item.MinimalPair, Sound, x, Rating.Response.d.zscored, 
+         category, m, S, kappa, nu, lapse_rate) %>%
+  nest(belief = c(category, m, S, kappa, nu, lapse_rate)) %>%
+  nest(data = c(Item.MinimalPair, Sound, x, Rating.Response.d.zscored)) %>%
+  # Get posterior probability of /d/ for each data point
+  mutate(IBBU.Posterior.d = map2(
+    data, 
+    belief, 
+    ~ get_posterior_predictive_from_NIW_belief(.x$x, .y, log = F) %>%
+      mutate(ID = rep(1:(nrow(.)/2), 2)) %>%
+      group_by(ID) %>%
+      pivot_wider(
+        values_from = pp,
+        names_from = category) %>%
+      transmute(posterior = `/d/` / (`/d/` + `/t/`)) %>%
+      pull(posterior))) %>%
+  # Get posterior probabiltiy of correct category 
+  # (and then collapse to overall probability of data)
+  mutate(
+    IBBU.Posterior.Correlation = unlist(map2(
+      data,
+      IBBU.Posterior.d,
+      ~ cor(.x$Rating.Response.d.zscored, .y))))
+
+d.test.IBBU %>%
+  filter(NativeLanguage == "English") %>%
+  ggplot(aes(x = prior_kappa, y = prior_nu, fill = IBBU.Posterior.Correlation)) +
+  geom_raster(interpolate = T) +
+  scale_fill_viridis_b("Correlation between\nIBBU posterior\nand participant ratings") 
+
+d.test.IBBU %>%
+  filter(NativeLanguage == "Swedish") %>%
+  ggplot(aes(x = prior_kappa, y = prior_nu, fill = IBBU.Posterior.Correlation)) +
+  geom_raster(interpolate = T) +
+  scale_fill_viridis_b("Correlation between\nIBBU posterior\nand participant ratings") 
+```
 
 
 
@@ -2431,7 +2588,6 @@ read_csv("../data/English/English_wordlist_exposure.csv") %>%
   replace_na(list(`Critical (/d/-Exposure)` = "-", `Critical (Control)` = "-" , `Filler` = "-" )) %>%
   kbl() %>% 
   kable_styling(bootstrap_options = "striped", full_width = F, position = "center")
-  
   #knitr::kable(booktabs = TRUE, caption = 'English - Exposure')
 ```
 
