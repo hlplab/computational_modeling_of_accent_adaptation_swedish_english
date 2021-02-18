@@ -729,7 +729,9 @@ p.results.perception.bySubject = insertLayer(p.results.perception, after = 0,
                alpha = 1,  dotsize = 0.5, 
                binaxis = "y", stackdir = "center", 
                position = position_dodge(.9)))
-p.results.perception.bySubject
+
+p.results.perception.bySubject + scale_y_continuous("Mean /d/-goodness ratings\n(z-scored) by subject")
+
 ```
 
 Figure \@ref(fig:ratings-results) shows the z-scored /d/-goodness ratings from both experiments. To compare participants' ratings for the /d,t/-final test words across the two experiments, we conducted a linear mixed-effects regression [@baayen2008mixed] over the combined data from both experiments. The regression predicted z-scored /d/-goodness ratings based on the sound category (sum-coded: 1 = word recording intended to end in /d/ vs. -1 = word recording intended to end in /t/), exposure group (sum-coded: 1 =  /d/-exposure vs. -1 = control), the experiment (sum-coded: 1 = Swedish vs. -1 = English), and all their interactions. The regression contained the maximal random effect structure justified by the design (random by-participant intercepts and slope for sound; random by-item intercepts and slopes for sound, exposure group, and their interaction).^[Even this simplified model estimated the variance of the by-participant intercepts to be zero (see below), presumably because the z-scoring of ratings within participant already removed that variance. If all by-participant random effects are excluded, the results reported below do not change. If non-z-scored ratings are analyzed instead (unlike in previous work), the three-way interaction is no longer significant ($p = .11$).]
@@ -2134,16 +2136,12 @@ p.results.perception.bySubject %+%
      filter(Model.Group.matchesParticipant.Group == "yes") %>%
      group_by(Language, NativeLanguage, Group, Sound, Item.WordID, Model.Group) %>%
      summarise(Rating.mean = mean(Model.Posterior.d * 2 - 1))) +
-  scale_y_continuous("Ideal observer predicted\n/d/-goodness rating (z-score aligned)") +
+  ylab("Ideal observer predicted\n/d/-goodness rating (z-score aligned)") +
   scale_fill_manual("Ideal observer",
     breaks = c("/d/-exposure", "control"),
     labels = c("/d/-exposure", "control"),
-    values = colors.Accent
-  ) +
+    values = colors.Accent) +
   ylim(-1.25, 1.25)
-
-ggsave(p.results.perception.bySubject, filename = "../figures/Result-ratings-bySubject.png",
-       width = 7, height = 4)
 ```
 
 
@@ -2152,6 +2150,7 @@ p.results.percept.byItem <- p.results.perception.bySubject %+%
   (d.test %>%
      group_by(Language, NativeLanguage, Group, Sound, Item.WordID) %>%
      summarise(Rating.mean = mean(Rating.Response.d.zscored))) +
+  ylab("Mean /d/-goodness ratings\n(z-scored) by item") +
   ylim(-1.25, 1.25)
 
 p.results.percept.byItem
