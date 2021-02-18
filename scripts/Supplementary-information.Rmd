@@ -184,19 +184,6 @@ get_axes = function(.data, cues) {
 ```
 
 
-# TO DO
-
-1) Final clean-up:
-
- * Check whether warnings are addressed, and then (after) set to silent.
- * Run final compilation with echo = F.
- * Check that all remaining Maryan,Xin,Florian comments have been addressed. 
-
-2) Potential additional analyses:
- 
- * Consider adding perception noise to IOs to simulate various subjects. In any case, *explain in IO result section why IO results are more categorical than human responses* (lack of noise is one plausible reason).
- * In particular, do we want to add a section on the alternative Swedish recordings?
-
 # Overview
 
 This supplementary information describes the results and methods of the perception experiments on Mandarin-accented English and Flemish-accented Swedish, as well as the development and evaluation of the ideal observer models. The experiment on Mandarin-accented English [@xie2017more] found an effect of exposure to the non-native-accented sound (syllable-final /d/) on subsequent /d/- and /t/-goodness ratings. This effect has been replicated in two other paradigms (categorization and priming) using the same stimuli Xie et al. [@xie2017more]. Additionally, an earlier priming study found the same type of benefit for exposure to syllable-final /d/ in Dutch-accented English (Dutch, like Flemish, exhibits final devoicing, partially or completely neutralizing stop voicing in the syllable final position). In contrast to these previous studies, the experiment on Flemish-accented Swedish did *not* find a significant effect of exposure on subsequent /d/ and /t/-goodness ratings.
@@ -2420,6 +2407,10 @@ plot_IO_test(d.IO, d.test.IO, language = c("Swedish"), cues = selected_cues, sho
 
 # Belief updating (DRAFT)
 
+We use incremental Bayesan belief updating to .... MORE HERE.
+
+We set the prior $m_0$ and $S_0$ for the /t/ and /d/ categories based on the category mean $\mu$ and covariance $\Sigma$ observed for the native data (i.e., the control model) and then consider a range of values for the strengths of the prior beliefs about the mean ($\kappa$) and covariance ($\nu$). Specifically, for each $\nu$, $S_0$ is set so that the *expected value* of the covariance matrix $\Sigma$ is identical to the observed category covariance in the native data. We consider $\kappa$ = 1, 2, 4, ..., 512 and $\nu$ = 8, 16, ..., 512 (the model is only well defined for $\nu > D + 1$, where $D$ is the number of cues).
+
 ```{r belief-updating-setup}
 if (!file.exists("../models/IBBU_updates.RData")) {
   d.IBBU <-
@@ -2429,14 +2420,25 @@ if (!file.exists("../models/IBBU_updates.RData")) {
     rename(
       NativeLanguage = Used_for.Model.NativeLanguage,
       category = Used_for.Model.Sound) %>%
+    # Assume kappa = nu = 8 in generating the prior
+    # (this choice is arbitrary but needs to be taken into account below when different nus are 
+    # considered since the scatter matrix S_0 is set to yield the sample Sigma given the assumed 
+    # nu),
     make_NIW_prior_from_data(
       groups = "NativeLanguage",
-      cues = c("rvowel", "rclosure", "rburst")) %>%
+      cues = c("rvowel", "rclosure", "rburst"),
+      kappa = 8, 
+      nu = 8) %>%
     select(-c(kappa, nu)) %>%
     # Consider a range of prior strengths
     crossing(
       kappa = 2^(0:9),
       nu = 2^(3:9)) %>%
+    # Correct the S_0 for each nu so that it's still the case that the expected covariance 
+    # matrix Sigma matches the sample covariance matrix.
+    mutate(
+      S = map2(S, nu, ~ get_Sigma_from_S(.x, 8) %>% get_S_from_Sigma(nu = .y))) %>%
+    # Make a copy of kappa and nu and keep it around as a grouping variable (factor)
     mutate(
       prior_kappa = factor(kappa),
       prior_nu = factor(nu)) %>%
@@ -2507,20 +2509,14 @@ d.IBBU.test <-
       ~ ifelse(.x$Sound == "/d/", .y, 1 - .y)), 
     IBBU.Posterior.Intended.AllData = unlist(map(
       IBBU.Posterior.Intended,
-      ~ prod(.x) %>% unlist())))
+      ~ prod(.x)^(1/length(.x)) %>% unlist())))
     #~ get_categorization_from_NIW_belief(.x$x, .y, decision_rule = "proportional")))
 
 d.IBBU.test %>%
-  filter(NativeLanguage == "English") %>%
   ggplot(aes(x = prior_kappa, y = prior_nu, fill = IBBU.Posterior.Intended.AllData)) +
-  geom_raster() +
-  scale_fill_viridis_b("Posterior probability\nof correct category\nunder IBBU") 
-
-d.IBBU.test %>%
-  filter(NativeLanguage == "Swedish") %>%
-  ggplot(aes(x = prior_kappa, y = prior_nu, fill = IBBU.Posterior.Intended.AllData)) +
-  geom_raster() +
-  scale_fill_viridis_b("Posterior probability\nof correct category\nunder IBBU") 
+  geom_raster(interpolate = T) +
+  scale_fill_viridis_b("Avg. posterior probability\nof correct category\nunder IBBU") +
+  facet_wrap(~ NativeLanguage)
 ```
 
 Predicting participants' responses for English (top) and Swedish (bottom).
@@ -2571,13 +2567,13 @@ d.test.IBBU <-
 d.test.IBBU %>%
   filter(NativeLanguage == "English") %>%
   ggplot(aes(x = prior_kappa, y = prior_nu, fill = IBBU.Posterior.Correlation)) +
-  geom_raster() +
+  geom_raster(interpolate = T) +
   scale_fill_viridis_b("Correlation between\nIBBU posterior\nand participant ratings") 
 
 d.test.IBBU %>%
   filter(NativeLanguage == "Swedish") %>%
   ggplot(aes(x = prior_kappa, y = prior_nu, fill = IBBU.Posterior.Correlation)) +
-  geom_raster() +
+  geom_raster(interpolate = T) +
   scale_fill_viridis_b("Correlation between\nIBBU posterior\nand participant ratings") 
 ```
 
@@ -2593,7 +2589,6 @@ read_csv("../data/English/English_wordlist_exposure.csv") %>%
   replace_na(list(`Critical (/d/-Exposure)` = "-", `Critical (Control)` = "-" , `Filler` = "-" )) %>%
   kbl() %>% 
   kable_styling(bootstrap_options = "striped", full_width = F, position = "center")
-  
   #knitr::kable(booktabs = TRUE, caption = 'English - Exposure')
 ```
 
