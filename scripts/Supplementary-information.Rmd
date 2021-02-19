@@ -2081,20 +2081,23 @@ d.english.ID <- d.english.ID %>%
 (ref:ID-to-ratings) Item-level correlation of human identification and rating responses from two experiments in @xie2017more. The two experiments used the same exposure and test stimuli, and differed only in the task during test (categorization vs. rating). The trend line shows a generalized additive model fit with a non-parametric smoother. That is, the fit would in principle allow non-linearity in the relation between categorization and rating responses. The fact that no non-linearity is detected suggests that the relation is largely linear. Shaded areas show 95\% confidence intervals.
 
 ```{r ID-to-ratings, fig.cap="(ref:ID-to-ratings)", fig.height = 4.5, out.width="75%"}
-d.english.test.byItem = 
-  plyr::rbind.fill(d.test %>%
-                     filter(NativeLanguage == "English") %>%
-                     droplevels() %>%
-                     mutate(Task = "rating"), 
-                   d.english.ID %>% mutate(Task = "ID")) %>%
+d.english.test.byItem.before <- 
+ plyr::rbind.fill(d.test %>% filter(NativeLanguage == "English") %>%
+                     droplevels() %>% 
+                    mutate(Task = "rating"), d.english.ID %>% 
+                    mutate(Task = "ID")
+                  ) %>%
   group_by(Task, Group, Sound, Item.Word, Item.MinimalPair) %>%
   summarise(zRating.d = mean(Rating.Response.d.zscored),
-            Proportion.d = mean(ID.Response.d)) %>%
-  ungroup() %>%
-  select(-Task) %>%
-  gather(resp, value, `zRating.d`,`Proportion.d`) %>%
-  filter(!is.na(value)) %>%
-  spread(resp,value) %>%
+            Proportion.d = mean(ID.Response.d)) %>% 
+ungroup() %>%
+  select(-Task) %>% 
+  pivot_longer(c("zRating.d", "Proportion.d"),
+               names_to = "resp",
+               values_to = "value") %>% 
+  filter(!is.na(value)) %>% 
+  pivot_wider(names_from = "resp",
+              values_from = "value") %>% 
   mutate(Logodds.d = qlogis(Proportion.d)) %>%
   mutate_if(is.character, as.factor) %>%
   applyFactorLevels()
