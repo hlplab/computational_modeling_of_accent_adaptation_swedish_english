@@ -680,8 +680,9 @@ d.test %>%
   group_by(Group, Participant) %>%
   mutate(Rating.Response.zscored = as.numeric(scale(Rating.Response))) %>%
   group_by(Language, Group, Item.Word, Rating.for) %>%
-  summarise(Rating.mean = mean(Rating.Response.zscored)) %>%
-  spread(Rating.for, Rating.mean) %>%
+  summarise(Rating.mean = mean(Rating.Response.zscored)) %>% 
+  pivot_wider(names_from = "Rating.for",
+            values_from = "Rating.mean") %>%
   ggplot(
     aes(x = d, y = t, label = Item.Word)
   ) + 
