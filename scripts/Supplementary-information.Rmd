@@ -2294,7 +2294,6 @@ plot_IO_test = function(
       # Using difference. Could use ratio instead
       mutate(Model.Posterior.Intended.Difference = `/d/-exposure` - control)
   }
-
   # Unnest data if that hasn't already happened
   if ("ellipse" %in% names(.data.IO)) .data.IO %<>%
     unnest(ellipse)
@@ -2311,15 +2310,36 @@ plot_IO_test = function(
             vowel = !! rlang::sym(cues[1]),
             closure = !! rlang::sym(cues[2]),
             burst = !! rlang::sym(cues[3])),
-        x= ~vowel,
-        y= ~closure,
-        z= ~burst,
-        marker = list(color = ~Model.Posterior.Intended.Difference, colorscale = 'RdBu', cmin = -1, cmax = 1, showscale = T),
+        # x= ~vowel,
+        # y= ~closure,
+        # z= ~burst,
+        # marker = list(color = ~Model.Posterior.Intended.Difference, 
+        #               colorscale = 'Rdbu', 
+        #               cmin = -1, 
+        #               cmax = 1, 
+        #               showscale = T),
         symbol= ~Sound,
         symbols = shapes.Category,
-        opacity = .8,
+        #opacity = .7,
         showlegend = T,
-        type="scatter3d", mode="markers") 
+        type="scatter3d", 
+        mode="markers") %>% 
+        add_markers(x= ~vowel,
+                  y= ~closure,
+                  z= ~burst,
+                  marker = list(color = ~Model.Posterior.Intended.Difference,
+                                cauto = TRUE,
+                                autocolorscale = FALSE,
+                                colorscale = list(c(0,'rgba(9, 1, 95,0.9)'),
+                                                  list(0.5,'rgba(236, 237, 231,0.9)'),
+                                                  list(1,'rgba(235, 94, 11,0.9)')), 
+                                cmin = -1,
+                                cmid = 0,
+                                cmax = 1,
+                                colorbar = list(len = 0.5, title = 'Advantage of\n/d/-exposure over\ncontrol model'),
+                                line = list(colors = ~Sound, 
+                                            width = 1), 
+                                showscale = T))
     # ... or posterior by accent
     } else p = plot_ly(
       data = .data.test %>%
@@ -2328,16 +2348,25 @@ plot_IO_test = function(
           vowel = !! rlang::sym(cues[1]),
           closure = !! rlang::sym(cues[2]),
           burst = !! rlang::sym(cues[3])),
-      x= ~vowel,
-      y= ~closure,
-      z= ~burst,
-      color= ~Model.Posterior.Intended,
       symbol= ~Sound,
       symbols = shapes.Category,
       frame= ~Model.Group,
-      opacity = .8,
-        showlegend = T,
-        type="scatter3d", mode="markers")
+      type="scatter3d", 
+      mode="markers"
+     ) %>% 
+        add_markers(x= ~vowel,
+                  y= ~closure,
+                  z= ~burst, 
+                  marker = list(
+                     color= ~Model.Posterior.Intended,
+                     cauto = F,
+                     autocolorscale = F,
+                     colorscale = list(c(0,'rgb(0, 34, 62)'), list(1,'rgb(255, 212, 121)')),
+                     cmin = 0,
+                     cmax = 1,
+                     colorbar = list(len = 0.7, title = 'Model-predicted posterior\nof intended category'),
+                     line = list(color = ~Sound, colors = list(c("red", "blue")), width = 1)
+        )) 
   } else p = plot_ly()
   
   p = p %>%
