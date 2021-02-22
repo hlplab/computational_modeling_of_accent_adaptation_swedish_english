@@ -2176,7 +2176,7 @@ The ideal observers do, however, predict the qualitative patterns in the human g
 
 We first predicted human responses across all native languages and exposure conditions from the ideal observers that are meant for those languages and exposure conditions. That is, we predict human ratings in the /d/-exposure group from the /d/-exposure ideal observer, and human ratings in the control group from the control ideal observer. Specifically, we use a linear mixed-effects regression, predicting human /d/-goodness ratings from the posterior probability of /d/ predicted by the ideal observers, while also including the maximal converging random effect structure (random intercepts by participant and minimal pair). 
 
-This analysis is summarized in Table \@ref(tab:ratings-IO-analysis) and found a highly significant effect of ideal observer predicted posterior probabilities on the z-scored human goodness ratings ($\hat{\beta} = 1.14, t = 35.1, p < .0001$). 
+This analysis is summarized in Table \@ref(tab:ratings-IO-analysis) and found a highly significant effect of ideal observer predicted posterior probabilities on the z-scored human goodness ratings ($\hat{\beta} = 1.27, t = 26.6, p < .001$). 
 
 ```{r item-level-regression-between-ID-rating-tasks}
 d.test.IO %<>%
@@ -2184,7 +2184,7 @@ d.test.IO %<>%
 
 lmer.IOtoRating =
   lmer(Rating.Response.d.zscored ~ 1 + Model.Posterior.d + 
-         (1 | Item.MinimalPair) +  (1 | Participant), 
+         (1 | Item.MinimalPair) +  (1 + Model.Posterior.d | Participant), 
                      data = d.test.IO %>%
                        filter(Model.Group.matchesParticipant.Group == "yes"))
 # summary(lmer.IOtoRating)
@@ -2197,42 +2197,38 @@ tab_model(lmer.IOtoRating,
           dv.labels = "/d/-goodness rating (z-scored)")
 ```
 
+Next, we asked whether the effect of the ideal observer predicted posterior probabilities differed depending on the native language, exposure group, and/or the test token's intended category label. To this end, we repeated the above analysis while incrementally including additional control predictors in the model. We started by adding only native language, then the full factorial of native language and exposure condition, and finally the full factorial of native language, exposure condition, and sound category. At each step, we asked whether the effect of the ideal observer predicted posterior probability of /d/ was still significant. All control predictors were sum-coded (native language: English = -1 vs. Swedish = 1; exposure group: control = -1 vs. /d/-exposure = 1; sound category: /t/ = -1 vs. /d/ = 1), and all analyses contained the the maximal by-item random effect structure (random intercept and slopes for exposure group, sound category, and their interaction) and by-participant random intercepts (more complex random effect structures by participant did not converge).
 
+The effect of the ideal observer predicted posterior probability of /d/ remained significant when native language or its full factorial with exposure group were added to the model ($p$s $< .01$), but stopped being a significant predictor once the tokens' correct (intended) category label was included in the model. This final analysis is summarized in Table \@ref(tab:ratings-IO-analysis-full). Together with the first analysis, this suggests that the effect of the ideal observer predicted posterior probability is largely driven by the fact that the ideal observer correctly predicts whether a sound should be categorized as /d/ or /t/. The fact that the ideal observer predicted posterior probability of /d/ is no longer a significant predictor of /d/-goodness ratings when tokens' intended category label is included as a predictor is not surprising: the test data for both experiments comes from natural productions (rather than experimenter-controlled resynthesized speech), so that comparatively few of our test tokens fell into the phonetic space exactly between the /d/ and /t/ categories. This means that comparatively few of our test tokens fell into the space for which the gradient posterior probability of /d/ or /t/ provides information that goes beyond what is already contained in the category label. In short, there is exceedingly little power to detect effects of the ideal observer predicted posterior probabilities *within* each category.
 
+```{r}
+# summary(lmer(Rating.Response.d.zscored ~ 1 + NativeLanguage * Group + Model.Posterior.d  + (1 + Group * Sound | Item.MinimalPair) + (1 + Model.Posterior.d | Participant),
+#                       data = d.test.IO %>%
+#                         filter(Model.Group.matchesParticipant.Group == "yes")))
 
+lmer.IOtoRating.full <- lmer(Rating.Response.d.zscored ~ 
+                               1 + NativeLanguage * Group * Sound + Model.Posterior.d + 
+                               (1 + Group * Sound | Item.MinimalPair) + (1 + Model.Posterior.d | Participant),
+                     data = d.test.IO %>%
+                       filter(Model.Group.matchesParticipant.Group == "yes"))
 
+pred.labels = c("Intercept",
+                "Native language (Swedish vs. English)",
+                "Group (/d/-exposure vs. control)",
+                "Sound (/d/ vs /t/)",
+                "IO-predicted posterior of /d/",
+                "Native language : Group",
+                "Native language : Sound",
+                "Group : Sound",
+                "Native language : Group : Sound")
+tab_model(lmer.IOtoRating.full,
+          show.r2 = F,
+          title = "(\\#tab:ratings-IO-analysis-full) Results of linear mixed-effects regression of /d/-goodness ratings on ideal observer posterior /d/ predictions with full interactions of native language, exposure group and sound.",
+          pred.labels = pred.labels,
+          dv.labels = "/d/-goodness rating (z-scored)")
+```
 
-<!-- ### What drives the effect of ideal observer predicted posterior probabilities? -->
-<!-- To understand better what drives the correlation between ideal observer predictions and human ratings, we repeated the above analysis while incrementally including additional control predictors in the model. We started by adding only native language, then the full factorial of native language and exposure condition, and finally the full factorial of native language, exposure condition, and sound category. At each step, we asked whether the effect of the ideal observer predicted posterior probability of /d/ was still significant. All control predictors were sum-coded (native language: English = -1 vs. Swedish = 1; exposure group: control = -1 vs. /d/-exposure = 1; sound category: /t/ = -1 vs. /d/ = 1), and all analyses contained the the maximal by-item random effect structure (random intercept and slopes for exposure group, sound category, and their interaction) and by-participant random intercepts (more complex random effect structures by participant did not converge).  -->
-
-<!-- The effect of the ideal observer predicted posterior probability of /d/ remained significant when native language or its full factorial with exposure group were added to the model ($p$s $< .02$), but stopped being a significant predictor once sound category was included in the model. This final analysis is summarized in Table \@ref(tab:ratings-IO-analysis-full). Together with the first analysis, this suggests that the effect of the ideal observer predicted posterior probability is largely driven by the fact that the ideal observer correctly predicts whether a sound should be categorized as /d/ or /t/. -->
-
-<!-- ```{r} -->
-<!-- # summary(lmer(Rating.Response.d.zscored ~ 1 + NativeLanguage * Group + Model.Posterior.d  + (1 + Group * Sound | Item.MinimalPair) + (1 | Participant), -->
-<!-- #                      data = d.test.IO %>% -->
-<!-- #                        filter(Model.Group.matchesParticipant.Group == "yes"))) -->
-
-<!-- lmer.IOtoRating.full <- lmer(Rating.Response.d.zscored ~ 1 + NativeLanguage * Group * Sound + Model.Posterior.d  + (1 + Group * Sound | Item.MinimalPair) + (1 | Participant), -->
-<!--                      data = d.test.IO %>% -->
-<!--                        filter(Model.Group.matchesParticipant.Group == "yes")) -->
-
-<!-- pred.labels = c("Intercept", -->
-<!--                 "Native language (Swedish vs. English)", -->
-<!--                 "Group (/d/-exposure vs. control)", -->
-<!--                 "Sound (/d/ vs /t/)", -->
-<!--                 "Native language : Group", -->
-<!--                 "Native language : Sound", -->
-<!--                 "Group : Sound", -->
-<!--                 "Native language : Group : Sound", -->
-<!--                 "IO-predicted posterior of /d/") -->
-<!-- tab_model(lmer.IOtoRating.full, -->
-<!--           show.r2 = F, -->
-<!--           title = "(\\#tab:ratings-IO-analysis-full) Results of linear mixed-effects regression of /d/-goodness ratings on ideal observer posterior /d/ predictions with full interactions of native language, exposure group and sound.", -->
-<!--           pred.labels = pred.labels, -->
-<!--           dv.labels = "/d/-goodness rating (z-scored)") -->
-<!-- ``` -->
-
-### Do ideal observers that model an exposure condition predict human /d/-goodness rating responses *better* than ideal observers intended for a different exposure condition?
+## Do ideal observers that model an exposure condition predict human /d/-goodness rating responses *better* than ideal observers intended for a different exposure condition?
 
 Next, we asked whether ideal observers that match the exposure conditions (i.e., the control ideal observer for the control condition and the /d/-exposure ideal observer for the /d/-exposure condition) provide a better fit against human ratings than ideal observers that do not. This would provide the strongest item-level evidence that the ideal observers we constructed capture the effects of exposure in the English and Swedish experiments. To this end, we repeated the linear mixed-effects analysis while including the posterior predictions for both matching and non-matching ideal observers in the analysis and letting them interact with an indicator variable (sum-coded: non-matching = -1 vs. matching = 1) and the native language (sum-coded: English = -1 vs. Swedish = 1). The analysis again contained random intercepts by participant and minimal pair.
 
@@ -2516,7 +2512,7 @@ if (!file.exists("../models/IBBU_updates.RData")) {
 
 Does super quick updating indeed provide the best fit against the *ground truth* (not yet the human responses)? This is not guaranteed because the training and test data (for /d/) is not the same. Plotting the posterior probability of the correct category under the IBBU model for English (top) and Swedish (bottom).
 
-```{r IBBU-sanity-check}
+```{r IBBU-sanity-check, fig.width=10}
 d.IBBU.test <-
   d.IBBU %>%
   # select final (updated) IOs
@@ -2547,7 +2543,7 @@ d.IBBU.test <-
         names_from = category) %>%
       transmute(posterior = `/d/` / (`/d/` + `/t/`)) %>%
       pull(posterior))) %>%
-  # Get posterior probabiltiy of correct category 
+  # Get posterior probability of correct category 
   # (and then collapse to overall probability of data)
   mutate(
     IBBU.Posterior.Intended = map2(
