@@ -2359,10 +2359,11 @@ plot_IO_test = function(
                   z= ~burst, 
                   marker = list(
                      color= ~Model.Posterior.Intended,
-                     cauto = F,
+                     cauto = T,
                      autocolorscale = F,
-                     colorscale = list(c(0,'rgb(0, 34, 62)'), list(1,'rgb(255, 212, 121)')),
+                     colorscale = list(c(0,'rgb(0, 65, 106)'), list(0.5,'rgb(121, 159, 12)'), list(1,'rgb(255, 224, 0)')),
                      cmin = 0,
+                     cmid = 0.5,
                      cmax = 1,
                      colorbar = list(len = 0.7, title = 'Model-predicted posterior\nof intended category'),
                      line = list(color = ~Sound, colors = list(c("red", "blue")), width = 1)
