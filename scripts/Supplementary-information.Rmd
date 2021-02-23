@@ -2281,8 +2281,8 @@ plot_IO_test = function(
   # per stimulus & model
   .data.test %<>% 
     filter(Model.Group.matchesParticipant.Group == "yes") %>%
-    group_by(NativeLanguage, Item.Word, Item.WordID, Item.MinimalPair, Model.Group, Sound) %>%
-    summarise_at(c(cues, "Model.Posterior.Intended"), first)
+     distinct(NativeLanguage,Item.Word,Item.WordID, Item.MinimalPair, Model.Group,Model.Posterior.t, Model.Posterior.Intended, Model.Group.matchesParticipant.Group, rvowel, rclosure, rburst, Sound)
+
   
   # If difference should be plotted instead
   if (show.difference) {
@@ -2292,7 +2292,8 @@ plot_IO_test = function(
         values_from = Model.Posterior.Intended
       ) %>%
       # Using difference. Could use ratio instead
-      mutate(Model.Posterior.Intended.Difference = `/d/-exposure` - control)
+      mutate(Model.Posterior.Intended.Difference = `/d/-exposure` - control,
+             Model.Posterior.Intended.Difference.Adjusted = Model.Posterior.Intended.Difference + 0.5)
   }
   # Unnest data if that hasn't already happened
   if ("ellipse" %in% names(.data.IO)) .data.IO %<>%
@@ -2310,64 +2311,63 @@ plot_IO_test = function(
             vowel = !! rlang::sym(cues[1]),
             closure = !! rlang::sym(cues[2]),
             burst = !! rlang::sym(cues[3])),
-        # x= ~vowel,
-        # y= ~closure,
-        # z= ~burst,
-        # marker = list(color = ~Model.Posterior.Intended.Difference, 
-        #               colorscale = 'Rdbu', 
-        #               cmin = -1, 
-        #               cmax = 1, 
-        #               showscale = T),
         symbol= ~Sound,
         symbols = shapes.Category,
+        color = ~Sound,
+        colors = colors.Category,
+        size = I(200),
         #opacity = .7,
         showlegend = T,
         type="scatter3d", 
-        mode="markers") %>% 
-        add_markers(x= ~vowel,
+        mode="markers") %>%
+       add_markers(x= ~vowel,
                   y= ~closure,
                   z= ~burst,
-                  marker = list(color = ~Model.Posterior.Intended.Difference,
-                                cauto = TRUE,
-                                autocolorscale = FALSE,
-                                colorscale = list(c(0,'rgba(9, 1, 95,0.9)'),
-                                                  list(0.5,'rgba(236, 237, 231,0.9)'),
-                                                  list(1,'rgba(235, 94, 11,0.9)')), 
-                                cmin = -1,
-                                cmid = 0,
+                  marker = list(color = ~Model.Posterior.Intended.Difference.Adjusted,
+                                size = I(10),
+                                 colorscale = list(c(0,'rgb(153,153,153)'), list(0.5,'rgb(255, 255, 255)'), list(1,'rgb(255,10,10)')), # list three colors: gray, white and red
+                                cmin = 0,
+                                cmid = 0.5,
                                 cmax = 1,
                                 colorbar = list(len = 0.5, title = 'Advantage of\n/d/-exposure over\ncontrol model'),
-                                line = list(colors = ~Sound, 
-                                            width = 1), 
                                 showscale = T))
     # ... or posterior by accent
     } else p = plot_ly(
-      data = .data.test %>%
+      data = .data.test %>% # plot the ellipses
         filter(NativeLanguage %in% language) %>%
         mutate(
           vowel = !! rlang::sym(cues[1]),
           closure = !! rlang::sym(cues[2]),
           burst = !! rlang::sym(cues[3])),
+      color = ~Sound,
+      colors = colors.Category,
       symbol= ~Sound,
       symbols = shapes.Category,
       frame= ~Model.Group,
       type="scatter3d", 
-      mode="markers"
-     ) %>% 
-        add_markers(x= ~vowel,
+      mode="markers") %>%
+        add_markers(x= ~vowel, # plot the individual tokens with a large size (show up as the outline color)
                   y= ~closure,
-                  z= ~burst, 
+                  z= ~burst,
+          color = ~Sound,
+          colors = colors.Category,
+          size = I(200)
+        ) %>%
+        add_markers(x= ~vowel, # plot the individual tokens
+                  y= ~closure,
+                  z= ~burst,
                   marker = list(
-                     color= ~Model.Posterior.Intended,
-                     cauto = T,
-                     autocolorscale = F,
-                     colorscale = list(c(0,'rgb(0, 65, 106)'), list(0.5,'rgb(121, 159, 12)'), list(1,'rgb(255, 224, 0)')),
+                      color= ~Model.Posterior.t, # the bottom of the scale is 0 (1d and 0t, the middle is 0.5d and 0.5t, the top is most 0d and 1t)
+                      size = I(10),
+                     # cauto = T,
+                      autocolorscale = F,
+                     colorscale = list(c(0,'rgb(143, 206, 255)'), list(0.5,'rgb(255, 255, 255)'), list(1,'rgb(255, 165, 0)')), # list three colors: lightblue, white and orange
                      cmin = 0,
                      cmid = 0.5,
                      cmax = 1,
-                     colorbar = list(len = 0.7, title = 'Model-predicted posterior\nof intended category'),
-                     line = list(color = ~Sound, colors = list(c("red", "blue")), width = 1)
-        )) 
+                     colorbar = list(len = 0.7, title = 'Model-predicted posterior\nof intended category')
+        )
+        )
   } else p = plot_ly()
   
   p = p %>%
@@ -2392,10 +2392,58 @@ plot_IO_test = function(
 
 ```{r plot-3d-test-IO-English, fig.cap="(ref:plot-3d-test-IO-English)", fig.height=4.5, out.width="75%"}
 plot_IO_test(d.IO, d.test.IO, language = "English", cues = selected_cues)
+
 ``` 
 
 ```{r plot-3d-test-IO-English-difference, fig.cap="(ref:plot-3d-test-IO-English-difference)", fig.height=4.5, out.width="75%"}
 plot_IO_test(d.IO, d.test.IO, language = c("English"), cues = selected_cues, show.difference = T)
+
+
+
+d.temp.diff <- d.test.IO %>%
+  filter(Model.Group.matchesParticipant.Group == "yes") %>%
+     distinct(NativeLanguage,Item.Word,Item.WordID, Item.MinimalPair, Model.Group,Model.Posterior.t, Model.Posterior.Intended, Model.Group.matchesParticipant.Group, rvowel, rclosure, rburst, Sound) %>%
+  select(-Model.Posterior.t) %>%
+  pivot_wider(
+        names_from = Model.Group,
+        values_from = Model.Posterior.Intended
+      ) %>%
+      # Using difference. Could use ratio instead
+      mutate(Model.Posterior.Intended.Difference = `/d/-exposure` - control)
+
+
+p = plot_ly(
+        data = d.temp.diff %>%
+          filter(NativeLanguage == "English") %>%
+          mutate(
+            vowel = rvowel,
+            closure = rclosure,
+            burst = rburst,
+            Model.Posterior.Intended.Difference.Adjusted = Model.Posterior.Intended.Difference + 0.5),
+        symbol= ~Sound,
+        symbols = shapes.Category,
+        color = ~Sound,
+        colors = colors.Category,
+        size = I(200),
+        #opacity = .7,
+        showlegend = T,
+        type="scatter3d",
+        mode="markers") %>%
+        add_markers(x= ~vowel,
+                  y= ~closure,
+                  z= ~burst,
+                  marker = list(color = ~Model.Posterior.Intended.Difference.Adjusted,
+                                size = I(10),
+                                 colorscale = list(c(0,'rgb(153,153,153)'), list(0.5,'rgb(255, 255, 255)'), list(1,'rgb(255,10,10)')), # list three colors: gray, white and red
+                                cmin = 0,
+                                cmid = 0.5,
+                                cmax = 1,
+                                colorbar = list(len = 0.5, title = 'Advantage of\n/d/-exposure over\ncontrol model'),
+                                showscale = T))
+    # ... or posterior by accent
+
+p
+
 ```
 
 ```{r plot-3d-test-IO-Swedish, fig.cap="(ref:plot-3d-test-IO-Swedish)", fig.height=4.5, out.width="75%"}
