@@ -2424,18 +2424,20 @@ p = plot_ly(
         #opacity = .7,
         showlegend = T,
         type="scatter3d",
+        text= ~paste("Difference:", Model.Posterior.Intended.Difference),
+        hoverinfo= "text",
         mode="markers") %>%
         add_markers(x= ~vowel,
                   y= ~closure,
                   z= ~burst,
-                  marker = list(color = ~Model.Posterior.Intended.Difference.Adjusted,
+                  marker = list(color = ~Model.Posterior.Intended.Difference,
                                 size = I(10),
                                  colorscale = list(c(0,'rgb(153,153,153)'), list(0.5,'rgb(255, 255, 255)'), list(1,'rgb(255,10,10)')), # list three colors: gray, white and red
-                                cmin = 0,
-                                cmid = 0.5,
+                                cmin = -1,
+                                cmid = 0,
                                 cmax = 1,
                                 colorbar = list(len = 0.5, title = 'Advantage of\n/d/-exposure over\ncontrol model'),
-                                showscale = T))
+                                showscale = T)) 
     # ... or posterior by accent
 
 p
