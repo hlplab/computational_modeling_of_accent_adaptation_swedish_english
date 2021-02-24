@@ -2313,20 +2313,33 @@ plot_IO_test = function(
         colors = colors.Category,
         size = I(200),
         #opacity = .7,
-        showlegend = T,
+        # showlegend = T,
         type="scatter3d", 
-        mode="markers") %>%
-       add_markers(x= ~vowel,
+        text= ~paste("Advantage:", signif(Model.Posterior.Intended.Difference, 3)),
+        hoverinfo= "text",
+        mode="markers"
+        )%>%
+          add_markers(
+            x= ~vowel, # plot the individual tokens with a large size (show up as the outline color)
+            y= ~closure,
+            z= ~burst,
+            color = ~Sound,
+          colors = colors.Category,
+          size = I(200)
+        ) %>% add_markers(x= ~vowel,
                   y= ~closure,
                   z= ~burst,
-                  marker = list(color = ~Model.Posterior.Intended.Difference.Adjusted,
+                  marker = list(color = ~Model.Posterior.Intended.Difference,
                                 size = I(10),
-                                 colorscale = list(c(0,'rgb(153,153,153)'), list(0.5,'rgb(255, 255, 255)'), list(1,'rgb(255,10,10)')), # list three colors: gray, white and red
-                                cmin = 0,
-                                cmid = 0.5,
+                                autocolorscale = F,
+                                colorscale = list(c(0,'rgb(153,153,153)'), 
+                                                   list(0.5,'rgb(255, 255, 255)'),
+                                                   list(1,'rgb(255,10,10)')), # list three colors: gray,white and red
+                                cmin = -1,
+                                cmid = 0,
                                 cmax = 1,
                                 colorbar = list(len = 0.5, title = 'Advantage of\n/d/-exposure over\ncontrol model'),
-                                showscale = T))
+                  showscale = T))
     # ... or posterior by accent
     } else p = plot_ly(
       data = .data.test %>% # plot the ellipses
@@ -2341,13 +2354,15 @@ plot_IO_test = function(
       symbols = shapes.Category,
       frame= ~Model.Group,
       type="scatter3d", 
-      mode="markers") %>%
+      mode="markers",
+      showlegend = T) %>%
         add_markers(x= ~vowel, # plot the individual tokens with a large size (show up as the outline color)
                   y= ~closure,
                   z= ~burst,
           color = ~Sound,
           colors = colors.Category,
-          size = I(200)
+          size = I(200),
+          showlegend = F
         ) %>%
         add_markers(x= ~vowel, # plot the individual tokens
                   y= ~closure,
@@ -2355,15 +2370,16 @@ plot_IO_test = function(
                   marker = list(
                       color= ~Model.Posterior.t, # the bottom of the scale is 0 (1d and 0t, the middle is 0.5d and 0.5t, the top is most 0d and 1t)
                       size = I(10),
-                     # cauto = T,
                       autocolorscale = F,
-                     colorscale = list(c(0,'rgb(143, 206, 255)'), list(0.5,'rgb(255, 255, 255)'), list(1,'rgb(255, 165, 0)')), # list three colors: lightblue, white and orange
+                     colorscale = list(c(0,'rgb(143, 206, 255)'), 
+                                       list(0.5,'rgb(255, 255, 255)'), 
+                                       list(1,'rgb(255, 165, 0)')), # list three colors: lightblue, white and orange
                      cmin = 0,
                      cmid = 0.5,
                      cmax = 1,
-                     colorbar = list(len = 0.7, title = 'Model-predicted posterior\nof intended category')
-        )
-        )
+                     colorbar = list(len = 0.5, title = 'Model-predicted posterior\nof intended category') 
+        ) 
+        ) %>% layout(legend = list(itemsizing = "constant"))
   } else p = plot_ly()
   
   p = p %>%
@@ -2392,8 +2408,7 @@ plot_IO_test(d.IO, d.test.IO, language = "English", cues = selected_cues)
 ``` 
 
 ```{r plot-3d-test-IO-English-difference, fig.cap="(ref:plot-3d-test-IO-English-difference)", fig.height=4.5, out.width="75%"}
-plot_IO_test(d.IO, d.test.IO, language = c("English"), cues = selected_cues, show.difference = T)
-
+#plot_IO_test(d.IO, d.test.IO, language = c("English"), cues = selected_cues, show.difference = T)
 
 
 d.temp.diff <- d.test.IO %>%
@@ -2406,6 +2421,26 @@ d.temp.diff <- d.test.IO %>%
       ) %>%
       # Using difference. Could use ratio instead
       mutate(Model.Posterior.Intended.Difference = `/d/-exposure` - control)
+
+
+axx <- list(
+    title = "corr.vowel (ms)",
+    nticks = 4,
+    range = c(-200, 200),
+    gridwidth = 2
+  )
+  axy <- list(
+    title = "corr.closure (ms)",
+    nticks = 4,
+    range = c(-100, 100),
+    gridwidth = 2
+  )
+  axz <- list(
+    title = "corr.burst (ms)",
+    nticks = 4,
+    range =  c(-100, 100),
+    gridwidth = 2
+  )
 
 
 p = plot_ly(
@@ -2424,7 +2459,7 @@ p = plot_ly(
         #opacity = .7,
         showlegend = T,
         type="scatter3d",
-        text= ~paste("Difference:", Model.Posterior.Intended.Difference),
+        text= ~paste("Advantage:", signif(Model.Posterior.Intended.Difference, 3)),
         hoverinfo= "text",
         mode="markers") %>%
         add_markers(x= ~vowel,
@@ -2437,10 +2472,20 @@ p = plot_ly(
                                 cmid = 0,
                                 cmax = 1,
                                 colorbar = list(len = 0.5, title = 'Advantage of\n/d/-exposure over\ncontrol model'),
-                                showscale = T)) 
+                                showscale = T)) %>%
+ layout(legend = list(itemsizing = "constant"),
+        scene = list(xaxis = axx,
+                     yaxis = axy,
+                     zaxis = axz,
+                     aspectmode = "cube"))
+      
+  
     # ... or posterior by accent
 
-p
+p 
+
+
+  
 
 ```
 
