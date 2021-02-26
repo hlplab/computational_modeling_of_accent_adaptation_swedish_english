@@ -96,6 +96,7 @@ colors.Accent = colors.Group
 colors.Category = c("lightblue", "orange")
 colors.Language = c("cyan", "pink")
 shapes.Category = c("circle","square")
+
 ```
 
 ```{r functions and pipes}
@@ -691,7 +692,7 @@ d.test %>%
   scale_x_continuous("/d/-goodness rating (z-scored)") +
   scale_y_continuous("/t/-goodness rating (z-scored)") +
   scale_color_manual(values = colors.Group) +
-  scale_fill_manual(values = colors.Group) +
+  scale_fill_manual(name = "Exposure group", values = colors.Group) +
   facet_wrap(~ Language) +
   theme(legend.position = "top")
 ```
@@ -717,7 +718,7 @@ p.results.perception = d.test %>%
   scale_x_discrete("Intended sound category") +
   scale_y_continuous("/d/-goodness rating (z-scored)") +
   scale_color_manual(values = colors.Group) +
-  scale_fill_manual(values = colors.Group) +
+  scale_fill_manual(name = "Exposure group", values = colors.Group) +
   facet_grid(. ~ Language, scales="free_y") +
   theme(legend.position = "top",
         panel.grid.major.x = element_blank(),
@@ -832,7 +833,7 @@ d.test %>%
   geom_smooth(method = "lm") +
   scale_x_continuous("Percent correct on critical exposure items") +
   scale_y_continuous("goodness rating for the intended category (z-scored)") +
-  scale_color_manual(values = colors.Group) +
+  scale_color_manual(name = "Exposure group", values = colors.Group) +
   scale_fill_manual(values = colors.Group) +
   facet_grid(. ~ Language, scales="free_y") +
   theme(legend.position = "top",
@@ -2319,8 +2320,8 @@ plot_IO_test = function(
         hoverinfo= "text",
         mode="markers"
         ) %>% add_markers(x= ~vowel,
-                  y= ~closure,
-                  z= ~burst,
+                          y= ~closure,
+                          z= ~burst,
                   marker = list(color = ~Model.Posterior.Intended.Difference,
                                 size = I(200),
                                 autocolorscale = F,
@@ -2391,21 +2392,21 @@ plot_IO_test = function(
 
 (ref:plot-3d-test-IO-English) Ideal observer predicted posterior probabilities for all test tokens of the experiment on English. Shapes indicate the intended sound category and color indicates whether the posterior probability of that *intended* category was low or high. 
 
-(ref:plot-3d-test-IO-English-difference) Difference between non-native and control ideal observer predicted posterior probabilities of the *intended* category for all test tokens of the experiment on English. The posterior probability predicted by the control ideal observer is subtracted from the posterior probability predicted by the /d/-exposure ideal observer. Positive value thus indicate test tokens for which the /d/-exposure ideal observer makes better predictions.
+(ref:plot-3d-test-IO-English-difference) Difference between /d/-exposure and control ideal observer predicted posterior probabilities of the *intended* category for all test tokens of the experiment in English. The posterior probability predicted by the control ideal observer is subtracted from the posterior probability predicted by the /d/-exposure ideal observer. Positive values thus indicate test tokens for which the /d/-exposure ideal observer makes better predictions.
 
-(ref:plot-3d-test-IO-Swedish) Ideal observer predicted posterior probabilities for all test tokens of the experiment on Swedish Shapes indicate the intended sound category and color indicates whether the posterior probability of that *intended* category was low or high. 
+(ref:plot-3d-test-IO-Swedish) Ideal observer predicted posterior probabilities for all test tokens of the experiment in Swedish. Shapes indicate the intended sound category and color indicates whether the posterior probability of that *intended* category was low or high. 
 
-(ref:plot-3d-test-IO-Swedish-difference) Difference between non-native and control ideal observer predicted posterior probabilities for all test tokens of the experiment on Swedish. 
+(ref:plot-3d-test-IO-Swedish-difference) Difference between /d/-exposure and control ideal observer predicted posterior probabilities for all test tokens of the experiment on Swedish. 
 
 ```{r plot-3d-test-IO-English, fig.cap="(ref:plot-3d-test-IO-English)", fig.height=4.5, out.width="75%"}
 plot_IO_test(d.IO, d.test.IO, language = "English", cues = selected_cues)
 
 ``` 
 
-```{r plot-3d-test-IO-English-difference, fig.cap="(ref:plot-3d-test-IO-English-difference)", fig.height=4.5, out.width="75%"}
+```{r plot-3d-test-IO-English-difference, fig.cap="(ref:plot-3d-test-IO-English-difference)", fig.height=4.5, out.width="75%", cache=FALSE}
 #plot_IO_test(d.IO, d.test.IO, language = c("English"), cues = selected_cues, show.difference = T)
 
-
+# plot separately because previous function call failed to generate specified fill
 d.temp.diff <- d.test.IO %>%
   filter(Model.Group.matchesParticipant.Group == "yes") %>%
      distinct(NativeLanguage,Item.Word,Item.WordID, Item.MinimalPair, Model.Group,Model.Posterior.t, Model.Posterior.Intended, Model.Group.matchesParticipant.Group, rvowel, rclosure, rburst, Sound) %>%
@@ -2417,26 +2418,18 @@ d.temp.diff <- d.test.IO %>%
       # Using difference. Could use ratio instead
       mutate(Model.Posterior.Intended.Difference = `/d/-exposure` - control)
 
+# use get_axes() to set axes
+rvowel <- as.numeric(d.temp.diff$rvowel)
+rclosure <- as.numeric(d.temp.diff$rclosure)
+rburst <- as.numeric(d.temp.diff$rburst)
+d.temp.diff.cues <- tibble(rvowel, rclosure, rburst)
+cues <- names(d.temp.diff.cues) 
+axes <- get_axes(d.temp.diff.cues, cues)
 
-axx <- list(
-    title = "corr.vowel (ms)",
-    nticks = 4,
-    range = range(d.temp.diff$rvowel),
-    gridwidth = 2
-  )
-  axy <- list(
-    title = "corr.closure (ms)",
-    nticks = 4,
-    range = range(d.temp.diff$rclosure),
-    gridwidth = 2
-  )
-  axz <- list(
-    title = "corr.burst (ms)",
-    nticks = 4,
-    range =  range(d.temp.diff$rburst),
-    gridwidth = 2
-  )
-
+# fix colorscale to red, white, grey
+colorscale.IO.difference = list(c(0,'rgb(153,153,153)'), 
+                                list(0.5,'rgb(255, 255, 255)'), 
+                                list(1,'rgb(255,10,10)'))
 
 p = plot_ly(
         data = d.temp.diff %>%
@@ -2465,17 +2458,17 @@ p = plot_ly(
                   z= ~burst,
                   marker = list(color = ~Model.Posterior.Intended.Difference,
                                 size = I(200),
-                                 colorscale = list(c(0,'rgb(153,153,153)'), list(0.5,'rgb(255, 255, 255)'), list(1,'rgb(255,10,10)')), # list three colors: gray, white and red
+                                 colorscale = colorscale.IO.difference, # list three colors: gray, white and red
                                 cmin = -1,
                                 cmid = 0,
                                 cmax = 1,
                                 colorbar = list(len = 0.5, title = 'Advantage of\n/d/-exposure over\ncontrol model'),
                                 showscale = T)) %>%
  layout(legend = list(itemsizing = "constant"),
-        scene = list(xaxis = axx,
-                     yaxis = axy,
-                     zaxis = axz,
-                     aspectmode = "cube"))
+        scene = list(xaxis = axes[[1]], 
+                     yaxis = axes[[2]], 
+                     zaxis = axes[[3]],
+                     aspectmode='cube'))
       
   
     # ... or posterior by accent
@@ -2488,7 +2481,7 @@ plot_IO_test(d.IO, d.test.IO, language = "Swedish", cues = selected_cues)
 ``` 
 
 ```{r plot-3d-test-IO-Swedish-difference, fig.cap="(ref:plot-3d-test-IO-Swedish-difference)", fig.height=4.5, out.width="75%"}
-plot_IO_test(d.IO, d.test.IO, language = c("Swedish"), cues = selected_cues, show.difference = T)
+#plot_IO_test(d.IO, d.test.IO, language = c("Swedish"), cues = selected_cues, show.difference = T)
 
 p = plot_ly(
         data = d.temp.diff %>%
@@ -2517,16 +2510,16 @@ p = plot_ly(
                   z= ~burst,
                   marker = list(color = ~Model.Posterior.Intended.Difference,
                                 size = I(200),
-                                 colorscale = list(c(0,'rgb(153,153,153)'), list(0.5,'rgb(255, 255, 255)'), list(1,'rgb(255,10,10)')), # list three colors: gray, white and red
+                                 colorscale = colorscale.IO.difference,
                                 cmin = -1,
                                 cmid = 0,
                                 cmax = 1,
                                 colorbar = list(len = 0.5, title = 'Advantage of\n/d/-exposure over\ncontrol model'),
                                 showscale = T)) %>%
  layout(legend = list(itemsizing = "constant"),
-        scene = list(xaxis = axx,
-                     yaxis = axy,
-                     zaxis = axz,
+        scene = list(xaxis = axes[[1]],
+                     yaxis = axes[[2]],
+                     zaxis = axes[[3]],
                      aspectmode = "cube"))
       
   
