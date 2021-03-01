@@ -2348,14 +2348,19 @@ plot_IO_test = function(
       symbols = shapes.Category,
       frame= ~Model.Group,
       type="scatter3d", 
+      text = ~paste("Posterior predicted /t/:", signif(Model.Posterior.t, 4),
+                     "<br>vowel:", signif(vowel, 4),
+                     "<br>closure:", signif(closure, 4),
+                     "<br>burst:", signif(burst, 4)),
+      hoverinfo = "text",
       mode="markers",
       showlegend = T) %>%
-        add_markers(x= ~vowel, # plot the individual tokens with a large size (show up as the outline color)
+        add_markers(x= ~vowel, 
                     y= ~closure,
                     z= ~burst,
                     color = ~Sound,
                     colors = colors.Category,
-                    size = I(200),
+                    size = I(200), #plot the individual tokens with a large size (show up as the outline color)
                     showlegend = F) %>%
         add_markers(x= ~vowel, # plot the individual tokens
                     y= ~closure,
@@ -2371,7 +2376,7 @@ plot_IO_test = function(
                                   cmid = 0.5,
                                   cmax = 1,
                                   colorbar = list(len = 0.5, 
-                                                  title = 'Model-predicted posterior\nof intended category')
+                                                  title = 'Model-predicted posterior\nof /t/ category')
                                   )
                     ) %>% 
         layout(legend = list(itemsizing = "constant"))
