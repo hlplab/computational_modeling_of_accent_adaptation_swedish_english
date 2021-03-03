@@ -2406,25 +2406,38 @@ plot_IO_test = function(
 
 d.temp <- d.test.IO %>%
   filter(Model.Group.matchesParticipant.Group == "yes") %>%
-     distinct(NativeLanguage,Item.Word,Item.WordID, Item.MinimalPair, Model.Group, Model.Posterior.t, Model.Posterior.Intended, Model.Group.matchesParticipant.Group, rvowel, rclosure, rburst, Sound)
+     distinct(NativeLanguage,Item.Word,Item.WordID, Item.MinimalPair, Model.Group, Model.Posterior.t, Model.Posterior.Intended, Model.Group.matchesParticipant.Group, rvowel, rclosure, rburst, Sound) %>% 
+  mutate(
+    rvowel.d = ifelse(Sound == "/d/", rvowel, NA),
+    rburst.d = ifelse(Sound == "/d/", rburst, NA),
+    rclosure.d = ifelse(Sound == "/d/", rclosure, NA),
+    rvowel.t = ifelse(Sound == "/t/", rvowel, NA),
+    rburst.t = ifelse(Sound == "/t/", rburst, NA),
+    rclosure.t = ifelse(Sound == "/t/", rclosure, NA),
+  )
 
 # use get_axes() to set axes
-d.IO %<>% unnest(ellipse)
 rvowel <- as.numeric(d.IO$rvowel)
 rclosure <- as.numeric(d.IO$rclosure)
-rburst <- as.numeric(d.IO$rburst)
-d.IO.cues <- tibble(rvowel, rclosure, rburst)
-cues <- names(d.IO.cues) 
-axes <- get_axes(d.IO.cues, cues)
+rburst <- as.numeric(c(min(d.IO$rburst), range(d.temp$rburst))) #include the minimum of the ellipse to fully capture it; use range from test data because its maximum value exceeds ellipse's
+d.temp.cues <- cbind(rvowel, rclosure, rburst)
+cues <- names(as_tibble(d.temp.cues))
+axes <- get_axes(d.temp.cues, cues)
 
 # fix colorscale to red, white, grey
 colorscale.IO = list(c(0,'rgb(143, 206, 255)'),
                       list(0.5,'rgb(255, 255, 255)'),
                       list(1,'rgb(255, 165, 0)'))  # list three colors: lightblue, white and orange
+colorbar.posterior.t = list(len = 0.5, title = 'Model-predicted posterior\nof /t/ category')
+text.posterior.t = ~paste("Posterior predicted /t/:", signif(Model.Posterior.t, 4),
+                          "<br>Intended sound:", Sound,
+                          "<br>vowel:", signif(rvowel, 4),
+                          "<br>closure:", signif(rclosure, 4),
+                          "<br>burst:", signif(rburst, 4))
 
 p = plot_ly(
         data = d.temp %>%
-          filter(NativeLanguage == "English") %>%
+          filter(NativeLanguage == "English" & Model.Group == "/d/-exposure") %>% 
           mutate(
             vowel = rvowel,
             closure = rclosure,
@@ -2433,87 +2446,80 @@ p = plot_ly(
       colors = colors.Category,
       symbol= ~Sound,
       symbols = shapes.Category,
-      frame= ~Model.Group,
+      size = I(250),
+      #frame= ~Model.Group,
       type="scatter3d", 
-      #size = I(1),
-      text = ~paste("Posterior predicted /t/:", signif(Model.Posterior.t, 4),
-                     "<br>vowel:", signif(vowel, 4),
-                     "<br>closure:", signif(closure, 4),
-                     "<br>burst:", signif(burst, 4)),
+      text = text.posterior.t,
       hoverinfo = "text",
-      mode="markers",
-      showlegend = T) %>%
-  # add_markers(x= ~vowel,
-  #                   y= ~closure,
-  #                   z= ~burst,
-  #                   color = ~Sound,
-  #                   colors = colors.Category,
-  #                   size = I(200), #plot the individual tokens with a large size (show up as the outline color)
-  #                   showlegend = F) %>%
-        add_markers(x= ~vowel, # plot the individual tokens
-                    y= ~closure,
-                    z= ~burst,
-                    marker = list(color= ~Model.Posterior.t, # the bottom of the scale is 0 (1d and 0t, the middle is 0.5d and 0.5t, the top is most 0d and 1t)
-                                  size = I(10),
+      mode="markers") %>% 
+      add_markers(x = ~vowel,
+        y = ~closure,
+        z = ~burst,
+        marker = list(color= ~Model.Posterior.t,
+                                  size = I(250),
+                      opacity = 0.7,
                                   autocolorscale = F,
-                                  colorscale = colorscale.IO,
+                                  colorscale = colorscale.IO, # list three colors: lightblue, white and orange
                                   cmin = 0,
                                   cmid = 0.5,
                                   cmax = 1,
-                                  colorbar = list(len = 0.5,
-                                                  title = 'Model-predicted posterior\nof /t/ category'),
-                                  showscale = T)) %>%
- layout(legend = list(itemsizing = "constant"),
-        scene = list(xaxis = axes[[1]], 
-                     yaxis = axes[[2]], 
-                     zaxis = axes[[3]],
-                     aspectmode='cube'))
+                                  colorbar = colorbar.posterior.t)) %>%
+    layout(legend = list(itemsizing = "constant"),
+              scene = list(xaxis = axes[[1]],
+                           yaxis = axes[[2]],
+                           zaxis = axes[[3]],
+                           aspectmode='cube'))
 
-p
+  # add_trace(x= ~rvowel.d,
+  #                   y= ~rclosure.d,
+  #                   z= ~rburst.d,
+  #           marker = list(symbol = "circle-open",
+  #                         line = list(color = 'rgb(143, 206, 255)'))) %>%
+  # add_trace(x= ~rvowel.t,
+  #                   y= ~rclosure.t,
+  #                   z= ~rburst.t,
+  #           marker = list(symbol = "square-open",
+  #                   line = list(color = 'rgb(255, 165, 0)'))) %>% 
 
 plot_IO(d.IO, language = "English", .plot = p, cues = cues, alpha = 0.2, addSlider = T)
+p
+# plot Control Exposure English IO separately because plotly confuses the point fills if plotted together
 
-
-#Xin's code:
-p =  plot_ly(
-          data = d.temp %>% filter(NativeLanguage == "English"),
-          x= ~rvowel, # plot the individual tokens
-                    y= ~rclosure,
-                    z= ~rburst,
-          frame= ~Model.Group,
-          text = ~paste("Posterior predicted /t/:", signif(Model.Posterior.t, 4),
-                     "<br>vowel:", signif(rvowel, 4),
-                     "<br>closure:", signif(rclosure, 4),
-                     "<br>burst:", signif(rburst, 4)),
-      hoverinfo = "text",
+p2 = plot_ly(
+        data = d.temp %>%
+          filter(NativeLanguage == "English" & Model.Group == "control") %>% 
+          mutate(
+            vowel = rvowel,
+            closure = rclosure,
+            burst = rburst),
+      color = ~Sound,
+      colors = colors.Category,
+      symbol= ~Sound,
+      symbols = shapes.Category,
+      size = I(250),
       type="scatter3d", 
-      mode="markers",
-      marker = list(color= ~Model.Posterior.t, # the bottom of the scale is 0 (1d and 0t, the middle is 0.5d and 0.5t, the top is most 0d and 1t)
-                                  size = I(10),
+      text = text.posterior.t,
+      hoverinfo = "text",
+      mode="markers") %>% 
+      add_markers(x = ~vowel,
+        y = ~closure,
+        z = ~burst,
+        marker = list(color= ~Model.Posterior.t,
+                                  size = I(250),
+                      opacity = 0.7,
                                   autocolorscale = F,
-                                  colorscale = list(c(0,'rgb(143, 206, 255)'),
-                                                    list(0.5,'rgb(255, 255, 255)'),
-                                                    list(1,'rgb(255, 165, 0)')
-                                                   ), # list three colors: lightblue, white and orange
+                                  colorscale = colorscale.IO, # list three colors: lightblue, white and orange
                                   cmin = 0,
                                   cmid = 0.5,
                                   cmax = 1,
-                                  colorbar = list(len = 0.5,
-                                                  title = 'Model-predicted posterior\nof /t/ category')
-                                  )
-                    ) #%>%
-  # add_markers(x= ~rvowel, # plot the individual tokens with a large size (show up as the outline color)
-  #                   y= ~rclosure,
-  #                   z= ~rburst,
-  #                   # color = ~Sound,
-  #                   # colors = colors.Category,
-  #                   # symbol= ~Sound,
-  #                   # symbols = shapes.Category,
-  #                   size = I(200),
-  #                   showlegend = F)
+                                  colorbar = colorbar.posterior.t)) %>%
+    layout(legend = list(itemsizing = "constant"),
+              scene = list(xaxis = axes[[1]],
+                           yaxis = axes[[2]],
+                           zaxis = axes[[3]],
+                           aspectmode='cube'))
 
-plot_IO(d.IO, language = "English", .plot = p, cues = cues, alpha = 0.2 ,addSlider = T)
-
+plot_IO(d.IO, language = "English", .plot = p2, cues = cues, alpha = 0.2, addSlider = T)
 ``` 
 
 
@@ -2533,18 +2539,15 @@ d.temp.diff <- d.test.IO %>%
       # Using difference. Could use ratio instead
       mutate(Model.Posterior.Intended.Difference = `/d/-exposure` - control)
 
-# use get_axes() to set axes
-rvowel <- as.numeric(d.temp.diff$rvowel)
-rclosure <- as.numeric(d.temp.diff$rclosure)
-rburst <- as.numeric(d.temp.diff$rburst)
-d.temp.diff.cues <- tibble(rvowel, rclosure, rburst)
-cues <- names(d.temp.diff.cues) 
-axes <- get_axes(d.temp.diff.cues, cues)
-
 # fix colorscale to red, white, grey
 colorscale.IO.difference = list(c(0,'rgb(153,153,153)'), 
                                 list(0.5,'rgb(255, 255, 255)'), 
                                 list(1,'rgb(255,10,10)'))
+colorbar.difference = list(len = 0.5, title = 'Advantage of\n/d/-exposure over\ncontrol model')
+text.posterior.difference = ~paste("Advantage:", signif(Model.Posterior.Intended.Difference, 4),
+                     "<br>vowel:", signif(rvowel, 4),
+                     "<br>closure:", signif(rclosure, 4),
+                     "<br>burst:", signif(rburst, 4))
 
 p = plot_ly(
         data = d.temp.diff %>%
@@ -2557,26 +2560,23 @@ p = plot_ly(
         symbols = shapes.Category,
         color = ~Sound,
         colors = colors.Category,
-        size = I(200),
+        size = I(250),
         #opacity = .7,
         showlegend = T,
         type="scatter3d",
-        text= ~paste("Advantage:", signif(Model.Posterior.Intended.Difference, 4),
-                     "<br>vowel:", signif(vowel, 4),
-                     "<br>closure:", signif(closure, 4),
-                     "<br>burst:", signif(burst, 4)),
+        text= text.posterior.difference,
         hoverinfo= "text",
         mode="markers") %>%
         add_markers(x= ~vowel,
                   y= ~closure,
                   z= ~burst,
                   marker = list(color = ~Model.Posterior.Intended.Difference,
-                                size = I(200),
+                                size = I(250),
                                  colorscale = colorscale.IO.difference, # list three colors: gray, white and red
                                 cmin = -1,
                                 cmid = 0,
                                 cmax = 1,
-                                colorbar = list(len = 0.5, title = 'Advantage of\n/d/-exposure over\ncontrol model'),
+                                colorbar = colorbar.difference,
                                 showscale = T)) %>%
  layout(legend = list(itemsizing = "constant"),
         scene = list(xaxis = axes[[1]], 
@@ -2591,7 +2591,86 @@ p
 ```
 
 ```{r plot-3d-test-IO-Swedish, fig.cap="(ref:plot-3d-test-IO-Swedish)", fig.height=4.5, out.width="75%"}
-plot_IO_test(d.IO, d.test.IO, language = "Swedish", cues = selected_cues)
+#plot_IO_test(d.IO, d.test.IO, language = "Swedish", cues = selected_cues)
+
+p3 = plot_ly(
+        data = d.temp %>%
+          filter(NativeLanguage == "Swedish" & Model.Group == "/d/-exposure") %>% 
+          mutate(
+            vowel = rvowel,
+            closure = rclosure,
+            burst = rburst),
+      color = ~Sound,
+      colors = colors.Category,
+      symbol= ~Sound,
+      symbols = shapes.Category,
+      size = I(250),
+      #frame= ~Model.Group,
+      type="scatter3d", 
+      text = text.posterior.t,
+      hoverinfo = "text",
+      mode="markers") %>% 
+      add_markers(x = ~vowel,
+        y = ~closure,
+        z = ~burst,
+        marker = list(color= ~Model.Posterior.t,
+                                  size = I(250),
+                      opacity = 0.7,
+                                  autocolorscale = F,
+                                  colorscale = colorscale.IO, # list three colors: lightblue, white and orange
+                                  cmin = 0,
+                                  cmid = 0.5,
+                                  cmax = 1,
+                                  colorbar = colorbar.posterior.t)) %>%
+    layout(legend = list(itemsizing = "constant"),
+              scene = list(xaxis = axes[[1]],
+                           yaxis = axes[[2]],
+                           zaxis = axes[[3]],
+                           aspectmode='cube'))
+p3
+
+plot_IO(d.IO, language = "Swedish", .plot = p3, cues = cues, alpha = 0.2, addSlider = T)
+
+# plot Control Exposure Swedish IO separately because plotly confuses the point fills if plotted together
+
+p4 = plot_ly(
+        data = d.temp %>%
+          filter(NativeLanguage == "Swedish" & Model.Group == "control") %>% 
+          mutate(
+            vowel = rvowel,
+            closure = rclosure,
+            burst = rburst),
+      color = ~Sound,
+      colors = colors.Category,
+      symbol= ~Sound,
+      symbols = shapes.Category,
+      size = I(250),
+      #frame= ~Model.Group,
+      type="scatter3d", 
+      text = text.posterior.t,
+      hoverinfo = "text",
+      mode="markers") %>% 
+      add_markers(x = ~vowel,
+        y = ~closure,
+        z = ~burst,
+        marker = list(color= ~Model.Posterior.t,
+                                  size = I(250),
+                      opacity = 0.7,
+                                  autocolorscale = F,
+                                  colorscale = colorscale.IO, # list three colors: lightblue, white and orange
+                                  cmin = 0,
+                                  cmid = 0.5,
+                                  cmax = 1,
+                                  colorbar = colorbar.posterior.t)) %>%
+    layout(legend = list(itemsizing = "constant"),
+              scene = list(xaxis = axes[[1]],
+                           yaxis = axes[[2]],
+                           zaxis = axes[[3]],
+                           aspectmode='cube'))
+p4
+
+plot_IO(d.IO, language = "Swedish", .plot = p4, cues = cues, alpha = 0.2, addSlider = T)
+
 ``` 
 
 ```{r plot-3d-test-IO-Swedish-difference, fig.cap="(ref:plot-3d-test-IO-Swedish-difference)", fig.height=4.5, out.width="75%"}
@@ -2613,10 +2692,7 @@ p = plot_ly(
         #opacity = .7,
         showlegend = T,
         type="scatter3d",
-        text= ~paste("Advantage:", signif(Model.Posterior.Intended.Difference, 4),
-                     "<br>vowel:", signif(vowel, 4),
-                     "<br>closure:", signif(closure, 4),
-                     "<br>burst:", signif(burst, 4)),
+        text= text.posterior.difference,
         hoverinfo= "text",
         mode="markers") %>%
         add_markers(x= ~vowel,
@@ -2628,7 +2704,7 @@ p = plot_ly(
                                 cmin = -1,
                                 cmid = 0,
                                 cmax = 1,
-                                colorbar = list(len = 0.5, title = 'Advantage of\n/d/-exposure over\ncontrol model'),
+                                colorbar = colorbar.difference,
                                 showscale = T)) %>%
  layout(legend = list(itemsizing = "constant"),
         scene = list(xaxis = axes[[1]],
