@@ -2419,12 +2419,12 @@ d.temp <- d.test.IO %>%
 # use get_axes() to set axes
 rvowel <- as.numeric(d.IO$rvowel)
 rclosure <- as.numeric(d.IO$rclosure)
-rburst <- as.numeric(c(min(d.IO$rburst), range(d.temp$rburst))) #include the minimum of the ellipse to fully capture it; use range from test data because its maximum value exceeds ellipse's
+rburst <- as.numeric(c(min(d.IO$rburst), range(d.temp$rburst))) #include the minimum of the ellipse to fully capture it; use range from test data because its maximum value exceeds ellipse's (without, it misses points)
 d.temp.cues <- cbind(rvowel, rclosure, rburst)
 cues <- names(as_tibble(d.temp.cues))
 axes <- get_axes(d.temp.cues, cues)
 
-# fix colorscale to red, white, grey
+# fix colorscale to lightblue, white orange; colorbar, and hover information
 colorscale.IO = list(c(0,'rgb(143, 206, 255)'),
                       list(0.5,'rgb(255, 255, 255)'),
                       list(1,'rgb(255, 165, 0)'))  # list three colors: lightblue, white and orange
@@ -2459,7 +2459,7 @@ p = plot_ly(
                                   size = I(250),
                       opacity = 0.7,
                                   autocolorscale = F,
-                                  colorscale = colorscale.IO, # list three colors: lightblue, white and orange
+                                  colorscale = colorscale.IO, 
                                   cmin = 0,
                                   cmid = 0.5,
                                   cmax = 1,
