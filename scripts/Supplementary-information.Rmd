@@ -2764,177 +2764,177 @@ p
 
 
 
-# Belief updating (DRAFT)
+<!-- # Belief updating (DRAFT) -->
 
-We use incremental Bayesan belief updating to .... MORE HERE.
+<!-- We use incremental Bayesan belief updating to .... MORE HERE. -->
 
-We set the prior $m_0$ and $S_0$ for the /t/ and /d/ categories based on the category mean $\mu$ and covariance $\Sigma$ observed for the native data (i.e., the control model) and then consider a range of values for the strengths of the prior beliefs about the mean ($\kappa$) and covariance ($\nu$). Specifically, for each $\nu$, $S_0$ is set so that the *expected value* of the covariance matrix $\Sigma$ is identical to the observed category covariance in the native data. We consider $\kappa$ = 1, 2, 4, ..., 512 and $\nu$ = 8, 16, ..., 512 (the model is only well defined for $\nu > D + 1$, where $D$ is the number of cues).
+<!-- We set the prior $m_0$ and $S_0$ for the /t/ and /d/ categories based on the category mean $\mu$ and covariance $\Sigma$ observed for the native data (i.e., the control model) and then consider a range of values for the strengths of the prior beliefs about the mean ($\kappa$) and covariance ($\nu$). Specifically, for each $\nu$, $S_0$ is set so that the *expected value* of the covariance matrix $\Sigma$ is identical to the observed category covariance in the native data. We consider $\kappa$ = 1, 2, 4, ..., 512 and $\nu$ = 8, 16, ..., 512 (the model is only well defined for $\nu > D + 1$, where $D$ is the number of cues). -->
 
-```{r belief-updating-setup}
-if (!file.exists("../models/IBBU_updates.RData")) {
-  d.IBBU <-
-    d.IO.training %>%
-    # Make priors from control model's training data
-    filter(Used_for.Model.Group == "control") %>%
-    rename(
-      NativeLanguage = Used_for.Model.NativeLanguage,
-      category = Used_for.Model.Sound) %>%
-    # Assume kappa = nu = 8 in generating the prior
-    # (this choice is arbitrary but needs to be taken into account below when different nus are 
-    # considered since the scatter matrix S_0 is set to yield the sample Sigma given the assumed 
-    # nu),
-    make_NIW_prior_from_data(
-      groups = "NativeLanguage",
-      cues = c("rvowel", "rclosure", "rburst"),
-      kappa = 8, 
-      nu = 8) %>%
-    select(-c(kappa, nu)) %>%
-    # Consider a range of prior strengths
-    crossing(
-      kappa = 2^(0:9),
-      nu = 2^(3:9)) %>%
-    # Correct the S_0 for each nu so that it's still the case that the expected covariance 
-    # matrix Sigma matches the sample covariance matrix.
-    mutate(
-      S = map2(S, nu, ~ get_Sigma_from_S(.x, 8) %>% get_S_from_Sigma(nu = .y))) %>%
-    # Make a copy of kappa and nu and keep it around as a grouping variable (factor)
-    mutate(
-      prior_kappa = factor(kappa),
-      prior_nu = factor(nu)) %>%
-    # Update each prior with exposure data from /d/-exposure group
-    group_by(NativeLanguage, prior_kappa, prior_nu) %>%
-    group_map(
-      ~ update_NIW_beliefs_incrementally(
-        .x, 
-        # Select exposure data to be only /d/-exposure data for /d/ category 
-        # for the matching NativeLanguage
-        exposure = d.IO.training %>%
-          filter(
-            Used_for.Model.NativeLanguage == .y$NativeLanguage,
-            Used_for.Model.Sound == "/d/",
-            Used_for.Model.Group == "/d/-exposure") %>%
-          rename(
-            NativeLanguage = Used_for.Model.NativeLanguage,
-            category = Used_for.Model.Sound),
-        add_noise = NULL),
-      .keep = T) %>% 
-    reduce(rbind)
-  save(d.IBBU, file = "../models/IBBU_updates.RData", compress = T)
-} else {
-  message("Loading previously calculated incremental Bayesian belief updates. If you have made changes to the training data of the ideal observers, delete the file IBBU_updates.RData under models/ and then rerun this code.")
-  load("../models/IBBU_updates.RData")
-}
-```
+<!-- ```{r belief-updating-setup} -->
+<!-- if (!file.exists("../models/IBBU_updates.RData")) { -->
+<!--   d.IBBU <- -->
+<!--     d.IO.training %>% -->
+<!--     # Make priors from control model's training data -->
+<!--     filter(Used_for.Model.Group == "control") %>% -->
+<!--     rename( -->
+<!--       NativeLanguage = Used_for.Model.NativeLanguage, -->
+<!--       category = Used_for.Model.Sound) %>% -->
+<!--     # Assume kappa = nu = 8 in generating the prior -->
+<!--     # (this choice is arbitrary but needs to be taken into account below when different nus are  -->
+<!--     # considered since the scatter matrix S_0 is set to yield the sample Sigma given the assumed  -->
+<!--     # nu), -->
+<!--     make_NIW_prior_from_data( -->
+<!--       groups = "NativeLanguage", -->
+<!--       cues = c("rvowel", "rclosure", "rburst"), -->
+<!--       kappa = 8,  -->
+<!--       nu = 8) %>% -->
+<!--     select(-c(kappa, nu)) %>% -->
+<!--     # Consider a range of prior strengths -->
+<!--     crossing( -->
+<!--       kappa = 2^(0:9), -->
+<!--       nu = 2^(3:9)) %>% -->
+<!--     # Correct the S_0 for each nu so that it's still the case that the expected covariance  -->
+<!--     # matrix Sigma matches the sample covariance matrix. -->
+<!--     mutate( -->
+<!--       S = map2(S, nu, ~ get_Sigma_from_S(.x, 8) %>% get_S_from_Sigma(nu = .y))) %>% -->
+<!--     # Make a copy of kappa and nu and keep it around as a grouping variable (factor) -->
+<!--     mutate( -->
+<!--       prior_kappa = factor(kappa), -->
+<!--       prior_nu = factor(nu)) %>% -->
+<!--     # Update each prior with exposure data from /d/-exposure group -->
+<!--     group_by(NativeLanguage, prior_kappa, prior_nu) %>% -->
+<!--     group_map( -->
+<!--       ~ update_NIW_beliefs_incrementally( -->
+<!--         .x,  -->
+<!--         # Select exposure data to be only /d/-exposure data for /d/ category  -->
+<!--         # for the matching NativeLanguage -->
+<!--         exposure = d.IO.training %>% -->
+<!--           filter( -->
+<!--             Used_for.Model.NativeLanguage == .y$NativeLanguage, -->
+<!--             Used_for.Model.Sound == "/d/", -->
+<!--             Used_for.Model.Group == "/d/-exposure") %>% -->
+<!--           rename( -->
+<!--             NativeLanguage = Used_for.Model.NativeLanguage, -->
+<!--             category = Used_for.Model.Sound), -->
+<!--         add_noise = NULL), -->
+<!--       .keep = T) %>%  -->
+<!--     reduce(rbind) -->
+<!--   save(d.IBBU, file = "../models/IBBU_updates.RData", compress = T) -->
+<!-- } else { -->
+<!--   message("Loading previously calculated incremental Bayesian belief updates. If you have made changes to the training data of the ideal observers, delete the file IBBU_updates.RData under models/ and then rerun this code.") -->
+<!--   load("../models/IBBU_updates.RData") -->
+<!-- } -->
+<!-- ``` -->
 
-Does super quick updating indeed provide the best fit against the *ground truth* (not yet the human responses)? This is not guaranteed because the training and test data (for /d/) is not the same. Plotting the posterior probability of the correct category under the IBBU model for English (top) and Swedish (bottom).
+<!-- Does super quick updating indeed provide the best fit against the *ground truth* (not yet the human responses)? This is not guaranteed because the training and test data (for /d/) is not the same. Plotting the posterior probability of the correct category under the IBBU model for English (top) and Swedish (bottom). -->
 
-```{r IBBU-sanity-check, fig.width=10}
-d.IBBU.test <-
-  d.IBBU %>%
-  # select final (updated) IOs
-  filter(observation.n == 30) %>%
-  full_join(
-    # Get test data (after removing IO information and removing duplicate rows)
-    d.test.IO %>%
-      select(
-        NativeLanguage, Item.MinimalPair, Sound, rvowel, rclosure, rburst) %>%
-      distinct()) %>%
-  make_vector_column(
-    cols = c("rvowel", "rclosure", "rburst"),
-    vector_col = "x") %>%
-  arrange(NativeLanguage, prior_kappa, prior_nu, Item.MinimalPair, Sound, category) %>%
-  group_by(NativeLanguage, prior_kappa, prior_nu) %>%
-  select(Item.MinimalPair, Sound, x, category, m, S, kappa, nu, lapse_rate) %>%
-  nest(belief = c(category, m, S, kappa, nu, lapse_rate)) %>%
-  nest(data = c(Item.MinimalPair, Sound, x)) %>%
-  # Get posterior probability of /d/ for each data point
-  mutate(IBBU.Posterior.d = map2(
-    data, 
-    belief, 
-    ~ get_posterior_predictive_from_NIW_belief(.x$x, .y, log = F) %>%
-      mutate(ID = rep(1:(nrow(.)/2), 2)) %>%
-      group_by(ID) %>%
-      pivot_wider(
-        values_from = pp,
-        names_from = category) %>%
-      transmute(posterior = `/d/` / (`/d/` + `/t/`)) %>%
-      pull(posterior))) %>%
-  # Get posterior probability of correct category 
-  # (and then collapse to overall probability of data)
-  mutate(
-    IBBU.Posterior.Intended = map2(
-      data,
-      IBBU.Posterior.d,
-      ~ ifelse(.x$Sound == "/d/", .y, 1 - .y)), 
-    IBBU.Posterior.Intended.AllData = unlist(map(
-      IBBU.Posterior.Intended,
-      ~ prod(.x)^(1/length(.x)) %>% unlist())))
-    #~ get_categorization_from_NIW_belief(.x$x, .y, decision_rule = "proportional")))
+<!-- ```{r IBBU-sanity-check, fig.width=10} -->
+<!-- d.IBBU.test <- -->
+<!--   d.IBBU %>% -->
+<!--   # select final (updated) IOs -->
+<!--   filter(observation.n == 30) %>% -->
+<!--   full_join( -->
+<!--     # Get test data (after removing IO information and removing duplicate rows) -->
+<!--     d.test.IO %>% -->
+<!--       select( -->
+<!--         NativeLanguage, Item.MinimalPair, Sound, rvowel, rclosure, rburst) %>% -->
+<!--       distinct()) %>% -->
+<!--   make_vector_column( -->
+<!--     cols = c("rvowel", "rclosure", "rburst"), -->
+<!--     vector_col = "x") %>% -->
+<!--   arrange(NativeLanguage, prior_kappa, prior_nu, Item.MinimalPair, Sound, category) %>% -->
+<!--   group_by(NativeLanguage, prior_kappa, prior_nu) %>% -->
+<!--   select(Item.MinimalPair, Sound, x, category, m, S, kappa, nu, lapse_rate) %>% -->
+<!--   nest(belief = c(category, m, S, kappa, nu, lapse_rate)) %>% -->
+<!--   nest(data = c(Item.MinimalPair, Sound, x)) %>% -->
+<!--   # Get posterior probability of /d/ for each data point -->
+<!--   mutate(IBBU.Posterior.d = map2( -->
+<!--     data,  -->
+<!--     belief,  -->
+<!--     ~ get_posterior_predictive_from_NIW_belief(.x$x, .y, log = F) %>% -->
+<!--       mutate(ID = rep(1:(nrow(.)/2), 2)) %>% -->
+<!--       group_by(ID) %>% -->
+<!--       pivot_wider( -->
+<!--         values_from = pp, -->
+<!--         names_from = category) %>% -->
+<!--       transmute(posterior = `/d/` / (`/d/` + `/t/`)) %>% -->
+<!--       pull(posterior))) %>% -->
+<!--   # Get posterior probability of correct category  -->
+<!--   # (and then collapse to overall probability of data) -->
+<!--   mutate( -->
+<!--     IBBU.Posterior.Intended = map2( -->
+<!--       data, -->
+<!--       IBBU.Posterior.d, -->
+<!--       ~ ifelse(.x$Sound == "/d/", .y, 1 - .y)),  -->
+<!--     IBBU.Posterior.Intended.AllData = unlist(map( -->
+<!--       IBBU.Posterior.Intended, -->
+<!--       ~ prod(.x)^(1/length(.x)) %>% unlist()))) -->
+<!--     #~ get_categorization_from_NIW_belief(.x$x, .y, decision_rule = "proportional"))) -->
 
-d.IBBU.test %>%
-  ggplot(aes(x = prior_kappa, y = prior_nu, fill = IBBU.Posterior.Intended.AllData)) +
-  geom_raster(interpolate = T) +
-  scale_fill_viridis_b("Avg. posterior probability\nof correct category\nunder IBBU") +
-  facet_wrap(~ NativeLanguage)
-```
+<!-- d.IBBU.test %>% -->
+<!--   ggplot(aes(x = prior_kappa, y = prior_nu, fill = IBBU.Posterior.Intended.AllData)) + -->
+<!--   geom_raster(interpolate = T) + -->
+<!--   scale_fill_viridis_b("Avg. posterior probability\nof correct category\nunder IBBU") + -->
+<!--   facet_wrap(~ NativeLanguage) -->
+<!-- ``` -->
 
-Predicting participants' responses for English (top) and Swedish (bottom).
+<!-- Predicting participants' responses for English (top) and Swedish (bottom). -->
 
-```{r}
-d.test.IBBU <-
-  d.IBBU %>%
-  # select final (updated) IOs
-  filter(observation.n == 30) %>%
-  # Get test data (after removing IO information and removing duplicate rows)
-  full_join(
-    # Get test data (after removing IO information and removing duplicate rows)
-    d.test.IO %>%
-      select(
-        NativeLanguage, 
-        Item.MinimalPair, Sound, Rating.Response.d.zscored,
-        rvowel, rclosure, rburst) %>%
-      distinct()) %>%
-  make_vector_column(
-    cols = c("rvowel", "rclosure", "rburst"),
-    vector_col = "x") %>%
-  arrange(NativeLanguage, prior_kappa, prior_nu, Item.MinimalPair, Sound, category) %>%
-  group_by(NativeLanguage, prior_kappa, prior_nu) %>%
-  select(Item.MinimalPair, Sound, x, Rating.Response.d.zscored, 
-         category, m, S, kappa, nu, lapse_rate) %>%
-  nest(belief = c(category, m, S, kappa, nu, lapse_rate)) %>%
-  nest(data = c(Item.MinimalPair, Sound, x, Rating.Response.d.zscored)) %>%
-  # Get posterior probability of /d/ for each data point
-  mutate(IBBU.Posterior.d = map2(
-    data, 
-    belief, 
-    ~ get_posterior_predictive_from_NIW_belief(.x$x, .y, log = F) %>%
-      mutate(ID = rep(1:(nrow(.)/2), 2)) %>%
-      group_by(ID) %>%
-      pivot_wider(
-        values_from = pp,
-        names_from = category) %>%
-      transmute(posterior = `/d/` / (`/d/` + `/t/`)) %>%
-      pull(posterior))) %>%
-  # Get posterior probabiltiy of correct category 
-  # (and then collapse to overall probability of data)
-  mutate(
-    IBBU.Posterior.Correlation = unlist(map2(
-      data,
-      IBBU.Posterior.d,
-      ~ cor(.x$Rating.Response.d.zscored, .y))))
+<!-- ```{r} -->
+<!-- d.test.IBBU <- -->
+<!--   d.IBBU %>% -->
+<!--   # select final (updated) IOs -->
+<!--   filter(observation.n == 30) %>% -->
+<!--   # Get test data (after removing IO information and removing duplicate rows) -->
+<!--   full_join( -->
+<!--     # Get test data (after removing IO information and removing duplicate rows) -->
+<!--     d.test.IO %>% -->
+<!--       select( -->
+<!--         NativeLanguage,  -->
+<!--         Item.MinimalPair, Sound, Rating.Response.d.zscored, -->
+<!--         rvowel, rclosure, rburst) %>% -->
+<!--       distinct()) %>% -->
+<!--   make_vector_column( -->
+<!--     cols = c("rvowel", "rclosure", "rburst"), -->
+<!--     vector_col = "x") %>% -->
+<!--   arrange(NativeLanguage, prior_kappa, prior_nu, Item.MinimalPair, Sound, category) %>% -->
+<!--   group_by(NativeLanguage, prior_kappa, prior_nu) %>% -->
+<!--   select(Item.MinimalPair, Sound, x, Rating.Response.d.zscored,  -->
+<!--          category, m, S, kappa, nu, lapse_rate) %>% -->
+<!--   nest(belief = c(category, m, S, kappa, nu, lapse_rate)) %>% -->
+<!--   nest(data = c(Item.MinimalPair, Sound, x, Rating.Response.d.zscored)) %>% -->
+<!--   # Get posterior probability of /d/ for each data point -->
+<!--   mutate(IBBU.Posterior.d = map2( -->
+<!--     data,  -->
+<!--     belief,  -->
+<!--     ~ get_posterior_predictive_from_NIW_belief(.x$x, .y, log = F) %>% -->
+<!--       mutate(ID = rep(1:(nrow(.)/2), 2)) %>% -->
+<!--       group_by(ID) %>% -->
+<!--       pivot_wider( -->
+<!--         values_from = pp, -->
+<!--         names_from = category) %>% -->
+<!--       transmute(posterior = `/d/` / (`/d/` + `/t/`)) %>% -->
+<!--       pull(posterior))) %>% -->
+<!--   # Get posterior probabiltiy of correct category  -->
+<!--   # (and then collapse to overall probability of data) -->
+<!--   mutate( -->
+<!--     IBBU.Posterior.Correlation = unlist(map2( -->
+<!--       data, -->
+<!--       IBBU.Posterior.d, -->
+<!--       ~ cor(.x$Rating.Response.d.zscored, .y)))) -->
 
-d.test.IBBU %>%
-  filter(NativeLanguage == "English") %>%
-  ggplot(aes(x = prior_kappa, y = prior_nu, fill = IBBU.Posterior.Correlation)) +
-  geom_raster(interpolate = T) +
-  scale_fill_viridis_b("Correlation between\nIBBU posterior\nand participant ratings") 
+<!-- d.test.IBBU %>% -->
+<!--   filter(NativeLanguage == "English") %>% -->
+<!--   ggplot(aes(x = prior_kappa, y = prior_nu, fill = IBBU.Posterior.Correlation)) + -->
+<!--   geom_raster(interpolate = T) + -->
+<!--   scale_fill_viridis_b("Correlation between\nIBBU posterior\nand participant ratings")  -->
 
-d.test.IBBU %>%
-  filter(NativeLanguage == "Swedish") %>%
-  ggplot(aes(x = prior_kappa, y = prior_nu, fill = IBBU.Posterior.Correlation)) +
-  geom_raster(interpolate = T) +
-  scale_fill_viridis_b("Correlation between\nIBBU posterior\nand participant ratings") 
-```
+<!-- d.test.IBBU %>% -->
+<!--   filter(NativeLanguage == "Swedish") %>% -->
+<!--   ggplot(aes(x = prior_kappa, y = prior_nu, fill = IBBU.Posterior.Correlation)) + -->
+<!--   geom_raster(interpolate = T) + -->
+<!--   scale_fill_viridis_b("Correlation between\nIBBU posterior\nand participant ratings")  -->
+<!-- ``` -->
 
 
 
