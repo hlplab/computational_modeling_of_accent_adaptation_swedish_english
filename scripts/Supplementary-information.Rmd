@@ -2632,7 +2632,6 @@ p3 = plot_ly(
                            yaxis = axes[[2]],
                            zaxis = axes[[3]],
                            aspectmode='cube'))
-p3
 
 plot_IO(d.IO, language = "Swedish", .plot = p3, cues = cues, alpha = 0.2, addSlider = T)
 ```
@@ -2675,7 +2674,6 @@ p4 = plot_ly(
                            yaxis = axes[[2]],
                            zaxis = axes[[3]],
                            aspectmode='cube'))
-p4
 
 plot_IO(d.IO, language = "Swedish", .plot = p4, cues = cues, alpha = 0.2, addSlider = T)
 
