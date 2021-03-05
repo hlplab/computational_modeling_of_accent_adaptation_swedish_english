@@ -2180,8 +2180,6 @@ We first predicted human responses across all native languages and exposure cond
 This analysis is summarized in Table \@ref(tab:ratings-IO-analysis) and found a highly significant effect of ideal observer predicted posterior probabilities on the z-scored human goodness ratings ($\hat{\beta} = 1.25, t = 25.09, p < .001$). 
 
 ```{r item-level-regression-between-ID-rating-tasks}
-d.test.IO %<>%
-  
 
 lmer.IOtoRating =
   lmer(Rating.Response.d.zscored ~ 1 + Model.Posterior.d + 
