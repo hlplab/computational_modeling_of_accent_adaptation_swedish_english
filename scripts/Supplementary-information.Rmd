@@ -1,5 +1,5 @@
 ---
-title: "Supplementary Information for PAPER TITLE"
+title: "Supplementary Information for 'Using rational models to interpret the results of experiments on accent adaption.'"
 author: "Tan, M., Xie, X., Jaeger, T. F."
 date: \today
 header-includes:
