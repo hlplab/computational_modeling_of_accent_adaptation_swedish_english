@@ -13,11 +13,3 @@ and
 You can do so from the R terminal. Then make sure to pull the most recent version from the remote repository on github.com. Now your document should knit!
 
 
-# PBR_adaptation_accented_swedish
-Data, R scripts, drafts for prep of manuscript on modelling perceptual adaptation to accented speech
-
-This repository contains raw data, R scripts and other relevant material to be used for analysis and statistical modelling of two perceptual experiments:
-
-More than a boundary shift... Experiment 3 (Xie, Theodore, & Myers, 2017);
-Native listener perceptual judgments of foreign accented Swedish (pilot experiment)
-
