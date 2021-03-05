@@ -2401,7 +2401,7 @@ plot_IO_test = function(
 
 (ref:plot-3d-test-IO-Swedish-difference) Difference between /d/-exposure and control ideal observer predicted posterior probabilities for all test tokens of the experiment on Swedish. 
 
-```{r plot-3d-test-IO-English, fig.cap="(ref:plot-3d-test-IO-English)", fig.height=4.5, out.width="75%"}
+```{r plot-3d-test-IO-English-d-exposure, fig.cap="(ref:plot-3d-test-IO-English)", fig.height=4.5, out.width="75%"}
 #plot_IO_test(d.IO, d.test.IO, language = "English", cues = selected_cues)
 
 d.temp <- d.test.IO %>%
@@ -2417,9 +2417,10 @@ d.temp <- d.test.IO %>%
   )
 
 # use get_axes() to set axes
-rvowel <- as.numeric(d.IO$rvowel)
-rclosure <- as.numeric(d.IO$rclosure)
-rburst <- as.numeric(c(min(d.IO$rburst), range(d.temp$rburst))) #include the minimum of the ellipse to fully capture it; use range from test data because its maximum value exceeds ellipse's (without, it misses points)
+d.IO.unnested <- d.IO %>% unnest(ellipse)
+rvowel <- as.numeric(d.IO.unnested $rvowel)
+rclosure <- as.numeric(d.IO.unnested $rclosure)
+rburst <- as.numeric(c(min(d.IO.unnested$rburst), range(d.temp$rburst))) #include the minimum of the ellipse to fully capture it; use range from test data because its maximum value exceeds ellipse's (without, it misses points)
 d.temp.cues <- cbind(rvowel, rclosure, rburst)
 cues <- names(as_tibble(d.temp.cues))
 axes <- get_axes(d.temp.cues, cues)
@@ -2482,8 +2483,12 @@ p = plot_ly(
   #                   line = list(color = 'rgb(255, 165, 0)'))) %>% 
 
 plot_IO(d.IO, language = "English", .plot = p, cues = cues, alpha = 0.2, addSlider = T)
-p
-# plot Control Exposure English IO separately because plotly confuses the point fills if plotted together
+```
+
+
+```{r plot-3d-test-IO-English-control, fig.cap="(ref:plot-3d-test-IO-English)", fig.height=4.5, out.width="75%"}
+
+# plot Control Exposure English IO points separately because plotly confuses the point fills if plotted together with the d-exposure condition
 
 p2 = plot_ly(
         data = d.temp %>%
@@ -2520,7 +2525,9 @@ p2 = plot_ly(
                            aspectmode='cube'))
 
 plot_IO(d.IO, language = "English", .plot = p2, cues = cues, alpha = 0.2, addSlider = T)
-``` 
+
+#currently the ellipses layer includes both exposure conditions, for current plot, slide it to the appropriate exposure condition (control)
+```
 
 
 
@@ -2590,7 +2597,7 @@ p = plot_ly(
 p 
 ```
 
-```{r plot-3d-test-IO-Swedish, fig.cap="(ref:plot-3d-test-IO-Swedish)", fig.height=4.5, out.width="75%"}
+```{r plot-3d-test-IO-Swedish-d-exposure, fig.cap="(ref:plot-3d-test-IO-Swedish)", fig.height=4.5, out.width="75%"}
 #plot_IO_test(d.IO, d.test.IO, language = "Swedish", cues = selected_cues)
 
 p3 = plot_ly(
@@ -2630,7 +2637,10 @@ p3 = plot_ly(
 p3
 
 plot_IO(d.IO, language = "Swedish", .plot = p3, cues = cues, alpha = 0.2, addSlider = T)
+```
 
+
+```{r plot-3d-test-IO-Swedish-control, fig.cap="(ref:plot-3d-test-IO-Swedish)", fig.height=4.5, out.width="75%"}
 # plot Control Exposure Swedish IO separately because plotly confuses the point fills if plotted together
 
 p4 = plot_ly(
@@ -2671,7 +2681,7 @@ p4
 
 plot_IO(d.IO, language = "Swedish", .plot = p4, cues = cues, alpha = 0.2, addSlider = T)
 
-``` 
+```
 
 ```{r plot-3d-test-IO-Swedish-difference, fig.cap="(ref:plot-3d-test-IO-Swedish-difference)", fig.height=4.5, out.width="75%"}
 #plot_IO_test(d.IO, d.test.IO, language = c("Swedish"), cues = selected_cues, show.difference = T)
