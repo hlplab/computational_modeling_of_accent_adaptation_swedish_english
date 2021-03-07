@@ -2400,11 +2400,14 @@ plot_IO_test = function(
   p = p %>%
     # specify axis range to be held constant across plots
     layout(scene = list(xaxis = axes[[1]], yaxis = axes[[2]], zaxis = axes[[3]], aspectmode='cube'), 
-           legend = list(itemsizing = "constant")) %>%
+           legend = list(itemsizing = "constant"))
+
+  if (!show.difference)
+    p = p %>%
     animation_slider(
       currentvalue = list(prefix = paste0("Ideal observer for ", language, ": "), 
                           font = list(color="black"))) 
-
+  
   return(p)
 }
 ```
