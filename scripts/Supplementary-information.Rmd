@@ -159,7 +159,7 @@ get_axes = function(.data, cues) {
   if(substr(cues[1], 1, 1) == "r")
   cue.names = paste(cues, "(ms)")
   cue.names = ifelse(substr(cue.names, 1, 1) == "r", 
-                     paste("corr.", substr(cue.names, 2, nchar(cue.names))), 
+                     paste("", substr(cue.names, 2, nchar(cue.names))), 
                      cue.names)
   
   # axis setting 
@@ -2301,8 +2301,10 @@ plot_IO_test = function(
   # Unnest data if that hasn't already happened
   if ("ellipse" %in% names(.data.IO)) .data.IO %<>%
     unnest(ellipse)
+  #axes = get_axes(.data.IO, cues)
   
-  axes = get_axes(.data.IO, cues)
+  axes = get_axes(.data.IO %>% left_join(.data.test), cues)
+  
   
   # Add ideal observer, or---if differences are to be shown---add color scale
   if (!show.difference) {
@@ -2311,7 +2313,8 @@ plot_IO_test = function(
       frame = ~Model.Group,
       type = "scatter3d", 
       mode = "markers",
-      showlegend = T)
+      showlegend = T,
+      hoverinfo = 'skip')
     
     p = plot_IO(.data.IO, language = language, .plot = p, cues = cues, alpha = ellipses.alpha, addSlider = F) 
   }
