@@ -12,4 +12,3 @@ and
 
 You can do so from the R terminal. Then make sure to pull the most recent version from the remote repository on github.com. Now your document should knit!
 
-
