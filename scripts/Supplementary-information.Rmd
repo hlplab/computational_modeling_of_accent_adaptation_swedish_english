@@ -1761,7 +1761,7 @@ plot_IO = function(
   language, 
   .plot = NULL,
   cues,
-  alpha = .5,
+  alpha = .1,
   addSlider = T
 ) {
   # Unnest data if that hasn't already happened
@@ -1833,7 +1833,7 @@ plot_IO_training =
         color= ~Used_for.Model.Sound,
         colors = colors.Category,
         frame = ~Used_for.Model.Group,
-        opacity = .1,
+        opacity = .2,
         showlegend = T,
         type="scatter3d", mode="markers") 
   } else p = plot_ly()
