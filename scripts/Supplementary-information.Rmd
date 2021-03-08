@@ -1777,23 +1777,44 @@ plot_IO = function(
           closure = !! rlang::sym(cues[2]),
           burst = !! rlang::sym(cues[3]))
   
-  .plot = .plot %>%
-    add_trace(
-      data = .data.IO,
-      type = 'mesh3d', 
-      x= ~vowel, y= ~closure, z= ~burst,
-      alphahull = 0,
-      frame = ~Model.Group,
-      color = ~Model.Sound,
-      vertexcolor = colors.Category[.data.IO$Model.Sound],
-      opacity = alpha, 
-      hoverinfo = 'text',
-      text = ~paste("Category:", Model.Sound,
-                    "<br>Vowel:", signif(vowel, 4),
-                    "<br>Closure:", signif(closure, 4),
-                    "<br>Burst:", signif(burst, 4)),
-      inherit = F,
-      showlegend = F)
+  # If there are two models, separate by frame
+  if (length(unique(.data.IO$Model.Group)) > 1) {
+    .plot = .plot %>%
+      add_trace(
+        data = .data.IO,
+        type = 'mesh3d', 
+        x= ~vowel, y= ~closure, z= ~burst,
+        alphahull = 0,
+        frame = ~Model.Group,
+        color = ~Model.Sound,
+        vertexcolor = colors.Category[.data.IO$Model.Sound],
+        opacity = alpha, 
+        hoverinfo = 'text',
+        text = ~paste("Category:", Model.Sound,
+                      "<br>Vowel:", signif(vowel, 4),
+                      "<br>Closure:", signif(closure, 4),
+                      "<br>Burst:", signif(burst, 4)),
+        inherit = F,
+        showlegend = F)
+  # If there's only one model, don't use
+  } else {
+    .plot = .plot %>%
+      add_trace(
+        data = .data.IO,
+        type = 'mesh3d', 
+        x= ~vowel, y= ~closure, z= ~burst,
+        alphahull = 0,
+        color = ~Model.Sound,
+        vertexcolor = colors.Category[.data.IO$Model.Sound],
+        opacity = alpha, 
+        hoverinfo = 'text',
+        text = ~paste("Category:", Model.Sound,
+                      "<br>Vowel:", signif(vowel, 4),
+                      "<br>Closure:", signif(closure, 4),
+                      "<br>Burst:", signif(burst, 4)),
+        inherit = F,
+        showlegend = F)   
+  }
   
   if (addSlider) {
     .plot = .plot %>%
@@ -2301,20 +2322,28 @@ plot_IO_test = function(
   # Unnest data if that hasn't already happened
   if ("ellipse" %in% names(.data.IO)) .data.IO %<>%
     unnest(ellipse)
-  #axes = get_axes(.data.IO, cues)
-  
+
   axes = get_axes(.data.IO %>% left_join(.data.test), cues)
   
   
   # Add ideal observer, or---if differences are to be shown---add color scale
   if (!show.difference) {
-    p = plot_ly(
-      data = .data.test,
-      frame = ~Model.Group,
-      type = "scatter3d", 
-      mode = "markers",
-      showlegend = T,
-      hoverinfo = 'skip')
+    if (length(unique(.data.test$Model.Group)) > 1) {
+      p = plot_ly(
+        data = .data.test,
+        frame = ~Model.Group,
+        type = "scatter3d", 
+        mode = "markers",
+        showlegend = T,
+        hoverinfo = 'skip')
+    } else {
+      p = plot_ly(
+        data = .data.test,
+        type = "scatter3d", 
+        mode = "markers",
+        showlegend = T,
+        hoverinfo = 'skip')
+    }
     
     p = plot_IO(.data.IO, language = language, .plot = p, cues = cues, alpha = ellipses.alpha, addSlider = F) 
   }
@@ -2367,38 +2396,75 @@ plot_IO_test = function(
                         "<br>Closure:", signif(closure, 4),
                         "<br>Burst:", signif(burst, 4))) 
     # ... or posterior by accent
-    } else p = p %>%
-        add_trace(
-          data = .data.test,
-          type = "scatter3d",
-          x = ~vowel, 
-          y = ~closure,
-          z = ~burst,
-          frame = ~Model.Group,
-          marker = list(
-            color = ~Model.Posterior.d, 
-            line = list(
-              color = colors.Category[.data.test$Sound],
-              width = points.line.width),
-            opacity = points.alpha,
-            size = points.size,
-            autocolorscale = F,
-            # the bottom of the scale is 0 (1t and 0d, the middle is 0.5t and 0.5d, the top is 0t and 1d)
-            colorscale = list(c(0, colors.Category[2]),
-                              list(0.5,'white'),
-                              list(1, colors.Category[1])), 
-            cmin = 0,
-            cmid = 0.5,
-            cmax = 1,
-            colorbar = list(
-              len = .75,
-              title = 'Model-predicted\nposterior of /d/')),
-          hoverinfo = 'text',
-          text = ~paste("Posterior predicted /d/:", signif(Model.Posterior.d, 4),
-                        "<br>Intended category:", Sound,
-                        "<br>Vowel:", signif(vowel, 4),
-                        "<br>Closure:", signif(closure, 4),
-                        "<br>Burst:", signif(burst, 4))) 
+    } else 
+      # If there is more than one model group, use frame to express model group
+      if (length(unique(.data.test$Model.Group)) > 1) {
+        p = p %>%
+          add_trace(
+            data = .data.test,
+            type = "scatter3d",
+            x = ~vowel, 
+            y = ~closure,
+            z = ~burst,
+            frame = ~Model.Group,
+            marker = list(
+              color = ~Model.Posterior.d, 
+              line = list(
+                color = colors.Category[.data.test$Sound],
+                width = points.line.width),
+              opacity = points.alpha,
+              size = points.size,
+              autocolorscale = F,
+              # the bottom of the scale is 0 (1t and 0d, the middle is 0.5t and 0.5d, the top is 0t and 1d)
+              colorscale = list(c(0, colors.Category[2]),
+                                list(0.5,'white'),
+                                list(1, colors.Category[1])), 
+              cmin = 0,
+              cmid = 0.5,
+              cmax = 1,
+              colorbar = list(
+                len = .75,
+                title = 'Model-predicted\nposterior of /d/')),
+            hoverinfo = 'text',
+            text = ~paste("Posterior predicted /d/:", signif(Model.Posterior.d, 4),
+                          "<br>Intended category:", Sound,
+                          "<br>Vowel:", signif(vowel, 4),
+                          "<br>Closure:", signif(closure, 4),
+                          "<br>Burst:", signif(burst, 4))) 
+      # if there's only one model group, don't use frame
+      } else {
+        p = p %>%
+          add_trace(
+            data = .data.test,
+            type = "scatter3d",
+            x = ~vowel, 
+            y = ~closure,
+            z = ~burst,
+            marker = list(
+              color = ~Model.Posterior.d, 
+              line = list(
+                color = colors.Category[.data.test$Sound],
+                width = points.line.width),
+              opacity = points.alpha,
+              size = points.size,
+              autocolorscale = F,
+              # the bottom of the scale is 0 (1t and 0d, the middle is 0.5t and 0.5d, the top is 0t and 1d)
+              colorscale = list(c(0, colors.Category[2]),
+                                list(0.5,'white'),
+                                list(1, colors.Category[1])), 
+              cmin = 0,
+              cmid = 0.5,
+              cmax = 1,
+              colorbar = list(
+                len = .75,
+                title = 'Model-predicted\nposterior of /d/')),
+            hoverinfo = 'text',
+            text = ~paste("Posterior predicted /d/:", signif(Model.Posterior.d, 4),
+                          "<br>Intended category:", Sound,
+                          "<br>Vowel:", signif(vowel, 4),
+                          "<br>Closure:", signif(closure, 4),
+                          "<br>Burst:", signif(burst, 4))) 
+      }
   } else p = plot_ly()
   
   p = p %>%
@@ -2406,7 +2472,7 @@ plot_IO_test = function(
     layout(scene = list(xaxis = axes[[1]], yaxis = axes[[2]], zaxis = axes[[3]], aspectmode='cube'), 
            legend = list(itemsizing = "constant"))
 
-  if (!show.difference)
+  if (!show.difference & length(unique(.data.test$Model.Group)) > 1)
     p = p %>%
     animation_slider(
       currentvalue = list(prefix = paste0("Ideal observer for ", language, ": "), 
@@ -2428,6 +2494,8 @@ plot_IO_test = function(
 
 ```{r plot-3d-test-IO-English, fig.cap="(ref:plot-3d-test-IO-English)", fig.height=6.5, out.width="95%", cache=FALSE}
 plot_IO_test(d.IO, d.test.IO, language = "English", cues = selected_cues)
+
+# plot_IO_test(d.IO %>% filter(Model.Group == "control"), d.test.IO %>% filter(Model.Group == "control"), language = "English", cues = selected_cues)
 ``` 
 
 
