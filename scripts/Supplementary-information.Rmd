@@ -1018,7 +1018,7 @@ In the following sections, we walk through the steps summarized in Figure \@ref(
 (ref:ideal-observer-and-data) Four ideal observer models---a *control* and */d/-exposure* ideal observer each for the English and the Swedish data---were fit and cross-validated against production data from native and non-native English and Swedish. In the databases (top and bottom), native speech is shown in gray; non-native speech is shown in red. We use the same colors to distinguish between the control and /d/-exposure *model*. Each ideal observer has two components: the /d/ and the /t/ category. Training of the ideal observer refers to estimating the mean $\mu$ and covariance matrix $\Sigma$ of these two categories.
 
 ```{r ideal-observer-and-data, fig.cap="(ref:ideal-observer-and-data)", out.width="100%"}
-knitr::include_graphics("../figures/IdealObserverAndData.png")
+knitr::include_graphics("../figures/IdealObserverAndData.jpg")
 ```
 
 ## Phonetically annotated production data
