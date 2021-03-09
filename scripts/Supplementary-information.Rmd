@@ -163,7 +163,7 @@ get_axes = function(.data, cues) {
   cue.names = ifelse(substr(cue.names, 1, 1) == "r", 
                      paste("", substr(cue.names, 2, nchar(cue.names))), 
                      cue.names)
-  
+
   # axis setting 
   axx <- list(
     title = cue.names[1],
@@ -1198,13 +1198,13 @@ get_segmental_model = function(
  f = formula(
     case_when(
        language == "English" & cue.name == "vowel" ~ 
-         "y ~ 1 + number_segments + coda_has_lateral + onset_has_rhotic + Talker ",
+         "y ~ 1 + number_segments + coda_has_lateral + onset_has_lateral + onset_has_rhotic + Talker ",
        language == "English" & cue.name == "closure" ~
-         "y ~ 1 + number_segments + coda_has_lateral + onset_has_lateral + onset_has_rhotic + Talker",
+         "y ~ 1 + number_segments + coda_has_lateral + onset_has_lateral + onset_has_nasal + onset_has_rhotic + Talker",
        language == "English" & cue.name == "burst" ~
-         "y ~ 1 + number_segments + coda_has_lateral + Talker",
+         "y ~ 1 + number_segments + onset_has_lateral + onset_has_nasal + coda_has_nasal + onset_has_rhotic + Talker",
        language == "Swedish" & (cue.name == "vowel" | cue.name == "closure")  ~ 
-         "y ~ 1 + number_segments + has_long_vowel + coda_has_nasal",
+         "y ~ 1 + has_long_vowel + coda_has_nasal",
        language == "Swedish" & cue.name == "burst" ~
          "y ~ 1 + number_segments + has_long_vowel",
        T ~ NA_character_))
@@ -1739,6 +1739,9 @@ make_IO = function(
     applyFactorLevels()
 }
 ```
+
+
+
 
 ```{r IO-visualization-functions, include=FALSE}
 # Make ellipsis from mu and Sigma, and return as tibble with 3 columns, named after cue names
