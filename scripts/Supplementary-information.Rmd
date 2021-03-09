@@ -1118,7 +1118,7 @@ d.stims =
     read.csv("../data/English/English_production_Li et al 2020.csv") %>%
       filter(!(Speaker %in% c("E12", "E3", "E7", "E9"))) %>%  # apply this if only speakers with a high ratio of burst releases are included
       # exclude the nasal words for now due to different annotation criteria compared to Xie et al. 2017 (to check).
-      filter(coda_has_nasal == "no") %>% 
+      #filter(coda_has_nasal == "no") %>% 
       select(-Word) %>%
       rename(
         Talker = Speaker,
