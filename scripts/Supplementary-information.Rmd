@@ -20,7 +20,9 @@ header-includes:
   - \subsubsectionfont{\color{red}}
 output: 
   bookdown::gitbook:
-    split_by: section+number
+   # split_by: section+number
+    split_by: rmd
+    self_contained: true
     config:
       toc:
         collapse: subsection
