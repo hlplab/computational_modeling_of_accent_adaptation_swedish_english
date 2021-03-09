@@ -157,13 +157,20 @@ insertLayer <- function(P, after=0, ...) {
   return(P)
 }
 
-get_axes = function(.data, cues) { 
+get_axes = function(.data, .data.test = NULL, cues) { 
   if(substr(cues[1], 1, 1) == "r")
   cue.names = paste(cues, "(ms)")
   cue.names = ifelse(substr(cue.names, 1, 1) == "r", 
                      paste("", substr(cue.names, 2, nchar(cue.names))), 
                      cue.names)
+<<<<<<< HEAD
 
+=======
+  
+  if(!is.null(.data.test))
+    .data %<>% full_join(.data.test)
+  
+>>>>>>> new_branch
   # axis setting 
   axx <- list(
     title = cue.names[1],
@@ -1845,7 +1852,7 @@ plot_IO_training =
   if ("ellipse" %in% names(.data.IO)) .data.IO %<>%
     unnest(ellipse)
   
-  axes = get_axes(.data.IO, cues)
+  axes = get_axes(.data.IO, cues = selected_cues)
   
   if (!is.null(.data.training)) {
     p = plot_ly(
@@ -2328,7 +2335,7 @@ plot_IO_test = function(
   if ("ellipse" %in% names(.data.IO)) .data.IO %<>%
     unnest(ellipse)
 
-  axes = get_axes(.data.IO %>% left_join(.data.test), cues)
+  axes = get_axes(.data.IO, .data.test, cues)
   
   
   # Add ideal observer, or---if differences are to be shown---add color scale
