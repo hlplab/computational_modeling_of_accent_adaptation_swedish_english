@@ -163,14 +163,11 @@ get_axes = function(.data, .data.test = NULL, cues) {
   cue.names = ifelse(substr(cue.names, 1, 1) == "r", 
                      paste("", substr(cue.names, 2, nchar(cue.names))), 
                      cue.names)
-<<<<<<< HEAD
 
-=======
-  
   if(!is.null(.data.test))
     .data %<>% full_join(.data.test)
   
->>>>>>> new_branch
+
   # axis setting 
   axx <- list(
     title = cue.names[1],
