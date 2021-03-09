@@ -2329,20 +2329,30 @@ plot_IO_test = function(
   # Add ideal observer, or---if differences are to be shown---add color scale
   if (!show.difference) {
     if (length(unique(.data.test$Model.Group)) > 1) {
-      p = plot_ly(
-        data = .data.test,
-        frame = ~Model.Group,
-        type = "scatter3d", 
-        mode = "markers",
-        showlegend = T,
-        hoverinfo = 'skip')
+       p = plot_ly() %>%
+      add_trace(data = .data.test,
+            x = ~rvowel,
+            y = ~rclosure,
+            z = ~rburst,
+            frame = ~Model.Group,
+            type = "scatter3d", 
+            mode = "markers",
+            color = ~Sound, 
+            colors = colors.Category,
+            showlegend = T,
+            visible = "legendonly") 
     } else {
-      p = plot_ly(
-        data = .data.test,
-        type = "scatter3d", 
-        mode = "markers",
-        showlegend = T,
-        hoverinfo = 'skip')
+       p = plot_ly() %>%
+      add_trace(data = .data.test,
+            x = ~rvowel,
+            y = ~rclosure,
+            z = ~rburst,
+            type = "scatter3d", 
+            mode = "markers",
+            color = ~Sound, 
+            colors = colors.Category,
+            showlegend = T,
+            visible = "legendonly") 
     }
     
     p = plot_IO(.data.IO, language = language, .plot = p, cues = cues, alpha = ellipses.alpha, addSlider = F) 
@@ -2365,7 +2375,7 @@ plot_IO_test = function(
           data = .data.test,
           type = "scatter3d", 
           mode = "markers",
-          showlegend = T) %>%
+          showlegend = F) %>%
         add_trace(
           type = "scatter3d",
           x = ~vowel, 
@@ -2407,6 +2417,7 @@ plot_IO_test = function(
             y = ~closure,
             z = ~burst,
             frame = ~Model.Group,
+            showlegend = F,
             marker = list(
               color = ~Model.Posterior.d, 
               line = list(
@@ -2440,6 +2451,7 @@ plot_IO_test = function(
             x = ~vowel, 
             y = ~closure,
             z = ~burst,
+            showlegend = F,
             marker = list(
               color = ~Model.Posterior.d, 
               line = list(
