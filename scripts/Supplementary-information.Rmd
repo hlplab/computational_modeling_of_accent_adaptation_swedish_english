@@ -2268,11 +2268,15 @@ tab_model(lmer.IOtoRating.full,
 
 Next, we asked whether ideal observers that match the exposure conditions (i.e., the control ideal observer for the control condition and the /d/-exposure ideal observer for the /d/-exposure condition) provide a better fit against human ratings than ideal observers that do not. This would provide the strongest item-level evidence that the ideal observers we constructed capture the effects of exposure in the English and Swedish experiments. To this end, we repeated the linear mixed-effects analysis while including the posterior predictions for both matching and non-matching ideal observers in the analysis and letting them interact with an indicator variable (sum-coded: non-matching = -1 vs. matching = 1) and the native language (sum-coded: English = -1 vs. Swedish = 1). The analysis again contained random intercepts by participant and minimal pair.
 
-This analysis replicates the effect of ideal observer predicted posterior probabilities on the z-scored human goodness ratings ($\hat{\beta} = 1.16, t = 49.3, p < .0001$). This effect interacted with native language ($\hat{\beta} = 0.15, t = 6.4, p < .0001$), indicating a stronger effect for Swedish. A simple effect analysis reported in Table \@ref(tab:ratings-IO-model-comparison) confirmed that the effect of ideal observer predicted posterior probabilities was highly significant for both languages. No other effect, including any of the interactions with the indicator variable, reached significance.   
+This analysis replicates the effect of ideal observer predicted posterior probabilities on the z-scored human goodness ratings ($\hat{\beta} = 1.2, t = 35.4, p < .0001$). A simple effect analysis reported in Table \@ref(tab:ratings-IO-model-comparison) confirmed that the effect of ideal observer predicted posterior probabilities was highly significant for both languages. No other effect, including any of the interactions with the indicator variable, reached significance.   
 
 ```{r item-level-regression-between-models}
 contrasts(d.test.IO$Model.Group.matchesParticipant.Group) = cbind("Yes.vs.No" = c(-1, 1))
 d.test.IO$cModel.Posterior.d = d.test.IO$Model.Posterior.d - mean(d.test.IO$Model.Posterior.d)
+
+# summary(lmer(Rating.Response.d.zscored ~ 1 + NativeLanguage * cModel.Posterior.d * Model.Group.matchesParticipant.Group + 
+#                (1 | Item.MinimalPair) + 
+#                (1 | Participant), data = d.test.IO))
 
 lmer.IOtoRating.ModelComparison =
   lmer(
