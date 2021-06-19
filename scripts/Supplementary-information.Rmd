@@ -1,5 +1,5 @@
 ---
-title: "Supplementary Information for *Using rational models to understand experiments on accent adaption*"
+title: "Supplementary Information for *Using rational models to understand experiments on accent adaptation*"
 author: "Tan, M., Xie, X., Jaeger, T. F."
 date: "`r Sys.Date()`"
 header-includes:
@@ -2209,6 +2209,9 @@ The ideal observers do, however, predict the qualitative patterns in the human g
   
  + For the Swedish data, the ideal observers predict no difference between the control and /d/-exposure model for /d/ but higher ratings for the the *control* model for /t/. This qualitatively mirrors the asymmetry between /d/ and /t/ observed in the human ratings, though the effect for /t/ is only marginal for the human ratings.
 
+<!-- # Could add lapse-rate-based fit eval here? -->
+
+
 ## Item-level comparison between human and model-predicted ratings
 
 We first predicted human responses across all native languages and exposure conditions from the ideal observers that are meant for those languages and exposure conditions. That is, we predict human ratings in the /d/-exposure group from the /d/-exposure ideal observer, and human ratings in the control group from the control ideal observer. Specifically, we use a linear mixed-effects regression, predicting human /d/-goodness ratings from the posterior probability of /d/ predicted by the ideal observers, while also including the maximal converging random effect structure (random intercepts by participant and minimal pair). 
@@ -2300,7 +2303,7 @@ tab_model(lmer.IOtoRating.ModelComparison,
 
 In short, we did *not* find evidence that ideal observers that match the exposure condition of human participants did significantly better in predicting human goodness ratings. One possible reason for this becomes apparent when we visualize the predictions of the ideal observers. Figure \@ref(fig:plot-3d-test-IO-English) and \@ref(fig:plot-3d-test-IO-Swedish) visualises the posterior predictions of the control and /d/-exposure ideal observers for all test token. Figure \@ref(fig:plot-3d-test-IO-English-difference) and Figure \@ref(fig:plot-3d-test-IO-Swedish-difference) show the *difference* between the predictions of the control and /d/-exposure ideal observers. These latter figures thus highlight the test tokens that can distinguish between the control and /d/-exposure models. 
 
-On the one hand, the results are encouraging: the /d/-exposure model predicts the intended (non-native) category better for English but not for Swedish, paralleling the results for human ratings. On the other hand, these plots also show clear limitations of the present approach: for many test tokens, the control and /d/-exposure ideal observers make basically identical predictions, limiting our ability to distinguish between the two models. This provides a straightforward explanation as to why ideal observers that match the exposure condition do not provide a better fit against human ratings: the control and /d/-exposure models do not differ sufficiently enough in their predictions. We note that this is not *necessarily* a limitation of the ideal observers but rather might reflect a limitation of experiments that use natural speech stimuli as test tokens. These natural speech stimuli were not chosen so as to maximize the statistical power to detect differences between the exposure groups (or ideal observers) but rather reflect the natural distribution of the relevant non-native accent.
+On the one hand, the results are encouraging: the /d/-exposure model predicts the intended (non-native) category better for English but not for Swedish, paralleling the results for human ratings. On the other hand, these plots also show clear limitations of the present approach: for many test tokens, the control and /d/-exposure ideal observers make basically identical predictions, limiting our ability to distinguish between the two models. This provides a straightforward explanation as to why ideal observers that match the exposure condition do not provide a better fit against human ratings: the control and /d/-exposure models do not differ sufficiently enough in their predictions. We note that this is not *necessarily* a limitation of the ideal observers but likely at least in part is a limitation of experiments that use natural speech stimuli as test tokens. These natural speech stimuli were not chosen so as to maximize the statistical power to detect differences between the exposure groups (or ideal observers) but rather reflect the natural distribution of the relevant non-native accent.
 
 ```{r functions to plot-ideal-observers-results-3D}
 plot_IO_test = function(
