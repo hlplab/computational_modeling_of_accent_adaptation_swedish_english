@@ -2195,10 +2195,8 @@ p.results.percept.byItem <- p.results.perception.bySubject %+%
   ylim(-1.25, 1.25)
 
 p.results.percept.byItem
-
 ggsave(p.results.percept.byItem, filename = "../figures/Result-ratings-byItem.png",
        width = 7, height = 4)
-
 ```
 
 The ideal observers' predictions differ from the human ratings in a number of ways. First, the human data is more gradient than predicted by the ideal observers. This is most evident for the Swedish data. One likely explanation for this is that the simple ideal observers we employ here do not account for perceptual noise [cf. @feldman2009influence]. Second, the differences between the different ideal observers are more pronounced than for the z-scored human ratings. This is the case both across languages, and across exposure conditions within each language.
@@ -2209,8 +2207,86 @@ The ideal observers do, however, predict the qualitative patterns in the human g
   
  + For the Swedish data, the ideal observers predict no difference between the control and /d/-exposure model for /d/ but higher ratings for the the *control* model for /t/. This qualitatively mirrors the asymmetry between /d/ and /t/ observed in the human ratings, though the effect for /t/ is only marginal for the human ratings.
 
-<!-- # Could add lapse-rate-based fit eval here? -->
 
+# TO DO: THIS NEEDS WORK. IS THE LIKELIHOOD FUNCTION DOING THE RIGHT THING?
+<!-- # Could add lapse-rate-based fit eval here? -->
+```{r}
+get_per_token_log_likelihood <- function(data, lapse_rate = .1, bias.d = .5) {
+  data %>%
+    mutate(
+      prediction.d = (1 - lapse_rate) * Model.Posterior.d + lapse_rate * bias.d,
+      log_likelihood = log(
+        Rating.Response.d.normalized * prediction.d + 
+        (1 - Rating.Response.d.normalized.d) * (1 - prediction.d))) %>%
+    summarise(per_token_loglik = sum(log_likelihood) / length(log_likelihood)) %>%
+    pull(per_token_loglik)
+}
+
+d.test.IO.byItem <- 
+  d.test.IO %>%
+  # There seem to be points for which no model predictions exist. 
+  # Removing them for now (It's two English data points: Item.WordID E104, E105)
+  filter(!is.na(Model.Group.matchesParticipant.Group)) %>%
+  group_by(Language, Group, Model.Group.matchesParticipant.Group, Sound, Item.WordID) %>%
+  summarise(
+    Model.Posterior.d = mean(Model.Posterior.d),
+    Rating.Response.d.zscored = mean(Rating.Response.d.zscored)) %>%
+  # Normalize human ratings'
+  group_by(Language, Group, Model.Group.matchesParticipant.Group) %>%
+  mutate(
+    Model.Posterior.d = Model.Posterior.d,
+    Rating.Response.d.normalized = (Rating.Response.d.zscored - min(Rating.Response.d.zscored)) / (max(Rating.Response.d.zscored) - min(Rating.Response.d.zscored))) 
+
+d.test.IO.byItem %>%
+  # Crossing in lapse rate and apply likelihood
+  crossing(
+    bias.d = .5,
+    lapse_rate = 10^c(seq(-10, 0, length.out = 51))) %>%
+  group_by(Language, Group, Model.Group.matchesParticipant.Group, lapse_rate, bias.d) %>%
+  nest() %>%
+  mutate(per_token_loglik = unlist(pmap(.l = list(data, lapse_rate, bias.d), .f = function(x, y, z) get_log_likelihood(x, y, z)))) %>%
+  ggplot(aes(x = lapse_rate, y = per_token_loglik, color = Group, linetype = Model.Group.matchesParticipant.Group)) +
+  geom_line(alpha = .9) +
+  scale_x_continuous(
+    "lapse rate",
+    breaks = 10^c(seq(-10, 0, 2))) +
+  scale_y_continuous("Fit against perceptual responses\n(per token log likelihood)") +
+  scale_color_manual("Exposure group",
+    breaks = c("/d/-exposure", "control"),
+    labels = c("/d/-exposure", "control"),
+    values = colors.Accent) +
+  scale_linetype_manual("Ideal observer",
+    breaks = c("yes", "no"),
+    labels = c("matching", "mismatching"),
+    values = 1:2) +
+  coord_trans(x = "log10") +
+  facet_wrap(~ Language) +
+  theme(panel.grid.minor = element_blank())
+
+d.test.IO.byItem %>%
+  # Crossing in lapse rate and bias and then apply likelihood
+  crossing(
+    lapse_rate = seq(0, 0.2, length.out = 51),
+    bias.d = seq(0, 1, length.out = 51)) %>%
+  group_by(Language, Group, Model.Group.matchesParticipant.Group, lapse_rate, bias.d) %>%
+  nest() %>%
+  mutate(per_token_loglik = unlist(pmap(.l = list(data, lapse_rate, bias.d), .f = function(x, y, z) get_log_likelihood(x, y, z)))) %>%  
+  drop_na() %>%
+  ggplot(aes(x = lapse_rate, y = bias.d, fill = per_token_loglik)) +
+  geom_raster(interpolate = T) +
+  scale_x_continuous(
+    "lapse rate",
+    breaks = seq(0, .2, .05)) +
+  scale_y_continuous(
+    "bias towards /d/",
+    breaks = seq(0, 1, .1)) +
+  scale_fill_viridis_c("Fit against perceptual responses\n(per token log likelihood)") +
+  coord_cartesian(expand = 0) +
+  facet_grid(Group + Model.Group.matchesParticipant.Group ~ Language) +
+  theme(panel.grid.minor = element_blank())
+
+# Make difference plots (AFTER FIGURING OUT WHETHER THESE FUNCTIONS DO THE RIGHT THING)
+```
 
 ## Item-level comparison between human and model-predicted ratings
 
@@ -2219,7 +2295,6 @@ We first predicted human responses across all native languages and exposure cond
 This analysis is summarized in Table \@ref(tab:ratings-IO-analysis) and found a highly significant effect of ideal observer predicted posterior probabilities on the z-scored human goodness ratings ($\hat{\beta} = 1.25, t = 25.09, p < .001$). 
 
 ```{r item-level-regression-between-ID-rating-tasks}
-
 lmer.IOtoRating =
   lmer(Rating.Response.d.zscored ~ 1 + Model.Posterior.d + 
          (1 | Item.MinimalPair) +  (1 + Model.Posterior.d | Participant), 
