@@ -2217,7 +2217,7 @@ get_per_token_log_likelihood <- function(data, lapse_rate = .1, bias.d = .5) {
       prediction.d = (1 - lapse_rate) * Model.Posterior.d + lapse_rate * bias.d,
       log_likelihood = log(
         Rating.Response.d.normalized * prediction.d + 
-        (1 - Rating.Response.d.normalized.d) * (1 - prediction.d))) %>%
+        (1 - Rating.Response.d.normalized) * (1 - prediction.d))) %>%
     summarise(per_token_loglik = sum(log_likelihood) / length(log_likelihood)) %>%
     pull(per_token_loglik)
 }
@@ -2244,7 +2244,7 @@ d.test.IO.byItem %>%
     lapse_rate = 10^c(seq(-10, 0, length.out = 51))) %>%
   group_by(Language, Group, Model.Group.matchesParticipant.Group, lapse_rate, bias.d) %>%
   nest() %>%
-  mutate(per_token_loglik = unlist(pmap(.l = list(data, lapse_rate, bias.d), .f = function(x, y, z) get_log_likelihood(x, y, z)))) %>%
+  mutate(per_token_loglik = unlist(pmap(.l = list(data, lapse_rate, bias.d), .f = function(x, y, z) get_per_token_log_likelihood(x, y, z)))) %>%
   ggplot(aes(x = lapse_rate, y = per_token_loglik, color = Group, linetype = Model.Group.matchesParticipant.Group)) +
   geom_line(alpha = .9) +
   scale_x_continuous(
@@ -2270,7 +2270,7 @@ d.test.IO.byItem %>%
     bias.d = seq(0, 1, length.out = 51)) %>%
   group_by(Language, Group, Model.Group.matchesParticipant.Group, lapse_rate, bias.d) %>%
   nest() %>%
-  mutate(per_token_loglik = unlist(pmap(.l = list(data, lapse_rate, bias.d), .f = function(x, y, z) get_log_likelihood(x, y, z)))) %>%  
+  mutate(per_token_loglik = unlist(pmap(.l = list(data, lapse_rate, bias.d), .f = function(x, y, z) get_per_token_log_likelihood(x, y, z)))) %>%  
   drop_na() %>%
   ggplot(aes(x = lapse_rate, y = bias.d, fill = per_token_loglik)) +
   geom_raster(interpolate = T) +
