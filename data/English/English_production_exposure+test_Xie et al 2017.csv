@@ -132,8 +132,8 @@ side,/d/,test,yes,no,no,no,no,no,no,no,yes,1,0.046,0.061,0.229,side,E100,E51,0.6
 sight,/t/,test,yes,no,no,no,no,no,no,no,yes,1,0.151,0.031,0.27,sight,E101,E51,0.734,0.734,sight,3
 skid,/d/,test,yes,no,no,no,no,no,no,no,no,1,0.075,0.048,0.136,skid,E102,E52,0.565,0.565,skid,4
 skit,/t/,test,yes,no,no,no,no,no,no,no,no,1,0.133,0.061,0.176,skit,E103,E52,0.74,0.74,skit,4
-slid,/d/,test,yes,no,yes,no,no,no,no,no,no,1,0.053,0.091,0.141,slid,E104,E53,0.562,0.562,slid,4
-slide,/d/,test,yes,no,yes,no,no,no,no,no,yes,1,0.073,0.052,0.196,slide,E105,E54,0.661,0.661,slide,4
+slid,/d/,test,yes,no,yes,no,no,no,no,no,no,1,0.053,0.091,0.141,slid,E104,E54,0.562,0.562,slid,4
+slide,/d/,test,yes,no,yes,no,no,no,no,no,yes,1,0.073,0.052,0.196,slide,E105,E53,0.661,0.661,slide,4
 slight,/t/,test,yes,no,yes,no,no,no,no,no,yes,1,0.135,0.034,0.224,slight,E106,E53,0.772,0.772,slight,4
 slit,/t/,test,yes,no,yes,no,no,no,no,no,no,1,0.127,0.048,0.141,slit,E107,E54,0.651,0.651,slit,4
 spade,/d/,test,yes,no,no,no,no,no,no,no,no,1,0.08,0.077,0.211,spade,E108,E55,0.675,0.675,spade,4
