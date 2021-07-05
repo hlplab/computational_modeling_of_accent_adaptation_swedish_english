@@ -264,7 +264,7 @@ It is therefore possible that the decision to use stimuli from the assisted reco
 
 ## Exposure stimuli and procedure
 
-During exposure, participants performed a lexical decision task. Recordings were played over headphones at a comfortable volume. Participants were instructed to decide whether the word they heard was a real word or not. Order of presentation was randomized across participans.
+During exposure, participants performed a lexical decision task. Recordings were played over headphones at a comfortable volume. Participants were instructed to decide whether the word they heard was a real word or not. Order of presentation was randomized across participants.
 
 The full list of stimuli is available in Section \@ref(sec:stimuli) for both Swedish and English. In both experiments participants in both groups heard a total of 180 words, including the same 60 filler words in the respective languages and 90 pseudowords that obeyed English or Swedish phonotactical rules. The remaining 30 words were the critical words, manipulated between exposure groups. 
 
@@ -1644,7 +1644,43 @@ save(
   file = "../data/data_production_corrected for phonetic context_both languages.Rdata")
 ```
 
+```{r pairwise correlation plots production data, include = FALSE}
+# make pairwise correlation plots for the corrected cues
+library(ggforce)
 
+plot_cue_matrix <- function(data) {
+  data %>% mutate("Vowel" = rvowel,
+         "Closure" = rclosure,
+         "Burst" = rburst) %>% 
+  ggplot(aes(x = .panel_x, y = .panel_y, colour = Sound, fill = Sound)) +
+  scale_colour_manual(values = colors.Category) +
+  scale_fill_manual(values = colors.Category) +
+  geom_point(alpha = 0.6, shape = 16, size = 1, aes(fill = Sound)) +
+  geom_autodensity(alpha = .04, position = "identity") +
+  stat_ellipse(type = "norm") +
+  facet_matrix(vars(c(Vowel, Closure, Burst)), layer.diag = 2, layer.upper = 3, 
+                    grid.y.diag= FALSE) +
+  theme_bw()
+}
+```
+
+
+```{r native-english-corrected-cues-2D fig.cap="(ref:native-english-corrected-cues-2D)", out.width="75%", fig.show='hold'}
+plot_cue_matrix(d.stims %>% filter(NativeLanguage == "English" & Accent == "native"))
+```
+
+
+```{r non-native-english-corrected-cues-2D fig.cap="(ref:non-native-english-corrected-cues-2D)", out.width="75%", fig.show='hold'}
+plot_cue_matrix(d.stims %>% filter(NativeLanguage == "English" & Accent == "non-native"))
+```
+
+```{r native-swedish-corrected-cues-2D fig.cap="(ref:native-swedish-corrected-cues-2D)", out.width="75%", fig.show='hold'}
+plot_cue_matrix(d.stims %>% filter(NativeLanguage == "Swedish" & Accent == "native") )
+```
+
+```{r non-native-swedish-corrected-cues-2D fig.cap="(ref:non-native-swedish-corrected-cues-2D)", out.width="75%", fig.show='hold'}
+plot_cue_matrix(d.stims %>% filter(NativeLanguage == "Swedish" & Accent == "non-native"))
+```
 
 ## Training the four ideal observers
 
