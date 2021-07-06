@@ -1,0 +1,55 @@
+This is BibTeX, Version 0.99d (TeX Live 2021)
+Capacity: max_strings=200000, hash_size=200000, hash_prime=170003
+The top-level auxiliary file: Frontiers.aux
+The style file: frontiersinSCNS_ENG_HUMS.bst
+Database file #1: refs.bib
+Reallocated wiz_functions (elt_size=4) to 6000 items from 3000.
+Warning--empty journal in bicknell2021
+Warning--empty journal in kleinschmidt2020constrains
+Warning--empty pages in kleinschmidt2015cogsci
+Warning--can't use both volume and number fields in kleinschmidt2012belief
+Warning--empty pages in kleinschmidt2012belief
+Warning--empty pages in kleinschmidt2016you
+Warning--empty journal in nearey1978phonetic
+You've used 75 entries,
+            3029 wiz_defined-function locations,
+            1100 strings with 20122 characters,
+and the built_in function-call counts, 47981 in all, are:
+= -- 4202
+> -- 2141
+< -- 41
++ -- 1017
+- -- 571
+* -- 3521
+:= -- 7151
+add.period$ -- 206
+call.type$ -- 75
+change.case$ -- 578
+chr.to.int$ -- 76
+cite$ -- 157
+duplicate$ -- 3224
+empty$ -- 3485
+format.name$ -- 827
+if$ -- 9725
+int.to.chr$ -- 2
+int.to.str$ -- 1
+missing$ -- 704
+newline$ -- 515
+num.names$ -- 300
+pop$ -- 1429
+preamble$ -- 1
+purify$ -- 490
+quote$ -- 0
+skip$ -- 1531
+stack$ -- 0
+substring$ -- 2274
+swap$ -- 1555
+text.length$ -- 1
+text.prefix$ -- 0
+top$ -- 0
+type$ -- 672
+warning$ -- 7
+while$ -- 342
+width$ -- 0
+write$ -- 1160
+(There were 7 warnings)

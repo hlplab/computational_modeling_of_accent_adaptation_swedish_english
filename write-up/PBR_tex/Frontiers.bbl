@@ -1,0 +1,602 @@
+\begin{thebibliography}{75}
+\providecommand{\natexlab}[1]{#1}
+\expandafter\ifx\csname urlstyle\endcsname\relax
+  \providecommand{\doi}[1]{doi:\discretionary{}{}{}#1}\else
+  \providecommand{\doi}{doi:\discretionary{}{}{}\begingroup
+  \urlstyle{rm}\Url}\fi
+\providecommand{\selectlanguage}[1]{\relax}
+\providecommand{\bibAnnoteFile}[1]{%
+  \IfFileExists{#1}{\begin{quotation}\noindent\textsc{Key:} #1\\
+  \textsc{Annotation:}\ \input{#1}\end{quotation}}{}}
+\providecommand{\bibAnnote}[2]{%
+  \begin{quotation}\noindent\textsc{Key:} #1\\
+  \textsc{Annotation:}\ #2\end{quotation}}
+
+\bibitem[{Adank et~al.(2009)Adank, Evans, Stuart-Smith, and
+  Scott}]{adank2009comprehension}
+Adank, P., Evans, B.~G., Stuart-Smith, J., and Scott, S.~K. (2009).
+\newblock Comprehension of familiar and unfamiliar native accents under adverse
+  listening conditions.
+\newblock \emph{Journal of Experimental Psychology: Human Perception and
+  Performance} 35, 520.
+\newblock \doi{https://doi.org/10.1037/a0013552}
+\bibAnnoteFile{adank2009comprehension}
+
+\bibitem[{Allaire et~al.(2021)Allaire, Xie, McPherson, Luraschi, Ushey, Atkins
+  et~al.}]{allaire}
+Allaire, J., Xie, Y., McPherson, J., Luraschi, J., Ushey, K., Atkins, A.,
+  et~al. (2021).
+\newblock \emph{rmarkdown: Dynamic Documents for R}.
+\newblock R package version 2.7
+\bibAnnoteFile{allaire}
+
+\bibitem[{Allen and Miller(2001)}]{allen2001contextual}
+Allen, J.~S. and Miller, J.~L. (2001).
+\newblock Contextual influences on the internal structure of phonetic
+  categories: A distinction between lexical status and speaking rate.
+\newblock \emph{Perception \& Psychophysics} 63, 798--810.
+\newblock \doi{https://doi.org/10.3758/BF03194439}
+\bibAnnoteFile{allen2001contextual}
+
+\bibitem[{Apfelbaum and McMurray(2015)}]{apfelbaum2015relative}
+Apfelbaum, K.~S. and McMurray, B. (2015).
+\newblock Relative cue encoding in the context of sophisticated models of
+  categorization: {S}eparating information from categorization.
+\newblock \emph{Psychonomic Bulletin \& Review} 22, 916--943.
+\newblock \doi{https://doi.org/10.3758/s13423-014-0783-2}
+\bibAnnoteFile{apfelbaum2015relative}
+
+\bibitem[{Bejjanki et~al.(2011)Bejjanki, Clayards, Knill, and
+  Aslin}]{bejjanki2011cue}
+Bejjanki, V.~R., Clayards, M., Knill, D.~C., and Aslin, R.~N. (2011).
+\newblock Cue integration in categorical tasks: Insights from audio-visual
+  speech perception.
+\newblock \emph{PloS One} 6, e19812.
+\newblock \doi{https://doi.org/10.1371/journal.pone.0019812}
+\bibAnnoteFile{bejjanki2011cue}
+
+\bibitem[{Best(1995)}]{best1995direct}
+Best, C.~T. (1995).
+\newblock A direct realist view of cross-language speech perception.
+\newblock \emph{Speech Perception and Linguistic Experience} , 171--206
+\bibAnnoteFile{best1995direct}
+
+\bibitem[{Bicknell et~al.(under review)Bicknell, Bushong, Tanenhaus, and
+  Jaeger}]{bicknell2021}
+Bicknell, K., Bushong, W., Tanenhaus, M.~K., and Jaeger, T.~F. (under review).
+\newblock Listeners can maintain and rationally update uncertainty about prior
+  words
+\bibAnnoteFile{bicknell2021}
+
+\bibitem[{Booij(1999)}]{booij1999phonology}
+Booij, G. (1999).
+\newblock \emph{The {P}honology of Dutch} (Oxford University Press)
+\bibAnnoteFile{booij1999phonology}
+
+\bibitem[{Bradlow and Bent(2008)}]{bradlow2008perceptual}
+Bradlow, A.~R. and Bent, T. (2008).
+\newblock Perceptual adaptation to non-native speech.
+\newblock \emph{Cognition} 106, 707--729.
+\newblock \doi{https://doi.org/10.1016/j.cognition.2007.04.005}
+\bibAnnoteFile{bradlow2008perceptual}
+
+\bibitem[{Chodroff and Wilson(2017)}]{chodroff2017}
+Chodroff, E. and Wilson, C. (2017).
+\newblock {Structure in talker-specific phonetic realization: Covariation of
+  stop consonant VOT in American English}.
+\newblock \emph{Journal of Phonetics} 61, 30--47.
+\newblock \doi{10.1016/j.wocn.2017.01.001}
+\bibAnnoteFile{chodroff2017}
+
+\bibitem[{Chodroff and Wilson(2018)}]{chodroff2018}
+Chodroff, E. and Wilson, C. (2018).
+\newblock Predictability of stop consonant phonetics across talkers:
+  Between-category and within-category dependencies among cues for place and
+  voice.
+\newblock \emph{Linguistics Vanguard} 4.
+\newblock \doi{10.1515/lingvan-2017-0047}
+\bibAnnoteFile{chodroff2018}
+
+\bibitem[{Clarke and Garrett(2004)}]{clarke2004rapid}
+Clarke, C.~M. and Garrett, M.~F. (2004).
+\newblock Rapid adaptation to foreign-accented english.
+\newblock \emph{The Journal of the Acoustical Society of America} 116,
+  3647--3658.
+\newblock \doi{https://doi.org/10.1121/1.1815131}
+\bibAnnoteFile{clarke2004rapid}
+
+\bibitem[{Clarke-Davidson et~al.(2008)Clarke-Davidson, Luce, and
+  Sawusch}]{clarke2008does}
+Clarke-Davidson, C.~M., Luce, P.~A., and Sawusch, J.~R. (2008).
+\newblock Does perceptual learning in speech reflect changes in phonetic
+  category representation or decision bias?
+\newblock \emph{Perception \& psychophysics} 70, 604--618.
+\newblock \doi{https://doi.org/10.3758/PP.70.4.604}
+\bibAnnoteFile{clarke2008does}
+
+\bibitem[{Clayards et~al.(2008)Clayards, Tanenhaus, Aslin, and
+  Jacobs}]{clayards2008perception}
+Clayards, M., Tanenhaus, M.~K., Aslin, R.~N., and Jacobs, R.~A. (2008).
+\newblock Perception of speech reflects optimal use of probabilistic speech
+  cues.
+\newblock \emph{Cognition} 108, 804--809.
+\newblock \doi{https://doi.org/10.1016/j.cognition.2008.04.004}
+\bibAnnoteFile{clayards2008perception}
+
+\bibitem[{Drouin et~al.(2016)Drouin, Theodore, and Myers}]{drouin2016lexically}
+Drouin, J.~R., Theodore, R.~M., and Myers, E.~B. (2016).
+\newblock Lexically guided perceptual tuning of internal phonetic category
+  structure.
+\newblock \emph{The Journal of the Acoustical Society of America} 140,
+  EL307--EL313.
+\newblock \doi{https://doi.org/10.1121/1.4964468}
+\bibAnnoteFile{drouin2016lexically}
+
+\bibitem[{Eisner and McQueen(2005)}]{eisner2005specificity}
+Eisner, F. and McQueen, J.~M. (2005).
+\newblock The specificity of perceptual learning in speech processing.
+\newblock \emph{Perception \& Psychophysics} 67, 224--238.
+\newblock \doi{https://doi.org/10.3758/BF03206487}
+\bibAnnoteFile{eisner2005specificity}
+
+\bibitem[{Eisner et~al.(2013)Eisner, Melinger, and
+  Weber}]{eisner2013constraints}
+Eisner, F., Melinger, A., and Weber, A. (2013).
+\newblock Constraints on the transfer of perceptual learning in accented
+  speech.
+\newblock \emph{Frontiers in Psychology} 4, 148.
+\newblock \doi{https://doi.org/10.3389/fpsyg.2013.00148}
+\bibAnnoteFile{eisner2013constraints}
+
+\bibitem[{Feldman et~al.(2009)Feldman, Griffiths, and
+  Morgan}]{feldman2009influence}
+Feldman, N.~H., Griffiths, T.~L., and Morgan, J.~L. (2009).
+\newblock The influence of categories on perception: Explaining the perceptual
+  magnet effect as optimal statistical inference.
+\newblock \emph{Psychological Review} 116, 752.
+\newblock \doi{https://doi.org/10.1037/a0017196}
+\bibAnnoteFile{feldman2009influence}
+
+\bibitem[{Flege(1995)}]{flege1995second}
+Flege, J.~E. (1995).
+\newblock Second language speech learning: Theory, findings, and problems.
+\newblock \emph{Speech Perception and Linguistic Experience: Issues in
+  Cross-Language Research} 92, 233--277
+\bibAnnoteFile{flege1995second}
+
+\bibitem[{Flege et~al.(1992)Flege, Munro, and Skelton}]{flege1992production}
+Flege, J.~E., Munro, M.~J., and Skelton, L. (1992).
+\newblock Production of the word-final english/t/--/d/contrast by native
+  speakers of english, mandarin, and spanish.
+\newblock \emph{The Journal of the Acoustical Society of America} 92, 128--143.
+\newblock \doi{https://doi.org/10.1121/1.404278}
+\bibAnnoteFile{flege1992production}
+
+\bibitem[{Flege and Wang(1989)}]{flege1989native}
+Flege, J.~E. and Wang, C. (1989).
+\newblock Native-language phonotactic constraints affect how well {C}hinese
+  subjects perceive the word-final {E}nglish /t/-/d/contrast.
+\newblock \emph{Journal of Phonetics} 17, 299--315.
+\newblock \doi{https://doi.org/10.1016/S0095-4470(19)30446-2}
+\bibAnnoteFile{flege1989native}
+
+\bibitem[{Franco et~al.(2014)Franco, Malhotra, and
+  Simonovits}]{franco2014publication}
+Franco, A., Malhotra, N., and Simonovits, G. (2014).
+\newblock Publication bias in the social sciences: Unlocking the file drawer.
+\newblock \emph{Science} 345, 1502--1505.
+\newblock \doi{10.1126/science.1255484}
+\bibAnnoteFile{franco2014publication}
+
+\bibitem[{Goslin et~al.(2012)Goslin, Duffy, and Floccia}]{goslin2012erp}
+Goslin, J., Duffy, H., and Floccia, C. (2012).
+\newblock An {ERP} investigation of regional and foreign accent processing.
+\newblock \emph{Brain and language} 122, 92--102.
+\newblock \doi{https://doi.org/10.1016/j.bandl.2012.04.017}
+\bibAnnoteFile{goslin2012erp}
+
+\bibitem[{Hastie(2017)}]{hastie2017}
+Hastie, T.~J. (2017).
+\newblock Generalized additive models.
+\newblock In \emph{Statistical models in {S}} (Routledge). 249--307
+\bibAnnoteFile{hastie2017}
+
+\bibitem[{Hitczenko and Feldman(2016)}]{hitczenko2016modeling}
+Hitczenko, K. and Feldman, N.~H. (2016).
+\newblock Modeling adaptation to a novel accent.
+\newblock In \emph{Proceedings of the Annual Conference of the Cognitive
+  Science Society}. 1367--1372
+\bibAnnoteFile{hitczenko2016modeling}
+
+\bibitem[{Idemaru and Holt(2011)}]{idemaru2011word}
+Idemaru, K. and Holt, L.~L. (2011).
+\newblock Word recognition reflects dimension-based statistical learning.
+\newblock \emph{Journal of Experimental Psychology: Human Perception and
+  Performance} 37, 1939.
+\newblock \doi{https://doi.org/10.1037/a0025641}
+\bibAnnoteFile{idemaru2011word}
+
+\bibitem[{Jaeger et~al.(2019)Jaeger, Burchill, and Bushong}]{jaeger2019strong}
+[Dataset] Jaeger, T., Burchill, Z., and Bushong, W. (2019).
+\newblock Strong evidence for expectation adaptation during language
+  understanding, not a replication failure. a reply to {H}arrington {S}tack,
+  {J}ames, and {W}atson (2018)
+\bibAnnoteFile{jaeger2019strong}
+
+\bibitem[{Kartushina et~al.(2016)Kartushina, Hervais-Adelman, Frauenfelder, and
+  Golestani}]{kartushina2016mutual}
+Kartushina, N., Hervais-Adelman, A., Frauenfelder, U.~H., and Golestani, N.
+  (2016).
+\newblock Mutual influences between native and non-native vowels in production:
+  Evidence from short-term visual articulatory feedback training.
+\newblock \emph{Journal of Phonetics} 57, 21--39.
+\newblock \doi{https://doi.org/10.1016/j.wocn.2016.05.001}
+\bibAnnoteFile{kartushina2016mutual}
+
+\bibitem[{Kleinschmidt(2020)}]{kleinschmidt2020constrains}
+Kleinschmidt, D. (2020).
+\newblock What constrains distributional learning in adults?
+\bibAnnoteFile{kleinschmidt2020constrains}
+
+\bibitem[{Kleinschmidt and Jaeger(2011)}]{kleinschmidt2011bayesian}
+Kleinschmidt, D. and Jaeger, T.~F. (2011).
+\newblock A bayesian belief updating model of phonetic recalibration and
+  selective adaptation.
+\newblock In \emph{Proceedings of the 2nd Workshop on Cognitive Modeling and
+  Computational Linguistics}. 10--19
+\bibAnnoteFile{kleinschmidt2011bayesian}
+
+\bibitem[{Kleinschmidt et~al.(2015)Kleinschmidt, Raizada, and
+  Jaeger}]{kleinschmidt2015cogsci}
+Kleinschmidt, D., Raizada, R., and Jaeger, T.~F. (2015).
+\newblock Supervised and unsupervised learning in phonetic adaptation.
+\newblock In \emph{Proceedings of the 37th Annual Meeting of the Cognitive
+  Science Society (CogSci15)} (Austin, TX: Cognitive Science Society)
+\bibAnnoteFile{kleinschmidt2015cogsci}
+
+\bibitem[{Kleinschmidt et~al.(2012)Kleinschmidt, Fine, and
+  Jaeger}]{kleinschmidt2012belief}
+Kleinschmidt, D.~F., Fine, A.~B., and Jaeger, T.~F. (2012).
+\newblock A belief-updating model of adaptation and cue combination in
+  syntactic comprehension.
+\newblock In \emph{Proceedings of the annual meeting of the cognitive science
+  society}. vol.~34
+\bibAnnoteFile{kleinschmidt2012belief}
+
+\bibitem[{Kleinschmidt and Jaeger(2015)}]{kleinschmidt2015robust}
+Kleinschmidt, D.~F. and Jaeger, T.~F. (2015).
+\newblock Robust speech perception: recognize the familiar, generalize to the
+  similar, and adapt to the novel.
+\newblock \emph{Psychological Review} 122, 148.
+\newblock \doi{https://doi.org/10.1037/a0038695}
+\bibAnnoteFile{kleinschmidt2015robust}
+
+\bibitem[{Kleinschmidt and Jaeger(2016)}]{kleinschmidt2016you}
+Kleinschmidt, D.~F. and Jaeger, T.~F. (2016).
+\newblock What do you expect from an unfamiliar talker?
+\newblock In \emph{CogSci}
+\bibAnnoteFile{kleinschmidt2016you}
+
+\bibitem[{Kraljic and Samuel(2006)}]{kraljic2006generalization}
+Kraljic, T. and Samuel, A.~G. (2006).
+\newblock Generalization in perceptual learning for speech.
+\newblock \emph{Psychonomic Bulletin \& Review} 13, 262--268.
+\newblock \doi{https://doi.org/10.3758/BF03193841}
+\bibAnnoteFile{kraljic2006generalization}
+
+\bibitem[{Kraljic and Samuel(2007)}]{kraljic2007perceptual}
+Kraljic, T. and Samuel, A.~G. (2007).
+\newblock Perceptual adjustments to multiple speakers.
+\newblock \emph{Journal of Memory and Language} 56, 1--15.
+\newblock \doi{https://doi.org/10.1016/j.jml.2006.07.010}
+\bibAnnoteFile{kraljic2007perceptual}
+
+\bibitem[{Kronrod et~al.(2016)Kronrod, Coppess, and
+  Feldman}]{kronrod2016unified}
+Kronrod, Y., Coppess, E., and Feldman, N.~H. (2016).
+\newblock A unified account of categorical effects in phonetic perception.
+\newblock \emph{Psychonomic Bulletin \& Review} 23, 1681--1712.
+\newblock \doi{https://doi.org/10.3758/s13423-016-1049-y}
+\bibAnnoteFile{kronrod2016unified}
+
+\bibitem[{Lahiri and Marslen-Wilson(1991)}]{lahiri1991mental}
+Lahiri, A. and Marslen-Wilson, W. (1991).
+\newblock The mental representation of lexical form: A phonological approach to
+  the recognition lexicon.
+\newblock \emph{Cognition} 38, 245--294.
+\newblock \doi{https://doi.org/10.1016/0010-0277(91)90008-R}
+\bibAnnoteFile{lahiri1991mental}
+
+\bibitem[{Lancia and Winter(2013)}]{lancia2013interaction}
+Lancia, L. and Winter, B. (2013).
+\newblock The interaction between competition, learning, and habituation
+  dynamics in speech perception.
+\newblock \emph{Laboratory Phonology} 4, 221--257.
+\newblock \doi{https://doi.org/10.1515/lp-2013-0009}
+\bibAnnoteFile{lancia2013interaction}
+
+\bibitem[{Lobanov(1971)}]{lobanov1971classification}
+Lobanov, B.~M. (1971).
+\newblock Classification of {R}ussian vowels spoken by different speakers.
+\newblock \emph{The Journal of the Acoustical Society of America} 49, 606--608.
+\newblock \doi{https://doi.org/10.1121/1.1912396}
+\bibAnnoteFile{lobanov1971classification}
+
+\bibitem[{Luce and Pisoni(1998)}]{luce1998recognizing}
+Luce, P.~A. and Pisoni, D.~B. (1998).
+\newblock Recognizing spoken words: The neighborhood activation model.
+\newblock \emph{Ear and Hearing} 19, 1
+\bibAnnoteFile{luce1998recognizing}
+
+\bibitem[{Massaro and Friedman(1990)}]{massaro1990models}
+Massaro, D.~W. and Friedman, D. (1990).
+\newblock Models of integration given multiple sources of information.
+\newblock \emph{Psychological Review} 97, 225.
+\newblock \doi{https://doi.org/10.1037/0033-295X.97.2.225}
+\bibAnnoteFile{massaro1990models}
+
+\bibitem[{Maye et~al.(2008)Maye, Aslin, and Tanenhaus}]{maye2008weckud}
+Maye, J., Aslin, R.~N., and Tanenhaus, M.~K. (2008).
+\newblock The {W}eckud {W}etch of the {W}ast: Lexical adaptation to a novel
+  accent.
+\newblock \emph{Cognitive Science} 32, 543--562.
+\newblock \doi{https://doi.org/10.1080/03640210802035357}
+\bibAnnoteFile{maye2008weckud}
+
+\bibitem[{McMurray and Jongman(2011)}]{mcmurray2011information}
+McMurray, B. and Jongman, A. (2011).
+\newblock What information is necessary for speech categorization? harnessing
+  variability in the speech signal by integrating cues computed relative to
+  expectations.
+\newblock \emph{Psychological Review} 118, 219.
+\newblock \doi{https://doi.org/10.1037/a0022325}
+\bibAnnoteFile{mcmurray2011information}
+
+\bibitem[{Munro and Derwing(1995)}]{munro1995processing}
+Munro, M.~J. and Derwing, T.~M. (1995).
+\newblock Processing time, accent, and comprehensibility in the perception of
+  native and foreign-accented speech.
+\newblock \emph{Language and Speech} 38, 289--306.
+\newblock \doi{https://doi.org/10.1177/002383099503800305}
+\bibAnnoteFile{munro1995processing}
+
+\bibitem[{Nearey(1978)}]{nearey1978phonetic}
+Nearey, T. (1978).
+\newblock Phonetic feature systems for vowels (indiana university linguistics
+  club, bloomington, in)
+\bibAnnoteFile{nearey1978phonetic}
+
+\bibitem[{Nixon et~al.(2016)Nixon, van Rij, Mok, Baayen, and
+  Chen}]{nixon2016temporal}
+Nixon, J.~S., van Rij, J., Mok, P., Baayen, R.~H., and Chen, Y. (2016).
+\newblock The temporal dynamics of perceptual uncertainty: eye movement
+  evidence from cantonese segment and tone perception.
+\newblock \emph{Journal of Memory and Language} 90, 103--125.
+\newblock \doi{https://doi.org/10.1016/j.jml.2016.03.005}
+\bibAnnoteFile{nixon2016temporal}
+
+\bibitem[{Norris and McQueen(2008)}]{norris2008shortlist}
+Norris, D. and McQueen, J.~M. (2008).
+\newblock Shortlist b: a bayesian model of continuous speech recognition.
+\newblock \emph{Psychological Review} 115, 357.
+\newblock \doi{https://doi.org/10.1037/0033-295X.115.2.357}
+\bibAnnoteFile{norris2008shortlist}
+
+\bibitem[{Norris et~al.(2003)Norris, McQueen, and
+  Cutler}]{norris2003perceptual}
+Norris, D., McQueen, J.~M., and Cutler, A. (2003).
+\newblock Perceptual learning in speech.
+\newblock \emph{Cognitive psychology} 47, 204--238.
+\newblock \doi{https://doi.org/10.1016/S0010-0285(03)00006-9}
+\bibAnnoteFile{norris2003perceptual}
+
+\bibitem[{Pierrehumbert(2001)}]{pierrehumbert2001exemplar}
+Pierrehumbert, J.~B. (2001).
+\newblock Exemplar dynamics: Word frequency, lenition and contrast.
+\newblock \emph{Typological Studies in Language} 45, 137--158
+\bibAnnoteFile{pierrehumbert2001exemplar}
+
+\bibitem[{Porretta et~al.(2017)Porretta, Tremblay, and
+  Bolger}]{porretta2017got}
+Porretta, V., Tremblay, A., and Bolger, P. (2017).
+\newblock Got experience? {PMN} amplitudes to foreign-accented speech modulated
+  by listener experience.
+\newblock \emph{Journal of Neurolinguistics} 44, 54--67.
+\newblock \doi{https://doi.org/10.1016/j.jneuroling.2017.03.002}
+\bibAnnoteFile{porretta2017got}
+
+\bibitem[{Qian et~al.(2016)Qian, Jaeger, and Aslin}]{qian2016incremental}
+Qian, T., Jaeger, T.~F., and Aslin, R.~N. (2016).
+\newblock Incremental implicit learning of bundles of statistical patterns.
+\newblock \emph{Cognition} 157, 156--173.
+\newblock \doi{https://doi.org/10.1016/j.cognition.2016.09.002}
+\bibAnnoteFile{qian2016incremental}
+
+\bibitem[{Reinisch and Holt(2014)}]{reinisch2014lexically}
+Reinisch, E. and Holt, L.~L. (2014).
+\newblock Lexically guided phonetic retuning of foreign-accented speech and its
+  generalization.
+\newblock \emph{Journal of Experimental Psychology: Human Perception and
+  Performance} 40, 539.
+\newblock \doi{https://doi.org/10.1037/a0034409}
+\bibAnnoteFile{reinisch2014lexically}
+
+\bibitem[{Rosenthal(1979)}]{rosenthal1979file}
+Rosenthal, R. (1979).
+\newblock The file drawer problem and tolerance for null results.
+\newblock \emph{Psychological bulletin} 86, 638.
+\newblock \doi{https://doi.org/10.1037/0033-2909.86.3.638}
+\bibAnnoteFile{rosenthal1979file}
+
+\bibitem[{Samuel(1982)}]{samuel1982phonetic}
+Samuel, A.~G. (1982).
+\newblock Phonetic prototypes.
+\newblock \emph{Perception \& Psychophysics} 31, 307--314.
+\newblock \doi{https://doi.org/10.3758/BF03202653}
+\bibAnnoteFile{samuel1982phonetic}
+
+\bibitem[{Schertz et~al.(2015)Schertz, Cho, Lotto, and
+  Warner}]{schertz2015individual}
+Schertz, J., Cho, T., Lotto, A., and Warner, N. (2015).
+\newblock Individual differences in phonetic cue use in production and
+  perception of a non-native sound contrast.
+\newblock \emph{Journal of phonetics} 52, 183--204.
+\newblock \doi{https://doi.org/10.1016/j.wocn.2015.07.003}
+\bibAnnoteFile{schertz2015individual}
+
+\bibitem[{Schmale et~al.(2012)Schmale, Cristia, and
+  Seidl}]{schmale2012toddlers}
+Schmale, R., Cristia, A., and Seidl, A. (2012).
+\newblock Toddlers recognize words in an unfamiliar accent after brief
+  exposure.
+\newblock \emph{Developmental Science} 15, 732--738.
+\newblock \doi{https://doi.org/10.1111/j.1467-7687.2012.01175.x}
+\bibAnnoteFile{schmale2012toddlers}
+
+\bibitem[{Shi et~al.(2010)Shi, Griffiths, Feldman, and
+  Sanborn}]{shi2010exemplar}
+Shi, L., Griffiths, T.~L., Feldman, N.~H., and Sanborn, A.~N. (2010).
+\newblock Exemplar models as a mechanism for performing bayesian inference.
+\newblock \emph{Psychonomic Bulletin \& Review} 17, 443--464.
+\newblock \doi{https://doi.org/10.3758/PBR.17.4.443}
+\bibAnnoteFile{shi2010exemplar}
+
+\bibitem[{Sidaras et~al.(2009)Sidaras, Alexander, and
+  Nygaard}]{sidaras2009perceptual}
+Sidaras, S.~K., Alexander, J.~E., and Nygaard, L.~C. (2009).
+\newblock Perceptual learning of systematic variation in spanish-accented
+  speech.
+\newblock \emph{The Journal of the Acoustical Society of America} 125,
+  3306--3316.
+\newblock \doi{https://doi.org/10.1121/1.3101452}
+\bibAnnoteFile{sidaras2009perceptual}
+
+\bibitem[{Smith et~al.(2019)Smith, Johnson, and Hayes-Harb}]{smith2019esl}
+Smith, B.~L., Johnson, E., and Hayes-Harb, R. (2019).
+\newblock {ESL} learners’ intra-speaker variability in producing {A}merican
+  {E}nglish tense and lax vowels.
+\newblock \emph{Journal of Second Language Pronunciation} 5, 139--164.
+\newblock \doi{https://doi.org/10.1075/jslp.15050.smi}
+\bibAnnoteFile{smith2019esl}
+
+\bibitem[{Tan et~al.(2019)Tan, Xie, and Jaeger}]{tan2019analysing}
+Tan, M. S.~L., Xie, X., and Jaeger, T.~F. (2019).
+\newblock Analysing {L}2 swedish word-final stops.
+\newblock In \emph{10th Tutorial and Research Workshop on Experimental
+  Linguistics}. 193--196
+\bibAnnoteFile{tan2019analysing}
+
+\bibitem[{Theodore and Monto(2019)}]{theodore2019distributional}
+Theodore, R.~M. and Monto, N.~R. (2019).
+\newblock Distributional learning for speech reflects cumulative exposure to a
+  talker’s phonetic distributions.
+\newblock \emph{Psychonomic Bulletin \& Review} 26, 985--992.
+\newblock \doi{https://doi.org/10.3758/s13423-018-1551-5}
+\bibAnnoteFile{theodore2019distributional}
+
+\bibitem[{Toscano and McMurray(2010)}]{toscano2010cue}
+Toscano, J.~C. and McMurray, B. (2010).
+\newblock Cue integration with categories: Weighting acoustic cues in speech
+  using unsupervised learning and distributional statistics.
+\newblock \emph{Cognitive science} 34, 434--464.
+\newblock \doi{10.1111/j.1551-6709.2009.01077.x}
+\bibAnnoteFile{toscano2010cue}
+
+\bibitem[{Vaughn et~al.(2019)Vaughn, Baese-Berk, and Idemaru}]{vaughn2019re}
+Vaughn, C., Baese-Berk, M., and Idemaru, K. (2019).
+\newblock Re-examining phonetic variability in native and non-native speech.
+\newblock \emph{Phonetica} 76, 327--358.
+\newblock \doi{https://doi.org/10.1159/000487269}
+\bibAnnoteFile{vaughn2019re}
+
+\bibitem[{Verhoeven(2005)}]{verhoeven2005belgian}
+Verhoeven, J. (2005).
+\newblock Belgian standard dutch.
+\newblock \emph{Journal of the International Phonetic Association} 35, 243--247
+\bibAnnoteFile{verhoeven2005belgian}
+
+\bibitem[{Volaitis and Miller(1992)}]{volaitis1992phonetic}
+Volaitis, L.~E. and Miller, J.~L. (1992).
+\newblock Phonetic prototypes: Influence of place of articulation and speaking
+  rate on the internal structure of voicing categories.
+\newblock \emph{The Journal of the Acoustical Society of America} 92, 723--735.
+\newblock \doi{https://doi.org/10.1121/1.403997}
+\bibAnnoteFile{volaitis1992phonetic}
+
+\bibitem[{Wade et~al.(2007)Wade, Jongman, and Sereno}]{Wade2007effects}
+Wade, T., Jongman, A., and Sereno, J. (2007).
+\newblock Effects of acoustic variability in the perceptual learning of
+  non-native-accented speech sounds.
+\newblock \emph{Phonetica} 64, 122--144.
+\newblock \doi{https://doi.org/10.1159/000107913}
+\bibAnnoteFile{Wade2007effects}
+
+\bibitem[{Weil(2001)}]{weil2001foreign}
+Weil, S. (2001).
+\newblock Foreign accented speech: Encoding and generalization.
+\newblock \emph{Journal of the Acoustical Society of America} 109, 2473
+\bibAnnoteFile{weil2001foreign}
+
+\bibitem[{Witteman et~al.(2013)Witteman, Weber, and
+  McQueen}]{witteman2013foreign}
+Witteman, M.~J., Weber, A., and McQueen, J.~M. (2013).
+\newblock Foreign accent strength and listener familiarity with an accent
+  codetermine speed of perceptual adaptation.
+\newblock \emph{Attention, Perception, \& Psychophysics} 75, 537--556.
+\newblock \doi{https://doi.org/10.3758/s13414-012-0404-y}
+\bibAnnoteFile{witteman2013foreign}
+
+\bibitem[{Xie et~al.(2021)Xie, Buxó-Lugo, and Kurumada}]{xie2021encoding}
+Xie, X., Buxó-Lugo, A., and Kurumada, C. (2021).
+\newblock Encoding and decoding of meaning through structured variability in
+  intonational speech prosody.
+\newblock \emph{Cognition} 97.
+\newblock \doi{https://doi.org/10.1016/j.cognition.2021.104619}
+\bibAnnoteFile{xie2021encoding}
+
+\bibitem[{Xie et~al.(2018{\natexlab{a}})Xie, Earle, and Myers}]{xie2018sleep}
+Xie, X., Earle, F.~S., and Myers, E.~B. (2018{\natexlab{a}}).
+\newblock Sleep facilitates generalisation of accent adaptation to a new
+  talker.
+\newblock \emph{Language, Cognition and Neuroscience} 33, 196--210.
+\newblock \doi{https://doi.org/10.1080/23273798.2017.1369551}
+\bibAnnoteFile{xie2018sleep}
+
+\bibitem[{Xie and Jaeger(2020)}]{xie2020comparing}
+Xie, X. and Jaeger, T.~F. (2020).
+\newblock Comparing non-native and native speech: Are {L}2 productions more
+  variable?
+\newblock \emph{The Journal of the Acoustical Society of America} 147,
+  3322--3347.
+\newblock \doi{https://doi.org/10.1121/10.0001141}
+\bibAnnoteFile{xie2020comparing}
+
+\bibitem[{Xie and Myers(2017)}]{xie2017learning}
+Xie, X. and Myers, E.~B. (2017).
+\newblock Learning a talker or learning an accent: Acoustic similarity
+  constrains generalization of foreign accent adaptation to new talkers.
+\newblock \emph{Journal of Memory and Language} 97, 30--46.
+\newblock \doi{https://doi.org/10.1016/j.jml.2017.07.005}
+\bibAnnoteFile{xie2017learning}
+
+\bibitem[{Xie et~al.(2017)Xie, Theodore, and Myers}]{xie2017more}
+Xie, X., Theodore, R.~M., and Myers, E.~B. (2017).
+\newblock More than a boundary shift: Perceptual adaptation to foreign-accented
+  speech reshapes the internal structure of phonetic categories.
+\newblock \emph{Journal of Experimental Psychology: Human Perception and
+  Performance} 43, 206.
+\newblock \doi{https://doi.org/10.1037/xhp0000285}
+\bibAnnoteFile{xie2017more}
+
+\bibitem[{Xie et~al.(2018{\natexlab{b}})Xie, Weatherholtz, Bainton, Rowe,
+  Burchill, Liu et~al.}]{xie2018rapid}
+Xie, X., Weatherholtz, K., Bainton, L., Rowe, E., Burchill, Z., Liu, L., et~al.
+  (2018{\natexlab{b}}).
+\newblock Rapid adaptation to foreign-accented speech and its transfer to an
+  unfamiliar talker.
+\newblock \emph{The Journal of the Acoustical Society of America} 143,
+  2013--2031.
+\newblock \doi{https://doi.org/10.1121/1.5027410}
+\bibAnnoteFile{xie2018rapid}
+
+\end{thebibliography}
