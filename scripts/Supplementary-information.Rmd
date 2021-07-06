@@ -69,6 +69,7 @@ library(cowplot)        # multi-plot figures
 library(plotly)         # 3D plotting 
 library(shiny)          # tabs
 library(ggpubr)
+library(ggforce)
 library(gridExtra)
 
 library(assertthat)
@@ -1646,7 +1647,6 @@ save(
 
 ```{r pairwise correlation plots production data, include = FALSE}
 # make pairwise correlation plots for the corrected cues
-library(ggforce)
 
 plot_cue_matrix <- function(data) {
   data %>% mutate("Vowel" = rvowel,
@@ -1655,7 +1655,7 @@ plot_cue_matrix <- function(data) {
   ggplot(aes(x = .panel_x, y = .panel_y, colour = Sound, fill = Sound)) +
   scale_colour_manual(values = colors.Category) +
   scale_fill_manual(values = colors.Category) +
-  geom_point(alpha = 0.6, shape = 16, size = 1, aes(fill = Sound)) +
+  geom_point(alpha = 0.6, shape = 16, size = 1) +
   geom_autodensity(alpha = .04, position = "identity") +
   stat_ellipse(type = "norm") +
   facet_matrix(vars(c(Vowel, Closure, Burst)), layer.diag = 2, layer.upper = 3, 
