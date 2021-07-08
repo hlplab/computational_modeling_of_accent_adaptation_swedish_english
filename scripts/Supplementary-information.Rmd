@@ -237,7 +237,7 @@ Power analyses presented in Section \@ref(sec:bootstrap) find that a) the Englis
 
 ## Recording of materials {#sec:recording}
 
-By design, the two experiments differ by design in the native-non-native background of the recorded speaker. Additionally, the two experiments differed in the recording procedure. Whereas the English recordings was elicited without playing a native pronunciation (*unassisted*), the Swedish recordings were elicited by first playing a native pronunciation of the target word (*assisted*). Both the non-native talkers were selected based on experimenters' judgments of their accentedness. 
+By design, the two experiments differ by design in the native-non-native background of the recorded speaker. Additionally, the two experiments differed in the recording procedure. Whereas the English recordings was elicited without playing a native pronunciation (*unassisted*), the Swedish recordings were elicited by first playing a native pronunciation of the target word (*assisted*). Both the non-native talkers were selected based on experimenters' judgments of their accentedness. We cannot conclude that these two speakers were identical in their overall intelligibility and it is very unlikely that they are comparable in overall perceived accentedness.
 
 ### English
 Recordings were made of a male native-Mandarin speaker who was a late second language learner of English. This speaker was an undergraduate student enrolled in a U.S. university and had resided in the United States for 18 months at the time of recording. Recordings were made in a sound-proof room using a microphone onto a digital recorder, digitally sampled at 44.1 kHz and normalized for root mean square amplitude to 70 dB sound pressure level. 
