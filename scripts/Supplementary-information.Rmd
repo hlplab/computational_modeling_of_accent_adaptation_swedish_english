@@ -893,16 +893,19 @@ bootstrap = function(replacement = T) {
   applyContrasts() %>% 
   ungroup() %>%
   # Run analysis and simple effects
-  summarise(
-    lmer.rating = list(
-      lmer(Rating.Response.d.zscored ~ 
-             NativeLanguage * Group * Sound + 
-             (1 + Sound * Group | Item.BootstrapID) + (1 | Participant),
-           data = .)),
-    lmer.rating.simple = list(
-      contrast(emmeans(lmer.rating[[1]], ~ Group : Sound | NativeLanguage,
-                       lmer.df = "Satterthwaite", lmerTest.limit = 10000),
-               interaction = c("consec", "consec")))
+    summarise(
+      lmer.rating = list(
+        lmer(
+          Rating.Response.d.zscored ~ 
+            NativeLanguage * Group * Sound + 
+            (1 + Sound * Group | Item.BootstrapID) + 
+            (1 | Participant),
+          data = .)),
+      lmer.rating.simple = list(
+      emmeans::contrast(
+        emmeans(lmer.rating[[1]], ~ Group : Sound | NativeLanguage,
+                lmer.df = "Satterthwaite", lmerTest.limit = 10000),
+        interaction = c("consec", "consec")))
   )
   
   return(d)
