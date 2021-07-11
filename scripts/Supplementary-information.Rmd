@@ -1388,6 +1388,23 @@ plot_corrected_cues = function(.data, title = "Correction step") {
                           font = list(color="black"))
     )   
 }
+
+# make pairwise correlation plots for the corrected cues in 1D and 2D
+
+plot_cue_matrix <- function(data) {
+  data %>% mutate("Vowel" = rvowel.step2,
+         "Closure" = rclosure.step2,
+         "Burst" = rburst.step2) %>% 
+  ggplot(aes(x = .panel_x, y = .panel_y, colour = Sound, fill = Sound)) +
+  scale_colour_manual(values = colors.Category) +
+  scale_fill_manual(values = colors.Category) +
+  geom_point(alpha = 0.6, shape = 16, size = 1) +
+  geom_autodensity(alpha = .04, position = "identity") +
+  stat_ellipse(type = "norm") +
+  facet_matrix(vars(c(Vowel, Closure, Burst)), layer.diag = 2, layer.upper = 3, 
+                    grid.y.diag= FALSE) +
+  theme_bw()
+}
 ```
 
 <!-- ```{r results='asis', echo=FALSE} -->
@@ -1606,6 +1623,11 @@ plot_corrected_cues(
     filter(NativeLanguage == "English", Accent == "native"))
 ```
 
+
+```{r native-english-corrected-cues-2D, fig.cap="Native English corrected cues in 1D density plots and 2D pair-wise correlation plots", out.width="75%", fig.show='hold'}
+plot_cue_matrix(d.stims.step2 %>% filter(NativeLanguage == "English" & Accent == "native"))
+```
+
 #### English (non-native)
 (ref:non-native-english-cue-before-and-after-suprasegmental-correction) Mandarin-accented English words with syllable-final /d/ or /t/ before and after correction for supra-segmental context.
 
@@ -1616,6 +1638,9 @@ plot_corrected_cues(
 ```
 
 
+```{r non-native-english-corrected-cues-2D, fig.cap="Non-native English corrected cues in 1D density plots and 2D pair-wise correlation plots", out.width="75%", fig.show='hold'}
+plot_cue_matrix(d.stims.step2 %>% filter(NativeLanguage == "English" & Accent == "non-native"))
+```
 #### Swedish (native)
 (ref:native-swedish-cue-before-and-after-suprasegmental-correction) native-accented Swedish words with syllable-final /d/ or /t/ before and after correction for supra-segmental context.
 
@@ -1623,6 +1648,10 @@ plot_corrected_cues(
 plot_corrected_cues(
    d.stims.long %>% 
           filter(NativeLanguage == "Swedish", Accent == "native"))
+```
+
+```{r native-swedish-corrected-cues-2D, fig.cap="Native Swedish corrected cues in 1D density plots and 2D pair-wise correlation plots", out.width="75%", fig.show='hold'}
+plot_cue_matrix(d.stims.step2 %>% filter(NativeLanguage == "Swedish" & Accent == "native") )
 ```
 
 #### Swedish (non-native)
@@ -1634,6 +1663,10 @@ plot_corrected_cues(
           filter(NativeLanguage == "Swedish", Accent == "non-native"))
 ```
 
+
+```{r non-native-swedish-corrected-cues-2D, fig.cap="Non-native Swedish corrected cues in 1D density plots and 2D pair-wise correlation plots", out.width="75%", fig.show='hold'}
+plot_cue_matrix(d.stims.step2 %>% filter(NativeLanguage == "Swedish" & Accent == "non-native"))
+```
 
 ```{r store corrected production data, include=FALSE}
 # store the final residualised values from step 2 as r<cue>
@@ -1648,44 +1681,15 @@ save(
   file = "../data/data_production_corrected for phonetic context_both languages.Rdata")
 ```
 
-```{r pairwise correlation plots production data, include = FALSE}
-# make pairwise correlation plots for the corrected cues
 
-plot_cue_matrix <- function(data) {
-  data %>% mutate("Vowel" = rvowel,
-         "Closure" = rclosure,
-         "Burst" = rburst) %>% 
-  ggplot(aes(x = .panel_x, y = .panel_y, colour = Sound, fill = Sound)) +
-  scale_colour_manual(values = colors.Category) +
-  scale_fill_manual(values = colors.Category) +
-  geom_point(alpha = 0.6, shape = 16, size = 1) +
-  geom_autodensity(alpha = .04, position = "identity") +
-  stat_ellipse(type = "norm") +
-  facet_matrix(vars(c(Vowel, Closure, Burst)), layer.diag = 2, layer.upper = 3, 
-                    grid.y.diag= FALSE) +
-  theme_bw()
-}
-```
 
-(ref:native-english-corrected-cues-2D) 1D density plots and 2D pair-wise correlation plots of native English cues corrected for both segmental and supra-segmental context.
-```{r native-english-corrected-cues-2D, fig.cap="(ref:native-english-corrected-cues-2D)", out.width="75%", fig.show='hold'}
-plot_cue_matrix(d.stims %>% filter(NativeLanguage == "English" & Accent == "native"))
-```
 
-(ref:non-native-english-corrected-cues-2D) 1D density plots and 2D pair-wise correlation plots of non-native English cues corrected for both segmental and supra-segmental context.
-```{r non-native-english-corrected-cues-2D, fig.cap="(ref:non-native-english-corrected-cues-2D)", out.width="75%", fig.show='hold'}
-plot_cue_matrix(d.stims %>% filter(NativeLanguage == "English" & Accent == "non-native"))
-```
 
-(ref:native-swedish-corrected-cues-2D) 1D density plots and 2D pair-wise correlation plots of native Swedish cues corrected for both segmental and supra-segmental context.
-```{r native-swedish-corrected-cues-2D, fig.cap="(ref:native-swedish-corrected-cues-2D)", out.width="75%", fig.show='hold'}
-plot_cue_matrix(d.stims %>% filter(NativeLanguage == "Swedish" & Accent == "native") )
-```
+
+
 
 (ref:non-native-swedish-corrected-cues-2D) 1D density plots and 2D pair-wise correlation plots of non-native Swedish cues corrected for both segmental and supra-segmental context.
-```{r non-native-swedish-corrected-cues-2D, fig.cap="(ref:non-native-swedish-corrected-cues-2D)", out.width="75%", fig.show='hold'}
-plot_cue_matrix(d.stims %>% filter(NativeLanguage == "Swedish" & Accent == "non-native"))
-```
+
 
 ## Training the four ideal observers
 
