@@ -77,8 +77,8 @@ library(assertthat)
 library(daver)
 # devtools::install_github("kleinschmidt/phondisttools")
 library(phondisttools)
-# devtools::install_github("hlplab/MVBeliefUpdatr")
-library(MVBeliefUpdatr)
+# devtools::install_github("../../MVBeliefUpdatr")
+#library(MVBeliefUpdatr)
 ```
 
 ```{r constants and environments}
@@ -1667,20 +1667,22 @@ plot_cue_matrix <- function(data) {
 }
 ```
 
-
+(ref:native-english-corrected-cues-2D) 1D density plots and 2D pair-wise correlation plots of native English cues corrected for both segmental and supra-segmental context.
 ```{r native-english-corrected-cues-2D, fig.cap="(ref:native-english-corrected-cues-2D)", out.width="75%", fig.show='hold'}
 plot_cue_matrix(d.stims %>% filter(NativeLanguage == "English" & Accent == "native"))
 ```
 
-
+(ref:non-native-english-corrected-cues-2D) 1D density plots and 2D pair-wise correlation plots of non-native English cues corrected for both segmental and supra-segmental context.
 ```{r non-native-english-corrected-cues-2D, fig.cap="(ref:non-native-english-corrected-cues-2D)", out.width="75%", fig.show='hold'}
 plot_cue_matrix(d.stims %>% filter(NativeLanguage == "English" & Accent == "non-native"))
 ```
 
+(ref:native-swedish-corrected-cues-2D) 1D density plots and 2D pair-wise correlation plots of native Swedish cues corrected for both segmental and supra-segmental context.
 ```{r native-swedish-corrected-cues-2D, fig.cap="(ref:native-swedish-corrected-cues-2D)", out.width="75%", fig.show='hold'}
 plot_cue_matrix(d.stims %>% filter(NativeLanguage == "Swedish" & Accent == "native") )
 ```
 
+(ref:non-native-swedish-corrected-cues-2D) 1D density plots and 2D pair-wise correlation plots of non-native Swedish cues corrected for both segmental and supra-segmental context.
 ```{r non-native-swedish-corrected-cues-2D, fig.cap="(ref:non-native-swedish-corrected-cues-2D)", out.width="75%", fig.show='hold'}
 plot_cue_matrix(d.stims %>% filter(NativeLanguage == "Swedish" & Accent == "non-native"))
 ```
