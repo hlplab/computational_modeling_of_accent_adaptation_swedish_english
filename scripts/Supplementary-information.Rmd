@@ -1646,8 +1646,6 @@ save(
 ```
 
 ```{r pairwise correlation plots production data, include = FALSE}
-# make pairwise correlation plots for the corrected cues
-
 plot_cue_matrix <- function(data) {
   data %>% mutate("Vowel" = rvowel,
          "Closure" = rclosure,
@@ -1665,20 +1663,20 @@ plot_cue_matrix <- function(data) {
 ```
 
 
-```{r native-english-corrected-cues-2D fig.cap="(ref:native-english-corrected-cues-2D)", out.width="75%", fig.show='hold'}
+```{r native-english-corrected-cues-2D, fig.cap="(ref:native-english-corrected-cues-2D)", out.width="75%", fig.show='hold'}
 plot_cue_matrix(d.stims %>% filter(NativeLanguage == "English" & Accent == "native"))
 ```
 
 
-```{r non-native-english-corrected-cues-2D fig.cap="(ref:non-native-english-corrected-cues-2D)", out.width="75%", fig.show='hold'}
+```{r non-native-english-corrected-cues-2D, fig.cap="(ref:non-native-english-corrected-cues-2D)", out.width="75%", fig.show='hold'}
 plot_cue_matrix(d.stims %>% filter(NativeLanguage == "English" & Accent == "non-native"))
 ```
 
-```{r native-swedish-corrected-cues-2D fig.cap="(ref:native-swedish-corrected-cues-2D)", out.width="75%", fig.show='hold'}
+```{r native-swedish-corrected-cues-2D, fig.cap="(ref:native-swedish-corrected-cues-2D)", out.width="75%", fig.show='hold'}
 plot_cue_matrix(d.stims %>% filter(NativeLanguage == "Swedish" & Accent == "native") )
 ```
 
-```{r non-native-swedish-corrected-cues-2D fig.cap="(ref:non-native-swedish-corrected-cues-2D)", out.width="75%", fig.show='hold'}
+```{r non-native-swedish-corrected-cues-2D, fig.cap="(ref:non-native-swedish-corrected-cues-2D)", out.width="75%", fig.show='hold'}
 plot_cue_matrix(d.stims %>% filter(NativeLanguage == "Swedish" & Accent == "non-native"))
 ```
 
