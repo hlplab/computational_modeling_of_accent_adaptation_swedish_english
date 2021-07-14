@@ -2271,7 +2271,7 @@ d.test.IO.byItem <-
   d.test.IO %>%
   # There seem to be points for which no model predictions exist. 
   # Removing them for now (It's two English data points: Item.WordID E104, E105)
-  filter(!is.na(Model.Group.matchesParticipant.Group)) %>%
+  #filter(!is.na(Model.Group.matchesParticipant.Group)) %>%
   group_by(Language, Group, Model.Group.matchesParticipant.Group, Sound, Item.WordID) %>%
   summarise(
     Model.Posterior.d = mean(Model.Posterior.d),
@@ -2279,7 +2279,7 @@ d.test.IO.byItem <-
   # Normalize human ratings'
   group_by(Language, Group, Model.Group.matchesParticipant.Group) %>%
   mutate(
-    Model.Posterior.d = Model.Posterior.d,
+    Model.Posterior.d = Model.Posterior.d, # do we need this line?
     Rating.Response.d.normalized = (Rating.Response.d.zscored - min(Rating.Response.d.zscored)) / (max(Rating.Response.d.zscored) - min(Rating.Response.d.zscored))) 
 
 d.test.IO.byItem %>%
