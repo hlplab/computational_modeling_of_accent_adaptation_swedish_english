@@ -2093,24 +2093,26 @@ In addition to testing the ideal observer models on the respective non-native ta
 ```{r k-fold-CV-of-IO, include = FALSE}
 
 k = 5
-# function to get the number of rows per talker contribution to each category model
-get_nrows_per_talker <- function(d) {
-  d %>% group_by(Used_for.Model.Group,
-                 Talker, 
-                 Used_for.Model.Sound) %>% 
-   add_count() %>% 
-    rename(Length.Data = n)
-}
+# # function to get the number of rows per talker contribution to each category model
+# get_nrows_per_talker <- function(d) {
+#   d %>% group_by(Used_for.Model.Group,
+#                  Talker, 
+#                  Used_for.Model.Sound) %>% 
+#    add_count() %>% 
+#     rename(Length.Data = n)
+# }
 
 # group the training data by talker for each model and divide into 5 parts
-d.IO.training %>% group_by(Used_for.Model.NativeLanguage,
+d.IO.training.CV <- d.IO.training %>% group_by(Used_for.Model.NativeLanguage,
                            Used_for.Model.Group,
                            Talker, Used_for.Model.Sound) %>%
-  get_nrows_per_talker() %>% 
+  add_count() %>% 
+  rename(Length.Data = n) %>%  
   mutate(Segment.Size = Length.Data/k, 
          Count = row_number(), 
          Test.Set = paste0(rep("test",length.out = 30), 
-                           rep(c(1:6), 5)))
+                           rep(c(1:5), 1, each = 6)))
+
 ```
 
 
