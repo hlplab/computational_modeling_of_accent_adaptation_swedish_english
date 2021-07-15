@@ -2103,7 +2103,7 @@ k = 5
 # }
 
 # group the training data by talker for each model and divide into 5 parts
-d.IO.training.CV <- d.IO.training %>% group_by(Used_for.Model.NativeLanguage,
+d.IO.training %>% group_by(Used_for.Model.NativeLanguage,
                            Used_for.Model.Group,
                            Talker, Used_for.Model.Sound) %>%
   add_count() %>% 
