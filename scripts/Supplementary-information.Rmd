@@ -44,7 +44,7 @@ csl: frontiers-in-psychology.csl
 
 ```{r rmarkdown setup, include=FALSE}
 knitr::opts_chunk$set(echo = FALSE, 
-                      message=FALSE, warning=FALSE, error=TRUE)
+                      message=TRUE, warning=TRUE, error=TRUE)
 ```
 
 
@@ -2088,6 +2088,35 @@ p.post +
                alpha = .8, size = .8, 
                position = position_dodge(.3))
 ```
+### K-fold Cross-Validation of ideal observer models
+In addition to testing the ideal observer models on the respective non-native talker test data we ran 5-fold cross-validation on each of the models to estimate their test error rate.
+```{r k-fold-CV-of-IO, include = FALSE}
+
+k = 5
+# function to get the number of rows per talker contribution to each category model
+get_nrows_per_talker <- function(d) {
+  d %>% group_by(Used_for.Model.Group,
+                 Talker, 
+                 Used_for.Model.Sound) %>% 
+   add_count() %>% 
+    rename(Length.Data = n)
+}
+
+# group the training data by talker for each model and divide into 5 parts
+d.IO.training %>% group_by(Used_for.Model.NativeLanguage,
+                           Used_for.Model.Group,
+                           Talker, Used_for.Model.Sound) %>%
+  get_nrows_per_talker() %>% 
+  mutate(Segment.Size = Length.Data/k, 
+         Count = row_number(), 
+         Test.Set = paste0(rep("test",length.out = 30), 
+                           rep(c(1:6), 5)))
+```
+
+
+
+
+
 
 
 ### Categorization accuracy {#sec:IO-methods-categorization}
