@@ -1339,7 +1339,7 @@ d.stims.step1 %<>%
            rvowel.step1, rclosure.step1, rburst.step1)) 
 ```
 
-The estimates shown in the above figures are the segmental context effects we then subtracted out of *all* tokens. Figures \@ref(fig:native-english-cue-before-and-after-segment-correction) to \@ref(fig:non-native-swedish-cue-before-and-after-segment-correction) show the distribution of cues to the /t/ and /d/ categories before and after correction for segmental context for the English and Swedish experiment, respectively. 
+The estimates shown in the above figures are the segmental context effects we then subtracted out of *all* tokens. Figures \@ref(fig:native-english-cue-before-and-after-segment-correction) to \@ref(fig:non-native-swedish-cue-before-and-after-segment-correction) show the distribution of cues to the /t/ and /d/ categories before and after correction for segmental context for the English and Swedish experiment, respectively. We show both 3D plots, and pairwise correlation plots.
 
 ```{r prepare for cue plot after step 1, include=FALSE}
 # Make pipe to transform d.stim into long format for plotting (used a few times below)
@@ -1435,6 +1435,15 @@ plot_corrected_cues(
           filter(NativeLanguage == "English", Accent == "native"))
 ```
 
+(ref:native-english-cue-before-and-after-segment-correction-2D) 1D density plots and 2D pairwise correlation plots of native English cues corrected for segmental context.
+
+```{r native-english-cue-before-and-after-segment-correction-2D, fig.cap="(ref:native-english-cue-before-and-after-segment-correction-2D)", out.width="75%", fig.show='hold'}
+plot_cue_matrix(
+  d.stims.step1 %>% 
+    filter(NativeLanguage == "English" & Accent == "native"),
+  cues = c("rvowel.step1", "rclosure.step1", "rburst.step1"))
+```
+
 #### English (non-native)
 (ref:non-native-english-cue-before-and-after-segment-correction) Mandarin-accented English words with syllable-final /d/ or /t/ before and after correction for segmental context.
 
@@ -1442,6 +1451,15 @@ plot_corrected_cues(
 plot_corrected_cues(
    d.stims.long %>% 
           filter(NativeLanguage == "English", Accent == "non-native"))
+```
+
+(ref:non-native-english-cue-before-and-after-segment-correction-2D) 1D density plots and 2D pairwise correlation plots of non-native English cues corrected for segmental context.
+
+```{r non-native-english-cue-before-and-after-segment-correction-2D, fig.cap="(ref:non-native-english-cue-before-and-after-segment-correction-2D)", out.width="75%", fig.show='hold'}
+plot_cue_matrix(
+  d.stims.step1 %>% 
+    filter(NativeLanguage == "English" & Accent == "non-native"),
+  cues = c("rvowel.step1", "rclosure.step1", "rburst.step1"))
 ```
 
 #### Swedish (native)
@@ -1453,6 +1471,16 @@ plot_corrected_cues(
           filter(NativeLanguage == "Swedish", Accent == "native"))
 ```
 
+(ref:native-Swedish-cue-before-and-after-segment-correction-2D) 1D density plots and 2D pairwise correlation plots of native Swedish cues corrected for segmental context.
+
+```{r native-Swedish-cue-before-and-after-segment-correction-2D, fig.cap="(ref:native-Swedish-cue-before-and-after-segment-correction-2D)", out.width="75%", fig.show='hold'}
+plot_cue_matrix(
+  d.stims.step1 %>% 
+    filter(NativeLanguage == "Swedish" & Accent == "native"),
+  cues = c("rvowel.step1", "rclosure.step1", "rburst.step1"))
+```
+
+
 #### Swedish (non-native)
 (ref:non-native-swedish-cue-before-and-after-segment-correction) Flemish-accented Swedish words with syllable-final /d/ or /t/ before and after correction for segmental context.
 
@@ -1462,6 +1490,14 @@ plot_corrected_cues(
           filter(NativeLanguage == "Swedish", Accent == "non-native"))
 ```
 
+(ref:non-native-Swedish-cue-before-and-after-segment-correction-2D) 1D density plots and 2D pairwise correlation plots of non-native Swedish cues corrected for segmental context.
+
+```{r non-native-Swedish-cue-before-and-after-segment-correction-2D, fig.cap="(ref:non-native-Swedish-cue-before-and-after-segment-correction-2D)", out.width="75%", fig.show='hold'}
+plot_cue_matrix(
+  d.stims.step1 %>% 
+    filter(NativeLanguage == "Swedish" & Accent == "non-native"),
+  cues = c("rvowel.step1", "rclosure.step1", "rburst.step1"))
+```
 
 ### Step 2: Correcting for supra-segmental context
 
@@ -1601,7 +1637,7 @@ d.stims.step2 %<>%
       rburst.step2))
 ```
 
-Figures \@ref(fig:native-english-cue-before-and-after-suprasegmental-correction) to \@ref(fig:non-native-swedish-cue-before-and-after-suprasegmental-correction) show the distribution of cues to the /t/ and /d/ categories before and after correction for segmental and supra-segmental context for the English and Swedish experiment, respectively. The cue distributions after the second, and final, correction step were then used to train (fit) and test the four ideal observers for the /d/-exposure and control conditions for English and Swedish.
+Figures \@ref(fig:native-english-cue-before-and-after-suprasegmental-correction) to \@ref(fig:non-native-swedish-corrected-cues-2D) show the distribution of cues to the /t/ and /d/ categories before and after correction for segmental and supra-segmental context for the English and Swedish experiment, respectively. We show both 3D plots, and pairwise correlation plots. The cue distributions after the second, and final, correction step were then used to train (fit) and test the four ideal observers for the /d/-exposure and control conditions for English and Swedish.
 
 ```{r prepare for cue plot after step 1 and 2, include=FALSE}
 d.stims.long = 
