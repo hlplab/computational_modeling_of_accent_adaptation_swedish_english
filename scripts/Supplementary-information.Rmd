@@ -2091,27 +2091,86 @@ p.post +
 ### K-fold Cross-Validation of ideal observer models
 In addition to testing the ideal observer models on the respective non-native talker test data we ran 5-fold cross-validation on each of the models to estimate their test error rate.
 ```{r k-fold-CV-of-IO, include = FALSE}
-
 k = 5
-# # function to get the number of rows per talker contribution to each category model
-# get_nrows_per_talker <- function(d) {
-#   d %>% group_by(Used_for.Model.Group,
-#                  Talker, 
-#                  Used_for.Model.Sound) %>% 
-#    add_count() %>% 
-#     rename(Length.Data = n)
-# }
 
 # group the training data by talker for each model and divide into 5 parts
-d.IO.training %>% group_by(Used_for.Model.NativeLanguage,
+d.IO.CV <- d.IO.training %>% group_by(Used_for.Model.NativeLanguage,
                            Used_for.Model.Group,
                            Talker, Used_for.Model.Sound) %>%
   add_count() %>% 
   rename(Length.Data = n) %>%  
   mutate(Segment.Size = Length.Data/k, 
          Count = row_number(), 
-         Test.Set = paste0(rep("test",length.out = 30), 
-                           rep(c(1:5), 1, each = 6)))
+         Test.Set = paste0(rep("test_",length.out = 30), 
+                           rep(c(1:5), 1, each = 6))) 
+
+train_IO = function(
+  .data, 
+  cues, 
+  # Guess maximal grouping structure from data
+  groups = guess_groups(.data),
+  Test.Set = c(1:5)
+) {
+  # Make sure that only training data is used
+  .data %<>%
+    ungroup() %>%
+    filter(Used_for == "training") %>%
+    droplevels()
+  
+  # Get the mean and covariance matrix
+  .data %>%
+    # If there's more than one talker do the subsequent steps separately for each talker
+    group_by(!!! rlang::syms(groups)) %>%
+    summarise(
+      mu = list(colMeans(cbind(!!! rlang::syms(cues)))),
+      Sigma = list(cov(cbind(!!! rlang::syms(cues))))
+    ) %>%
+    # If there's more than one talker get the average of by-talker mu and Sigma
+    { if (nlevels(.data$Talker) > 1) {
+      # Group by everything *except* for Talker
+      group_by(., !!! rlang::syms(setdiff(groups, "Talker"))) %>%
+        summarise(
+          Model = list(list(
+            mu = Reduce("+", mu) / length(mu),
+            Sigma = Reduce("+", Sigma) / length(Sigma)))
+        ) } else . } %>%
+    select(!!! rlang::syms(setdiff(groups, "Talker")), Model) %>%
+    mutate(Training.Set = paste0("training_", Test.Set )) %>%
+    applyFactorLevels()
+}
+
+#Filter d.IO.CV into 5 training sets and pipe into train_IO, create a column indicating training round
+
+training.1 <- d.IO.CV %>% filter(Test.Set != "test_1") %>% 
+  train_IO(., cues = selected_cues, Test.Set = 1)
+
+training.2 <- d.IO.CV %>% filter(Test.Set != "test_2") %>% 
+  train_IO(., cues = selected_cues, Test.Set = 2)
+
+training.3 <- d.IO.CV %>% filter(Test.Set != "test_3") %>% 
+  train_IO(., cues = selected_cues, Test.Set = 3)
+
+training.4 <- d.IO.CV %>% filter(Test.Set != "test_4") %>% 
+  train_IO(., cues = selected_cues, Test.Set = 4)
+
+training.5 <- d.IO.CV %>% filter(Test.Set != "test_5") %>% 
+  train_IO(., cues = selected_cues, Test.Set = 5)
+
+d.IO.training.models <- rbind(training.1, training.2, training.3, training.4, training.5)
+
+# loop over for the above?
+# for (i in 1:2){
+#  d.IO.CV %>% filter(Test.Set != paste("test_",i)) %>%
+#   train_IO(., cues = selected_cues, Test.Set = i)
+#   }
+
+
+              
+
+  
+
+
+
 
 ```
 
