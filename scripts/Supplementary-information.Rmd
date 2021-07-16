@@ -2550,7 +2550,7 @@ On the one hand, the results are encouraging: the /d/-exposure model predicts th
 ```{r functions to plot-ideal-observers-results-3D}
 plot_IO_test = function(
   .data.IO, 
-  .data.test = NULL,
+  .data.test,
   language, 
   cues,
   show.difference = FALSE, # Should the difference between native and non-native posterior be plotted?
@@ -2574,7 +2574,12 @@ plot_IO_test = function(
     mutate(
       vowel = !! rlang::sym(cues[1]),
       closure = !! rlang::sym(cues[2]),
-      burst = !! rlang::sym(cues[3]))
+      burst = !! rlang::sym(cues[3])) %>%
+    mutate(color.outer = colors.Category[Sound]) %>%
+    # IMPORTANT: Sorting by Model.Group (which is used below as frame argument)
+    # This might be a bug in plotly() but it seems to assume that the data are arranged
+    # by the frame variable
+    arrange(Model.Group)
   
   # Unnest data if that hasn't already happened
   if ("ellipse" %in% names(.data.IO)) .data.IO %<>%
@@ -2582,7 +2587,6 @@ plot_IO_test = function(
 
   axes = get_axes(.data.IO, .data.test, cues)
   
-  # Add ideal observer, or---if differences are to be shown---add color scale
   if (!show.difference) {
     if (length(unique(.data.test$Model.Group)) > 1) {
        p = plot_ly() %>%
@@ -2611,130 +2615,129 @@ plot_IO_test = function(
             visible = "legendonly") 
     }
     
-    p = plot_IO(.data.IO, language = language, .plot = p, cues = cues, alpha = ellipses.alpha, addSlider = F) 
+    # p = plot_IO(.data.IO, language = language, .plot = p, cues = cues, alpha = ellipses.alpha, addSlider = F) 
   }
   
-  if (!is.null(.data.test)) {
-    # Plot difference ...
-    if (show.difference) {
-      .data.test %<>%
-        select(-Model.Posterior.d) %>%
-        pivot_wider(
-          names_from = Model.Group,
-          values_from = Model.Posterior.Intended
-        ) %>%
-        # Using difference. Could use ratio instead
-        mutate(Model.Posterior.Intended.Difference = `/d/-exposure` - control)
-      
-      p = 
-        plot_ly(
-          data = .data.test,
-          type = "scatter3d", 
-          mode = "markers",
-          showlegend = F) %>%
+  # Plot difference ...
+  if (show.difference) {
+    .data.test %<>%
+      select(-Model.Posterior.d) %>%
+      pivot_wider(
+        names_from = Model.Group,
+        values_from = Model.Posterior.Intended
+      ) %>%
+      # Using difference. Could use ratio instead
+      mutate(Model.Posterior.Intended.Difference = `/d/-exposure` - control)
+    
+    p = 
+      plot_ly(
+        data = .data.test,
+        type = "scatter3d", 
+        mode = "markers",
+        showlegend = F) %>%
+      add_trace(
+        type = "scatter3d",
+        x = ~vowel, 
+        y = ~closure,
+        z = ~burst,
+        marker = list(
+          color = ~Model.Posterior.Intended.Difference, 
+          line = list(
+            color = colors.Category[.data.test$Sound],
+            width = points.line.width),
+          opacity = points.alpha,
+          size = points.size,
+          autocolorscale = F,
+          # list three colors: gray,white and red
+          colorscale = list(c(0, colors.Group[2]),
+                            list(0.5, 'white'),
+                            list(1, colors.Group[1])), 
+          cmin = -1,
+          cmid = 0,
+          cmax = 1,
+          colorbar = list(
+            len = .75,
+            title = 'Advantage of\n/d/-exposure over\ncontrol model')),
+        hoverinfo = 'text',
+        text = ~paste("Advantage:", signif(Model.Posterior.Intended.Difference, 3),
+                      "<br>Intended category:", Sound,
+                      "<br>Vowel:", signif(vowel, 4),
+                      "<br>Closure:", signif(closure, 4),
+                      "<br>Burst:", signif(burst, 4))) 
+    # ... or posterior by accent
+  } else 
+    # If there is more than one model group, use frame to express model group
+    if (length(unique(.data.test$Model.Group)) > 1) {
+      p = p %>%
         add_trace(
+          data = .data.test,
           type = "scatter3d",
           x = ~vowel, 
           y = ~closure,
           z = ~burst,
+          frame = ~Model.Group,
+          showlegend = F,
           marker = list(
-            color = ~Model.Posterior.Intended.Difference, 
+            color = ~Model.Posterior.d, 
             line = list(
-              color = colors.Category[.data.test$Sound],
+              color = ~color.outer,
               width = points.line.width),
             opacity = points.alpha,
             size = points.size,
             autocolorscale = F,
-            # list three colors: gray,white and red
-            colorscale = list(c(0, colors.Group[2]),
-                              list(0.5, 'white'),
-                              list(1, colors.Group[1])), 
-            cmin = -1,
-            cmid = 0,
+            # the bottom of the scale is 0 (1t and 0d, the middle is 0.5t and 0.5d, the top is 0t and 1d)
+            colorscale = list(c(0, colors.Category[2]),
+                              list(0.5,'white'),
+                              list(1, colors.Category[1])),
+            cmin = 0,
+            cmid = 0.5,
             cmax = 1,
             colorbar = list(
               len = .75,
-              title = 'Advantage of\n/d/-exposure over\ncontrol model')),
+              title = 'Model-predicted\nposterior of /d/')
+          ),
           hoverinfo = 'text',
-          text = ~paste("Advantage:", signif(Model.Posterior.Intended.Difference, 3),
+          text = ~paste("Posterior predicted /d/:", signif(Model.Posterior.d, 4),
                         "<br>Intended category:", Sound,
                         "<br>Vowel:", signif(vowel, 4),
                         "<br>Closure:", signif(closure, 4),
                         "<br>Burst:", signif(burst, 4))) 
-    # ... or posterior by accent
-    } else 
-      # If there is more than one model group, use frame to express model group
-      if (length(unique(.data.test$Model.Group)) > 1) {
-        p = p %>%
-          add_trace(
-            data = .data.test,
-            type = "scatter3d",
-            x = ~vowel, 
-            y = ~closure,
-            z = ~burst,
-            frame = ~Model.Group,
-            showlegend = F,
-            marker = list(
-              color = ~Model.Posterior.d, 
-              line = list(
-                color = colors.Category[.data.test$Sound],
-                width = points.line.width),
-              opacity = points.alpha,
-              size = points.size,
-              autocolorscale = F,
-              # the bottom of the scale is 0 (1t and 0d, the middle is 0.5t and 0.5d, the top is 0t and 1d)
-              colorscale = list(c(0, colors.Category[2]),
-                                list(0.5,'white'),
-                                list(1, colors.Category[1])), 
-              cmin = 0,
-              cmid = 0.5,
-              cmax = 1,
-              colorbar = list(
-                len = .75,
-                title = 'Model-predicted\nposterior of /d/')),
-            hoverinfo = 'text',
-            text = ~paste("Posterior predicted /d/:", signif(Model.Posterior.d, 4),
-                          "<br>Intended category:", Sound,
-                          "<br>Vowel:", signif(vowel, 4),
-                          "<br>Closure:", signif(closure, 4),
-                          "<br>Burst:", signif(burst, 4))) 
       # if there's only one model group, don't use frame
-      } else {
-        p = p %>%
-          add_trace(
-            data = .data.test,
-            type = "scatter3d",
-            x = ~vowel, 
-            y = ~closure,
-            z = ~burst,
-            showlegend = F,
-            marker = list(
-              color = ~Model.Posterior.d, 
-              line = list(
-                color = colors.Category[.data.test$Sound],
-                width = points.line.width),
-              opacity = points.alpha,
-              size = points.size,
-              autocolorscale = F,
-              # the bottom of the scale is 0 (1t and 0d, the middle is 0.5t and 0.5d, the top is 0t and 1d)
-              colorscale = list(c(0, colors.Category[2]),
-                                list(0.5,'white'),
-                                list(1, colors.Category[1])), 
-              cmin = 0,
-              cmid = 0.5,
-              cmax = 1,
-              colorbar = list(
-                len = .75,
-                title = 'Model-predicted\nposterior of /d/')),
-            hoverinfo = 'text',
-            text = ~paste("Posterior predicted /d/:", signif(Model.Posterior.d, 4),
-                          "<br>Intended category:", Sound,
-                          "<br>Vowel:", signif(vowel, 4),
-                          "<br>Closure:", signif(closure, 4),
-                          "<br>Burst:", signif(burst, 4))) 
-      }
-  } else p = plot_ly()
-  
+    } else {
+      p = p %>%
+        add_trace(
+          data = .data.test,
+          type = "scatter3d",
+          x = ~vowel, 
+          y = ~closure,
+          z = ~burst,
+          showlegend = F,
+          marker = list(
+            color = ~Model.Posterior.d, 
+            line = list(
+              color = ~color.outer,
+              width = points.line.width),
+            opacity = points.alpha,
+            size = points.size,
+            autocolorscale = F,
+            # the bottom of the scale is 0 (1t and 0d, the middle is 0.5t and 0.5d, the top is 0t and 1d)
+            colorscale = list(c(0, colors.Category[2]),
+                              list(0.5,'white'),
+                              list(1, colors.Category[1])), 
+            cmin = 0,
+            cmid = 0.5,
+            cmax = 1,
+            colorbar = list(
+              len = .75,
+              title = 'Model-predicted\nposterior of /d/')),
+          hoverinfo = 'text',
+          text = ~paste("Posterior predicted /d/:", signif(Model.Posterior.d, 4),
+                        "<br>Intended category:", Sound,
+                        "<br>Vowel:", signif(vowel, 4),
+                        "<br>Closure:", signif(closure, 4),
+                        "<br>Burst:", signif(burst, 4))) 
+    }
+
   p = p %>%
     # specify axis range to be held constant across plots
     layout(scene = list(xaxis = axes[[1]], yaxis = axes[[2]], zaxis = axes[[3]], aspectmode='cube'), 
