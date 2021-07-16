@@ -44,7 +44,7 @@ csl: frontiers-in-psychology.csl
 
 ```{r rmarkdown setup, include=FALSE}
 knitr::opts_chunk$set(echo = FALSE, 
-                      message=FALSE, warning=FALSE, error=TRUE)
+                      message=TRUE, warning=TRUE, error=TRUE)
 ```
 
 
@@ -77,8 +77,8 @@ library(assertthat)
 library(daver)
 # devtools::install_github("kleinschmidt/phondisttools")
 library(phondisttools)
-# devtools::install_github("hlplab/MVBeliefUpdatr")
-library(MVBeliefUpdatr)
+# devtools::install_github("../../MVBeliefUpdatr")
+#library(MVBeliefUpdatr)
 ```
 
 ```{r constants and environments}
@@ -893,16 +893,19 @@ bootstrap = function(replacement = T) {
   applyContrasts() %>% 
   ungroup() %>%
   # Run analysis and simple effects
-  summarise(
-    lmer.rating = list(
-      lmer(Rating.Response.d.zscored ~ 
-             NativeLanguage * Group * Sound + 
-             (1 + Sound * Group | Item.BootstrapID) + (1 | Participant),
-           data = .)),
-    lmer.rating.simple = list(
-      contrast(emmeans(lmer.rating[[1]], ~ Group : Sound | NativeLanguage,
-                       lmer.df = "Satterthwaite", lmerTest.limit = 10000),
-               interaction = c("consec", "consec")))
+    summarise(
+      lmer.rating = list(
+        lmer(
+          Rating.Response.d.zscored ~ 
+            NativeLanguage * Group * Sound + 
+            (1 + Sound * Group | Item.BootstrapID) + 
+            (1 | Participant),
+          data = .)),
+      lmer.rating.simple = list(
+      emmeans::contrast(
+        emmeans(lmer.rating[[1]], ~ Group : Sound | NativeLanguage,
+                lmer.df = "Satterthwaite", lmerTest.limit = 10000),
+        interaction = c("consec", "consec")))
   )
   
   return(d)
@@ -1385,6 +1388,23 @@ plot_corrected_cues = function(.data, title = "Correction step") {
                           font = list(color="black"))
     )   
 }
+
+# make pairwise correlation plots for the corrected cues in 1D and 2D
+
+plot_cue_matrix <- function(data) {
+  data %>% mutate("Vowel" = rvowel.step2,
+         "Closure" = rclosure.step2,
+         "Burst" = rburst.step2) %>% 
+  ggplot(aes(x = .panel_x, y = .panel_y, colour = Sound, fill = Sound)) +
+  scale_colour_manual(values = colors.Category) +
+  scale_fill_manual(values = colors.Category) +
+  geom_point(alpha = 0.6, shape = 16, size = 1) +
+  geom_autodensity(alpha = .04, position = "identity") +
+  stat_ellipse(type = "norm") +
+  facet_matrix(vars(c(Vowel, Closure, Burst)), layer.diag = 2, layer.upper = 3, 
+                    grid.y.diag= FALSE) +
+  theme_bw()
+}
 ```
 
 <!-- ```{r results='asis', echo=FALSE} -->
@@ -1447,7 +1467,6 @@ plot_corrected_cues(
 
 
 ### Step 2: Correcting for supra-segmental context
-
 
 ```{r step 2 functions to correct for supra-segmental context}
 get_suprasegmental_model = function(
@@ -1521,6 +1540,21 @@ correct_for_suprasegmental_context = function(
             plot = plot),
         data = data.fit %>% 
           mutate(y = as_vector(data.fit[, cue.name])))))
+}
+
+plot_cue_matrix <- function(data) {
+  data %>% mutate("Vowel" = rvowel,
+         "Closure" = rclosure,
+         "Burst" = rburst) %>% 
+  ggplot(aes(x = .panel_x, y = .panel_y, colour = Sound, fill = Sound)) +
+  scale_colour_manual(values = colors.Category) +
+  scale_fill_manual(values = colors.Category) +
+  geom_point(alpha = 0.6, shape = 16, size = 1) +
+  geom_autodensity(alpha = .04, position = "identity") +
+  stat_ellipse(type = "norm") +
+  facet_matrix(vars(c(Vowel, Closure, Burst)), layer.diag = 2, layer.upper = 3, 
+                    grid.y.diag= FALSE) +
+  theme_bw()
 }
 ```
 
@@ -1603,6 +1637,12 @@ plot_corrected_cues(
     filter(NativeLanguage == "English", Accent == "native"))
 ```
 
+(ref:native-english-corrected-cues-2D) 1D density plots and 2D pairwise correlation plots of native English cues corrected for both segmental and supra-segmental context.
+
+```{r native-english-corrected-cues-2D, fig.cap="(ref:native-english-corrected-cues-2D)", out.width="75%", fig.show='hold'}
+plot_cue_matrix(d.stims.step2 %>% filter(NativeLanguage == "English" & Accent == "native"))
+```
+
 #### English (non-native)
 (ref:non-native-english-cue-before-and-after-suprasegmental-correction) Mandarin-accented English words with syllable-final /d/ or /t/ before and after correction for supra-segmental context.
 
@@ -1612,6 +1652,11 @@ plot_corrected_cues(
           filter(NativeLanguage == "English", Accent == "non-native"))
 ```
 
+(ref:non-native-english-corrected-cues-2D) 1D density plots and 2D pairwise correlation plots of non-native English cues corrected for both segmental and supra-segmental context.
+
+```{r non-native-english-corrected-cues-2D, fig.cap="(ref:non-native-english-corrected-cues-2D)", out.width="75%", fig.show='hold'}
+plot_cue_matrix(d.stims.step2 %>% filter(NativeLanguage == "English" & Accent == "non-native"))
+```
 
 #### Swedish (native)
 (ref:native-swedish-cue-before-and-after-suprasegmental-correction) native-accented Swedish words with syllable-final /d/ or /t/ before and after correction for supra-segmental context.
@@ -1620,6 +1665,12 @@ plot_corrected_cues(
 plot_corrected_cues(
    d.stims.long %>% 
           filter(NativeLanguage == "Swedish", Accent == "native"))
+```
+
+(ref:native-swedish-corrected-cues-2D) 1D density plots and 2D pairwise correlation plots of native Swedish cues corrected for both segmental and supra-segmental context.
+
+```{r native-swedish-corrected-cues-2D, fig.cap="(ref:native-swedish-corrected-cues-2D)", out.width="75%", fig.show='hold'}
+plot_cue_matrix(d.stims.step2 %>% filter(NativeLanguage == "Swedish" & Accent == "native") )
 ```
 
 #### Swedish (non-native)
@@ -1631,8 +1682,13 @@ plot_corrected_cues(
           filter(NativeLanguage == "Swedish", Accent == "non-native"))
 ```
 
+(ref:non-native-swedish-corrected-cues-2D) 1D density plots and 2D pairwise correlation plots of non-native Swedish cues corrected for both segmental and supra-segmental context.
 
-```{r store corrected production data, include=FALSE}
+```{r non-native-swedish-corrected-cues-2D, fig.cap="(ref:non-native-swedish-corrected-cues-2D)", out.width="75%", fig.show='hold'}
+plot_cue_matrix(d.stims.step2 %>% filter(NativeLanguage == "Swedish" & Accent == "non-native"))
+```
+
+```{r store-corrected-production-data, include=FALSE}
 # store the final residualised values from step 2 as r<cue>
 d.stims <- d.stims.step2 %>% 
   mutate(
@@ -1645,40 +1701,6 @@ save(
   file = "../data/data_production_corrected for phonetic context_both languages.Rdata")
 ```
 
-```{r pairwise correlation plots production data, include = FALSE}
-plot_cue_matrix <- function(data) {
-  data %>% mutate("Vowel" = rvowel,
-         "Closure" = rclosure,
-         "Burst" = rburst) %>% 
-  ggplot(aes(x = .panel_x, y = .panel_y, colour = Sound, fill = Sound)) +
-  scale_colour_manual(values = colors.Category) +
-  scale_fill_manual(values = colors.Category) +
-  geom_point(alpha = 0.6, shape = 16, size = 1) +
-  geom_autodensity(alpha = .04, position = "identity") +
-  stat_ellipse(type = "norm") +
-  facet_matrix(vars(c(Vowel, Closure, Burst)), layer.diag = 2, layer.upper = 3, 
-                    grid.y.diag= FALSE) +
-  theme_bw()
-}
-```
-
-
-```{r native-english-corrected-cues-2D, fig.cap="(ref:native-english-corrected-cues-2D)", out.width="75%", fig.show='hold'}
-plot_cue_matrix(d.stims %>% filter(NativeLanguage == "English" & Accent == "native"))
-```
-
-
-```{r non-native-english-corrected-cues-2D, fig.cap="(ref:non-native-english-corrected-cues-2D)", out.width="75%", fig.show='hold'}
-plot_cue_matrix(d.stims %>% filter(NativeLanguage == "English" & Accent == "non-native"))
-```
-
-```{r native-swedish-corrected-cues-2D, fig.cap="(ref:native-swedish-corrected-cues-2D)", out.width="75%", fig.show='hold'}
-plot_cue_matrix(d.stims %>% filter(NativeLanguage == "Swedish" & Accent == "native") )
-```
-
-```{r non-native-swedish-corrected-cues-2D, fig.cap="(ref:non-native-swedish-corrected-cues-2D)", out.width="75%", fig.show='hold'}
-plot_cue_matrix(d.stims %>% filter(NativeLanguage == "Swedish" & Accent == "non-native"))
-```
 
 ## Training the four ideal observers
 
@@ -2077,6 +2099,84 @@ p.post +
                alpha = .8, size = .8, 
                position = position_dodge(.3))
 ```
+### Cross-Validation of ideal observer models
+In addition to testing the ideal observer models on the respective non-native talker test data we ran 5-fold cross-validation on each of the models to estimate their test error rate. Each model's training data was apportioned into 5 test sets. For each iteration of ideal observer training, all but one of the test sets were used; the left-out test set was reserved for validation. This process is reiterated until all five test sets are exhausted.
+```{r k-fold-CV-of-IO, include = FALSE}
+k = 5
+
+# group the training data by talker for each model and divide into 5 parts
+d.IO.CV <- d.IO.training %>% group_by(Used_for.Model.NativeLanguage,
+                           Used_for.Model.Group,
+                           Talker, Used_for.Model.Sound) %>%
+  add_count() %>% 
+  rename(Length.Data = n) %>%  
+  mutate(Segment.Size = Length.Data/k, 
+         Count = row_number(), 
+         Test.Set = paste0(rep("test_",length.out = 30), 
+                           rep(c(1:5), 1, each = 6))) 
+
+train_IO = function(
+  .data, 
+  cues, 
+  # Guess maximal grouping structure from data
+  groups = guess_groups(.data),
+  Training.Set = c(1:5)
+) {
+  # Make sure that only training data is used
+  .data %<>%
+    ungroup() %>%
+    filter(Used_for == "training") %>%
+    droplevels()
+  
+  # Get the mean and covariance matrix
+  .data %>%
+    # If there's more than one talker do the subsequent steps separately for each talker
+    group_by(!!! rlang::syms(groups)) %>%
+    summarise(
+      mu = list(colMeans(cbind(!!! rlang::syms(cues)))),
+      Sigma = list(cov(cbind(!!! rlang::syms(cues))))
+    ) %>%
+    # If there's more than one talker get the average of by-talker mu and Sigma
+    { if (nlevels(.data$Talker) > 1) {
+      # Group by everything *except* for Talker
+      group_by(., !!! rlang::syms(setdiff(groups, "Talker"))) %>%
+        summarise(
+          Model = list(list(
+            mu = Reduce("+", mu) / length(mu),
+            Sigma = Reduce("+", Sigma) / length(Sigma)))
+        ) } else . } %>%
+    select(!!! rlang::syms(setdiff(groups, "Talker")), Model) %>%
+    mutate(Training.Set = paste0("training_", Training.Set )) %>%
+    applyFactorLevels()
+}
+
+#Filter d.IO.CV into 5 training sets and pipe into train_IO
+
+training.1 <- d.IO.CV %>% filter(Test.Set != "test_1") %>% 
+  train_IO(., cues = selected_cues, Training.Set = 1)
+
+training.2 <- d.IO.CV %>% filter(Test.Set != "test_2") %>% 
+  train_IO(., cues = selected_cues, Training.Set = 2)
+
+training.3 <- d.IO.CV %>% filter(Test.Set != "test_3") %>% 
+  train_IO(., cues = selected_cues, Training.Set = 3)
+
+training.4 <- d.IO.CV %>% filter(Test.Set != "test_4") %>% 
+  train_IO(., cues = selected_cues, Training.Set = 4)
+
+training.5 <- d.IO.CV %>% filter(Test.Set != "test_5") %>% 
+  train_IO(., cues = selected_cues, Training.Set = 5)
+
+d.IO.training.models <- rbind(training.1, training.2, training.3, training.4, training.5)
+# join with d.IO.CV to have the test sets in the same data frame
+
+# loop for the above?
+# for (i in 1:2){
+#  d.IO.CV %>% filter(Test.Set != paste("test_",i)) %>%
+#   train_IO(., cues = selected_cues, Test.Set = i)
+#   }
+```
+
 
 
 ### Categorization accuracy {#sec:IO-methods-categorization}
@@ -2260,7 +2360,7 @@ d.test.IO.byItem <-
   d.test.IO %>%
   # There seem to be points for which no model predictions exist. 
   # Removing them for now (It's two English data points: Item.WordID E104, E105)
-  filter(!is.na(Model.Group.matchesParticipant.Group)) %>%
+  #filter(!is.na(Model.Group.matchesParticipant.Group)) %>%
   group_by(Language, Group, Model.Group.matchesParticipant.Group, Sound, Item.WordID) %>%
   summarise(
     Model.Posterior.d = mean(Model.Posterior.d),
@@ -2268,7 +2368,7 @@ d.test.IO.byItem <-
   # Normalize human ratings'
   group_by(Language, Group, Model.Group.matchesParticipant.Group) %>%
   mutate(
-    Model.Posterior.d = Model.Posterior.d,
+    Model.Posterior.d = Model.Posterior.d, # do we need this line?
     Rating.Response.d.normalized = (Rating.Response.d.zscored - min(Rating.Response.d.zscored)) / (max(Rating.Response.d.zscored) - min(Rating.Response.d.zscored))) 
 
 d.test.IO.byItem %>%
