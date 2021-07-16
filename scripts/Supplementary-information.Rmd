@@ -44,7 +44,7 @@ csl: frontiers-in-psychology.csl
 
 ```{r rmarkdown setup, include=FALSE}
 knitr::opts_chunk$set(echo = FALSE, 
-                      message=TRUE, warning=TRUE, error=TRUE)
+                      message=FALSE, warning=FALSE, error=TRUE)
 ```
 
 
@@ -1180,12 +1180,12 @@ correction_table %>%
   column_spec(3, bold = F, border_right = T) %>% 
   column_spec(4, bold = F, border_right = T, width = "9em") %>% 
   column_spec(5, bold = F, border_right = T, width = "6em") 
-  
 ```
 
 (ref:summary-cue-correction) Summary of steps in the cue value correction procedure. For the native Swedish data, the test words are the native recordings of the same words used in the non-native-accented test phase of the Swedish experiment. For the native English data, the test words are the native recordings of the mono-syllabic words with final /d,t/ in @Li2020database. For the non-native data, the /d/ words are the non-native recordings of the /d/-final exposure and test words in the respective experiments.
 
-### Step 1: Correcting for segmental context {.tabset .tabset-fade}
+### Step 1: Correcting for segmental context 
+<!-- {.tabset .tabset-fade} -->
 
 ```{r step 1 functions to correct for segmental context}
 # Correct for phonological context. For the specified cue (cue.name), we use linear regression 
@@ -1339,9 +1339,6 @@ d.stims.step1 %<>%
            rvowel.step1, rclosure.step1, rburst.step1)) 
 ```
 
- 
-<!-- Xin, Maryann: Perhaps we can put the output plots into html tabs, so as to not have this onslaught of figures -->
-
 The estimates shown in the above figures are the segmental context effects we then subtracted out of *all* tokens. Figures \@ref(fig:native-english-cue-before-and-after-segment-correction) to \@ref(fig:non-native-swedish-cue-before-and-after-segment-correction) show the distribution of cues to the /t/ and /d/ categories before and after correction for segmental context for the English and Swedish experiment, respectively. 
 
 ```{r prepare for cue plot after step 1, include=FALSE}
@@ -1390,18 +1387,21 @@ plot_corrected_cues = function(.data, title = "Correction step") {
 }
 
 # make pairwise correlation plots for the corrected cues in 1D and 2D
-
-plot_cue_matrix <- function(data) {
-  data %>% mutate("Vowel" = rvowel.step2,
-         "Closure" = rclosure.step2,
-         "Burst" = rburst.step2) %>% 
+plot_cue_matrix <- function(data, cues) {
+  message("Assumes that the cues are given in the order vowel, closure, burst.")
+  
+  data %>% 
+    mutate(
+      "Vowel" = !! sym(cues[1]),
+      "Closure" = !! sym(cues[2]),
+      "Burst" = !! sym(cues[3])) %>% 
   ggplot(aes(x = .panel_x, y = .panel_y, colour = Sound, fill = Sound)) +
   scale_colour_manual(values = colors.Category) +
   scale_fill_manual(values = colors.Category) +
   geom_point(alpha = 0.6, shape = 16, size = 1) +
   geom_autodensity(alpha = .04, position = "identity") +
   stat_ellipse(type = "norm") +
-  facet_matrix(vars(c(Vowel, Closure, Burst)), layer.diag = 2, layer.upper = 3, 
+  facet_matrix(vars(!!! syms(cues)), layer.diag = 2, layer.upper = 3, 
                     grid.y.diag= FALSE) +
   theme_bw()
 }
@@ -1444,10 +1444,8 @@ plot_corrected_cues(
           filter(NativeLanguage == "English", Accent == "non-native"))
 ```
 
-
 #### Swedish (native)
 (ref:native-swedish-cue-before-and-after-segment-correction) native-accented Swedish words with syllable-final /d/ or /t/ before and after correction for segmental context.
-
 
 ```{r native-swedish-cue-before-and-after-segment-correction, fig.cap="(ref:native-swedish-cue-before-and-after-segment-correction)", out.width="75%", fig.show='hold'}
 plot_corrected_cues(
@@ -1463,7 +1461,6 @@ plot_corrected_cues(
    d.stims.long %>% 
           filter(NativeLanguage == "Swedish", Accent == "non-native"))
 ```
-
 
 
 ### Step 2: Correcting for supra-segmental context
@@ -1541,21 +1538,6 @@ correct_for_suprasegmental_context = function(
         data = data.fit %>% 
           mutate(y = as_vector(data.fit[, cue.name])))))
 }
-
-plot_cue_matrix <- function(data) {
-  data %>% mutate("Vowel" = rvowel,
-         "Closure" = rclosure,
-         "Burst" = rburst) %>% 
-  ggplot(aes(x = .panel_x, y = .panel_y, colour = Sound, fill = Sound)) +
-  scale_colour_manual(values = colors.Category) +
-  scale_fill_manual(values = colors.Category) +
-  geom_point(alpha = 0.6, shape = 16, size = 1) +
-  geom_autodensity(alpha = .04, position = "identity") +
-  stat_ellipse(type = "norm") +
-  facet_matrix(vars(c(Vowel, Closure, Burst)), layer.diag = 2, layer.upper = 3, 
-                    grid.y.diag= FALSE) +
-  theme_bw()
-}
 ```
 
 Supra-segmental factors like---lexical stress and speech rate---are also known to affect the phonetic realization of sounds. For example, segments tend to have longer durations in stressed, compared to unstressed, syllables [@lindblom1963spectrographic; @van1987effects] and in words with fewer syllables [@rietveld1987effect]. We thus removed effects of lexical stress, and syllable/word complexity on vowel, closure, and burst duration.
@@ -1628,6 +1610,20 @@ d.stims.long =
   make_long()
 ```
 
+```{r store-corrected-production-data, include=FALSE}
+# store the final residualised values from step 2 as r<cue>
+d.stims <- d.stims.step2 %>% 
+  mutate(
+    rvowel = rvowel.step2,
+    rclosure = rclosure.step2,
+    rburst = rburst.step2)
+
+save(
+  d.stims, 
+  file = "../data/data_production_corrected for phonetic context_both languages.Rdata")
+```
+
+
 #### English (native)
 (ref:native-english-cue-before-and-after-suprasegmental-correction) native-accented English words with syllable-final /d/ or /t/ before and after correction for supra-segmental context.
 
@@ -1640,7 +1636,10 @@ plot_corrected_cues(
 (ref:native-english-corrected-cues-2D) 1D density plots and 2D pairwise correlation plots of native English cues corrected for both segmental and supra-segmental context.
 
 ```{r native-english-corrected-cues-2D, fig.cap="(ref:native-english-corrected-cues-2D)", out.width="75%", fig.show='hold'}
-plot_cue_matrix(d.stims.step2 %>% filter(NativeLanguage == "English" & Accent == "native"))
+plot_cue_matrix(
+  d.stims.step2 %>% 
+    filter(NativeLanguage == "English" & Accent == "native"),
+  cues = c("rvowel.step2", "rclosure.step2", "rburst.step2"))
 ```
 
 #### English (non-native)
@@ -1655,7 +1654,10 @@ plot_corrected_cues(
 (ref:non-native-english-corrected-cues-2D) 1D density plots and 2D pairwise correlation plots of non-native English cues corrected for both segmental and supra-segmental context.
 
 ```{r non-native-english-corrected-cues-2D, fig.cap="(ref:non-native-english-corrected-cues-2D)", out.width="75%", fig.show='hold'}
-plot_cue_matrix(d.stims.step2 %>% filter(NativeLanguage == "English" & Accent == "non-native"))
+plot_cue_matrix(
+  d.stims.step2 %>% 
+    filter(NativeLanguage == "English" & Accent == "non-native"),
+  cues = c("rvowel.step2", "rclosure.step2", "rburst.step2"))
 ```
 
 #### Swedish (native)
@@ -1670,7 +1672,10 @@ plot_corrected_cues(
 (ref:native-swedish-corrected-cues-2D) 1D density plots and 2D pairwise correlation plots of native Swedish cues corrected for both segmental and supra-segmental context.
 
 ```{r native-swedish-corrected-cues-2D, fig.cap="(ref:native-swedish-corrected-cues-2D)", out.width="75%", fig.show='hold'}
-plot_cue_matrix(d.stims.step2 %>% filter(NativeLanguage == "Swedish" & Accent == "native") )
+plot_cue_matrix(
+  d.stims.step2 %>% 
+    filter(NativeLanguage == "Swedish" & Accent == "native"),
+  cues = c("rvowel.step2", "rclosure.step2", "rburst.step2"))
 ```
 
 #### Swedish (non-native)
@@ -1685,20 +1690,10 @@ plot_corrected_cues(
 (ref:non-native-swedish-corrected-cues-2D) 1D density plots and 2D pairwise correlation plots of non-native Swedish cues corrected for both segmental and supra-segmental context.
 
 ```{r non-native-swedish-corrected-cues-2D, fig.cap="(ref:non-native-swedish-corrected-cues-2D)", out.width="75%", fig.show='hold'}
-plot_cue_matrix(d.stims.step2 %>% filter(NativeLanguage == "Swedish" & Accent == "non-native"))
-```
-
-```{r store-corrected-production-data, include=FALSE}
-# store the final residualised values from step 2 as r<cue>
-d.stims <- d.stims.step2 %>% 
-  mutate(
-    rvowel = rvowel.step2,
-    rclosure = rclosure.step2,
-    rburst = rburst.step2)
-
-save(
-  d.stims, 
-  file = "../data/data_production_corrected for phonetic context_both languages.Rdata")
+plot_cue_matrix(
+  d.stims.step2 %>% 
+    filter(NativeLanguage == "Swedish" & Accent == "non-native"),
+  cues = c("rvowel.step2", "rclosure.step2", "rburst.step2"))
 ```
 
 
@@ -2099,8 +2094,10 @@ p.post +
                alpha = .8, size = .8, 
                position = position_dodge(.3))
 ```
+
 ### Cross-Validation of ideal observer models
-In addition to testing the ideal observer models on the respective non-native talker test data we ran 5-fold cross-validation on each of the models to estimate their test error rate. Each model's training data was apportioned into 5 test sets. For each iteration of ideal observer training, all but one of the test sets were used; the left-out test set was reserved for validation. This process is reiterated until all five test sets are exhausted.
+In addition to testing the ideal observer models on the respective non-native talker test data we ran 5-fold cross-validation on each of the models to estimate their test error rate. Each model's training data was apportioned into 5 sets. For each iteration of ideal observer training, all but one of the test sets were used; the left-out test set was reserved for validation. This process is reiterated until all five test sets are exhausted.
+
 ```{r k-fold-CV-of-IO, include = FALSE}
 k = 5
 
