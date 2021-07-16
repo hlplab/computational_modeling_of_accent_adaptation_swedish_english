@@ -77,8 +77,8 @@ library(assertthat)
 library(daver)
 # devtools::install_github("kleinschmidt/phondisttools")
 library(phondisttools)
-# devtools::install_github("../../MVBeliefUpdatr")
-#library(MVBeliefUpdatr)
+# devtools::install_github("hlplab/MVBeliefUpdatr")
+library(MVBeliefUpdatr)
 ```
 
 ```{r constants and environments}
@@ -2561,8 +2561,8 @@ plot_IO_test = function(
 ) {
   message("plot_IO() currently expects three cues: vowel, closure, burst (corrected or uncorrected).")
   
-  # If .data.test contains more than one instance per unique combination of stimulus & model, summarize it down to one observation 
-  # per stimulus & model
+  # If .data.test contains more than one instance per unique combination of stimulus & model, 
+  # summarize it down to one observation per stimulus & model
   .data.test %<>% 
     filter(Model.Group.matchesParticipant.Group == "yes") %>%
     select(-Model.Group.matchesParticipant.Group) %>%
@@ -2581,7 +2581,6 @@ plot_IO_test = function(
     unnest(ellipse)
 
   axes = get_axes(.data.IO, .data.test, cues)
-  
   
   # Add ideal observer, or---if differences are to be shown---add color scale
   if (!show.difference) {
