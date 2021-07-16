@@ -2135,7 +2135,16 @@ p.post +
 In addition to testing the ideal observer models on the respective non-native talker test data we ran 5-fold cross-validation on each of the models to estimate their test error rate. Each model's training data was apportioned into 5 sets. For each iteration of ideal observer training, all but one of the test sets were used; the left-out test set was reserved for validation. This process is reiterated until all five test sets are exhausted.
 
 ```{r k-fold-CV-of-IO, include = FALSE}
-k = 5
+k <- 5
+n_per_talker_per_category <- 30
+
+# ADDDED BUT NOT YET INTEGRATED
+d.IO.training %>% 
+  group_by(Used_for.Model.NativeLanguage,
+           Used_for.Model.Group,
+           Talker, Used_for.Model.Sound) %>%
+  mutate(
+    Training.Set = ntile(runif(length(Talker)), k))
 
 # group the training data by talker for each model and divide into 5 parts
 d.IO.CV <- d.IO.training %>% group_by(Used_for.Model.NativeLanguage,
