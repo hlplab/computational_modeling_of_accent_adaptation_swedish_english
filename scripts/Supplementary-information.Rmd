@@ -2109,7 +2109,7 @@ train_IO = function(
   cues, 
   # Guess maximal grouping structure from data
   groups = guess_groups(.data),
-  Test.Set = c(1:5)
+  Training.Set = c(1:5)
 ) {
   # Make sure that only training data is used
   .data %<>%
@@ -2135,26 +2135,26 @@ train_IO = function(
             Sigma = Reduce("+", Sigma) / length(Sigma)))
         ) } else . } %>%
     select(!!! rlang::syms(setdiff(groups, "Talker")), Model) %>%
-    mutate(Training.Set = paste0("training_", Test.Set )) %>%
+    mutate(Training.Set = paste0("training_", Training.Set )) %>%
     applyFactorLevels()
 }
 
 #Filter d.IO.CV into 5 training sets and pipe into train_IO, create a column indicating training round
 
 training.1 <- d.IO.CV %>% filter(Test.Set != "test_1") %>% 
-  train_IO(., cues = selected_cues, Test.Set = 1)
+  train_IO(., cues = selected_cues, Training.Set = 1)
 
 training.2 <- d.IO.CV %>% filter(Test.Set != "test_2") %>% 
-  train_IO(., cues = selected_cues, Test.Set = 2)
+  train_IO(., cues = selected_cues, Training.Set = 2)
 
 training.3 <- d.IO.CV %>% filter(Test.Set != "test_3") %>% 
-  train_IO(., cues = selected_cues, Test.Set = 3)
+  train_IO(., cues = selected_cues, Training.Set = 3)
 
 training.4 <- d.IO.CV %>% filter(Test.Set != "test_4") %>% 
-  train_IO(., cues = selected_cues, Test.Set = 4)
+  train_IO(., cues = selected_cues, Training.Set = 4)
 
 training.5 <- d.IO.CV %>% filter(Test.Set != "test_5") %>% 
-  train_IO(., cues = selected_cues, Test.Set = 5)
+  train_IO(., cues = selected_cues, Training.Set = 5)
 
 d.IO.training.models <- rbind(training.1, training.2, training.3, training.4, training.5)
 
@@ -2163,15 +2163,6 @@ d.IO.training.models <- rbind(training.1, training.2, training.3, training.4, tr
 #  d.IO.CV %>% filter(Test.Set != paste("test_",i)) %>%
 #   train_IO(., cues = selected_cues, Test.Set = i)
 #   }
-
-
-              
-
-  
-
-
-
-
 ```
 
 
