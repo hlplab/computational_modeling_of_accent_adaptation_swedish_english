@@ -2196,14 +2196,33 @@ train_IO = function(
     applyFactorLevels()
 }
 
-m1 <- train_IO(exclude(d.IO.training.CV,1), selected_cues, 1)
-m2 <- train_IO(exclude(d.IO.training.CV,2), selected_cues, 2)
-m3 <- train_IO(exclude(d.IO.training.CV,3), selected_cues, 3)
-m4 <- train_IO(exclude(d.IO.training.CV,4), selected_cues, 4)
-m5 <- train_IO(exclude(d.IO.training.CV,5), selected_cues, 5)
+m1.IO <- train_IO(exclude(d.IO.training.CV,1), selected_cues, 1)
+m2.IO <- train_IO(exclude(d.IO.training.CV,2), selected_cues, 2)
+m3.IO <- train_IO(exclude(d.IO.training.CV,3), selected_cues, 3)
+m4.IO <- train_IO(exclude(d.IO.training.CV,4), selected_cues, 4)
+m5.IO <- train_IO(exclude(d.IO.training.CV,5), selected_cues, 5)
+
 ```
 
 ```{r test-IO-for cross-validation, include= FALSE}
+# divide English test data into 4 test bins; Swedish test data into 2 bins. Ensure minimal pair members are in the same bin.
+
+d.nonnative.test <- d.stims %>%
+      filter(Block.Type == "test", Accent == "non-native") 
+
+d.nonnative.test.bins <- d.nonnative.test %>% distinct(Item.MinimalPair) %>%
+  group_by(NativeLanguage) %>% 
+  mutate(Test.Bin = case_when(
+    NativeLanguage == "English" ~ ntile(runif(length(Item.MinimalPair)), 4),
+    NativeLanguage == "Swedish" ~ ntile(runif(length(Item.MinimalPair)), 2))) 
+
+d.nonnative.test.bins %>% filter(NativeLanguage == "Swedish") %>% 
+group_by(Test.Bin) %>% summarise(n())
+
+# After assigning English min.pairs into 4 bins and Swedish min.pairs into 2 bins join the assigned min.pairs with the main test dataframe
+d.nonnative.test <- left_join(d.nonnative.test, d.nonnative.test.bins)
+d.nonnative.test %>% group_by(Item.MinimalPair, Test.Bin) %>% summarise(n())
+
 
 ```
 
