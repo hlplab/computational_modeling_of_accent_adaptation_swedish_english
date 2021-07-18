@@ -2132,37 +2132,41 @@ p.post +
 ```
 
 ### Cross-Validation of ideal observer models
-In addition to testing the ideal observer models on the respective non-native talker test data we ran 5-fold cross-validation on each of the models to estimate their test error rate. Each model's training data was apportioned into 5 sets. For each iteration of ideal observer training, all but one of the test sets were used; the left-out test set was reserved for validation. This process is reiterated until all five test sets are exhausted.
+In addition to testing the ideal observer models on the respective non-native talker test data we cross-validated the data to check the stability of the results. 
 
-```{r k-fold-CV-of-IO, include = FALSE}
-k <- 5
-n_per_talker_per_category <- 30
+Each model's training data was apportioned into 5 sets. For each iteration of ideal observer training, all but one of the test sets were used; the left-out test set was reserved for validation. This process is reiterated until all five test sets are exhausted.
 
-# ADDDED BUT NOT YET INTEGRATED
-d.IO.training %>% 
+```{r train-IO-for-cross-validation, include = FALSE}
+
+k <- 5 # set number of training iterations
+
+# divide training data into k sets
+d.IO.training.CV <- d.IO.training %>% 
   group_by(Used_for.Model.NativeLanguage,
            Used_for.Model.Group,
            Talker, Used_for.Model.Sound) %>%
   mutate(
-    Training.Set = ntile(runif(length(Talker)), k))
+    Training.Set =  ntile(runif(length(Talker)), k))
 
-# group the training data by talker for each model and divide into 5 parts
-d.IO.CV <- d.IO.training %>% group_by(Used_for.Model.NativeLanguage,
-                           Used_for.Model.Group,
-                           Talker, Used_for.Model.Sound) %>%
-  add_count() %>% 
-  rename(Length.Data = n) %>%  
-  mutate(Segment.Size = Length.Data/k, 
-         Count = row_number(), 
-         Test.Set = paste0(rep("test_",length.out = 30), 
-                           rep(c(1:5), 1, each = 6))) 
+# check that above random flagging worked as desired
+# d.IO.training.CV %>% group_by(Used_for.Model.NativeLanguage, Used_for.Model.Group,
+#                               Talker, Used_for.Model.Sound, Training.Set) %>% summarise(n())
 
+# Each training iteration uses 4/5 of the training data; data from the non-native talkers are never down-sampled. exclude() drops 1/5 of the training data but keeps 5/5 of non-native talkers' data.
+exclude <- function(.data, excluded_group) {
+  .data %>% mutate(Used_for = case_when(Talker == "M5" ~ "training",
+                                        Talker == "F1" ~ "training",
+                                        Training.Set == excluded_group ~ "exclude",
+                                        TRUE ~ "training"))
+}
+
+# train_IO is a minor modification of make_IO() 
 train_IO = function(
   .data, 
-  cues, 
+  cues,
+  excluded_group,
   # Guess maximal grouping structure from data
-  groups = guess_groups(.data),
-  Training.Set = c(1:5)
+  groups = guess_groups(.data)
 ) {
   # Make sure that only training data is used
   .data %<>%
@@ -2181,44 +2185,27 @@ train_IO = function(
     # If there's more than one talker get the average of by-talker mu and Sigma
     { if (nlevels(.data$Talker) > 1) {
       # Group by everything *except* for Talker
-      group_by(., !!! rlang::syms(setdiff(groups, "Talker"))) %>%
+        group_by(., !!! rlang::syms(setdiff(groups, "Talker"))) %>%
         summarise(
           Model = list(list(
             mu = Reduce("+", mu) / length(mu),
             Sigma = Reduce("+", Sigma) / length(Sigma)))
         ) } else . } %>%
     select(!!! rlang::syms(setdiff(groups, "Talker")), Model) %>%
-    mutate(Training.Set = paste0("training_", Training.Set )) %>%
+    mutate(Training.Iteration = paste0("iter_", excluded_group)) %>%
     applyFactorLevels()
 }
 
-#Filter d.IO.CV into 5 training sets and pipe into train_IO
-
-training.1 <- d.IO.CV %>% filter(Test.Set != "test_1") %>% 
-  train_IO(., cues = selected_cues, Training.Set = 1)
-
-training.2 <- d.IO.CV %>% filter(Test.Set != "test_2") %>% 
-  train_IO(., cues = selected_cues, Training.Set = 2)
-
-training.3 <- d.IO.CV %>% filter(Test.Set != "test_3") %>% 
-  train_IO(., cues = selected_cues, Training.Set = 3)
-
-training.4 <- d.IO.CV %>% filter(Test.Set != "test_4") %>% 
-  train_IO(., cues = selected_cues, Training.Set = 4)
-
-training.5 <- d.IO.CV %>% filter(Test.Set != "test_5") %>% 
-  train_IO(., cues = selected_cues, Training.Set = 5)
-
-d.IO.training.models <- rbind(training.1, training.2, training.3, training.4, training.5)
-# join with d.IO.CV to have the test sets in the same data frame
-
-# loop for the above?
-# for (i in 1:2){
-#  d.IO.CV %>% filter(Test.Set != paste("test_",i)) %>%
-#   train_IO(., cues = selected_cues, Test.Set = i)
-#   }
+m1 <- train_IO(exclude(d.IO.training.CV,1), selected_cues, 1)
+m2 <- train_IO(exclude(d.IO.training.CV,2), selected_cues, 2)
+m3 <- train_IO(exclude(d.IO.training.CV,3), selected_cues, 3)
+m4 <- train_IO(exclude(d.IO.training.CV,4), selected_cues, 4)
+m5 <- train_IO(exclude(d.IO.training.CV,5), selected_cues, 5)
 ```
 
+```{r test-IO-for cross-validation, include= FALSE}
+
+```
 
 
 ### Categorization accuracy {#sec:IO-methods-categorization}
