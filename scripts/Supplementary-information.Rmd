@@ -2135,7 +2135,6 @@ p.post +
                position = position_dodge(.3))
 ```
 
-
 ### Categorization accuracy {#sec:IO-methods-categorization}
 
 As in our previous work, we assume that the ideal observer employs Luce's choice rule (also known as probability matching) to categorize inputs. Under this assumption, the ideal observer responds by sampling from its posterior. If the posterior probability of a /d/ is, say, .45 for a given stimulus, the observer will on average respond "d" on 45\% of all trials and "t" on 55\% of all trials. This choice rule does thus not introduce any additional degrees of freedom. 
@@ -2307,7 +2306,9 @@ We first evaluated the five folded models on the entire test set, following the 
 
 In an additional analysis, we randomly split the test data into folds of 15 tokens each, resulting in 2 folds for the Swedish test data (which had 30 test tokens) and 4 folds for the English test data (which had 60 test tokens). By comparing across test bins within each fold, we can estimate how robust our results depend on the specific test bins. Each fold was created by sampling minimal pairs---rather than individual words---to hold the phonological context constant between the /d/ and /t/ test items within each fold. To compare likes with likes, we then compared the model predictions for each test fold against the human ratings on the same test items. DESCRIBE THESE RESULTS HERE.
 
+
 ```{r train-IO-for-cross-validation, include = FALSE}
+
 k <- 5 # set number of training iterations
 
 # divide training data into k sets
@@ -2322,7 +2323,7 @@ d.IO.training.CV <- d.IO.training %>%
 # d.IO.training.CV %>% group_by(Used_for.Model.NativeLanguage, Used_for.Model.Group,
 #                               Talker, Used_for.Model.Sound, Training.Set) %>% summarise(n())
 
-# Each training iteration uses 4/5 of the training data; data from the non-native talkers are never down-sampled. exclude() drops 1/5 of the training data but keeps 5/5 of non-native talkers' data.
+# Each training iteration uses 4/5 of the training data; data from the non-native talkers are never down-sampled. exclude() drops 1/5 of the native talkers' training data but keeps 5/5 of non-native talkers' data.
 exclude <- function(.data, excluded_set) {
   .data %>% mutate(Used_for = case_when(Talker == "M5" ~ "training",
                                         Talker == "F1" ~ "training",
@@ -2351,14 +2352,14 @@ d.nonnative.test.bins <- d.nonnative.test %>% distinct(Item.MinimalPair) %>%
     NativeLanguage == "English" ~ ntile(runif(length(Item.MinimalPair)), 4),
     NativeLanguage == "Swedish" ~ ntile(runif(length(Item.MinimalPair)), 2))) 
 
-d.nonnative.test.bins %>% filter(NativeLanguage == "Swedish") %>% 
-group_by(Test.Bin) %>% summarise(n())
-
 # join the assigned min.pairs with the main cross-validation-test dataframe
 d.nonnative.test <- left_join(d.nonnative.test, d.nonnative.test.bins)
 
 
-# test each of 5 models on each test bin ### THIS RUNS INTO PROBLEMS AT TEST.BIN == 3 BECAUSE THERE ISN"T BINS 3 & 4 for SWEDISH
+# test each of 5 models on each test bin 
+### THIS RUNS INTO PROBLEMS AT TEST.BIN == 3 BECAUSE THERE ISN"T BINS 3 & 4 for SWEDISH
+### MODEL1:TEST.BIN1 RETURNS 120 ROWS
+### MODEL1:TEST.BIN3 RETURNS 60 ROWS WITH MODEL.NATIVELANGUAGE valuing to "English" only. Trips up the mutate() condition in join_to_human_ratings
 run_tests <- function(model, test_data, test_bin_count) { 
   runs = map(seq(1, test_bin_count), ~ IO_categorization(filter(test_data, Test.Bin == .x), model) %>%  mutate(RunCount = paste0(Training.Iteration, "_bin", .x)) %>% droplevels() %>%  join_to_human_ratings(d.test)) 
 bind_rows(runs)
@@ -2370,17 +2371,17 @@ bind_rows(runs)
 # }
 
 # join each training iteration with human test ratings
-join_to_human_ratings <- function(d.test.humans, model.result) {
+join_to_human_ratings <- function(model.test.run, d.test.humans) {
    d.test.humans %>% droplevels() %>% 
-    left_join(model.result) %>% 
+    left_join(model.test.run) %>% 
     mutate(
     Model.Group.matchesParticipant.Group = factor(case_when(
       NativeLanguage != Model.NativeLanguage ~ NA_character_,
       Group == Model.Group ~ "yes",
       Group != Model.Group ~ "no",
       T ~ NA_character_
-    ), levels = c("no", "yes"))) %>%
-  IO_ratings()
+    ), levels = c("no", "yes"))) 
+  # %>% IO_ratings()
 }
 
 test_bin_count = 4
@@ -2429,18 +2430,7 @@ p.results.perception.bySubject %+%
   ylim(-1.25, 1.25) +
   facet_grid(Training.Iteration ~ Test.Bin)
 
-
-
-
-
-
-
-
-
-
-
 ```
-
 
 
 # TO DO: THIS NEEDS WORK. IS THE LIKELIHOOD FUNCTION DOING THE RIGHT THING?
