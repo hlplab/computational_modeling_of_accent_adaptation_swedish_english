@@ -2193,20 +2193,20 @@ group_by(Test.Bin) %>% summarise(n())
 d.nonnative.test <- left_join(d.nonnative.test, d.nonnative.test.bins)
 
 
-# test each of 5 models on each test bin
-run_tests <- function(model, test_data, test_bin_count) {
-  runs = map(seq(1, test_bin_count), ~ IO_categorization(filter(test_data, Test.Bin == .x), model) %>% droplevels() %>% mutate(RunCount = paste0(Training.Iteration, "_bin", .x))) 
+# test each of 5 models on each test bin ### THIS RUNS INTO PROBLEMS AT TEST.BIN == 3 BECAUSE THERE ISN"T BINS 3 & 4 for SWEDISH
+run_tests <- function(model, test_data, test_bin_count) { 
+  runs = map(seq(1, test_bin_count), ~ IO_categorization(filter(test_data, Test.Bin == .x), model) %>%  mutate(RunCount = paste0(Training.Iteration, "_bin", .x)) %>% droplevels() %>%  join_to_human_ratings(d.test)) 
 bind_rows(runs)
 }
 
-run_and_join <- function(model, test_data, test_bin_count) {
-  run_tests(model, test_data, test_bin_count) %>% 
-  join_to_human_ratings(d.test)
-}
+# run_and_join <- function(model, test_data, test_bin_count) {
+#   run_tests(model, test_data, test_bin_count) %>% 
+#   join_to_human_ratings(d.test)
+# }
 
 # join each training iteration with human test ratings
-join_to_human_ratings <- function(model.result, d.test.humans) {
-  joins = d.test.humans %>% droplevels() %>% 
+join_to_human_ratings <- function(d.test.humans, model.result) {
+   d.test.humans %>% droplevels() %>% 
     left_join(model.result) %>% 
     mutate(
     Model.Group.matchesParticipant.Group = factor(case_when(
@@ -2219,7 +2219,8 @@ join_to_human_ratings <- function(model.result, d.test.humans) {
 }
 
 test_bin_count = 4
-results.CV = map(seq(1,length(models)), ~ run_and_join(models[[.x]], d.nonnative.test, test_bin_count)) 
+results.CV = map(seq(1,length(models)), ~ run_tests(models[[.x]], d.nonnative.test, test_bin_count))
+
 CV.data <- results.CV %>% bind_rows() %>% group_by(Training.Iteration, Test.Bin)
 
 
