@@ -2157,7 +2157,7 @@ d.IO.training.CV <- d.IO.training %>%
 # d.IO.training.CV %>% group_by(Used_for.Model.NativeLanguage, Used_for.Model.Group,
 #                               Talker, Used_for.Model.Sound, Training.Set) %>% summarise(n())
 
-# Each training iteration uses 4/5 of the training data; data from the non-native talkers are never down-sampled. exclude() drops 1/5 of the training data but keeps 5/5 of non-native talkers' data.
+# Each training iteration uses 4/5 of the training data; data from the non-native talkers are never down-sampled. exclude() drops 1/5 of the native talkers' training data but keeps 5/5 of non-native talkers' data.
 exclude <- function(.data, excluded_set) {
   .data %>% mutate(Used_for = case_when(Talker == "M5" ~ "training",
                                         Talker == "F1" ~ "training",
@@ -2186,14 +2186,14 @@ d.nonnative.test.bins <- d.nonnative.test %>% distinct(Item.MinimalPair) %>%
     NativeLanguage == "English" ~ ntile(runif(length(Item.MinimalPair)), 4),
     NativeLanguage == "Swedish" ~ ntile(runif(length(Item.MinimalPair)), 2))) 
 
-d.nonnative.test.bins %>% filter(NativeLanguage == "Swedish") %>% 
-group_by(Test.Bin) %>% summarise(n())
-
 # join the assigned min.pairs with the main cross-validation-test dataframe
 d.nonnative.test <- left_join(d.nonnative.test, d.nonnative.test.bins)
 
 
-# test each of 5 models on each test bin ### THIS RUNS INTO PROBLEMS AT TEST.BIN == 3 BECAUSE THERE ISN"T BINS 3 & 4 for SWEDISH
+# test each of 5 models on each test bin 
+### THIS RUNS INTO PROBLEMS AT TEST.BIN == 3 BECAUSE THERE ISN"T BINS 3 & 4 for SWEDISH
+### MODEL1:TEST.BIN1 RETURNS 120 ROWS
+### MODEL1:TEST.BIN3 RETURNS 60 ROWS WITH MODEL.NATIVELANGUAGE valuing to "English" only. Trips up the mutate() condition in join_to_human_ratings
 run_tests <- function(model, test_data, test_bin_count) { 
   runs = map(seq(1, test_bin_count), ~ IO_categorization(filter(test_data, Test.Bin == .x), model) %>%  mutate(RunCount = paste0(Training.Iteration, "_bin", .x)) %>% droplevels() %>%  join_to_human_ratings(d.test)) 
 bind_rows(runs)
@@ -2205,17 +2205,17 @@ bind_rows(runs)
 # }
 
 # join each training iteration with human test ratings
-join_to_human_ratings <- function(d.test.humans, model.result) {
+join_to_human_ratings <- function(model.test.run, d.test.humans) {
    d.test.humans %>% droplevels() %>% 
-    left_join(model.result) %>% 
+    left_join(model.test.run) %>% 
     mutate(
     Model.Group.matchesParticipant.Group = factor(case_when(
       NativeLanguage != Model.NativeLanguage ~ NA_character_,
       Group == Model.Group ~ "yes",
       Group != Model.Group ~ "no",
       T ~ NA_character_
-    ), levels = c("no", "yes"))) %>%
-  IO_ratings()
+    ), levels = c("no", "yes"))) 
+  # %>% IO_ratings()
 }
 
 test_bin_count = 4
@@ -2263,16 +2263,6 @@ p.results.perception.bySubject %+%
     values = colors.Accent) +
   ylim(-1.25, 1.25) +
   facet_grid(Training.Iteration ~ Test.Bin)
-
-
-
-
-
-
-
-
-
-
 
 ```
 
