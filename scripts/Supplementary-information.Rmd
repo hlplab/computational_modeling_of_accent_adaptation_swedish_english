@@ -99,7 +99,6 @@ colors.Accent = colors.Group
 colors.Category = c("blue", "orange")
 colors.Language = c("cyan", "pink")
 shapes.Category = c("circle","square")
-
 ```
 
 ```{r functions and pipes}
@@ -1733,7 +1732,7 @@ plot_cue_matrix(
 ```
 
 
-## Training the four ideal observers
+## Training the four ideal observers {#sec:IO-training}
 
 ```{r IO-training-functions, include=FALSE}
 # Select cues to train on
@@ -2003,7 +2002,7 @@ d.IO %>% plot_IO_training(d.IO.training, language = "Swedish", cues = selected_c
 
 
 
-## Testing the four ideal observers
+## Testing the four ideal observers {#sec:IO-test}
 
 ```{r IO-categorization-functions, include=FALSE}
 drop_ellipse <- function(.data.IO) {
@@ -2136,13 +2135,179 @@ p.post +
                position = position_dodge(.3))
 ```
 
-### Cross-Validation of ideal observer models
-In addition to testing the ideal observer models on the respective non-native talker test data we cross-validated the data to check the stability of the results. 
 
-Each model's training data was apportioned into 5 sets. For each iteration of ideal observer training, all but one of the test sets were used; the left-out test set was reserved for validation. This process is reiterated until all five test sets are exhausted.
+### Categorization accuracy {#sec:IO-methods-categorization}
+
+As in our previous work, we assume that the ideal observer employs Luce's choice rule (also known as probability matching) to categorize inputs. Under this assumption, the ideal observer responds by sampling from its posterior. If the posterior probability of a /d/ is, say, .45 for a given stimulus, the observer will on average respond "d" on 45\% of all trials and "t" on 55\% of all trials. This choice rule does thus not introduce any additional degrees of freedom. 
+
+Figure \@ref(fig:ideal-observers-accuracy) shows the predicted accuracy for a hypothetical categorization task over the test stimuli for the English and Swedish experiment. Critically, the /d/-exposure ideal observer patterns consistently with human responses from the /d/-exposure groups; we elaborate on this in Section \@ref(sec:results-main). Notably, the ideal observers for English, achieves high accuracy over the non-native-accented test stimuli, consistently higher than the control ideal observer.
+
+(ref:ideal-observers-accuracy) Predicted accuracy of control and /d/-exposure ideal observers for the non-native-accented /d/- and /t/ words during test.
+
+```{r ideal-observers-accuracy, fig.cap="(ref:ideal-observers-accuracy)", fig.height=4.5, out.width="75%"}
+p <- p.post %+% 
+  (d.IO.test) +
+  geom_hline(yintercept = 1/2, color = "gray") +
+  stat_summary(aes(color = Model.Group), fun = mean, geom = "bar",
+               alpha = .6, fill = NA,
+               position = position_dodge(.93)) +
+  stat_summary(aes(group = Model.Group), fun.data = mean_cl_boot, geom = "linerange", 
+               alpha = .8, size = .8, color = "black",
+               position = position_dodge(.93)) +
+  scale_y_continuous("Accuracy") 
+ggsave(p, filename = "../figures/IO_predict_accuracy.png", 
+       width = 7, height = 4)
+p
+```
+
+
+### Linking hypothesis for goodness ratings {#sec:IO-methods-link}
+
+Here we assume a linear link with 0 degrees of freedom between the posterior probability of /d/ and the predicted rating of /d/-goodness. Specifically, for visualization that compare the ideal observers' prediction against human data, we simply multiply posterior probabilities by 2 and subtract 1, to obtain predicted /d/-goodness ratings that range from -1 to 1, which is approximately the range observed for z-scored human ratings (see Figure \@ref(fig:ratings-results) in Section \@ref(sec:results)). For analyses, we predict human z-scored /d/-goodness ratings from ideal observer predicted posterior probabilities of /d/.
+
+The assumption of a linear link between posterior probabilities and goodness ratings predicts that categorization responses and rating responses should be linearly correlated, which we validate next.
+
+### Validating the linking hypothesis in human data
+
+@xie2017more conducted both an identification and a rating experiment using the exact same Mandarin-accented English exposure and test items employed here. The exposure task was the same for both experiments (lexical decision, as already described). Only the test task differed. In the identification task, participants provided categorization responses ("Did the word end in a /d/ or /t/?") rather than ratings. This allows us to compare identification and rating responses against each other. If posterior probabilities map linearly onto both ratings and identification, as assumed here, we should see a linear relation between identification and rating responses.
+
+Figure \@ref(fig:ID-to-ratings) shows the item-level correlation in participants' rating and identification responses across the two experiments. At least for the range of test stimuli in @xie2017more, the link between ratings and identification indeed seems to be linear.  
+
+```{r load categorization experiments, results='hide'}
+# load English ID data
+d.english.ID <- read.csv("../data/English/English_perception_identification_Xie et al 2017.csv")
+
+# Recode identification response as proportion of /d/ response
+d.english.ID <- d.english.ID %>%
+  rename(
+    Participant = participant,
+    ID.Response = Spelling1.ACC,
+    ID.RT = Spelling1.RT,
+    Item.Word = Word,
+    Block.Order = Block) %>%
+  mutate(
+    NativeLanguage = "English",
+    Participant = paste0("E", Participant),
+    Group = ifelse(Group == "experimental", "/d/-exposure", "control"),
+    Block.Type = "test",
+    Sound = factor(paste0("/", Sound, "/"),
+                   levels = levels.Category),
+    Sound.Position = "final",
+    ID.Response.d = case_when(
+      (Sound == levels.Category[1] & ID.Response == 1) | (Sound == levels.Category[2] & ID.Response == 0) ~ 1,
+      (Sound == levels.Category[2] & ID.Response == 1) | (Sound == levels.Category[1] & ID.Response == 0) ~ 0),
+    Subject = NULL,
+    Session = NULL
+  ) %>%
+  left_join(
+    d.test %>%
+      filter(NativeLanguage == "English") %>%
+      select(Item.Word, Item.MinimalPair, Sound) %>%
+      distinct(), by = c("Item.Word", "Sound")) %>%
+  applyFactorLevels()
+```
+
+(ref:ID-to-ratings) Item-level correlation of human identification and rating responses from two experiments in @xie2017more. The two experiments used the same exposure and test stimuli, and differed only in the task during test (identification vs. rating). The trend line shows a generalized additive model fit with a non-parametric smoother. That is, the fit would in principle allow non-linearity in the relation between identification and rating responses. The fact that no non-linearity is detected suggests that the relation is largely linear. Shaded areas show 95\% confidence intervals.
+
+```{r ID-to-ratings, fig.cap="(ref:ID-to-ratings)", fig.height = 4.5, out.width="75%"}
+d.english.test.byItem <- 
+ plyr::rbind.fill(d.test %>% filter(NativeLanguage == "English") %>%
+                     droplevels() %>% 
+                    mutate(Task = "rating"), d.english.ID %>% 
+                    mutate(Task = "ID")
+                  ) %>%
+  group_by(Task, Group, Sound, Item.Word, Item.MinimalPair) %>%
+  summarise(zRating.d = mean(Rating.Response.d.zscored),
+            Proportion.d = mean(ID.Response.d)) %>% 
+ungroup() %>%
+  select(-Task) %>% 
+  pivot_longer(c("zRating.d", "Proportion.d"),
+               names_to = "resp",
+               values_to = "value") %>% 
+  filter(!is.na(value)) %>% 
+  pivot_wider(names_from = "resp",
+              values_from = "value") %>% 
+  mutate(Logodds.d = qlogis(Proportion.d)) %>%
+  mutate_if(is.character, as.factor) %>%
+  applyFactorLevels()
+
+# correlation between ratings and percent /d/ responses
+ggscatter(d.english.test.byItem, x = "Proportion.d", y = "zRating.d", color = "Group", 
+          cor.method = "pearson",
+          xlab = "Proportion of /d/-responses from identification task", ylab = "/d/-goodness from rating task") + 
+  stat_cor(label.x.npc = "middle", label.y.npc = "bottom") + 
+  facet_grid(~ Group) + 
+  geom_smooth(method = "gam", formula = y ~ s(x), color = "black", fill = "black") +
+  scale_color_manual(
+    breaks = c("/d/-exposure", "control"),
+    values = colors.Group
+  )
+```
+
+
+
+
+
+# Results of ideal observer analyses {#sec:IO-results}
+
+<!-- Maryann, Xin: this text needs to be expanded, following the style used in the remainder of the SI -->
+
+We evaluate the ideal observers against human responses in two ways. First, we qualitatively compare *average group-level* for the two exposure groups (/d/-exposure vs. control). Second, we analyze and visualize item-level correlations between the ideal observer and human responses.  
+
+## Group-level comparison between human and model-predicted ratings {#sec:results-main}
+
+Figure \@ref(fig:IO-ratings-results-byItem) plots the predictions of the ideal observers. Figure \@ref(fig:ratings-results-byItem) replots the human rating results for the English and Swedish experiments from Figure \@ref(fig:ratings-results) in Section \@ref(sec:results). However, unlike the original Figure \@ref(fig:ratings-results), Figure \@ref(fig:ratings-results-byItem) shows by-item (rather than by-subject) means. This is done to facilitate comparison to the ideal observer predictions, which---by necessity---are predictions about individual items. 
+
+(ref:IO-ratings-results-byItem) **Ideal observer /d/-goodness ratings** during test (z-scored) predicted by the control and /d/-exposure ideal observers. Error bars show 95\% bootstrapped confidence intervals over by-item predictions (since there aren't multiple subjects). To facilitate comparison to the human data, predicted ratings were derived from each ideal observer by projecting its predicted posterior probability of /d/ linearly onto the range of the human z-scored /d/-goodness ratings (see Section \@ref(sec:IO-methods-link)). This was done only for the purpose of visualization---all analyses presented below directly predict human ratings from the ideal observers' posterior probabilities.
+
+(ref:ratings-results-byItem) **Human /d/-goodness ratings** during test (z-scored) by native language and exposure group. To facilitate comparison of the human data to the ideal observers in Figure \@ref(fig:IO-ratings-results-byItem), we first aggregate the human data by exposure condition and *item*, averaging across all subjects. These are the individual points shown in the figure. The bars show the mean of these by-item means, and the error interval shows the 95\% confidence interval over the by-item means. This contrasts with Figure \@ref(fig:ratings-results) in Section \@ref(sec:results), where we plotted the mean and confidence interval of by-subject means. 
+
+```{r IO-ratings-results-byItem, fig.cap="(ref:IO-ratings-results-byItem)", fig.height=4.5, out.width='75%'}
+p.results.perception.bySubject %+%
+  (d.test.IO %>%
+     filter(Model.Group.matchesParticipant.Group == "yes") %>%
+     group_by(Language, NativeLanguage, Group, Sound, Item.WordID, Model.Group) %>%
+     summarise(Rating.mean = mean(Model.Posterior.d * 2 - 1))) +
+  ylab("Ideal observer predicted\n/d/-goodness rating (z-score aligned)") +
+  scale_fill_manual("Ideal observer",
+    breaks = c("/d/-exposure", "control"),
+    labels = c("/d/-exposure", "control"),
+    values = colors.Accent) +
+  ylim(-1.25, 1.25)
+```
+
+
+```{r ratings-results-byItem, fig.cap="(ref:ratings-results-byItem)", fig.height=4.5, out.width='75%'}
+p.results.percept.byItem <- p.results.perception.bySubject %+%
+  (d.test %>%
+     group_by(Language, NativeLanguage, Group, Sound, Item.WordID) %>%
+     summarise(Rating.mean = mean(Rating.Response.d.zscored))) +
+  ylab("Mean /d/-goodness ratings\n(z-scored) by item") +
+  ylim(-1.25, 1.25)
+
+p.results.percept.byItem
+ggsave(p.results.percept.byItem, filename = "../figures/Result-ratings-byItem.png",
+       width = 7, height = 4)
+```
+
+The ideal observers' predictions differ from the human ratings in a number of ways. First, the human data is more gradient than predicted by the ideal observers. This is most evident for the Swedish data. One likely explanation for this is that the simple ideal observers we employ here do not account for perceptual noise [cf. @feldman2009influence]. Second, the differences between the different ideal observers are more pronounced than for the z-scored human ratings. This is the case both across languages, and across exposure conditions within each language.
+
+The ideal observers do, however, predict the qualitative patterns in the human goodness ratings:
+
+ + For the English data, the ideal observers predict significantly higher ratings from the /d/-exposure model over the control model for both /d/ and /t/. 
+  
+ + For the Swedish data, the ideal observers predict no difference between the control and /d/-exposure model for /d/ but higher ratings for the the *control* model for /t/. This qualitatively mirrors the asymmetry between /d/ and /t/ observed in the human ratings, though the effect for /t/ is only marginal for the human ratings.
+
+## How robust are these results? How much data does this type of modeling require?
+Our initial analysis did not employ cross-validation or similar methods. This decision was made since the data the ideal observers are tested on do not overlap with the data the ideal observers are tested on. During the review process, both reviewers raised questions about the amount of data that would be required for the type of computational analysis conducted here. Here we address this questions by subsetting the training and test data to assess the variability of the results across different folds of the training and test data. This also allows us to assess the extent to which the results in the previous section are due to overfitting to the training data.
+
+Our ideal observers are training on two types of data: data that estimate native listeners' expectations about /d/ and /t/ based on previous lifelong experienced with their native language, and data that estimate the effects of the exposure phase (for the /d/ category in the /d/-exposure condition). For the former data, we randomly created five non-overlapping folds of 20% of the data. The folds were created by sampling (without replacement) the native data described in Section \@ref(sec:IO-training) *within* each unique combination of talker and category. Each model was then trained on four of the five folds (80% of the data, i.e., 24 tokens per category and talker), resulting in five models, each omitting another 20% of the native training data. Since the exposure data---by hypothesis---form the basis of adaptation, we do *not* resample or subset these data but rather hold them constant across all folds of the training data. By comparing across these five models, we can thus assess the extent to which the specific native data used to train the ideal observers affects our results (recall that these data determine the /t/ category in both the control and the /d/-exposure model, as well as the /d/ category in the control model). At the same time, this analysis sheds light on whether 24 tokens per talker and category are even remotely sufficiently to achieve robust estimates of category means and covariances. This is a question, in particular, for the Swedish models, for which we had phonetically annotated data for only *one* native talker (as opposed to 10 talkers for the English data). 
+
+We first evaluated the five folded models on the entire test set, following the same procedure outlined in Section \@ref(sec:IO-test). DESCRIBE RESULTS HERE BEFORE WE MOVE ON.
+
+In an additional analysis, we randomly split the test data into folds of 15 tokens each, resulting in 2 folds for the Swedish test data (which had 30 test tokens) and 4 folds for the English test data (which had 60 test tokens). By comparing across test bins within each fold, we can estimate how robust our results depend on the specific test bins. Each fold was created by sampling minimal pairs---rather than individual words---to hold the phonological context constant between the /d/ and /t/ test items within each fold. To compare likes with likes, we then compared the model predictions for each test fold against the human ratings on the same test items. DESCRIBE THESE RESULTS HERE.
 
 ```{r train-IO-for-cross-validation, include = FALSE}
-
 k <- 5 # set number of training iterations
 
 # divide training data into k sets
@@ -2276,168 +2441,6 @@ p.results.perception.bySubject %+%
 
 ```
 
-
-### Categorization accuracy {#sec:IO-methods-categorization}
-
-As in our previous work, we assume that the ideal observer employs Luce's choice rule (also known as probability matching) to categorize inputs. Under this assumption, the ideal observer responds by sampling from its posterior. If the posterior probability of a /d/ is, say, .45 for a given stimulus, the observer will on average respond "d" on 45\% of all trials and "t" on 55\% of all trials. This choice rule does thus not introduce any additional degrees of freedom. 
-
-Figure \@ref(fig:ideal-observers-accuracy) shows the predicted accuracy for a hypothetical categorization task over the test stimuli for the English and Swedish experiment. Critically, the /d/-exposure ideal observer patterns consistently with human responses from the /d/-exposure groups; we elaborate on this in section (ref:Group-level comparison between human and model-predicted ratings). Notably, the ideal observers for English, achieves high accuracy over the non-native-accented test stimuli, consistently higher than the control ideal observer.
-
-(ref:ideal-observers-accuracy) Predicted accuracy of control and /d/-exposure ideal observers for the non-native-accented /d/- and /t/ words during test.
-
-```{r ideal-observers-accuracy, fig.cap="(ref:ideal-observers-accuracy)", fig.height=4.5, out.width="75%"}
-p <- p.post %+% 
-  (d.IO.test) +
-  geom_hline(yintercept = 1/2, color = "gray") +
-  stat_summary(aes(color = Model.Group), fun = mean, geom = "bar",
-               alpha = .6, fill = NA,
-               position = position_dodge(.93)) +
-  stat_summary(aes(group = Model.Group), fun.data = mean_cl_boot, geom = "linerange", 
-               alpha = .8, size = .8, color = "black",
-               position = position_dodge(.93)) +
-  scale_y_continuous("Accuracy") 
-ggsave(p, filename = "../figures/IO_predict_accuracy.png", 
-       width = 7, height = 4)
-p
-```
-
-
-### Linking hypothesis for goodness ratings {#sec:IO-methods-link}
-
-Here we assume a linear link with 0 degrees of freedom between the posterior probability of /d/ and the predicted rating of /d/-goodness. Specifically, for visualization that compare the ideal observers' prediction against human data, we simply multiply posterior probabilities by 2 and subtract 1, to obtain predicted /d/-goodness ratings that range from -1 to 1, which is approximately the range observed for z-scored human ratings (see Figure \@ref(fig:ratings-results) in Section \@ref(sec:results)). For analyses, we predict human z-scored /d/-goodness ratings from ideal observer predicted posterior probabilities of /d/.
-
-The assumption of a linear link between posterior probabilities and goodness ratings predicts that categorization responses and rating responses should be linearly correlated, which we validate next.
-
-### Validating the linking hypothesis in human data
-
-@xie2017more conducted both an identification and a rating experiment using the exact same Mandarin-accented English exposure and test items employed here. The exposure task was the same for both experiments (lexical decision, as already described). Only the test task differed. In the identification task, participants provided categorization responses ("Did the word end in a /d/ or /t/?") rather than ratings. This allows us to compare identification and rating responses against each other. If posterior probabilities map linearly onto both ratings and identification, as assumed here, we should see a linear relation between identification and rating responses.
-
-Figure \@ref(fig:ID-to-ratings) shows the item-level correlation in participants' rating and identification responses across the two experiments. At least for the range of test stimuli in @xie2017more, the link between ratings and identification indeed seems to be linear.  
-
-```{r load categorization experiments, results='hide'}
-# load English ID data
-d.english.ID <- read.csv("../data/English/English_perception_identification_Xie et al 2017.csv")
-
-# Recode identification response as proportion of /d/ response
-d.english.ID <- d.english.ID %>%
-  rename(
-    Participant = participant,
-    ID.Response = Spelling1.ACC,
-    ID.RT = Spelling1.RT,
-    Item.Word = Word,
-    Block.Order = Block) %>%
-  mutate(
-    NativeLanguage = "English",
-    Participant = paste0("E", Participant),
-    Group = ifelse(Group == "experimental", "/d/-exposure", "control"),
-    Block.Type = "test",
-    Sound = factor(paste0("/", Sound, "/"),
-                   levels = levels.Category),
-    Sound.Position = "final",
-    ID.Response.d = case_when(
-      (Sound == levels.Category[1] & ID.Response == 1) | (Sound == levels.Category[2] & ID.Response == 0) ~ 1,
-      (Sound == levels.Category[2] & ID.Response == 1) | (Sound == levels.Category[1] & ID.Response == 0) ~ 0),
-    Subject = NULL,
-    Session = NULL
-  ) %>%
-  left_join(
-    d.test %>%
-      filter(NativeLanguage == "English") %>%
-      select(Item.Word, Item.MinimalPair, Sound) %>%
-      distinct(), by = c("Item.Word", "Sound")) %>%
-  applyFactorLevels()
-```
-
-(ref:ID-to-ratings) Item-level correlation of human identification and rating responses from two experiments in @xie2017more. The two experiments used the same exposure and test stimuli, and differed only in the task during test (identification vs. rating). The trend line shows a generalized additive model fit with a non-parametric smoother. That is, the fit would in principle allow non-linearity in the relation between identification and rating responses. The fact that no non-linearity is detected suggests that the relation is largely linear. Shaded areas show 95\% confidence intervals.
-
-```{r ID-to-ratings, fig.cap="(ref:ID-to-ratings)", fig.height = 4.5, out.width="75%"}
-d.english.test.byItem <- 
- plyr::rbind.fill(d.test %>% filter(NativeLanguage == "English") %>%
-                     droplevels() %>% 
-                    mutate(Task = "rating"), d.english.ID %>% 
-                    mutate(Task = "ID")
-                  ) %>%
-  group_by(Task, Group, Sound, Item.Word, Item.MinimalPair) %>%
-  summarise(zRating.d = mean(Rating.Response.d.zscored),
-            Proportion.d = mean(ID.Response.d)) %>% 
-ungroup() %>%
-  select(-Task) %>% 
-  pivot_longer(c("zRating.d", "Proportion.d"),
-               names_to = "resp",
-               values_to = "value") %>% 
-  filter(!is.na(value)) %>% 
-  pivot_wider(names_from = "resp",
-              values_from = "value") %>% 
-  mutate(Logodds.d = qlogis(Proportion.d)) %>%
-  mutate_if(is.character, as.factor) %>%
-  applyFactorLevels()
-
-# correlation between ratings and percent /d/ responses
-ggscatter(d.english.test.byItem, x = "Proportion.d", y = "zRating.d", color = "Group", 
-          cor.method = "pearson",
-          xlab = "Proportion of /d/-responses from identification task", ylab = "/d/-goodness from rating task") + 
-  stat_cor(label.x.npc = "middle", label.y.npc = "bottom") + 
-  facet_grid(~ Group) + 
-  geom_smooth(method = "gam", formula = y ~ s(x), color = "black", fill = "black") +
-  scale_color_manual(
-    breaks = c("/d/-exposure", "control"),
-    values = colors.Group
-  )
-```
-
-
-
-
-
-# Results of ideal observer analyses {#sec:IO-results}
-
-<!-- Maryann, Xin: this text needs to be expanded, following the style used in the remainder of the SI -->
-
-We evaluate the ideal observers against human responses in two ways. First, we qualitatively compare *average group-level* for the two exposure groups (/d/-exposure vs. control). Second, we analyze and visualize item-level correlations between the ideal observer and human responses.  
-
-## Group-level comparison between human and model-predicted ratings
-
-Figure \@ref(fig:IO-ratings-results-byItem) plots the predictions of the ideal observers. Figure \@ref(fig:ratings-results-byItem) replots the human rating results for the English and Swedish experiments from Figure \@ref(fig:ratings-results) in Section \@ref(sec:results). However, unlike the original Figure \@ref(fig:ratings-results), Figure \@ref(fig:ratings-results-byItem) shows by-item (rather than by-subject) means. This is done to facilitate comparison to the ideal observer predictions, which---by necessity---are predictions about individual items. 
-
-(ref:IO-ratings-results-byItem) **Ideal observer /d/-goodness ratings** during test (z-scored) predicted by the control and /d/-exposure ideal observers. Error bars show 95\% bootstrapped confidence intervals over by-item predictions (since there aren't multiple subjects). To facilitate comparison to the human data, predicted ratings were derived from each ideal observer by projecting its predicted posterior probability of /d/ linearly onto the range of the human z-scored /d/-goodness ratings (see Section \@ref(sec:IO-methods-link)). This was done only for the purpose of visualization---all analyses presented below directly predict human ratings from the ideal observers' posterior probabilities.
-
-(ref:ratings-results-byItem) **Human /d/-goodness ratings** during test (z-scored) by native language and exposure group. To facilitate comparison of the human data to the ideal observers in Figure \@ref(fig:IO-ratings-results-byItem), we first aggregate the human data by exposure condition and *item*, averaging across all subjects. These are the individual points shown in the figure. The bars show the mean of these by-item means, and the error interval shows the 95\% confidence interval over the by-item means. This contrasts with Figure \@ref(fig:ratings-results) in Section \@ref(sec:results), where we plotted the mean and confidence interval of by-subject means. 
-
-```{r IO-ratings-results-byItem, fig.cap="(ref:IO-ratings-results-byItem)", fig.height=4.5, out.width='75%'}
-p.results.perception.bySubject %+%
-  (d.test.IO %>%
-     filter(Model.Group.matchesParticipant.Group == "yes") %>%
-     group_by(Language, NativeLanguage, Group, Sound, Item.WordID, Model.Group) %>%
-     summarise(Rating.mean = mean(Model.Posterior.d * 2 - 1))) +
-  ylab("Ideal observer predicted\n/d/-goodness rating (z-score aligned)") +
-  scale_fill_manual("Ideal observer",
-    breaks = c("/d/-exposure", "control"),
-    labels = c("/d/-exposure", "control"),
-    values = colors.Accent) +
-  ylim(-1.25, 1.25)
-```
-
-
-```{r ratings-results-byItem, fig.cap="(ref:ratings-results-byItem)", fig.height=4.5, out.width='75%'}
-p.results.percept.byItem <- p.results.perception.bySubject %+%
-  (d.test %>%
-     group_by(Language, NativeLanguage, Group, Sound, Item.WordID) %>%
-     summarise(Rating.mean = mean(Rating.Response.d.zscored))) +
-  ylab("Mean /d/-goodness ratings\n(z-scored) by item") +
-  ylim(-1.25, 1.25)
-
-p.results.percept.byItem
-ggsave(p.results.percept.byItem, filename = "../figures/Result-ratings-byItem.png",
-       width = 7, height = 4)
-```
-
-The ideal observers' predictions differ from the human ratings in a number of ways. First, the human data is more gradient than predicted by the ideal observers. This is most evident for the Swedish data. One likely explanation for this is that the simple ideal observers we employ here do not account for perceptual noise [cf. @feldman2009influence]. Second, the differences between the different ideal observers are more pronounced than for the z-scored human ratings. This is the case both across languages, and across exposure conditions within each language.
-
-The ideal observers do, however, predict the qualitative patterns in the human goodness ratings:
-
- + For the English data, the ideal observers predict significantly higher ratings from the /d/-exposure model over the control model for both /d/ and /t/. 
-  
- + For the Swedish data, the ideal observers predict no difference between the control and /d/-exposure model for /d/ but higher ratings for the the *control* model for /t/. This qualitatively mirrors the asymmetry between /d/ and /t/ observed in the human ratings, though the effect for /t/ is only marginal for the human ratings.
 
 
 # TO DO: THIS NEEDS WORK. IS THE LIKELIHOOD FUNCTION DOING THE RIGHT THING?
