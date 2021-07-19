@@ -2165,50 +2165,12 @@ exclude <- function(.data, excluded_set) {
                                         TRUE ~ "training"))
 }
 
-# # train_IO is a minor modification of make_IO() 
-# train_IO = function(
-#   .data, 
-#   cues,
-#   excluded_set,
-#   # Guess maximal grouping structure from data
-#   groups = guess_groups(.data)
-# ) {
-#   # Make sure that only training data is used
-#   .data %<>%
-#     ungroup() %>%
-#     filter(Used_for == "training") %>%
-#     droplevels()
-#   
-#   # Get the mean and covariance matrix
-#   .data %>%
-#     # If there's more than one talker do the subsequent steps separately for each talker
-#     group_by(!!! rlang::syms(groups)) %>%
-#     summarise(
-#       mu = list(colMeans(cbind(!!! rlang::syms(cues)))),
-#       Sigma = list(cov(cbind(!!! rlang::syms(cues))))
-#     ) %>%
-#     # If there's more than one talker get the average of by-talker mu and Sigma
-#     { if (nlevels(.data$Talker) > 1) {
-#       # Group by everything *except* for Talker
-#         group_by(., !!! rlang::syms(setdiff(groups, "Talker"))) %>%
-#         summarise(
-#           Model = list(list(
-#             mu = Reduce("+", mu) / length(mu),
-#             Sigma = Reduce("+", Sigma) / length(Sigma)))
-#         ) } else . } %>%
-#     select(!!! rlang::syms(setdiff(groups, "Talker")), Model) %>%
-#     # Now that IO is made, change the "Used_for" columns into "Model" columns
-#     rename_at(vars(starts_with("Used_for.")), ~str_remove(.x, pattern = "Used_for.")) %>%
-#     applyFactorLevels()
-# }
 
-models <- map(seq(1,5), ~ make_IO(exclude(d.IO.training.CV,.x), selected_cues))
+# train models, excluding 1/5 each iteration.
+models <- map(seq(1,5), ~ make_IO(exclude(d.IO.training.CV,.x), selected_cues) %>%
+                mutate(Training.Iteration = paste0("iteration_", .x)))
 
 #m1.IO <- train_IO(exclude(d.IO.training.CV,1), selected_cues, 1)
-#m2.IO <- train_IO(exclude(d.IO.training.CV,2), selected_cues, 2)
-#m3.IO <- train_IO(exclude(d.IO.training.CV,3), selected_cues, 3)
-#m4.IO <- train_IO(exclude(d.IO.training.CV,4), selected_cues, 4)
-#m5.IO <- train_IO(exclude(d.IO.training.CV,5), selected_cues, 5)
 
 ```
 
@@ -2227,26 +2189,41 @@ d.nonnative.test.bins <- d.nonnative.test %>% distinct(Item.MinimalPair) %>%
 d.nonnative.test.bins %>% filter(NativeLanguage == "Swedish") %>% 
 group_by(Test.Bin) %>% summarise(n())
 
-# join the assigned min.pairs with the main test dataframe
+# join the assigned min.pairs with the main cross-validation-test dataframe
 d.nonnative.test <- left_join(d.nonnative.test, d.nonnative.test.bins)
-d.nonnative.test %>% group_by(Item.MinimalPair, Test.Bin) %>% summarise(n())
 
 
-# test models on each test bin
+# test each of 5 models on each test bin
 run_tests <- function(model, test_data, test_bin_count) {
-  runs = map(seq(1, test_bin_count), ~ IO_categorization(filter(test_data, Test.Bin == .x), model) %>% droplevels() %>% mutate(RunCount = paste0("test_", .x))) 
+  runs = map(seq(1, test_bin_count), ~ IO_categorization(filter(test_data, Test.Bin == .x), model) %>% droplevels() %>% mutate(RunCount = paste0(Training.Iteration, "_bin", .x))) 
 bind_rows(runs)
 }
 
+run_and_join <- function(model, test_data, test_bin_count) {
+  run_tests(model, test_data, test_bin_count) %>% 
+  join_to_human_ratings(d.test)
+}
+
+# join each training iteration with human test ratings
+join_to_human_ratings <- function(model.result, d.test.humans) {
+  joins = d.test.humans %>% droplevels() %>% 
+    left_join(model.result) %>% 
+    mutate(
+    Model.Group.matchesParticipant.Group = factor(case_when(
+      NativeLanguage != Model.NativeLanguage ~ NA_character_,
+      Group == Model.Group ~ "yes",
+      Group != Model.Group ~ "no",
+      T ~ NA_character_
+    ), levels = c("no", "yes"))) %>%
+  IO_ratings()
+}
+
 test_bin_count = 4
-results = map(seq(1,length(models)), ~ run_tests(models[[.x]], d.nonnative.test, test_bin_count) %>% mutate(Training.Iteration = paste0("iteration_", .x))) 
+results.CV = map(seq(1,length(models)), ~ run_and_join(models[[.x]], d.nonnative.test, test_bin_count)) 
+CV.data <- results.CV %>% bind_rows() %>% group_by(Training.Iteration, Test.Bin)
 
 
-results[[1]]
-
-result = bind_rows(results) %>% group_by(Model, Test.Bin)
-
-plot = result %>% filter(Model.NativeLanguage == "English") %>% 
+p.english <-  CV.data %>% filter(Model.NativeLanguage == "English") %>% 
   ggplot( aes(x=Sound, y=Model.Posterior.Intended)) + 
   stat_summary(aes(fill = Model.Group), fun = mean, geom = "bar", 
                alpha = .6,
@@ -2256,64 +2233,44 @@ plot = result %>% filter(Model.NativeLanguage == "English") %>%
                position = position_dodge(.93)) +
   scale_color_manual(values = colors.Group) +
   scale_fill_manual(values = colors.Group) +
-  facet_grid(RunCount ~ Trainint.Iteration)
-plot
+  facet_grid(Training.Iteration ~ Test.Bin)
+p.english
 
-
-
-
-p.results.perception = d.test %>%
-  group_by(Language, NativeLanguage, Group, Sound, Participant) %>%
-  summarise(Rating.mean = mean(Rating.Response.d.zscored)) %>%
-  ggplot(mapping = aes(x = Sound, y = Rating.mean)) + 
-  stat_summary(aes(fill = Group), fun = mean, geom = "bar", 
+p.swedish <- CV.data %>% filter(Model.NativeLanguage == "Swedish") %>% 
+  ggplot( aes(x=Sound, y=Model.Posterior.Intended)) + 
+  stat_summary(aes(fill = Model.Group), fun = mean, geom = "bar", 
                alpha = .6,
                position = position_dodge(.93)) +
-  stat_summary(aes(group = Group), fun.data = mean_cl_boot, geom = "linerange", 
-               size = .8, 
+  stat_summary(aes(group = Model.Group), fun.data = mean_cl_boot, geom = "linerange", 
+               size = .8, color = "black",
                position = position_dodge(.93)) +
-  scale_x_discrete("Intended sound category") +
-  scale_y_continuous("/d/-goodness rating (z-scored)") +
   scale_color_manual(values = colors.Group) +
-  scale_fill_manual(name = "Exposure group", values = colors.Group) +
-  facet_grid(. ~ Language, scales="free_y") +
-  theme(legend.position = "top",
-        panel.grid.major.x = element_blank(),
-        panel.grid.minor.x = element_blank())
-
-
-
-
-# join with 
-d.test.results = 
-  # Human rating responses during test phase of perception experiment
-  d.test %>%
-  droplevels() %>%
-  # Join with stimulus and ideal observer information 
-  left_join(result) %>%
-  # Is the model meant for this exposure group? 
-  mutate(
-    Model.Group.matchesParticipant.Group = factor(case_when(
-      NativeLanguage != Model.NativeLanguage ~ NA_character_,
-      Group == Model.Group ~ "yes",
-      Group != Model.Group ~ "no",
-      T ~ NA_character_
-    ), levels = c("no", "yes"))) %>%
-  IO_ratings()
-
+  scale_fill_manual(values = colors.Group) +
+  facet_grid(Training.Iteration ~ Test.Bin)
+p.swedish
 
 
 p.results.perception.bySubject %+%
-  (d.test.m1testbin2.IO %>%
-     filter(Model.Group.matchesParticipant.Group == "yes") %>%
+  CV.data %>%
+     filter(Model.NativeLanguage == "English", Model.Group.matchesParticipant.Group == "yes") %>%
      group_by(Language, NativeLanguage, Group, Sound, Item.WordID, Model.Group) %>%
-     summarise(Rating.mean = mean(Model.Posterior.d * 2 - 1))) +
+     summarise(Rating.mean = mean(Model.Posterior.d * 2 - 1)) +
   ylab("Ideal observer predicted\n/d/-goodness rating (z-score aligned)") +
   scale_fill_manual("Ideal observer",
     breaks = c("/d/-exposure", "control"),
     labels = c("/d/-exposure", "control"),
     values = colors.Accent) +
-  ylim(-1.25, 1.25)
+  ylim(-1.25, 1.25) +
+  facet_grid(Training.Iteration ~ Test.Bin)
+
+
+
+
+
+
+
+
+
 
 
 ```
