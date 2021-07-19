@@ -2357,12 +2357,9 @@ d.nonnative.test <- left_join(d.nonnative.test, d.nonnative.test.bins)
 
 
 # test each of 5 models on each test bin 
-### THIS RUNS INTO PROBLEMS AT TEST.BIN == 3 BECAUSE THERE ISN"T BINS 3 & 4 for SWEDISH
-### MODEL1:TEST.BIN1 RETURNS 120 ROWS
-### MODEL1:TEST.BIN3 RETURNS 60 ROWS WITH MODEL.NATIVELANGUAGE valuing to "English" only. Trips up the mutate() condition in join_to_human_ratings
 run_tests <- function(model, test_data, test_bin_count) { 
-  runs = map(seq(1, test_bin_count), ~ IO_categorization(filter(test_data, Test.Bin == .x), model) %>%  mutate(RunCount = paste0(Training.Iteration, "_bin", .x)) %>% droplevels() %>%  join_to_human_ratings(d.test)) 
-bind_rows(runs)
+  runs = map(seq(1, test_bin_count), ~ IO_categorization(filter(test_data, Test.Bin == .x), model) %>%  
+              mutate(RunCount = paste0(Training.Iteration, "_bin", .x)) %>% droplevels()) %>% bind_rows()
 }
 
 # run_and_join <- function(model, test_data, test_bin_count) {
@@ -2379,18 +2376,36 @@ join_to_human_ratings <- function(model.test.run, d.test.humans) {
       NativeLanguage != Model.NativeLanguage ~ NA_character_,
       Group == Model.Group ~ "yes",
       Group != Model.Group ~ "no",
-      T ~ NA_character_
-    ), levels = c("no", "yes"))) 
-  # %>% IO_ratings()
+      T ~ NA_character_), levels = c("no", "yes"))) %>% IO_ratings()
 }
 
 test_bin_count = 4
 results.CV = map(seq(1,length(models)), ~ run_tests(models[[.x]], d.nonnative.test, test_bin_count))
 
-CV.data <- results.CV %>% bind_rows() %>% group_by(Training.Iteration, Test.Bin)
+# take the model-test results list and put them into a dataframe
+d.test.CV <- results.CV %>% bind_rows()
+# join to human data
+d.test.IO.CV <- join_to_human_ratings(d.test.CV, d.test)
 
+# test_bin_count = 4
+# results.CV.English = map(seq(1,length(models)), ~ run_tests(models[[.x]], d.nonnative.test %>% filter(NativeLanguage == "English"), test_bin_count))
+# # do test for Swedish
+# test_bin_count = 2
+# results.CV.Swedish = map(seq(1,length(models)), ~ run_tests(models[[.x]], d.nonnative.test %>% filter(NativeLanguage == "Swedish"), test_bin_count))
+# CV.data.English <- results.CV.English %>% bind_rows() %>% group_by(Training.Iteration, Test.Bin)
+# CV.data.Swedish <- results.CV.Swedish %>% bind_rows() %>% group_by(Training.Iteration, Test.Bin)
+# d.test.data.CV <- bind_rows(CV.data.English, CV.data.Swedish)
+# d.test.IO.CV <- d.test.CV %>% left_join(d.test) %>% 
+#   mutate(Model.Group.matchesParticipant.Group = factor(case_when(
+#       NativeLanguage != Model.NativeLanguage ~ NA_character_,
+#       Group == Model.Group ~ "yes",
+#       Group != Model.Group ~ "no",
+#       T ~ NA_character_
+#     ), levels = c("no", "yes")))
+ 
 
-p.english <-  CV.data %>% filter(Model.NativeLanguage == "English") %>% 
+# plot model posteriors by language
+p.english <-  d.test.data.CV %>% filter(Model.NativeLanguage == "English") %>% 
   ggplot( aes(x=Sound, y=Model.Posterior.Intended)) + 
   stat_summary(aes(fill = Model.Group), fun = mean, geom = "bar", 
                alpha = .6,
@@ -2403,7 +2418,7 @@ p.english <-  CV.data %>% filter(Model.NativeLanguage == "English") %>%
   facet_grid(Training.Iteration ~ Test.Bin)
 p.english
 
-p.swedish <- CV.data %>% filter(Model.NativeLanguage == "Swedish") %>% 
+p.swedish <- d.test.data.CV %>% filter(Model.NativeLanguage == "Swedish") %>% 
   ggplot( aes(x=Sound, y=Model.Posterior.Intended)) + 
   stat_summary(aes(fill = Model.Group), fun = mean, geom = "bar", 
                alpha = .6,
@@ -2416,12 +2431,11 @@ p.swedish <- CV.data %>% filter(Model.NativeLanguage == "Swedish") %>%
   facet_grid(Training.Iteration ~ Test.Bin)
 p.swedish
 
-
-p.results.perception.bySubject %+%
-  CV.data %>%
-     filter(Model.NativeLanguage == "English", Model.Group.matchesParticipant.Group == "yes") %>%
+# make posterior plots with human ratings 
+ d.test.IO.CV %>% ggplot(aes(x = Sound, y = Model.Posterior.Intended))
+     filter(NativeLanguage == "English" & Model.Group.matchesParticipant.Group == "yes") %>%
      group_by(Language, NativeLanguage, Group, Sound, Item.WordID, Model.Group) %>%
-     summarise(Rating.mean = mean(Model.Posterior.d * 2 - 1)) +
+     summarise(Rating.mean = mean(Model.Posterior.d * 2 - 1))) +
   ylab("Ideal observer predicted\n/d/-goodness rating (z-score aligned)") +
   scale_fill_manual("Ideal observer",
     breaks = c("/d/-exposure", "control"),
