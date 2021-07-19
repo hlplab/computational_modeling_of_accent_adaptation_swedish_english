@@ -2306,9 +2306,7 @@ We first evaluated the five folded models on the entire test set, following the 
 
 In an additional analysis, we randomly split the test data into folds of 15 tokens each, resulting in 2 folds for the Swedish test data (which had 30 test tokens) and 4 folds for the English test data (which had 60 test tokens). By comparing across test bins within each fold, we can estimate how robust our results depend on the specific test bins. Each fold was created by sampling minimal pairs---rather than individual words---to hold the phonological context constant between the /d/ and /t/ test items within each fold. To compare like with like, we then compared the model predictions for each test fold against the human ratings on the same test items. DESCRIBE THESE RESULTS HERE.
 
-
-```{r train-IO-for-cross-validation, include = FALSE}
-
+```{r cross-validation-train-IO, include = FALSE}
 k <- 5 # set number of training iterations
 
 # divide training data into k sets
@@ -2323,7 +2321,9 @@ d.IO.training.CV <- d.IO.training %>%
 # d.IO.training.CV %>% group_by(Used_for.Model.NativeLanguage, Used_for.Model.Group,
 #                               Talker, Used_for.Model.Sound, Training.Set) %>% summarise(n())
 
+
 # Each training iteration uses 4/5 of each talker's training data; data from the non-native talkers are never down-sampled. exclude() drops 1/5 of the native talkers' training data but keeps 5/5 of non-native talkers' data.
+
 exclude <- function(.data, excluded_set) {
   .data %>% mutate(Used_for = case_when(Talker == "M5" ~ "training",
                                         Talker == "F1" ~ "training",
@@ -2331,16 +2331,16 @@ exclude <- function(.data, excluded_set) {
                                         TRUE ~ "training"))
 }
 
-
 # train models, excluding 1/5 each iteration.
-models <- map(seq(1,5), ~ make_IO(exclude(d.IO.training.CV,.x), selected_cues) %>%
-                mutate(Training.Iteration = paste0("iteration_", .x)))
-
-#m1.IO <- train_IO(exclude(d.IO.training.CV,1), selected_cues, 1)
-
+models <- map(
+  seq(1,5), 
+  ~ make_IO(
+    exclude(d.IO.training.CV, .x), 
+    selected_cues) %>%
+    mutate(Training.Iteration = paste0("iteration_", .x)))
 ```
 
-```{r test-IO-for cross-validation, include= FALSE}
+```{r cross-validation-test-IO, include= FALSE}
 # divide English test data into 4 test bins; Swedish test data into 2 bins. Ensure minimal pair members are in the same bin.
 
 d.nonnative.test <- d.stims %>%
