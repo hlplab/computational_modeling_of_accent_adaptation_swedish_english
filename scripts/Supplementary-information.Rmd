@@ -2356,7 +2356,7 @@ d.nonnative.test.bins <- d.nonnative.test %>% distinct(Item.MinimalPair) %>%
 d.nonnative.test <- left_join(d.nonnative.test, d.nonnative.test.bins)
 
 # test models on all nonnative test tokens.
-runs_full_set <- map(seq(1, length(models)), ~ IO_categorization(select(d.nonnative.test,-c(Test.Bin)), models[[.x]])) %>% bind_rows()
+runs_full_set <- map(seq(1, length(models)), ~ IO_categorization(select(d.nonnative.test,-c(Test.Bin)), models[[.x]]) %>% join_to_human_ratings(d.test)) %>% bind_rows()
 
 # test each of 5 models on each test bin 
 run_tests <- function(model, test_data, test_bin_count) { 
@@ -2433,11 +2433,18 @@ p.swedish <- d.test.data.CV %>% filter(Model.NativeLanguage == "Swedish") %>%
   facet_grid(Training.Iteration ~ Test.Bin)
 p.swedish
 
-# make posterior plots with human ratings 
- d.test.IO.CV %>% ggplot(aes(x = Sound, y = Model.Posterior.Intended))
-     filter(NativeLanguage == "English" & Model.Group.matchesParticipant.Group == "yes") %>%
-     group_by(Language, NativeLanguage, Group, Sound, Item.WordID, Model.Group) %>%
-     summarise(Rating.mean = mean(Model.Posterior.d * 2 - 1))) +
+# facet plots of each traning fold by test bin 
+ d.test.IO.CV %>% 
+   group_by(Language, NativeLanguage, Group, Sound, Item.WordID, Model.Group) %>%
+   #summarise(Rating.mean = mean(Model.Posterior.d * 2 - 1)) 
+    filter(Model.Group.matchesParticipant.Group == "yes") %>%
+    ggplot(aes(x = Sound, y = Model.Posterior.d)) +
+    stat_summary(aes(fill = Model.Group), fun = mean, geom = "bar", 
+               alpha = .6, position = position_dodge(.93)) +
+  stat_summary(aes(group = Model.Group), fun.data = mean_cl_boot, geom = "linerange", 
+               size = .8, color = "black", position = position_dodge(.93)) +
+  scale_color_manual(values = colors.Group) +
+  scale_fill_manual(values = colors.Group) +
   ylab("Ideal observer predicted\n/d/-goodness rating (z-score aligned)") +
   scale_fill_manual("Ideal observer",
     breaks = c("/d/-exposure", "control"),
@@ -2445,6 +2452,19 @@ p.swedish
     values = colors.Accent) +
   ylim(-1.25, 1.25) +
   facet_grid(Training.Iteration ~ Test.Bin)
+ 
+# facet plot of the training runs tested on all test tokens
+ p.results.perception.bySubject %+%
+(runs_full_set %>% filter(Model.NativeLanguage == "English" & Model.Group.matchesParticipant.Group == "yes")%>%
+     group_by(Training.Iteration, Language, NativeLanguage, Group, Sound, Item.WordID, Model.Group) %>%
+     summarise(Rating.mean = mean(Model.Posterior.d * 2 - 1))) +
+  ylab("Ideal observer predicted\n/d/-goodness rating (z-score aligned)") +
+  scale_fill_manual("Ideal observer",
+    breaks = c("/d/-exposure", "control"),
+    labels = c("/d/-exposure", "control"),
+    values = colors.Accent) +
+  ylim(-1.25, 1.25) +
+  facet_wrap(.~ Training.Iteration)
 
 ```
 
