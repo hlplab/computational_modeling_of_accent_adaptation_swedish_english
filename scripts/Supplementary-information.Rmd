@@ -2339,7 +2339,7 @@ fold <- function(.data, excluded_fold) {
                                         TRUE ~ "training"))
 }
 
-# train models, excluding 1/5 each iteration.
+# fold training: train models, excluding 1/5 each iteration.
 d.IO.5folds <- map(
   seq(1,5), 
   ~ make_IO(
@@ -2371,224 +2371,56 @@ p.IO_prediction %+%
 ggsave(filename = "../figures/Result-ratings-byItem-5folds.png",
        width = 7, height = 20)
 ```
-
-
-```{r}
-# Run test on all data or folds
-fold_test_and_categorize <- function(model, .data_test, test_fold_count) { 
-  runs = map(
-    seq(1, test_fold_count), 
-    ~ IO_categorization(
-      filter(
-        .data_test, 
-        Test.Fold == .x),
-      model) %>%
-      mutate(RunCount = paste0("Training-test fold: "Training.Iteration, "-", .x)) %>% 
-      droplevels()) %>% 
-    bind_rows()
-}
-
-# join each training iteration with human test ratings
-join_to_human_ratings <- function(model.test.run, d.test.humans) {
-   d.test.humans %>% droplevels() %>% 
-    left_join(model.test.run) %>% 
-    mutate(
-    Model.Group.matchesParticipant.Group = factor(case_when(
-      NativeLanguage != Model.NativeLanguage ~ NA_character_,
-      Group == Model.Group ~ "yes",
-      Group != Model.Group ~ "no",
-      T ~ NA_character_), levels = c("no", "yes"))) %>% IO_ratings()
-}
-
-# test models on all nonnative test tokens.
-d. <- 
-  map(
-    seq(1, length(models)), 
-    ~ IO_categorization(select(d.nonnative.test,-c(Test.Bin)), models[[.x]]) %>% 
-      join_to_human_ratings(d.test)) %>% 
-  bind_rows() %>%
-  join_to_human_ratings(d.test)
-```
-
-```{r cross-validation-test-IO-allTest-plot, fig.height=6, out.width='100%'}
-# plot model posteriors of intended category by language
-p.english <-  
-  d.test.IO.CV %>% filter(Model.NativeLanguage == "English") %>% 
-  ggplot(aes(x=Sound, y=Model.Posterior.Intended)) + 
-  geom_hline(yintercept = 1/2, color = "gray") +
-  stat_summary(aes(fill = Model.Group), fun = mean, geom = "bar", 
-               alpha = .6,
-               position = position_dodge(.93)) +
-  stat_summary(aes(group = Model.Group), fun.data = mean_cl_boot, geom = "linerange", 
-               size = .8, color = "black",
-               position = position_dodge(.93)) +
-  scale_color_manual(values = colors.Group) +
-  scale_fill_manual(values = colors.Group) +
-  scale_y_continuous("Accuracy") +
-  xlab("Intended sound category") +
-  facet_wrap(.~ RunCount, nrow = 5)
-p.english
-```
-
 In an additional analysis, we randomly split the test data into folds of 30 tokens each, resulting in 2 folds for the Swedish test data (which had 60 test tokens) and 4 folds for the English test data (which had 120 test tokens). By comparing across test bins within each fold, we can estimate how robust our results depend on the specific test bins. Each fold was created by sampling minimal pairs---rather than individual words---to hold the phonological context constant between the /d/ and /t/ test items within each fold. To compare like with like, we then compared the model predictions for each test fold against the human ratings on the same test items. DESCRIBE THESE RESULTS HERE.
 
 
 
-```{r cross-validation-test-IO-subTests, include= FALSE}
-# divide English test data into 4 test folds; Swedish test data into 2 folds (each with 15 minimal pairs per fold)
-d.nonnative.test <- d.stims %>%
-      filter(Block.Type == "test", Accent == "non-native") 
+```{r cross-validation-fold-test}
+# Fold test: 
+#   1) Take the 5-fold IOs from above 
+#   2) left_join in test fold IDs 
+#      (divide English test data into 4 test folds and Swedish test data into 2 folds, each with 15 minimal pairs per fold)
+d.IO.test.5folds.wTest_folds <- 
+  left_join(
+    d.IO.test.5folds, 
+    # Get test fold IDs
+    d.IO.test.5folds %>%
+      group_by(NativeLanguage) %>% 
+      distinct(Item.MinimalPair) %>%
+      mutate(Test_fold = case_when(
+        NativeLanguage == "English" ~ ntile(runif(length(Item.MinimalPair)), 4),
+        NativeLanguage == "Swedish" ~ ntile(runif(length(Item.MinimalPair)), 2))))
 
-d.nonnative.test.bins <- 
-  d.nonnative.test %>% 
-  distinct(Item.MinimalPair) %>%
-  group_by(NativeLanguage) %>% 
-  mutate(Test.Bin = case_when(
-    NativeLanguage == "English" ~ ntile(runif(length(Item.MinimalPair)), 4),
-    NativeLanguage == "Swedish" ~ ntile(runif(length(Item.MinimalPair)), 2))) 
-
-# join the assigned min.pairs with the main cross-validation-test dataframe
-d.nonnative.test <- left_join(d.nonnative.test, d.nonnative.test.bins)
-
-# run_and_join <- function(model, test_data, test_bin_count) {
-#   run_tests(model, test_data, test_bin_count) %>% 
-#   join_to_human_ratings(d.test)
-# }
-
-#test each of 5 models on different test bins
-test_bin_count = 4
-results.CV = map(seq(1,length(models)), ~ run_tests(models[[.x]], d.nonnative.test, test_bin_count))
-
-# take the model-test results list and put them into a dataframe
-d.test.CV <- results.CV %>% bind_rows()
-# join to human data
-d.test.IO.CV <- join_to_human_ratings(d.test.CV, d.test)
-
-# test_bin_count = 4
-# results.CV.English = map(seq(1,length(models)), ~ run_tests(models[[.x]], d.nonnative.test %>% filter(NativeLanguage == "English"), test_bin_count))
-# # do test for Swedish
-# test_bin_count = 2
-# results.CV.Swedish = map(seq(1,length(models)), ~ run_tests(models[[.x]], d.nonnative.test %>% filter(NativeLanguage == "Swedish"), test_bin_count))
-# CV.data.English <- results.CV.English %>% bind_rows() %>% group_by(Training.Iteration, Test.Bin)
-# CV.data.Swedish <- results.CV.Swedish %>% bind_rows() %>% group_by(Training.Iteration, Test.Bin)
-# d.test.data.CV <- bind_rows(CV.data.English, CV.data.Swedish)
-# d.test.IO.CV <- d.test.CV %>% left_join(d.test) %>% 
-#   mutate(Model.Group.matchesParticipant.Group = factor(case_when(
-#       NativeLanguage != Model.NativeLanguage ~ NA_character_,
-#       Group == Model.Group ~ "yes",
-#       Group != Model.Group ~ "no",
-#       T ~ NA_character_
-#     ), levels = c("no", "yes")))
+# Maryann: Please check whether the above is folded the way you intended, and then delete this comment?
+# Maryann: The next command should be inheriting the test folds from above (just like it did inherit the absence of them when we used the function earlier)
+#          Can you check and then delete this comment?
+d.test.IO.5folds.wTest_folds <- join_IO_categorizations_with_human_test(d.IO.test.5folds.wTest_folds, d.test)
 ```
 
 
-```{r IO-CV-plots-posterior-predictions-english, fig.height=6, out.width='100%'}
-# plot model posteriors of intended category by language
-p.english <-  d.test.IO.CV %>% filter(Model.NativeLanguage == "English") %>% 
-  ggplot(aes(x=Sound, y=Model.Posterior.Intended)) + 
-  geom_hline(yintercept = 1/2, color = "gray") +
-  stat_summary(aes(fill = Model.Group), fun = mean, geom = "bar", 
-               alpha = .6,
-               position = position_dodge(.93)) +
-  stat_summary(aes(group = Model.Group), fun.data = mean_cl_boot, geom = "linerange", 
-               size = .8, color = "black",
-               position = position_dodge(.93)) +
-  scale_color_manual(values = colors.Group) +
-  scale_fill_manual(values = colors.Group) +
-  scale_y_continuous("Accuracy") +
-  xlab("Intended sound category") +
-  facet_wrap(.~ RunCount, nrow = 5)
-p.english
-```
+```{r cross-validation-ratings-results-byItem-test-folded-test, fig.cap="(ref:ratings-results-byItem-5folds-folded-test)", fig.height=22.5, out.width='75%'}
+# Maryann: This would also work if one used Training_fold ~ Language + Test_fold in the grid, but I wanted the plots a bit more clearly separate by language,
+# and so I made it a plot_grid
+plot_grid(
+  p.IO_prediction %+% 
+    (d.test.IO.5folds.wTest_folds %>%
+       filter(Model.Group.matchesParticipant.Group == "yes", NativeLanguage == "English") %>%
+       group_by(Language, NativeLanguage, Group, Sound, Item.WordID, Model.Group, Training_fold, Test_fold) %>%
+       summarise(Rating.mean = mean(Model.Posterior.d * 2 - 1))) +
+    facet_grid(Training_fold ~ Test_fold, scales="free_y") +
+    ggtitle("Mandarin-accented English"),
+  p.IO_prediction %+% 
+    (d.test.IO.5folds.wTest_folds %>%
+       filter(Model.Group.matchesParticipant.Group == "yes", NativeLanguage == "Swedish") %>%
+       group_by(Language, NativeLanguage, Group, Sound, Item.WordID, Model.Group, Training_fold, Test_fold) %>%
+       summarise(Rating.mean = mean(Model.Posterior.d * 2 - 1))) +
+    facet_grid(Training_fold ~ Test_fold, scales="free_y") +
+    ggtitle("Flemish-accented Swedish"),
+  nrow = 1,
+  rel_widths = c(4, 2))
 
-
-```{r IO-CV-plots-posterior-predictions-swedish, include= FALSE}
-p.swedish <- d.test.IO.CV %>% filter(Model.NativeLanguage == "Swedish") %>% 
-  ggplot(aes(x=Sound, y=Model.Posterior.Intended)) + 
-  geom_hline(yintercept = 1/2, color = "gray") +
-  stat_summary(aes(fill = Model.Group), fun = mean, geom = "bar", 
-               alpha = .6,
-               position = position_dodge(.93)) +
-  stat_summary(aes(group = Model.Group), fun.data = mean_cl_boot, geom = "linerange", 
-               size = .8, color = "black",
-               position = position_dodge(.93)) +
-  scale_color_manual(values = colors.Group) +
-  scale_fill_manual(values = colors.Group) +
-   scale_y_continuous("Accuracy") +
-  xlab("Intended sound category") +
-  facet_wrap(.~ RunCount, nrow = 3, ncol = 4)
-p.swedish
-```
-
-
-```{r IO-CV-plots-by-test-bin-english, include= FALSE}
-# facet plots of each training fold by test bin 
-
- d.test.IO.CV %>% filter(Model.NativeLanguage == "English" & Model.Group.matchesParticipant.Group == "yes") %>%
-   group_by(RunCount, Language, NativeLanguage, Group, Sound, Item.WordID, Model.Group) %>%
-   summarise(Rating.mean = mean(Model.Posterior.d * 2 - 1)) 
-    
-  #   ggplot(aes(x = Sound, y = Model.Posterior.d)) +
-  #   stat_summary(aes(fill = Model.Group), fun = mean, geom = "bar", 
-  #              alpha = .6, position = position_dodge(.93)) +
-  # stat_summary(aes(group = Model.Group), fun.data = mean_cl_boot, geom = "linerange", 
-  #              size = .8, color = "black", position = position_dodge(.93)) +
-  # scale_color_manual(values = colors.Group) +
-  # scale_fill_manual(values = colors.Group) +
-  # ylab("Ideal observer predicted\n/d/-goodness rating (z-score aligned)") +
-  # scale_fill_manual("Ideal observer",
-  #   breaks = c("/d/-exposure", "control"),
-  #   labels = c("/d/-exposure", "control"),
-  #   values = colors.Accent) +
-  # ylim(-1.25, 1.25) +
-  # facet_grid(Training.Iteration ~ Test.Bin)
-```
-
-
-```{r IO-CV-plots-all-test-tokens-english, include= FALSE}
-# facet plot of the training runs tested on all test tokens (English) with their respective predicted d-goodness ratings for each item
-
-runs_full_set %>% filter(Model.NativeLanguage == "English") %>% 
-  ggplot(aes(x=Sound, y=Model.Posterior.Intended)) + 
-  stat_summary(aes(fill = Model.Group), fun = mean, geom = "bar", 
-               alpha = .6,
-               position = position_dodge(.93)) +
-  stat_summary(aes(group = Model.Group), fun.data = mean_cl_boot, geom = "linerange", 
-               size = .8, color = "black",
-               position = position_dodge(.93)) +
-  scale_color_manual(values = colors.Group) +
-  scale_fill_manual(values = colors.Group) +
-  facet_wrap(.~ Training.Iteration)
-
-
- p.results.perception.bySubject %+%
-(runs_full_set %>% filter(Model.NativeLanguage == "English" & Model.Group.matchesParticipant.Group == "yes") %>%
-     group_by(Training.Iteration, Language, NativeLanguage, Group, Sound, Item.WordID, Model.Group) %>%
-     summarise(Rating.mean = mean(Model.Posterior.d * 2 - 1))) +
-  ylab("Ideal observer predicted\n/d/-goodness rating (z-score aligned)") +
-  scale_fill_manual("Ideal observer",
-    breaks = c("/d/-exposure", "control"),
-    labels = c("/d/-exposure", "control"),
-    values = colors.Accent) +
-  ylim(-1.25, 1.25) +
-  facet_wrap(.~ Training.Iteration)
-```
-
-
-```{r IO-CV-plots-all-test-tokens-swedish, include= FALSE}
-# facet plot of the training runs tested on all test tokens Swedish with their respective predicted d-goodness ratings for each item
- p.results.perception.bySubject %+%
-(runs_full_set %>% filter(Model.NativeLanguage == "Swedish" & Model.Group.matchesParticipant.Group == "yes") %>%
-     group_by(Training.Iteration, Language, NativeLanguage, Group, Sound, Item.WordID, Model.Group) %>%
-     summarise(Rating.mean = mean(Model.Posterior.d * 2 - 1))) +
-  ylab("Ideal observer predicted\n/d/-goodness rating (z-score aligned)") +
-  scale_fill_manual("Ideal observer",
-    breaks = c("/d/-exposure", "control"),
-    labels = c("/d/-exposure", "control"),
-    values = colors.Accent) +
-  ylim(-1.25, 1.25) +
-  facet_wrap(.~ Training.Iteration)
-
+ggsave(filename = "../figures/Result-ratings-byItem-5folds-folded-test.png",
+       width = 21, height = 20)
 ```
 
 
