@@ -78,7 +78,7 @@ library(daver)
 # devtools::install_github("kleinschmidt/phondisttools")
 library(phondisttools)
 # devtools::install_github("hlplab/MVBeliefUpdatr")
-library(MVBeliefUpdatr)
+#library(MVBeliefUpdatr)
 ```
 
 ```{r constants and environments}
@@ -2304,7 +2304,7 @@ Our ideal observers are training on two types of data: data that estimate native
 
 We first evaluated the five folded models on the entire test set, following the same procedure outlined in Section \@ref(sec:IO-test). DESCRIBE RESULTS HERE BEFORE WE MOVE ON.
 
-In an additional analysis, we randomly split the test data into folds of 15 tokens each, resulting in 2 folds for the Swedish test data (which had 30 test tokens) and 4 folds for the English test data (which had 60 test tokens). By comparing across test bins within each fold, we can estimate how robust our results depend on the specific test bins. Each fold was created by sampling minimal pairs---rather than individual words---to hold the phonological context constant between the /d/ and /t/ test items within each fold. To compare like with like, we then compared the model predictions for each test fold against the human ratings on the same test items. DESCRIBE THESE RESULTS HERE.
+In an additional analysis, we randomly split the test data into folds of 15 minimal pairs each, resulting in 2 folds for the Swedish test data (which had 30 test tokens) and 4 folds for the English test data (which had 60 test tokens). By comparing across test bins within each fold, we can estimate how robust our results depend on the specific test bins. Each fold was created by sampling minimal pairs---rather than individual words---to hold the phonological context constant between the /d/ and /t/ test items within each fold. To compare like with like, we then compared the model predictions for each test fold against the human ratings on the same test items. DESCRIBE THESE RESULTS HERE.
 
 ```{r cross-validation-train-IO, include = FALSE}
 k <- 5 # set number of training iterations
@@ -2412,10 +2412,10 @@ d.test.IO.CV <- join_to_human_ratings(d.test.CV, d.test)
 ```
 
 
-```{r IO-CV-plots-posterior-predictions-english, include= FALSE}
+```{r IO-CV-plots-posterior-predictions-english, fig.height=4.5, out.width='75%'}
 # plot model posteriors of intended category by language
 p.english <-  d.test.IO.CV %>% filter(Model.NativeLanguage == "English") %>% 
-  ggplot( aes(x=Sound, y=Model.Posterior.Intended)) + 
+  ggplot(aes(x=Sound, y=Model.Posterior.Intended)) + 
   stat_summary(aes(fill = Model.Group), fun = mean, geom = "bar", 
                alpha = .6,
                position = position_dodge(.93)) +
@@ -2431,7 +2431,7 @@ p.english
 
 ```{r IO-CV-plots-posterior-predictions-swedish, include= FALSE}
 p.swedish <- d.test.IO.CV %>% filter(Model.NativeLanguage == "Swedish") %>% 
-  ggplot( aes(x=Sound, y=Model.Posterior.Intended)) + 
+  ggplot(aes(x=Sound, y=Model.Posterior.Intended)) + 
   stat_summary(aes(fill = Model.Group), fun = mean, geom = "bar", 
                alpha = .6,
                position = position_dodge(.93)) +
@@ -2452,20 +2452,20 @@ p.swedish
    group_by(RunCount, Language, NativeLanguage, Group, Sound, Item.WordID, Model.Group) %>%
    summarise(Rating.mean = mean(Model.Posterior.d * 2 - 1)) 
     
-    ggplot(aes(x = Sound, y = Model.Posterior.d)) +
-    stat_summary(aes(fill = Model.Group), fun = mean, geom = "bar", 
-               alpha = .6, position = position_dodge(.93)) +
-  stat_summary(aes(group = Model.Group), fun.data = mean_cl_boot, geom = "linerange", 
-               size = .8, color = "black", position = position_dodge(.93)) +
-  scale_color_manual(values = colors.Group) +
-  scale_fill_manual(values = colors.Group) +
-  ylab("Ideal observer predicted\n/d/-goodness rating (z-score aligned)") +
-  scale_fill_manual("Ideal observer",
-    breaks = c("/d/-exposure", "control"),
-    labels = c("/d/-exposure", "control"),
-    values = colors.Accent) +
-  ylim(-1.25, 1.25) +
-  facet_grid(Training.Iteration ~ Test.Bin)
+  #   ggplot(aes(x = Sound, y = Model.Posterior.d)) +
+  #   stat_summary(aes(fill = Model.Group), fun = mean, geom = "bar", 
+  #              alpha = .6, position = position_dodge(.93)) +
+  # stat_summary(aes(group = Model.Group), fun.data = mean_cl_boot, geom = "linerange", 
+  #              size = .8, color = "black", position = position_dodge(.93)) +
+  # scale_color_manual(values = colors.Group) +
+  # scale_fill_manual(values = colors.Group) +
+  # ylab("Ideal observer predicted\n/d/-goodness rating (z-score aligned)") +
+  # scale_fill_manual("Ideal observer",
+  #   breaks = c("/d/-exposure", "control"),
+  #   labels = c("/d/-exposure", "control"),
+  #   values = colors.Accent) +
+  # ylim(-1.25, 1.25) +
+  # facet_grid(Training.Iteration ~ Test.Bin)
 ```
 
 
