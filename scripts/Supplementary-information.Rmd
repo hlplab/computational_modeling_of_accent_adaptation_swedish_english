@@ -2312,10 +2312,10 @@ The ideal observers do, however, predict the qualitative patterns in the human g
 ## How robust are these results? How much data does this type of modeling require?
 Our initial analysis did not employ cross-validation or similar methods. This decision was made since the data the ideal observers are tested on do not overlap with the data the ideal observers are tested on. During the review process, both reviewers raised questions about the amount of data that would be required for the type of computational analysis conducted here. Here we address this questions by subsetting the training and test data to assess the variability of the results across different folds of the training and test data. This also allows us to assess the extent to which the results in the previous section are due to overfitting to the training data.
 
-Our ideal observers are training on two types of data: data that estimate native listeners' expectations about /d/ and /t/ based on previous lifelong experienced with their native language, and data that estimate the effects of the exposure phase (for the /d/ category in the /d/-exposure condition). For the former data, we randomly created five non-overlapping folds of 20% of the data. The folds were created by sampling (without replacement) the native data described in Section \@ref(sec:IO-training) *within* each unique combination of talker and category. Each model was then trained on four of the five folds (80% of the data, i.e., 24 tokens per category and talker), resulting in five models, each omitting another 20% of the native training data. Since the exposure data---by hypothesis---form the basis of adaptation, we do *not* resample or subset these data but rather hold them constant across all folds of the training data. By comparing across these five models, we can thus assess the extent to which the specific native data used to train the ideal observers affects our results (recall that these data determine the /t/ category in both the control and the /d/-exposure model, as well as the /d/ category in the control model). At the same time, this analysis sheds light on whether 24 tokens per talker and category are even remotely sufficiently to achieve robust estimates of category means and covariances. This is a question, in particular, for the Swedish models, for which we had phonetically annotated data for only *one* native talker (as opposed to 6 talkers for the English data). <!-- Maryann: CHECK TALKER NUMBER AND MOTIVATION FOR IT, AND THEN ADJUST HERE AND EVERYWHERE ELSE. -->
+Our ideal observers are training on two types of data: data that estimate native listeners' expectations about /d/ and /t/ based on previous lifelong experienced with their native language, and data that estimate the effects of the exposure phase (for the /d/ category in the /d/-exposure condition). For the former data, we randomly created two non-overlapping folds of 50% of the data. The folds were created by sampling (without replacement) the native data described in Section \@ref(sec:IO-training) *within* each unique combination of talker and category. Each model was then trained on four of the two folds (50% of the data, i.e., 15 tokens per category and talker), resulting in two models, each omitting another half of the native training data. Since the exposure data---by hypothesis---form the basis of adaptation, we do *not* resample or subset these data but rather hold them constant across all folds of the training data. By comparing across these two models, we can thus assess the extent to which the specific native data used to train the ideal observers affects our results (recall that these data determine the /t/ category in both the control and the /d/-exposure model, as well as the /d/ category in the control model). At the same time, this analysis sheds light on whether 15 tokens per talker and category are even remotely sufficiently to achieve robust estimates of category means and covariances. This is a question, in particular, for the Swedish models, for which we had phonetically annotated data for only *one* native talker (as opposed to 6 talkers for the English data). <!-- Maryann: CHECK TALKER NUMBER AND MOTIVATION FOR IT, AND THEN ADJUST HERE AND EVERYWHERE ELSE. -->
 
 ```{r cross-validation-train-IO, include = FALSE}
-k <- 5 # set number of training iterations
+k <- 2 # set number of training iterations
 
 # divide training data into k sets
 d.IO.training.CV <- 
@@ -2340,7 +2340,7 @@ fold <- function(.data, excluded_fold) {
 }
 
 # fold training: train models, excluding 1/5 each iteration.
-d.IO.5folds <- map(
+d.IO.wTraining_folds <- map(
   seq(1,5), 
   ~ make_IO(
     fold(d.IO.training.CV, .x), 
@@ -2350,31 +2350,31 @@ d.IO.5folds <- map(
   group_by(Training_fold, .add = T)
 ```
 
-We first evaluated the five folded models on the entire test set, following the same procedure outlined in Section \@ref(sec:IO-test). Figure \@ref(fig:IO-ratings-results-byItem-5folds) plots the predictions of the ideal observers. 
+We first evaluated the five folded models on the entire test set, following the same procedure outlined in Section \@ref(sec:IO-test). Figure \@ref(fig:IO-ratings-results-byItem-wTraining_folds) plots the predictions of the ideal observers. 
 
-(ref:IO-ratings-results-byItem-5folds) **5-fold cross-validated ideal observer /d/-goodness ratings** during test (z-scored) predicted by the control and /d/-exposure ideal observers. Error bars show 95\% bootstrapped confidence intervals over by-item predictions (since there aren't multiple subjects). Each row shows one training fold excluding a different 20% of the native training data. For additional details, see Figure \@ref(fig:IO-ratings-results-byItem).
+(ref:IO-ratings-results-byItem-wTraining_folds) **2-fold cross-validated ideal observer /d/-goodness ratings** during test (z-scored) predicted by the control and /d/-exposure ideal observers. Error bars show 95\% bootstrapped confidence intervals over by-item predictions (since there aren't multiple subjects). Each row shows one training fold excluding a different half of the native training data. For additional details, see Figure \@ref(fig:IO-ratings-results-byItem).
 
 DESCRIBE RESULTS HERE BEFORE WE MOVE ON.
 
-```{r cross-validation-ratings-results-byItem, fig.cap="(ref:ratings-results-byItem-5folds)", fig.height=22.5, out.width='75%'}
+```{r cross-validation-ratings-results-byItem, fig.cap="(ref:ratings-results-byItem-wTraining_folds)", fig.height=8.5, out.width='75%'}
 # Following same steps as above for non-CV testing
-d.IO.test.5folds <- categorize_stims_by_IO(d.stims, d.IO.5folds)
-d.test.IO.5folds <- join_IO_categorizations_with_human_test(d.IO.test.5folds, d.test)
-save(d.test.IO.5folds, file = "../data/data_perception_test phase plus IO predictions_both languages-5 training folds.Rdata")
+d.IO.test.wTraining_folds <- categorize_stims_by_IO(d.stims, d.IO.wTraining_folds)
+d.test.IO.wTraining_folds <- join_IO_categorizations_with_human_test(d.IO.test.wTraining_folds, d.test)
+save(d.test.IO.wTraining_folds, file = "../data/data_perception_test phase plus IO predictions_both languages-5 training folds.Rdata")
 
 p.IO_prediction %+% 
-  (d.test.IO.5folds %>%
+  (d.test.IO.wTraining_folds %>%
      filter(Model.Group.matchesParticipant.Group == "yes") %>%
      group_by(Language, NativeLanguage, Group, Sound, Item.WordID, Model.Group, Training_fold) %>%
      summarise(Rating.mean = mean(Model.Posterior.d * 2 - 1))) +
   facet_grid(Training_fold ~ Language, scales="free_y") 
-ggsave(filename = "../figures/Result-ratings-byItem-5folds.png",
+ggsave(filename = "../figures/Result-ratings-byItem-wTraining_folds.png",
        width = 7, height = 20)
 ```
 
-In an additional analysis, we randomly split the test data into folds of 30 tokens each, resulting in 2 folds for the Swedish test data (which had 60 test tokens) and 4 folds for the English test data (which had 120 test tokens). By comparing across test bins within each fold, we can estimate how robust our results depend on the specific test bins. Each fold was created by sampling minimal pairs---rather than individual words---to hold the phonological context constant between the /d/ and /t/ test items within each fold. To compare like with like, we then compared the model predictions for each test fold against the human ratings on the same test items. Figure \@ref(fig:IO-ratings-results-byItem-5folds-folded-test) plots the predictions of the ideal observers. 
+In an additional analysis, we randomly split the test data into folds of 30 tokens each, resulting in 2 folds for the Swedish test data (which had 60 test tokens) and 4 folds for the English test data (which had 120 test tokens). By comparing across test bins within each fold, we can estimate how robust our results depend on the specific test bins. Each fold was created by sampling minimal pairs---rather than individual words---to hold the phonological context constant between the /d/ and /t/ test items within each fold. To compare like with like, we then compared the model predictions for each test fold against the human ratings on the same test items. Figure \@ref(fig:IO-ratings-results-byItem-wTraining_folds-folded-test) plots the predictions of the ideal observers. 
 
-(ref:IO-ratings-results-byItem-5folds-folded-test) **5-fold cross-validated ideal observer /d/-goodness ratings evaluated on separate test folds**. Error bars show 95\% bootstrapped confidence intervals over by-item predictions (since there aren't multiple subjects). Each row shows one training fold excluding a different 20% of the native training data. Each column shows a separate test bin with 15 randomly chosen minimal pairs (resulting in 4 test folds for the English experiment and 2 test folds for the Swedish experiment). For additional details, see Figure \@ref(fig:IO-ratings-results-byItem).
+(ref:IO-ratings-results-byItem-wTraining_folds-folded-test) **2-fold cross-validated ideal observer /d/-goodness ratings evaluated on separate test folds**. Error bars show 95\% bootstrapped confidence intervals over by-item predictions (since there aren't multiple subjects). Each row shows one training fold excluding a different half of the native training data. Each column shows a separate test bin with 15 randomly chosen minimal pairs (resulting in 4 test folds for the English experiment and 2 test folds for the Swedish experiment). For additional details, see Figure \@ref(fig:IO-ratings-results-byItem).
 
 DESCRIBE THESE RESULTS HERE.
 
@@ -2383,11 +2383,11 @@ DESCRIBE THESE RESULTS HERE.
 #   1) Take the 5-fold IOs from above 
 #   2) left_join in test fold IDs 
 #      (divide English test data into 4 test folds and Swedish test data into 2 folds, each with 15 minimal pairs per fold)
-d.IO.test.5folds.wTest_folds <- 
+d.IO.test.wTraining_folds.wTest_folds <- 
   left_join(
-    d.IO.test.5folds, 
+    d.IO.test.wTraining_folds, 
     # Getting the random minimal pair IDs for each test fold
-    d.IO.test.5folds %>%
+    d.IO.test.wTraining_folds %>%
       group_by(NativeLanguage) %>% 
       distinct(Item.MinimalPair) %>%
       mutate(Test_fold = case_when(
@@ -2397,14 +2397,14 @@ d.IO.test.5folds.wTest_folds <-
 # Maryann: Please check whether the above is folded the way you intended, and then delete this comment?
 # Maryann: The next command should be inheriting the test folds from above (just like it did inherit the absence of them when we used the function earlier)
 #          Can you check and then delete this comment?
-d.test.IO.5folds.wTest_folds <- join_IO_categorizations_with_human_test(d.IO.test.5folds.wTest_folds, d.test)
+d.test.IO.wTraining_folds.wTest_folds <- join_IO_categorizations_with_human_test(d.IO.test.wTraining_folds.wTest_folds, d.test)
 
 # Maryann: when you're done checking, replace all of the above code with this (corrected for whatever you change)
-# d.test.IO.5folds.wTest_folds <- 
+# d.test.IO.wTraining_folds.wTest_folds <- 
 #   left_join(
-#     d.IO.test.5folds, 
+#     d.IO.test.wTraining_folds, 
 #     # Getting the random minimal pair IDs for each test fold
-#     d.IO.test.5folds %>%
+#     d.IO.test.wTraining_folds %>%
 #       group_by(NativeLanguage) %>% 
 #       distinct(Item.MinimalPair) %>%
 #       mutate(Test_fold = case_when(
@@ -2413,19 +2413,19 @@ d.test.IO.5folds.wTest_folds <- join_IO_categorizations_with_human_test(d.IO.tes
 #   join_IO_categorizations_with_human_test(d.test)
 ```
 
-```{r cross-validation-ratings-results-byItem-test-folded-test, fig.cap="(ref:ratings-results-byItem-5folds-folded-test)", fig.height=22.5, out.width='75%'}
+```{r cross-validation-ratings-results-byItem-test-folded-test, fig.cap="(ref:ratings-results-byItem-wTraining_folds-folded-test)", fig.height=8.5, out.width='75%'}
 # Maryann: This would also work if one used Training_fold ~ Language + Test_fold in the grid, but I wanted the plots a bit more clearly separate by language,
 # and so I made it a plot_grid
 plot_grid(
   p.IO_prediction %+% 
-    (d.test.IO.5folds.wTest_folds %>%
+    (d.test.IO.wTraining_folds.wTest_folds %>%
        filter(Model.Group.matchesParticipant.Group == "yes", NativeLanguage == "English") %>%
        group_by(Language, NativeLanguage, Group, Sound, Item.WordID, Model.Group, Training_fold, Test_fold) %>%
        summarise(Rating.mean = mean(Model.Posterior.d * 2 - 1))) +
     facet_grid(Training_fold ~ Test_fold, scales="free_y") +
     ggtitle("Mandarin-accented English"),
   p.IO_prediction %+% 
-    (d.test.IO.5folds.wTest_folds %>%
+    (d.test.IO.wTraining_folds.wTest_folds %>%
        filter(Model.Group.matchesParticipant.Group == "yes", NativeLanguage == "Swedish") %>%
        group_by(Language, NativeLanguage, Group, Sound, Item.WordID, Model.Group, Training_fold, Test_fold) %>%
        summarise(Rating.mean = mean(Model.Posterior.d * 2 - 1))) +
@@ -2434,7 +2434,7 @@ plot_grid(
   nrow = 1,
   rel_widths = c(4, 2))
 
-ggsave(filename = "../figures/Result-ratings-byItem-5folds-folded-test.png",
+ggsave(filename = "../figures/Result-ratings-byItem-wTraining_folds-folded-test.png",
        width = 21, height = 20)
 ```
 
