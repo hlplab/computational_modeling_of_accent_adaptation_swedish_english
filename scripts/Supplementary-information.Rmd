@@ -44,7 +44,9 @@ csl: frontiers-in-psychology.csl
 
 ```{r rmarkdown setup, include=FALSE}
 knitr::opts_chunk$set(echo = FALSE, 
-                      message=FALSE, warning=FALSE, error=TRUE)
+                      message=FALSE, warning=FALSE, error=TRUE,
+                      fig.width = 4.5,
+                      fig.height = 4)
 ```
 
 
@@ -732,14 +734,15 @@ p.results.perception = d.test %>%
 ggsave(p.results.perception, filename = "../figures/Result-ratings.png",
        width = 7, height = 4)
 
-p.results.perception.bySubject = insertLayer(p.results.perception, after = 0,
-            geom_dotplot(aes(fill = Group), color = NA, 
+p.results.perception.bySubject = insertLayer(
+  p.results.perception, 
+  after = 0,
+  geom_dotplot(aes(fill = Group), color = NA, 
                alpha = 1,  dotsize = 0.5, 
                binaxis = "y", stackdir = "center", 
                position = position_dodge(.9)))
 
 p.results.perception.bySubject + scale_y_continuous("Mean /d/-goodness ratings\n(z-scored) by subject")
-
 ```
 
 Figure \@ref(fig:ratings-results) shows the z-scored /d/-goodness ratings from both experiments. To compare participants' ratings for the /d,t/-final test words across the two experiments, we conducted a linear mixed-effects regression [@baayen2008mixed] over the combined data from both experiments. The regression predicted z-scored /d/-goodness ratings based on the sound category (sum-coded: 1 = word recording intended to end in /d/ vs. -1 = word recording intended to end in /t/), exposure group (sum-coded: 1 =  /d/-exposure vs. -1 = control), the experiment (sum-coded: 1 = Swedish vs. -1 = English), and all their interactions. The regression contained the maximal random effect structure justified by the design (random by-participant intercepts and slope for sound; random by-item intercepts and slopes for sound, exposure group, and their interaction).^[Even this simplified model estimated the variance of the by-participant intercepts to be zero (see below), presumably because the z-scoring of ratings within participant already removed that variance. If all by-participant random effects are excluded, the results reported below do not change. If non-z-scored ratings are analyzed instead (unlike in previous work), the three-way interaction is no longer significant ($p = .11$).]
@@ -2007,7 +2010,9 @@ d.IO %>% plot_IO_training(d.IO.training, language = "Swedish", cues = selected_c
 ```{r IO-categorization-functions, include=FALSE}
 drop_ellipse <- function(.data.IO) {
   if ("ellipse" %in% colnames(.data.IO))
-    .data.IO %>% select(-c(ellipse)) 
+    .data.IO %<>% select(-c(ellipse)) 
+  
+  return(.data.IO)
 }
 
 IO_categorization = function(
@@ -2076,31 +2081,36 @@ By applying the control and /d/-exposure ideal observers to the stimuli from the
 To derive predictions about human behavior from the posterior category probabilities of the ideal observer, it is necessary to specify a linking hypothesis. Previous work has done so for *categorization* tasks [e.g., @clayards2008perception; @kleinschmidt2011bayesian; @kleinschmidt2012continuum; @kleinschmidt2016re; @kronrod2016unified]. We follow these previous works and assume Luce's choice rule---also known as probability matching---and visualize the predictions for categorization tasks in Section \@ref(sec:IO-methods-categorization). Then we specify the linking hypothesis for goodness ratings in Section \@ref(sec:IO-methods-link). To reduce researchers' degrees of freedom, we simply assume a linear link between posterior probabilities and goodness ratings. This essentially makes the same assumptions as Luce's choice rule makes for categorization. We validate the linking hypothesis against human data from another experiment [Experiments 2 and 3 of @xie2017more]. 
 
 ```{r integrate-test-data-with-modeling-results, include=FALSE}
-# Bind stimulus information and predictions of ideal observer
-# (this is the tibble to use for visualization of predictions -- each test data point occurs only once)
-d.IO.test <- 
-    d.stims %>%
-      filter(Block.Type == "test", Accent == "non-native") %>%
-      IO_categorization(drop_ellipse(d.IO)) %>%
-      droplevels()
+categorize_stims_by_IO <- function(d.stims, d.IO) {
+  # Bind stimulus information and predictions of ideal observer
+  # (this is the tibble to use for visualization of predictions -- each test data point occurs only once)
+  d.stims %>%
+    filter(Block.Type == "test", Accent == "non-native") %>%
+    IO_categorization(drop_ellipse(d.IO)) %>%
+    droplevels()
+}
 
 # Add human data into the prediction file
 # (this increases the number of rows by many times -- each test data point occurs once *per participant*)
-d.test.IO = 
+join_IO_categorizations_with_human_test <- function(d.IO.categorizations, d.test) {
   # Human rating responses during test phase of perception experiment
   d.test %>%
-  droplevels() %>%
-  # Join with stimulus and ideal observer information 
-  left_join(d.IO.test) %>%
-  # Is the model meant for this exposure group? 
-  mutate(
-    Model.Group.matchesParticipant.Group = factor(case_when(
-      NativeLanguage != Model.NativeLanguage ~ NA_character_,
-      Group == Model.Group ~ "yes",
-      Group != Model.Group ~ "no",
-      T ~ NA_character_
-    ), levels = c("no", "yes"))) %>%
-  IO_ratings()
+    droplevels() %>%
+    # Join with stimulus and ideal observer information 
+    left_join(d.IO.categorizations) %>%
+    # Is the model meant for this exposure group? 
+    mutate(
+      Model.Group.matchesParticipant.Group = factor(case_when(
+        NativeLanguage != Model.NativeLanguage ~ NA_character_,
+        Group == Model.Group ~ "yes",
+        Group != Model.Group ~ "no",
+        T ~ NA_character_
+      ), levels = c("no", "yes"))) %>%
+    IO_ratings()
+}
+
+d.IO.test <- categorize_stims_by_IO(d.stims, d.IO)
+d.test.IO <- join_IO_categorizations_with_human_test(d.IO.test, d.test)
 save(d.test.IO, file = "../data/data_perception_test phase plus IO predictions_both languages.Rdata")
 
 # Combinations of Native languages, exposure groups, and model properties
@@ -2262,7 +2272,7 @@ Figure \@ref(fig:IO-ratings-results-byItem) plots the predictions of the ideal o
 (ref:ratings-results-byItem) **Human /d/-goodness ratings** during test (z-scored) by native language and exposure group. To facilitate comparison of the human data to the ideal observers in Figure \@ref(fig:IO-ratings-results-byItem), we first aggregate the human data by exposure condition and *item*, averaging across all subjects. These are the individual points shown in the figure. The bars show the mean of these by-item means, and the error interval shows the 95\% confidence interval over the by-item means. This contrasts with Figure \@ref(fig:ratings-results) in Section \@ref(sec:results), where we plotted the mean and confidence interval of by-subject means. 
 
 ```{r IO-ratings-results-byItem, fig.cap="(ref:IO-ratings-results-byItem)", fig.height=4.5, out.width='75%'}
-p.results.perception.bySubject %+%
+p.IO_prediction <- p.results.perception.bySubject %+%
   (d.test.IO %>%
      filter(Model.Group.matchesParticipant.Group == "yes") %>%
      group_by(Language, NativeLanguage, Group, Sound, Item.WordID, Model.Group) %>%
@@ -2273,6 +2283,8 @@ p.results.perception.bySubject %+%
     labels = c("/d/-exposure", "control"),
     values = colors.Accent) +
   ylim(-1.25, 1.25)
+
+p.IO_prediction
 ```
 
 
@@ -2302,66 +2314,78 @@ Our initial analysis did not employ cross-validation or similar methods. This de
 
 Our ideal observers are training on two types of data: data that estimate native listeners' expectations about /d/ and /t/ based on previous lifelong experienced with their native language, and data that estimate the effects of the exposure phase (for the /d/ category in the /d/-exposure condition). For the former data, we randomly created five non-overlapping folds of 20% of the data. The folds were created by sampling (without replacement) the native data described in Section \@ref(sec:IO-training) *within* each unique combination of talker and category. Each model was then trained on four of the five folds (80% of the data, i.e., 24 tokens per category and talker), resulting in five models, each omitting another 20% of the native training data. Since the exposure data---by hypothesis---form the basis of adaptation, we do *not* resample or subset these data but rather hold them constant across all folds of the training data. By comparing across these five models, we can thus assess the extent to which the specific native data used to train the ideal observers affects our results (recall that these data determine the /t/ category in both the control and the /d/-exposure model, as well as the /d/ category in the control model). At the same time, this analysis sheds light on whether 24 tokens per talker and category are even remotely sufficiently to achieve robust estimates of category means and covariances. This is a question, in particular, for the Swedish models, for which we had phonetically annotated data for only *one* native talker (as opposed to 10 talkers for the English data). <!--it's 6 talkers isn't it?-->
 
-We first evaluated the five folded models on the entire test set, following the same procedure outlined in Section \@ref(sec:IO-test). DESCRIBE RESULTS HERE BEFORE WE MOVE ON.
-
-In an additional analysis, we randomly split the test data into folds of 30 tokens each, resulting in 2 folds for the Swedish test data (which had 60 test tokens) and 4 folds for the English test data (which had 120 test tokens). By comparing across test bins within each fold, we can estimate how robust our results depend on the specific test bins. Each fold was created by sampling minimal pairs---rather than individual words---to hold the phonological context constant between the /d/ and /t/ test items within each fold. To compare like with like, we then compared the model predictions for each test fold against the human ratings on the same test items. DESCRIBE THESE RESULTS HERE.
-
 ```{r cross-validation-train-IO, include = FALSE}
 k <- 5 # set number of training iterations
 
 # divide training data into k sets
-d.IO.training.CV <- d.IO.training %>% 
+d.IO.training.CV <- 
+  d.IO.training %>% 
   group_by(Used_for.Model.NativeLanguage,
            Used_for.Model.Group,
            Talker, Used_for.Model.Sound) %>%
   mutate(
-    Training.Set =  ntile(runif(length(Talker)), k))
+    Training_fold =  ntile(runif(length(Talker)), k))
 
 # check that above random flagging worked as desired
 # d.IO.training.CV %>% group_by(Used_for.Model.NativeLanguage, Used_for.Model.Group,
 #                               Talker, Used_for.Model.Sound, Training.Set) %>% summarise(n())
 
-
 # Each training iteration uses 4/5 of each talker's training data; data from the non-native talkers are never down-sampled. 
 # exclude() drops 1/5 of the native talkers' training data but keeps 5/5 of non-native talkers' data.
-exclude <- function(.data, excluded_set) {
+fold <- function(.data, excluded_fold) {
   .data %>% mutate(Used_for = case_when(Talker == "M5" ~ "training",
                                         Talker == "F1" ~ "training",
-                                        Training.Set == excluded_set ~ "exclude",
+                                        Training_fold == excluded_fold ~ "exclude",
                                         TRUE ~ "training"))
 }
 
 # train models, excluding 1/5 each iteration.
-models <- map(
+d.IO.5folds <- map(
   seq(1,5), 
   ~ make_IO(
-    exclude(d.IO.training.CV, .x), 
+    fold(d.IO.training.CV, .x), 
     selected_cues) %>%
-    mutate(Training.Iteration = paste0("iteration_", .x)))
+    mutate(Training_fold = .x)) %>%
+  reduce(rbind) %>%
+  group_by(Training_fold, .add = T)
 ```
 
-```{r cross-validation-test-IO, include= FALSE}
-# divide English test data into 4 test folds; Swedish test data into 2 folds (each with 15 minimal pairs per fold)
-d.nonnative.test <- d.stims %>%
-      filter(Block.Type == "test", Accent == "non-native") 
+We first evaluated the five folded models on the entire test set, following the same procedure outlined in Section \@ref(sec:IO-test). Figure \@ref(fig:IO-ratings-results-byItem-5folds) plots the predictions of the ideal observers. 
 
-d.nonnative.test.bins <- d.nonnative.test %>% distinct(Item.MinimalPair) %>%
-  group_by(NativeLanguage) %>% 
-  mutate(Test.Bin = case_when(
-    NativeLanguage == "English" ~ ntile(runif(length(Item.MinimalPair)), 4),
-    NativeLanguage == "Swedish" ~ ntile(runif(length(Item.MinimalPair)), 2))) 
+(ref:IO-ratings-results-byItem-5folds) **5-fold cross-validated ideal observer /d/-goodness ratings** during test (z-scored) predicted by the control and /d/-exposure ideal observers. Error bars show 95\% bootstrapped confidence intervals over by-item predictions (since there aren't multiple subjects). Each row shows one training fold excluding a different 20% of the native training data. For additional details, see Figure \@ref(fig:IO-ratings-results-byItem).
 
-# join the assigned min.pairs with the main cross-validation-test dataframe
-d.nonnative.test <- left_join(d.nonnative.test, d.nonnative.test.bins)
+DESCRIBE RESULTS HERE BEFORE WE MOVE ON.
 
-# test each of 5 models on each test bin 
-run_tests <- function(model, test_data, test_bin_count) { 
+```{r cross-validation-ratings-results-byItem, fig.cap="(ref:ratings-results-byItem-5folds)", fig.height=22.5, out.width='75%'}
+# Following same steps as above for non-CV testing
+d.IO.test.5folds <- categorize_stims_by_IO(d.stims, d.IO.5folds)
+d.test.IO.5folds <- join_IO_categorizations_with_human_test(d.IO.test.5folds, d.test)
+save(d.test.IO.5folds, file = "../data/data_perception_test phase plus IO predictions_both languages-5 training folds.Rdata")
+
+p.IO_prediction %+% 
+  (d.test.IO.5folds %>%
+     filter(Model.Group.matchesParticipant.Group == "yes") %>%
+     group_by(Language, NativeLanguage, Group, Sound, Item.WordID, Model.Group, Training_fold) %>%
+     summarise(Rating.mean = mean(Model.Posterior.d * 2 - 1))) +
+  facet_grid(Training_fold ~ Language, scales="free_y") 
+ggsave(filename = "../figures/Result-ratings-byItem-5folds.png",
+       width = 7, height = 20)
+```
+
+
+```{r}
+# Run test on all data or folds
+fold_test_and_categorize <- function(model, .data_test, test_fold_count) { 
   runs = map(
-    seq(1, test_bin_count), 
-    ~ IO_categorization(filter(test_data, Test.Bin == .x), 
-                        model) %>%
-      mutate(RunCount = paste0(Training.Iteration, "_bin", .x)) %>% 
-      droplevels()) %>% bind_rows()
+    seq(1, test_fold_count), 
+    ~ IO_categorization(
+      filter(
+        .data_test, 
+        Test.Fold == .x),
+      model) %>%
+      mutate(RunCount = paste0("Training-test fold: "Training.Iteration, "-", .x)) %>% 
+      droplevels()) %>% 
+    bind_rows()
 }
 
 # join each training iteration with human test ratings
@@ -2377,9 +2401,54 @@ join_to_human_ratings <- function(model.test.run, d.test.humans) {
 }
 
 # test models on all nonnative test tokens.
-runs_full_set <- map(seq(1, length(models)), ~ IO_categorization(select(d.nonnative.test,-c(Test.Bin)), models[[.x]]) %>% join_to_human_ratings(d.test)) %>% bind_rows()
+d. <- 
+  map(
+    seq(1, length(models)), 
+    ~ IO_categorization(select(d.nonnative.test,-c(Test.Bin)), models[[.x]]) %>% 
+      join_to_human_ratings(d.test)) %>% 
+  bind_rows() %>%
+  join_to_human_ratings(d.test)
+```
+
+```{r cross-validation-test-IO-allTest-plot, fig.height=6, out.width='100%'}
+# plot model posteriors of intended category by language
+p.english <-  
+  d.test.IO.CV %>% filter(Model.NativeLanguage == "English") %>% 
+  ggplot(aes(x=Sound, y=Model.Posterior.Intended)) + 
+  geom_hline(yintercept = 1/2, color = "gray") +
+  stat_summary(aes(fill = Model.Group), fun = mean, geom = "bar", 
+               alpha = .6,
+               position = position_dodge(.93)) +
+  stat_summary(aes(group = Model.Group), fun.data = mean_cl_boot, geom = "linerange", 
+               size = .8, color = "black",
+               position = position_dodge(.93)) +
+  scale_color_manual(values = colors.Group) +
+  scale_fill_manual(values = colors.Group) +
+  scale_y_continuous("Accuracy") +
+  xlab("Intended sound category") +
+  facet_wrap(.~ RunCount, nrow = 5)
+p.english
+```
+
+In an additional analysis, we randomly split the test data into folds of 30 tokens each, resulting in 2 folds for the Swedish test data (which had 60 test tokens) and 4 folds for the English test data (which had 120 test tokens). By comparing across test bins within each fold, we can estimate how robust our results depend on the specific test bins. Each fold was created by sampling minimal pairs---rather than individual words---to hold the phonological context constant between the /d/ and /t/ test items within each fold. To compare like with like, we then compared the model predictions for each test fold against the human ratings on the same test items. DESCRIBE THESE RESULTS HERE.
 
 
+
+```{r cross-validation-test-IO-subTests, include= FALSE}
+# divide English test data into 4 test folds; Swedish test data into 2 folds (each with 15 minimal pairs per fold)
+d.nonnative.test <- d.stims %>%
+      filter(Block.Type == "test", Accent == "non-native") 
+
+d.nonnative.test.bins <- 
+  d.nonnative.test %>% 
+  distinct(Item.MinimalPair) %>%
+  group_by(NativeLanguage) %>% 
+  mutate(Test.Bin = case_when(
+    NativeLanguage == "English" ~ ntile(runif(length(Item.MinimalPair)), 4),
+    NativeLanguage == "Swedish" ~ ntile(runif(length(Item.MinimalPair)), 2))) 
+
+# join the assigned min.pairs with the main cross-validation-test dataframe
+d.nonnative.test <- left_join(d.nonnative.test, d.nonnative.test.bins)
 
 # run_and_join <- function(model, test_data, test_bin_count) {
 #   run_tests(model, test_data, test_bin_count) %>% 
@@ -2415,7 +2484,6 @@ d.test.IO.CV <- join_to_human_ratings(d.test.CV, d.test)
 
 ```{r IO-CV-plots-posterior-predictions-english, fig.height=6, out.width='100%'}
 # plot model posteriors of intended category by language
-
 p.english <-  d.test.IO.CV %>% filter(Model.NativeLanguage == "English") %>% 
   ggplot(aes(x=Sound, y=Model.Posterior.Intended)) + 
   geom_hline(yintercept = 1/2, color = "gray") +
