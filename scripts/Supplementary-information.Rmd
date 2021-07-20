@@ -2371,7 +2371,10 @@ p.IO_prediction %+%
 ggsave(filename = "../figures/Result-ratings-byItem-5folds.png",
        width = 7, height = 20)
 ```
-In an additional analysis, we randomly split the test data into folds of 30 tokens each, resulting in 2 folds for the Swedish test data (which had 60 test tokens) and 4 folds for the English test data (which had 120 test tokens). By comparing across test bins within each fold, we can estimate how robust our results depend on the specific test bins. Each fold was created by sampling minimal pairs---rather than individual words---to hold the phonological context constant between the /d/ and /t/ test items within each fold. To compare like with like, we then compared the model predictions for each test fold against the human ratings on the same test items. DESCRIBE THESE RESULTS HERE.
+
+In an additional analysis, we randomly split the test data into folds of 30 tokens each, resulting in 2 folds for the Swedish test data (which had 60 test tokens) and 4 folds for the English test data (which had 120 test tokens). By comparing across test bins within each fold, we can estimate how robust our results depend on the specific test bins. Each fold was created by sampling minimal pairs---rather than individual words---to hold the phonological context constant between the /d/ and /t/ test items within each fold. To compare like with like, we then compared the model predictions for each test fold against the human ratings on the same test items. 
+
+DESCRIBE THESE RESULTS HERE.
 
 ```{r cross-validation-fold-test}
 # Fold test: 
@@ -2381,7 +2384,7 @@ In an additional analysis, we randomly split the test data into folds of 30 toke
 d.IO.test.5folds.wTest_folds <- 
   left_join(
     d.IO.test.5folds, 
-    # Get test fold IDs
+    # Getting the random minimal pair IDs for each test fold
     d.IO.test.5folds %>%
       group_by(NativeLanguage) %>% 
       distinct(Item.MinimalPair) %>%
@@ -2393,8 +2396,20 @@ d.IO.test.5folds.wTest_folds <-
 # Maryann: The next command should be inheriting the test folds from above (just like it did inherit the absence of them when we used the function earlier)
 #          Can you check and then delete this comment?
 d.test.IO.5folds.wTest_folds <- join_IO_categorizations_with_human_test(d.IO.test.5folds.wTest_folds, d.test)
-```
 
+# Maryann: when you're done checking, replace all of the above code with this (corrected for whatever you change)
+# d.test.IO.5folds.wTest_folds <- 
+#   left_join(
+#     d.IO.test.5folds, 
+#     # Getting the random minimal pair IDs for each test fold
+#     d.IO.test.5folds %>%
+#       group_by(NativeLanguage) %>% 
+#       distinct(Item.MinimalPair) %>%
+#       mutate(Test_fold = case_when(
+#         NativeLanguage == "English" ~ ntile(runif(length(Item.MinimalPair)), 4),
+#         NativeLanguage == "Swedish" ~ ntile(runif(length(Item.MinimalPair)), 2)))) %>%
+#   join_IO_categorizations_with_human_test(d.test)
+```
 
 ```{r cross-validation-ratings-results-byItem-test-folded-test, fig.cap="(ref:ratings-results-byItem-5folds-folded-test)", fig.height=22.5, out.width='75%'}
 # Maryann: This would also work if one used Training_fold ~ Language + Test_fold in the grid, but I wanted the plots a bit more clearly separate by language,
