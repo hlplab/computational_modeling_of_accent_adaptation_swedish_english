@@ -77,8 +77,8 @@ library(assertthat)
 library(daver)
 # devtools::install_github("kleinschmidt/phondisttools")
 library(phondisttools)
-# devtools::install_github("hlplab/MVBeliefUpdatr")
-library(MVBeliefUpdatr)
+# devtools::install_github("../MVBeliefUpdatr")
+#library(MVBeliefUpdatr)
 ```
 
 ```{r constants and environments}
@@ -2355,19 +2355,13 @@ d.nonnative.test.bins <- d.nonnative.test %>% distinct(Item.MinimalPair) %>%
 # join the assigned min.pairs with the main cross-validation-test dataframe
 d.nonnative.test <- left_join(d.nonnative.test, d.nonnative.test.bins)
 
-# test models on all nonnative test tokens.
-runs_full_set <- map(seq(1, length(models)), ~ IO_categorization(select(d.nonnative.test,-c(Test.Bin)), models[[.x]]) %>% join_to_human_ratings(d.test)) %>% bind_rows()
+
 
 # test each of 5 models on each test bin 
 run_tests <- function(model, test_data, test_bin_count) { 
   runs = map(seq(1, test_bin_count), ~ IO_categorization(filter(test_data, Test.Bin == .x), model) %>%  
               mutate(RunCount = paste0(Training.Iteration, "_bin", .x)) %>% droplevels()) %>% bind_rows()
 }
-
-# run_and_join <- function(model, test_data, test_bin_count) {
-#   run_tests(model, test_data, test_bin_count) %>% 
-#   join_to_human_ratings(d.test)
-# }
 
 # join each training iteration with human test ratings
 join_to_human_ratings <- function(model.test.run, d.test.humans) {
@@ -2381,6 +2375,17 @@ join_to_human_ratings <- function(model.test.run, d.test.humans) {
       T ~ NA_character_), levels = c("no", "yes"))) %>% IO_ratings()
 }
 
+# test models on all nonnative test tokens.
+runs_full_set <- map(seq(1, length(models)), ~ IO_categorization(select(d.nonnative.test,-c(Test.Bin)), models[[.x]]) %>% join_to_human_ratings(d.test)) %>% bind_rows()
+
+
+
+# run_and_join <- function(model, test_data, test_bin_count) {
+#   run_tests(model, test_data, test_bin_count) %>% 
+#   join_to_human_ratings(d.test)
+# }
+
+#test each of 5 models on different test bins
 test_bin_count = 4
 results.CV = map(seq(1,length(models)), ~ run_tests(models[[.x]], d.nonnative.test, test_bin_count))
 
@@ -2404,10 +2409,12 @@ d.test.IO.CV <- join_to_human_ratings(d.test.CV, d.test)
 #       Group != Model.Group ~ "no",
 #       T ~ NA_character_
 #     ), levels = c("no", "yes")))
- 
+```
 
-# plot model posteriors by language
-p.english <-  d.test.data.CV %>% filter(Model.NativeLanguage == "English") %>% 
+
+```{r IO-CV-plots-posterior-predictions-english, include= FALSE}
+# plot model posteriors of intended category by language
+p.english <-  d.test.IO.CV %>% filter(Model.NativeLanguage == "English") %>% 
   ggplot( aes(x=Sound, y=Model.Posterior.Intended)) + 
   stat_summary(aes(fill = Model.Group), fun = mean, geom = "bar", 
                alpha = .6,
@@ -2419,8 +2426,11 @@ p.english <-  d.test.data.CV %>% filter(Model.NativeLanguage == "English") %>%
   scale_fill_manual(values = colors.Group) +
   facet_grid(Training.Iteration ~ Test.Bin)
 p.english
+```
 
-p.swedish <- d.test.data.CV %>% filter(Model.NativeLanguage == "Swedish") %>% 
+
+```{r IO-CV-plots-posterior-predictions-swedish, include= FALSE}
+p.swedish <- d.test.IO.CV %>% filter(Model.NativeLanguage == "Swedish") %>% 
   ggplot( aes(x=Sound, y=Model.Posterior.Intended)) + 
   stat_summary(aes(fill = Model.Group), fun = mean, geom = "bar", 
                alpha = .6,
@@ -2432,12 +2442,16 @@ p.swedish <- d.test.data.CV %>% filter(Model.NativeLanguage == "Swedish") %>%
   scale_fill_manual(values = colors.Group) +
   facet_grid(Training.Iteration ~ Test.Bin)
 p.swedish
+```
 
-# facet plots of each traning fold by test bin 
- d.test.IO.CV %>% 
-   group_by(Language, NativeLanguage, Group, Sound, Item.WordID, Model.Group) %>%
-   #summarise(Rating.mean = mean(Model.Posterior.d * 2 - 1)) 
-    filter(Model.Group.matchesParticipant.Group == "yes") %>%
+
+```{r IO-CV-plots-by-test-bin-english, include= FALSE}
+# facet plots of each training fold by test bin 
+# NOTE: I think this isn't working because of the joins. Each test run of the training iteration requires the human ratings for the exact same tokens. For e.g. Iteration1 and testbin1 has different tokens to Iteration1 and testbin2. I think the human ratings test dataframe needs a column identifying the tokens that have been assigned to the test bins so that each test run can be joined correctly.
+ d.test.IO.CV %>% filter(Model.NativeLanguage == "English" & Model.Group.matchesParticipant.Group == "yes") %>%
+   group_by(RunCount, Language, NativeLanguage, Group, Sound, Item.WordID, Model.Group) %>%
+   summarise(Rating.mean = mean(Model.Posterior.d * 2 - 1)) 
+    
     ggplot(aes(x = Sound, y = Model.Posterior.d)) +
     stat_summary(aes(fill = Model.Group), fun = mean, geom = "bar", 
                alpha = .6, position = position_dodge(.93)) +
@@ -2452,10 +2466,29 @@ p.swedish
     values = colors.Accent) +
   ylim(-1.25, 1.25) +
   facet_grid(Training.Iteration ~ Test.Bin)
- 
-# facet plot of the training runs tested on all test tokens
+```
+
+
+```{r IO-CV-plots-all-test-tokens-english, include= FALSE}
+# facet plot of the training runs tested on all test tokens (English) with their respective predicted d-goodness ratings for each item
  p.results.perception.bySubject %+%
-(runs_full_set %>% filter(Model.NativeLanguage == "English" & Model.Group.matchesParticipant.Group == "yes")%>%
+(runs_full_set %>% filter(Model.NativeLanguage == "English" & Model.Group.matchesParticipant.Group == "yes") %>%
+     group_by(Training.Iteration, Language, NativeLanguage, Group, Sound, Item.WordID, Model.Group) %>%
+     summarise(Rating.mean = mean(Model.Posterior.d * 2 - 1))) +
+  ylab("Ideal observer predicted\n/d/-goodness rating (z-score aligned)") +
+  scale_fill_manual("Ideal observer",
+    breaks = c("/d/-exposure", "control"),
+    labels = c("/d/-exposure", "control"),
+    values = colors.Accent) +
+  ylim(-1.25, 1.25) +
+  facet_wrap(.~ Training.Iteration)
+```
+
+
+```{r IO-CV-plots-all-test-tokens-swedish, include= FALSE}
+# facet plot of the training runs tested on all test tokens Swedish with their respective predicted d-goodness ratings for each item
+ p.results.perception.bySubject %+%
+(runs_full_set %>% filter(Model.NativeLanguage == "Swedish" & Model.Group.matchesParticipant.Group == "yes") %>%
      group_by(Training.Iteration, Language, NativeLanguage, Group, Sound, Item.WordID, Model.Group) %>%
      summarise(Rating.mean = mean(Model.Posterior.d * 2 - 1))) +
   ylab("Ideal observer predicted\n/d/-goodness rating (z-score aligned)") +
