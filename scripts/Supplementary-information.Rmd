@@ -2322,8 +2322,8 @@ d.IO.training.CV <- d.IO.training %>%
 #                               Talker, Used_for.Model.Sound, Training.Set) %>% summarise(n())
 
 
-# Each training iteration uses 4/5 of each talker's training data; data from the non-native talkers are never down-sampled. exclude() drops 1/5 of the native talkers' training data but keeps 5/5 of non-native talkers' data.
-
+# Each training iteration uses 4/5 of each talker's training data; data from the non-native talkers are never down-sampled. 
+# exclude() drops 1/5 of the native talkers' training data but keeps 5/5 of non-native talkers' data.
 exclude <- function(.data, excluded_set) {
   .data %>% mutate(Used_for = case_when(Talker == "M5" ~ "training",
                                         Talker == "F1" ~ "training",
@@ -2341,8 +2341,7 @@ models <- map(
 ```
 
 ```{r cross-validation-test-IO, include= FALSE}
-# divide English test data into 4 test bins; Swedish test data into 2 bins. Ensure minimal pair members are in the same bin.
-
+# divide English test data into 4 test folds; Swedish test data into 2 folds (each with 15 minimal pairs per fold)
 d.nonnative.test <- d.stims %>%
       filter(Block.Type == "test", Accent == "non-native") 
 
@@ -2352,11 +2351,8 @@ d.nonnative.test.bins <- d.nonnative.test %>% distinct(Item.MinimalPair) %>%
     NativeLanguage == "English" ~ ntile(runif(length(Item.MinimalPair)), 4),
     NativeLanguage == "Swedish" ~ ntile(runif(length(Item.MinimalPair)), 2))) 
 
-
-
 # join the assigned min.pairs with the main cross-validation-test dataframe
 d.nonnative.test <- left_join(d.nonnative.test, d.nonnative.test.bins)
-
 
 # test each of 5 models on each test bin 
 run_tests <- function(model, test_data, test_bin_count) { 
