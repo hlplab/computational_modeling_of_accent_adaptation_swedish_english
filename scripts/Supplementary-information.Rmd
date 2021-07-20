@@ -2352,15 +2352,20 @@ d.nonnative.test.bins <- d.nonnative.test %>% distinct(Item.MinimalPair) %>%
     NativeLanguage == "English" ~ ntile(runif(length(Item.MinimalPair)), 4),
     NativeLanguage == "Swedish" ~ ntile(runif(length(Item.MinimalPair)), 2))) 
 
+
+
 # join the assigned min.pairs with the main cross-validation-test dataframe
 d.nonnative.test <- left_join(d.nonnative.test, d.nonnative.test.bins)
 
 
-
 # test each of 5 models on each test bin 
 run_tests <- function(model, test_data, test_bin_count) { 
-  runs = map(seq(1, test_bin_count), ~ IO_categorization(filter(test_data, Test.Bin == .x), model) %>%  
-              mutate(RunCount = paste0(Training.Iteration, "_bin", .x)) %>% droplevels()) %>% bind_rows()
+  runs = map(
+    seq(1, test_bin_count), 
+    ~ IO_categorization(filter(test_data, Test.Bin == .x), 
+                        model) %>%
+      mutate(RunCount = paste0(Training.Iteration, "_bin", .x)) %>% 
+      droplevels()) %>% bind_rows()
 }
 
 # join each training iteration with human test ratings
@@ -2445,6 +2450,8 @@ p.swedish <- d.test.IO.CV %>% filter(Model.NativeLanguage == "Swedish") %>%
                position = position_dodge(.93)) +
   scale_color_manual(values = colors.Group) +
   scale_fill_manual(values = colors.Group) +
+   scale_y_continuous("Accuracy") +
+  xlab("Intended sound category") +
   facet_wrap(.~ RunCount, nrow = 3, ncol = 4)
 p.swedish
 ```
@@ -2452,7 +2459,7 @@ p.swedish
 
 ```{r IO-CV-plots-by-test-bin-english, include= FALSE}
 # facet plots of each training fold by test bin 
-# NOTE: I think this isn't working because of the joins. Each test run of the training iteration requires the human ratings for the exact same tokens. For e.g. Iteration1 and testbin1 has different tokens to Iteration1 and testbin2. I think the human ratings test dataframe needs a column identifying the tokens that have been assigned to the test bins so that each test run can be joined correctly.
+
  d.test.IO.CV %>% filter(Model.NativeLanguage == "English" & Model.Group.matchesParticipant.Group == "yes") %>%
    group_by(RunCount, Language, NativeLanguage, Group, Sound, Item.WordID, Model.Group) %>%
    summarise(Rating.mean = mean(Model.Posterior.d * 2 - 1)) 
