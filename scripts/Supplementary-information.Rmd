@@ -44,7 +44,7 @@ csl: frontiers-in-psychology.csl
 
 ```{r rmarkdown setup, include=FALSE}
 knitr::opts_chunk$set(echo = FALSE, 
-                      message=FALSE, warning=FALSE, error=TRUE,
+                      message=FALSE, warning=FALSE, error=TRUE, cache = TRUE,
                       fig.width = 4.5,
                       fig.height = 4)
 ```
@@ -1037,9 +1037,9 @@ knitr::include_graphics("../figures/IdealObserverAndData.jpg")
 The ideal observers require estimates of the distribution of the relevant phonetic cues for the syllable-final contrast between /d/ and /t/. Specifically, we need to estimate these distributions for `typical' native-accented productions of /t/ (for both the native and /d/-exposure IOs), the native-accented production of /d/ (for the native IO), and the non-native-accented production of /d/ (for the /d/-exposure IO). Next, we describe the databases, annotation procedure, and additional steps taken to obtain these estimates.
 
 ### English
-For the native English IO, the /d/ and /t/ training data came from a database of 10 male native talkers of American English [@Li2020database]. To the best of our knowledge, this is the largest database of syllable-final stop voicing in native-accented American English for which vowel, closure, and burst duration are annotated. The 10 talkers had the same sex and spanned a similar age range (18-35) as the Mandarin-accented talker in @xie2017more. The recording procedure was the same as in @xie2017more. We used the data of the 10 male native speakers in @Li2020database to estimate the mean and covariance for a *prototypical* native talker's /d/ and /t/. Specifically, we took the prototypical category mean to be the mean of 10 talkers' category means, and the prototypical category covariance to be the mean of the 10 talkers' covariance matrices. This provides an---admittedly very coarse-grained---point estimate of an native listeners' beliefs about a prototypical native talker's /d/ and /t/ categories.
+For the native English IO, the /d/ and /t/ training data came from a larger database of 10 male native talkers of American English [@Li2020database], out of which 6 were selected based on their consistent burst realisations^[The database from which the tokens for the control and /d/-exposure English models were drawn comprised 10 native English talkers of which 6 were chosen for their consistent burst productions. Analysis (not presented here) showed that the models did not differ significantly when the 4 additional talkers were included.]. To the best of our knowledge, this is the largest database of syllable-final stop voicing in native-accented American English for which vowel, closure, and burst duration are annotated. The 6 talkers had the same sex and spanned a similar age range (18-35) as the Mandarin-accented talker in @xie2017more. The recording procedure was the same as in @xie2017more. We used the data of the 6 male native speakers in @Li2020database to estimate the mean and covariance for a *prototypical* native talker's /d/ and /t/. Specifically, we took the prototypical category mean to be the mean of 10 talkers' category means, and the prototypical category covariance to be the mean of the 6 talkers' covariance matrices. This provides an---admittedly very coarse-grained---point estimate of an native listeners' beliefs about a prototypical native talker's /d/ and /t/ categories.
 
-For the non-native English IO, the /t/ training data was the same as the /t/ training data for the native English IO. This reflects our simplifying assumption that the /d/-exposure condition did not contain any information about the non-native /t/ (see above). The /d/ training data for the English /d/-exposure IO were the 30 critical words with syllable-final /d/ used during the non-native-accented exposure in @xie2017more. Note that we intentionally did *not* use data from additional non-native talkers in @Li2020database's      database: the /d/-exposure IO is intended to approximate the beliefs held by an native listener who has perfectly adapted to the non-native-accented /d/ distribution during exposure. 
+For the non-native English IO, the /t/ training data was the same as the /t/ training data for the native English IO. This reflects our simplifying assumption that the /d/-exposure condition did not contain any information about the non-native /t/ (see above). The /d/ training data for the English /d/-exposure IO were the 30 critical words with syllable-final /d/ used during the non-native-accented exposure in @xie2017more. Note that we intentionally did *not* use data from additional non-native talkers in @Li2020database's database: the /d/-exposure IO is intended to approximate the beliefs held by an native listener who has perfectly adapted to the non-native-accented /d/ distribution during exposure. 
 
 Of note, the words that were used as training data for the native /d/ were not the same as those used as training data for the non-native /d/. The training data for the native /d/ were all mono-syllabic words with syllable-final /d/ from @Li2020database. Below, we report how we corrected for effects of phonological context and syllable length.
 
@@ -2312,7 +2312,7 @@ The ideal observers do, however, predict the qualitative patterns in the human g
 ## How robust are these results? How much data does this type of modeling require?
 Our initial analysis did not employ cross-validation or similar methods. This decision was made since the data the ideal observers are tested on do not overlap with the data the ideal observers are tested on. During the review process, both reviewers raised questions about the amount of data that would be required for the type of computational analysis conducted here. Here we address this questions by subsetting the training and test data to assess the variability of the results across different folds of the training and test data. This also allows us to assess the extent to which the results in the previous section are due to overfitting to the training data.
 
-Our ideal observers are training on two types of data: data that estimate native listeners' expectations about /d/ and /t/ based on previous lifelong experienced with their native language, and data that estimate the effects of the exposure phase (for the /d/ category in the /d/-exposure condition). For the former data, we randomly created two non-overlapping folds of 50% of the data. The folds were created by sampling (without replacement) the native data described in Section \@ref(sec:IO-training) *within* each unique combination of talker and category. Each model was then trained on four of the two folds (50% of the data, i.e., 15 tokens per category and talker), resulting in two models, each omitting another half of the native training data. Since the exposure data---by hypothesis---form the basis of adaptation, we do *not* resample or subset these data but rather hold them constant across all folds of the training data. By comparing across these two models, we can thus assess the extent to which the specific native data used to train the ideal observers affects our results (recall that these data determine the /t/ category in both the control and the /d/-exposure model, as well as the /d/ category in the control model). At the same time, this analysis sheds light on whether 15 tokens per talker and category are even remotely sufficiently to achieve robust estimates of category means and covariances. This is a question, in particular, for the Swedish models, for which we had phonetically annotated data for only *one* native talker (as opposed to 6 talkers for the English data). <!-- Maryann: CHECK TALKER NUMBER AND MOTIVATION FOR IT, AND THEN ADJUST HERE AND EVERYWHERE ELSE. -->
+Our ideal observers are training on two types of data: data that estimate native listeners' expectations about /d/ and /t/ based on previous lifelong experienced with their native language, and data that estimate the effects of the exposure phase (for the /d/ category in the /d/-exposure condition). For the former data, we randomly created two non-overlapping folds of 50% of the data. The folds were created by sampling (without replacement) the native data described in Section \@ref(sec:IO-training) *within* each unique combination of talker and category. Each model was then trained on one of the two folds (50% of the data, i.e., 15 tokens per category and talker), resulting in two models, each omitting another half of the native training data. Since the exposure data---by hypothesis---form the basis of adaptation, we do *not* resample or subset these data but rather hold them constant across all folds of the training data. By comparing across these two models, we can thus assess the extent to which the specific native data used to train the ideal observers affects our results (recall that these data determine the /t/ category in both the control and the /d/-exposure model, as well as the /d/ category in the control model). At the same time, this analysis sheds light on whether 15 tokens per talker and category are even remotely sufficiently to achieve robust estimates of category means and covariances. This is a question, in particular, for the Swedish models, for which we had phonetically annotated data for only *one* native talker (as opposed to 6 talkers for the English data).  
 
 ```{r cross-validation-train-IO, include = FALSE}
 k <- 2 # set number of training iterations
@@ -2332,35 +2332,35 @@ d.IO.training.CV <-
 
 # Each training iteration uses 4/5 of each talker's training data; data from the non-native talkers are never down-sampled. 
 # exclude() drops 1/5 of the native talkers' training data but keeps 5/5 of non-native talkers' data.
-fold <- function(.data, excluded_fold) {
+ fold <- function(.data, excluded_fold) {
   .data %>% mutate(Used_for = case_when(Talker == "M5" ~ "training",
                                         Talker == "F1" ~ "training",
                                         Training_fold == excluded_fold ~ "exclude",
                                         TRUE ~ "training"))
 }
 
-# fold training: train models, excluding 1/5 each iteration.
+# fold training: train models, excluding 1/k each iteration.
 d.IO.wTraining_folds <- map(
-  seq(1,5), 
+  seq(1,k), 
   ~ make_IO(
     fold(d.IO.training.CV, .x), 
     selected_cues) %>%
     mutate(Training_fold = .x)) %>%
-  reduce(rbind) %>%
+  reduce(rbind) %>% # why is this form preferred over bind_rows()? they seem to do the same
   group_by(Training_fold, .add = T)
 ```
 
-We first evaluated the five folded models on the entire test set, following the same procedure outlined in Section \@ref(sec:IO-test). Figure \@ref(fig:IO-ratings-results-byItem-wTraining_folds) plots the predictions of the ideal observers. 
+We first evaluated the two folded models on the entire test set, following the same procedure outlined in Section \@ref(sec:IO-test). Figure \@ref(fig:IO-ratings-results-byItem-wTraining_folds) plots the predictions of the ideal observers. 
 
 (ref:IO-ratings-results-byItem-wTraining_folds) **2-fold cross-validated ideal observer /d/-goodness ratings** during test (z-scored) predicted by the control and /d/-exposure ideal observers. Error bars show 95\% bootstrapped confidence intervals over by-item predictions (since there aren't multiple subjects). Each row shows one training fold excluding a different half of the native training data. For additional details, see Figure \@ref(fig:IO-ratings-results-byItem).
 
 DESCRIBE RESULTS HERE BEFORE WE MOVE ON.
 
-```{r cross-validation-ratings-results-byItem, fig.cap="(ref:ratings-results-byItem-wTraining_folds)", fig.height=8.5, out.width='75%'}
+```{r IO-ratings-results-byItem-wTraining_folds, fig.cap="(ref:IO-ratings-results-byItem-wTraining_folds)", fig.height=8.5, out.width='75%'}
 # Following same steps as above for non-CV testing
 d.IO.test.wTraining_folds <- categorize_stims_by_IO(d.stims, d.IO.wTraining_folds)
 d.test.IO.wTraining_folds <- join_IO_categorizations_with_human_test(d.IO.test.wTraining_folds, d.test)
-save(d.test.IO.wTraining_folds, file = "../data/data_perception_test phase plus IO predictions_both languages-5 training folds.Rdata")
+save(d.test.IO.wTraining_folds, file = "../data/data_perception_test phase plus IO predictions_both languages-2 training folds.Rdata")
 
 p.IO_prediction %+% 
   (d.test.IO.wTraining_folds %>%
