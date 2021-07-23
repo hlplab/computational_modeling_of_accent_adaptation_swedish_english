@@ -40,7 +40,16 @@ citation_package: BibTex
 bibliography: [refs.bib]
 link-citations: yes
 csl: frontiers-in-psychology.csl
+
 ---
+
+<style type="text/css">
+div.main-container {
+  max-width: 1800px;
+  margin-left: auto;
+  margin-right: auto;
+}
+</style>
 
 ```{r rmarkdown setup, include=FALSE}
 knitr::opts_chunk$set(echo = FALSE, 
