@@ -53,9 +53,7 @@ div.main-container {
 
 ```{r rmarkdown setup, include=FALSE}
 knitr::opts_chunk$set(echo = FALSE, 
-                      message=FALSE, warning=FALSE, error=TRUE, cache = FALSE,
-                      fig.width = 4.5,
-                      fig.height = 4)
+                      message=FALSE, warning=FALSE, error=TRUE, fig.align = 'center')
 ```
 
 
@@ -2227,7 +2225,7 @@ d.english.ID <- d.english.ID %>%
 
 (ref:ID-to-ratings) Item-level correlation of human identification and rating responses from two experiments in @xie2017more. The two experiments used the same exposure and test stimuli, and differed only in the task during test (identification vs. rating). The trend line shows a generalized additive model fit with a non-parametric smoother. That is, the fit would in principle allow non-linearity in the relation between identification and rating responses. The fact that no non-linearity is detected suggests that the relation is largely linear. Shaded areas show 95\% confidence intervals.
 
-```{r ID-to-ratings, fig.cap="(ref:ID-to-ratings)", fig.height = 4.5, out.width="75%"}
+```{r ID-to-ratings, fig.cap="(ref:ID-to-ratings)", fig.height = 4.5, out.width="75%", fig.align='center'}
 d.english.test.byItem <- 
  plyr::rbind.fill(d.test %>% filter(NativeLanguage == "English") %>%
                      droplevels() %>% 
@@ -2280,7 +2278,7 @@ Figure \@ref(fig:IO-ratings-results-byItem) plots the predictions of the ideal o
 
 (ref:ratings-results-byItem) **Human /d/-goodness ratings** during test (z-scored) by native language and exposure group. To facilitate comparison of the human data to the ideal observers in Figure \@ref(fig:IO-ratings-results-byItem), we first aggregate the human data by exposure condition and *item*, averaging across all subjects. These are the individual points shown in the figure. The bars show the mean of these by-item means, and the error interval shows the 95\% confidence interval over the by-item means. This contrasts with Figure \@ref(fig:ratings-results) in Section \@ref(sec:results), where we plotted the mean and confidence interval of by-subject means. 
 
-```{r IO-ratings-results-byItem, fig.cap="(ref:IO-ratings-results-byItem)", fig.height=4.5, out.width='75%'}
+```{r IO-ratings-results-byItem, fig.cap="(ref:IO-ratings-results-byItem)", fig.height=4.5, out.width='75%', fig.align='center'}
 p.IO_prediction <- p.results.perception.bySubject %+%
   (d.test.IO %>%
      filter(Model.Group.matchesParticipant.Group == "yes") %>%
@@ -2297,7 +2295,7 @@ p.IO_prediction
 ```
 
 
-```{r ratings-results-byItem, fig.cap="(ref:ratings-results-byItem)", fig.height=4.5, out.width='75%'}
+```{r ratings-results-byItem, fig.cap="(ref:ratings-results-byItem)", fig.height=4.5, out.width='75%', fig.align='center'}
 p.results.percept.byItem <- p.results.perception.bySubject %+%
   (d.test %>%
      group_by(Language, NativeLanguage, Group, Sound, Item.WordID) %>%
@@ -2331,12 +2329,7 @@ d.IO.training.CV <-
   mutate(
     Training_fold =  ntile(runif(length(Talker)), k))
 
-# check that above random flagging worked as desired
-# d.IO.training.CV %>% group_by(Used_for.Model.NativeLanguage, Used_for.Model.Group,
-#                               Talker, Used_for.Model.Sound, Training.Set) %>% summarise(n())
 
-# Each training iteration uses 4/5 of each talker's training data; data from the non-native talkers are never down-sampled. 
-# exclude() drops 1/5 of the native talkers' training data but keeps 5/5 of non-native talkers' data.
  fold <- function(.data, excluded_fold) {
   .data %>% mutate(Used_for = case_when(Talker == "M5" ~ "training",
                                         Talker == "F1" ~ "training",
@@ -2351,7 +2344,7 @@ d.IO.wTraining_folds <- map(
     fold(d.IO.training.CV, .x), 
     selected_cues) %>%
     mutate(Training_fold = .x)) %>%
-  reduce(rbind) %>% # why is this form preferred over bind_rows()? they seem to do the same
+  reduce(rbind) %>% 
   group_by(Training_fold, .add = T)
 ```
 
@@ -2361,7 +2354,7 @@ For Swedish, the predictions of two models are consistent for the /d/ category: 
 
 (ref:IO-ratings-results-byItem-wTraining-folds) **2-fold cross-validated ideal observer /d/-goodness ratings** during test (z-scored) predicted by the control and /d/-exposure ideal observers. Error bars show 95\% bootstrapped confidence intervals over by-item predictions (since there aren't multiple subjects). Each row shows one training fold excluding a different half of the native training data. For additional details, see Figure \@ref(fig:IO-ratings-results-byItem). 
 
-```{r IO-ratings-results-byItem-wTraining-folds, fig.cap="(ref:IO-ratings-results-byItem-wTraining-folds)", fig.height=8.5, out.width='75%'}
+```{r IO-ratings-results-byItem-wTraining-folds, fig.cap="(ref:IO-ratings-results-byItem-wTraining-folds)", fig.height=8.5, out.width='75%', fig.align='center'}
 # Following same steps as above for non-CV testing
 d.IO.test.wTraining_folds <- categorize_stims_by_IO(d.stims, d.IO.wTraining_folds)
 d.test.IO.wTraining_folds <- join_IO_categorizations_with_human_test(d.IO.test.wTraining_folds, d.test)
@@ -2405,7 +2398,7 @@ d.test.IO.wTraining_folds.wTest_folds <-
   join_IO_categorizations_with_human_test(d.test)
 ```
 
-```{r ratings-results-byItem-wTraining-folds-folded-test, fig.cap="(ref:ratings-results-byItem-wTraining-folds-folded-test)", fig.height=8.5, out.width='75%'}
+```{r ratings-results-byItem-wTraining-folds-folded-test, fig.cap="(ref:ratings-results-byItem-wTraining-folds-folded-test)", fig.height=8.5, fig.width=10.5, out.width='100%'}
 # Maryann: This would also work if one used Training_fold ~ Language + Test_fold in the grid, but I wanted the plots a bit more clearly separate by language,
 # and so I made it a plot_grid
 plot_grid(
