@@ -2450,7 +2450,7 @@ d.test.IO.byItem <-
   # Normalize human ratings'
   group_by(Language, Group, Model.Group.matchesParticipant.Group) %>%
   mutate(
-    Model.Posterior.d = Model.Posterior.d, # do we need this line?
+    Model.Posterior.d = Model.Posterior.d,
     Rating.Response.d.normalized = (Rating.Response.d.zscored - min(Rating.Response.d.zscored)) / (max(Rating.Response.d.zscored) - min(Rating.Response.d.zscored))) 
 
 d.test.IO.byItem %>%
