@@ -2435,7 +2435,7 @@ d.test.IO.wTraining_folds.wTest_folds.byItem <-
     Model.Posterior.d = Model.Posterior.d,
     Rating.Response.d.normalized = (Rating.Response.d.zscored - min(Rating.Response.d.zscored)) / (max(Rating.Response.d.zscored) - min(Rating.Response.d.zscored)))
 
-d.test.IO.wTraining_folds.wTest_folds.byItem %>% 
+x <- d.test.IO.wTraining_folds.wTest_folds.byItem %>% 
    crossing(
     bias.d = .5,
     lapse_rate = 10^c(seq(-10, 0, length.out = 51))) %>%
@@ -2443,11 +2443,39 @@ d.test.IO.wTraining_folds.wTest_folds.byItem %>%
   nest() %>%
   mutate(per_token_loglik = unlist(pmap(.l = list(data, lapse_rate, bias.d), .f = function(x, y, z) get_per_token_log_likelihood(x, y, z))),
          Training_fold = factor(Training_fold),
-         Test_fold = factor(Test_fold)) %>% 
-  ggplot(mapping = aes(x = lapse_rate, y = per_token_loglik), color = Group) +
-  stat_summary(aes(fill = Model.Group.matchesParticipant.Group), fun.data = mean_cl_boot, geom = "pointrange", 
-               alpha = .6, size = .8,
-               position = position_dodge(.3)) +
+         Test_fold = factor(Test_fold)) 
+
+x %>% 
+  ggplot(mapping = aes(x = lapse_rate, y = per_token_loglik, color = Group)) +
+  # stat_summary(fun.data = mean_cl_boot, geom = "pointrange", 
+  #              alpha = .6, size = .8,
+  #              position = position_dodge(.3)) +
+  # stat_summary(mapping = aes(linetype = Model.Group.matchesParticipant.Group),
+  #              fun = mean, geom = "line", 
+  #              alpha = .6, size = .8,
+  #              position = position_dodge(.3)) +
+  geom_line(stat = "smooth", mapping = aes(line = Group)) +
+  geom_ribbon(stat = "smooth", alpha = 0.2, aes(colour = NULL, group = Group)) +
+    scale_x_continuous(
+    "lapse rate",
+    breaks = 10^c(seq(-10, 0, 2))) +
+  scale_y_continuous("Fit against perceptual responses\n(per token log likelihood)") +
+  scale_color_manual("Exposure group",
+    breaks = c("/d/-exposure", "control"),
+    labels = c("/d/-exposure", "control"),
+    values = colors.Accent) +
+  scale_linetype_manual("Ideal observer",
+    breaks = c("yes", "no"),
+    labels = c("matching", "mismatching"),
+    values = 1:2) +
+  scale_shape_manual("Ideal observer",
+    breaks = c("yes", "no"),
+    labels = c("matching", "mismatching"),
+    values = 1:2) +
+  #coord_trans(x = "log10") +
+  facet_grid(Model.Group.matchesParticipant.Group ~ Language) +
+  theme(panel.grid.minor = element_blank())
+  
 ```
 
 
