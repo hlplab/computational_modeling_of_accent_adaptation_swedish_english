@@ -53,9 +53,7 @@ div.main-container {
 
 ```{r rmarkdown setup, include=FALSE}
 knitr::opts_chunk$set(echo = FALSE, 
-                      message=FALSE, warning=FALSE, error=TRUE, cache = FALSE,
-                      fig.width = 4.5,
-                      fig.height = 4)
+                      message=FALSE, warning=FALSE, error=TRUE, fig.align = 'center')
 ```
 
 
@@ -2227,7 +2225,7 @@ d.english.ID <- d.english.ID %>%
 
 (ref:ID-to-ratings) Item-level correlation of human identification and rating responses from two experiments in @xie2017more. The two experiments used the same exposure and test stimuli, and differed only in the task during test (identification vs. rating). The trend line shows a generalized additive model fit with a non-parametric smoother. That is, the fit would in principle allow non-linearity in the relation between identification and rating responses. The fact that no non-linearity is detected suggests that the relation is largely linear. Shaded areas show 95\% confidence intervals.
 
-```{r ID-to-ratings, fig.cap="(ref:ID-to-ratings)", fig.height = 4.5, out.width="75%"}
+```{r ID-to-ratings, fig.cap="(ref:ID-to-ratings)", fig.height = 4.5, out.width="75%", fig.align='center'}
 d.english.test.byItem <- 
  plyr::rbind.fill(d.test %>% filter(NativeLanguage == "English") %>%
                      droplevels() %>% 
@@ -2280,7 +2278,7 @@ Figure \@ref(fig:IO-ratings-results-byItem) plots the predictions of the ideal o
 
 (ref:ratings-results-byItem) **Human /d/-goodness ratings** during test (z-scored) by native language and exposure group. To facilitate comparison of the human data to the ideal observers in Figure \@ref(fig:IO-ratings-results-byItem), we first aggregate the human data by exposure condition and *item*, averaging across all subjects. These are the individual points shown in the figure. The bars show the mean of these by-item means, and the error interval shows the 95\% confidence interval over the by-item means. This contrasts with Figure \@ref(fig:ratings-results) in Section \@ref(sec:results), where we plotted the mean and confidence interval of by-subject means. 
 
-```{r IO-ratings-results-byItem, fig.cap="(ref:IO-ratings-results-byItem)", fig.height=4.5, out.width='75%'}
+```{r IO-ratings-results-byItem, fig.cap="(ref:IO-ratings-results-byItem)", fig.height=4.5, out.width='75%', fig.align='center'}
 p.IO_prediction <- p.results.perception.bySubject %+%
   (d.test.IO %>%
      filter(Model.Group.matchesParticipant.Group == "yes") %>%
@@ -2297,13 +2295,13 @@ p.IO_prediction
 ```
 
 
-```{r ratings-results-byItem, fig.cap="(ref:ratings-results-byItem)", fig.height=4.5, out.width='75%'}
+```{r ratings-results-byItem, fig.cap="(ref:ratings-results-byItem)", fig.height=4.5, out.width='75%', fig.align='center'}
 p.results.percept.byItem <- p.results.perception.bySubject %+%
   (d.test %>%
      group_by(Language, NativeLanguage, Group, Sound, Item.WordID) %>%
      summarise(Rating.mean = mean(Rating.Response.d.zscored))) +
   ylab("Mean /d/-goodness ratings\n(z-scored) by item") +
-  ylim(-1.25, 1.25)
+  ylim(-1.25, 1.30)
 
 p.results.percept.byItem
 ggsave(p.results.percept.byItem, filename = "../figures/Result-ratings-byItem.png",
@@ -2331,12 +2329,7 @@ d.IO.training.CV <-
   mutate(
     Training_fold =  ntile(runif(length(Talker)), k))
 
-# check that above random flagging worked as desired
-# d.IO.training.CV %>% group_by(Used_for.Model.NativeLanguage, Used_for.Model.Group,
-#                               Talker, Used_for.Model.Sound, Training.Set) %>% summarise(n())
 
-# Each training iteration uses 4/5 of each talker's training data; data from the non-native talkers are never down-sampled. 
-# exclude() drops 1/5 of the native talkers' training data but keeps 5/5 of non-native talkers' data.
  fold <- function(.data, excluded_fold) {
   .data %>% mutate(Used_for = case_when(Talker == "M5" ~ "training",
                                         Talker == "F1" ~ "training",
@@ -2351,7 +2344,7 @@ d.IO.wTraining_folds <- map(
     fold(d.IO.training.CV, .x), 
     selected_cues) %>%
     mutate(Training_fold = .x)) %>%
-  reduce(rbind) %>% # why is this form preferred over bind_rows()? they seem to do the same
+  reduce(rbind) %>% 
   group_by(Training_fold, .add = T)
 ```
 
@@ -2374,15 +2367,14 @@ p.IO_prediction %+%
      summarise(Rating.mean = mean(Model.Posterior.d * 2 - 1))) +
   facet_grid(Training_fold ~ Language, scales="free_y") 
 ggsave(filename = "../figures/Result-ratings-byItem-wTraining_folds.png",
-       width = 7, height = 20)
+       width = 14, height = 20)
 
 ```
 
-Next, we evaluated the two training folds on separately folded test folds. By comparing across test folds within each training fold, we can estimate how robust our results depend on the specific test items. Specifically, we randomly split the test data into folds of 30 tokens each (15 minimal pairs), resulting in 2 folds for the Swedish test data (which had 60 test tokens) and 4 folds for the English test data (which had 120 test tokens). Each fold was created by sampling minimal pairs---rather than individual words---to hold the phonological context constant between the /d/ and /t/ test items within each fold. To compare like with like, we then compared the model predictions for each test fold against the human ratings on the same test items. 
+Next, we evaluated the two training folds on separately folded test folds. By comparing across test folds within each training fold, we can estimate how robust our results are as the test items change. Specifically, we randomly split the test data into folds of 30 tokens each (15 minimal pairs), resulting in 2 folds for the Swedish test data (which had 60 test tokens) and 4 folds for the English test data (which had 120 test tokens). Each fold was created by sampling minimal pairs---rather than individual words---to hold the phonological context constant between the /d/ and /t/ test items within each fold. To compare like with like, we then compared the model predictions for each test fold against the human ratings on the same test items. 
+Figure \@ref(fig:IO-ratings-results-byItem-wTraining-folds-folded-test) plots the predictions for each combination of training and test fold. As expected given that the number of test items had quartered for English and halved for Swedish, the confidence interval of the mean predicted goodness ratings by the ideal observers noticeably widened. For the English data, the qualitative fit to the human ratings remained across all test folds except for the combination of training-fold 1 and test-fold 1. Here the /d/ ratings prediction by the /d/-exposure model no longer had an advantage over the control model instead they were both matched in average performance. Within each training-fold, the predictions of the control models varied more from test-fold to test-fold but the average predictions of the control models never performed better than the /d/-exposure model predictions. This result is encouraging and suggests that there was sufficient data to produce robust predictions that qualitatively match the human ratings for the English experiment.
 
-Figure \@ref(fig:IO-ratings-results-byItem-wTraining-folds-folded-test) plots the predictions for each combination of training and test fold. As is expected given that the number of test items now quartered for English and halved for Swedish, the confidence interval of the mean predicted goodness ratings of the ideal observers noticeably widened. While there are considerable differences between the predictions of each training-test combination, there is a consistent pattern of the /d/-exposure model surpassing the control model in average predicted ratings for every test fold in the English cross-validation. This result is encouraging and suggests that there was sufficient data to produce robust predictions that qualitatively match the human ratings for the English experiment. 
-
-The Swedish models were expected to display more variable results between test folds and this was indeed apparent from the four training-test runs. In some training-test combinations the prediction patterns that followed human performance before were no longer held and instead showed either the /d/-exposure model performing better than control or vice-versa. 
+The Swedish models were expected to display more variable results between test folds and this was indeed apparent from the four training-test runs. Within the first test fold the /d/-exposure models of both training folds perform better than the control models for /d/ predictions. This does not parallel human ratings. Within the second test fold, both training folds do qualitatively match human ratings. Although the models do not accurately predict the human ratings across both sets of test folds, there is some measure of consistency across training folds. 
 
 (ref:IO-ratings-results-byItem-wTraining-folds-folded-test) **2-fold cross-validated ideal observer /d/-goodness ratings evaluated on separate test folds**. Error bars show 95\% bootstrapped confidence intervals over by-item predictions (since there aren't multiple subjects). Each row shows one training fold excluding a different half of the native training data. Each column shows a separate test bin with 15 randomly chosen minimal pairs (resulting in 4 test folds for the English experiment and 2 test folds for the Swedish experiment). For additional details, see Figure \@ref(fig:IO-ratings-results-byItem).
 
@@ -2405,7 +2397,7 @@ d.test.IO.wTraining_folds.wTest_folds <-
   join_IO_categorizations_with_human_test(d.test)
 ```
 
-```{r IO-ratings-results-byItem-wTraining-folds-folded-test, fig.cap="(ref:IO-ratings-results-byItem-wTraining-folds-folded-test)", fig.height=8.5, out.width='75%'}
+```{r IO-ratings-results-byItem-wTraining-folds-folded-test, fig.cap="(ref:IO-ratings-results-byItem-wTraining-folds-folded-test)", fig.height=8.5, fig.width=10.5, out.width='100%'}
 # Maryann: This would also work if one used Training_fold ~ Language + Test_fold in the grid, but I wanted the plots a bit more clearly separate by language,
 # and so I made it a plot_grid
 plot_grid(
@@ -2427,7 +2419,7 @@ plot_grid(
   rel_widths = c(4, 2))
 
 ggsave(filename = "../figures/Result-ratings-byItem-wTraining_folds-folded-test.png",
-       width = 21, height = 20)
+       width = 30, height = 20)
 ```
 
 
@@ -2457,7 +2449,7 @@ d.test.IO.byItem <-
   # Normalize human ratings'
   group_by(Language, Group, Model.Group.matchesParticipant.Group) %>%
   mutate(
-    Model.Posterior.d = Model.Posterior.d, # do we need this line?
+    Model.Posterior.d = Model.Posterior.d,
     Rating.Response.d.normalized = (Rating.Response.d.zscored - min(Rating.Response.d.zscored)) / (max(Rating.Response.d.zscored) - min(Rating.Response.d.zscored))) 
 
 d.test.IO.byItem %>%
