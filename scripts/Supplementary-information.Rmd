@@ -2422,6 +2422,39 @@ ggsave(filename = "../figures/Result-ratings-byItem-wTraining_folds-folded-test.
        width = 30, height = 20)
 ```
 
+```{r}
+d.test.IO.wTraining_folds.wTest_folds.byItem <- 
+  d.test.IO.wTraining_folds.wTest_folds %>% 
+  group_by(Language, Group, Model.Group.matchesParticipant.Group, Training_fold, Test_fold, Sound, Item.WordID) %>%
+  summarise(
+    Model.Posterior.d = mean(Model.Posterior.d),
+    Rating.Response.d.zscored = mean(Rating.Response.d.zscored)) %>%
+  # Normalize human ratings'
+  group_by(Language, Group, Model.Group.matchesParticipant.Group, Training_fold, Test_fold) %>%
+  mutate(
+    Model.Posterior.d = Model.Posterior.d,
+    Rating.Response.d.normalized = (Rating.Response.d.zscored - min(Rating.Response.d.zscored)) / (max(Rating.Response.d.zscored) - min(Rating.Response.d.zscored)))
+
+d.test.IO.wTraining_folds.wTest_folds.byItem %>% 
+   crossing(
+    bias.d = .5,
+    lapse_rate = 10^c(seq(-10, 0, length.out = 51))) %>%
+  group_by(Language, Group, Model.Group.matchesParticipant.Group, Training_fold, Test_fold, lapse_rate, bias.d) %>%
+  nest() %>%
+  mutate(per_token_loglik = unlist(pmap(.l = list(data, lapse_rate, bias.d), .f = function(x, y, z) get_per_token_log_likelihood(x, y, z))),
+         Training_fold = factor(Training_fold),
+         Test_fold = factor(Test_fold)) %>% 
+  ggplot(mapping = aes(x = lapse_rate, y = per_token_loglik), color = Group) +
+  stat_summary(aes(fill = Model.Group.matchesParticipant.Group), fun.data = mean_cl_boot, geom = "pointrange", 
+               alpha = .6, size = .8,
+               position = position_dodge(.3)) +
+```
+
+
+
+
+
+
 
 # TO DO: THIS NEEDS WORK. IS THE LIKELIHOOD FUNCTION DOING THE RIGHT THING?
 <!-- # Could add lapse-rate-based fit eval here? -->
