@@ -1,0 +1,1002 @@
+---
+title: "Model comparison"
+author: "Maryann Tan"
+date: "1/1/2021"
+output: html_document
+---
+This rmd document is a testing ground for the context correction models.
+
+```{r rmarkdown setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, 
+                      message=FALSE, warning=FALSE, error=TRUE)
+```
+
+
+```{r preamble, message=FALSE, warning=FALSE, error=FALSE, echo=FALSE, results='hide'}
+rm(list=ls())
+library(bookdown)       # r markdown references to figures, tables, sections regardless of output format
+library(tidyverse)      # There is only one universe
+library(magrittr)       # Pipes!
+library(stringi)
+library(lme4)           # mixed-effects analyses
+library(lmerTest)       # p-values in LMMs
+library(sjPlot)         # HTML tables of mixed models
+library(knitr)          
+library(emmeans)        # simple effects in LMMs
+library(broom.mixed)    # easy extraction of information from LMMs
+library(ggplot2)        # plotting
+library(cowplot)        # multi-plot figures
+library(plotly)         # 3D plotting 
+library(shiny)          # tabs
+library(ggpubr)
+library(gridExtra)
+library(assertthat)
+# devtools::install_github('kleinschmidt/daver')
+library(daver)
+# devtools::install_github("kleinschmidt/phondisttools")
+library(phondisttools)
+library(rms)
+```
+
+```{r constants and environments}
+theme_set(
+  theme_bw() + 
+    theme(panel.border = element_blank())
+)
+
+levels.Category = c("/d/", "/t/")
+levels.Group = c("/d/-exposure", "control")
+levels.Accent = c("non-native", "native")
+levels.Language = c("Mandarin-accented English", "Flemish-accented Swedish")
+levels.NativeLanguage = c("English", "Swedish")
+colors.Group = c("red", "gray")
+colors.Accent = colors.Group
+colors.Category = c("lightblue", "orange")
+colors.Language = c("cyan", "pink")
+shapes.Category = c("circle","square")
+```
+
+
+
+
+
+```{r, cache=FALSE}
+# use the validate() function in the rms package. First the model is fit with ols() also in the rms package
+library(rms)
+B <- 2000
+method <- "boot"
+# first filter d.stims to be only English
+d.native.english <- d.stims %>% filter(NativeLanguage == "English" & Accent == "native" & Block.Type != "exposure") %>% droplevels()
+
+full.vowel <- ols(vowel ~ 1 + number_segments + coda_has_lateral +  onset_has_lateral + onset_has_nasal + coda_has_nasal + onset_has_rhotic + Talker, data = d.native.english, x = TRUE, y = TRUE)
+
+rms::validate(full.vowel, method = method, B = B, bw = TRUE)
+
+```
+
+
+
+```{r}
+full.closure <- ols(closure ~ 1 + number_segments + coda_has_lateral +  onset_has_lateral + onset_has_nasal + coda_has_nasal + onset_has_rhotic + Talker , data = d.native.english, x = TRUE, y = TRUE)
+rms::validate(full.closure, method = method, B = B, bw = TRUE)
+```
+
+```{r}
+full.burst <- ols(burst ~ 1 + number_segments + coda_has_lateral +  onset_has_lateral + onset_has_nasal + coda_has_nasal + onset_has_rhotic + Talker , data = d.native.english, x = TRUE, y = TRUE)
+rms::validate(full.burst, method = method, B = B, bw = TRUE)
+```
+
+
+```{r}
+# run validation for Swedish
+d.native.swedish <- d.stims %>% filter(NativeLanguage == "Swedish" & Accent == "native" & Block.Type != "exposure") %>% droplevels()
+
+full.vowel.swe <- ols(vowel ~ 1 + number_segments + has_long_vowel + onset_has_nasal + coda_has_nasal, data = d.native.swedish, x = TRUE, y = TRUE)
+rms::validate(full.vowel.swe, method = method, B = B, bw = TRUE)
+
+```
+
+
+
+```{r}
+full.closure.swe <- ols(closure ~ 1 + number_segments + has_long_vowel + onset_has_nasal + coda_has_nasal, data = d.native.swedish, x = TRUE, y = TRUE)
+rms::validate(full.closure.swe, method = method, B = B, bw = TRUE)
+
+```
+
+
+
+
+```{r}
+full.burst.swe <- ols(burst ~ 1 +  number_segments + has_long_vowel + onset_has_nasal + coda_has_nasal, data = d.native.swedish, x = TRUE, y = TRUE)
+rms::validate(full.burst.swe, method = method, B = B, bw = TRUE)
+
+```
+
+
+
+
+
+
+
+m.swe.burst <- lm(burst ~ 1 + Sound, data = d.native.swedish)
+
+summary(m.swe.burst)
+residuals(m.swe.burst)
+
+#plotting raw and residual values of Swedish native burst cue
+observed <- d.native.swedish$burst
+observed <- as_tibble(observed)
+predicted <- predict(m.swe.burst, data = d.native.swedish)
+burst <- cbind(observed, predicted)
+as.numeric(burst$value)
+burst %<>% rename(observed = "value")
+residual <- as_tibble(residuals(m.swe.burst))
+burst <- cbind(burst, residual)
+as.numeric(burst$value)
+burst %<>% rename(residual = "value")
+
+burst %<>% pivot_longer(cols = c("observed", "predicted", "residual"),
+                                 names_to = "burst",
+                                 values_to = "value")
+
+burst %>% ggplot(aes(x = burst, y = value)) +
+  geom_jitter(aes(colour = burst))
+
+d.test.IO %>% filter(Model.Accent.matchesGroup == "yes")
+
+
+
+```{r testing-pivoting-and-subsetting-columns-before-and-after-step-2}
+
+d.stims.pivoted.no.offset <- d.stims.pivoted %>% select(c(-offset_segmental, 
+                                                 -segmental_context)) 
+d.stims.pivoted.no.offset %>% distinct() 
+#recognises all duplicates, distinct() reduces it to 1036 rows
+
+# check how distinct() affects the dataframe after step2 corrections are applied. The dataframe has dropped all offset columns
+d.stims.step2.no.offset %>% distinct()
+
+# the problem happens after suprasegmental corrections are applied (line 1667 onwards)
+# apply the functions directly to unnested dataframes and check the outcomes. start with Swedish only as it's smaller.
+d.stims.swedish.step1 <- d.stims.step1 %>% filter(NativeLanguage == "Swedish") # 180 rows
+d.stims.english.step1 <- d.stims.step1 %>% filter(NativeLanguage == "English") # 856 rows
+
+#apply pivoting to Swedish subset
+d.stims.swedish.pivoted <- d.stims.swedish %>% pivot_longer(cols = c(contains("segmental_context")),
+                                        names_to = c(".value", "segmental_context"),
+                                        names_pattern = "(offset_segmental)_context_(.*)"
+                                        )
+d.stims.swedish.pivoted.no.offset <-  d.stims.swedish.pivoted %>% select(c(-segmental_context, -offset_segmental)) 
+d.stims.swedish.pivoted.no.offset %>% distinct()
+
+
+d.stims.swedish.pivoted %<>% mutate(offset_suprasegmental_context_vowel =
+                                     get_predictions_for_suprasegmental_context(data.fit = d.stims.swedish.pivoted, 
+                                                                                cue.name = "vowel", 
+                                                                                language = "Swedish"),
+                                    rvowel.step2 = correct_for_suprasegmental_context(data.fit = d.stims.swedish.pivoted, 
+                                                                                     cue.name = "vowel",
+                                                                                     language = "Swedish"))
+                                
+d.stims.swedish.pivoted2.no.offset <- d.stims.swedish.pivoted %>% select(c(-offset_segmental,
+                                      -offset_suprasegmental_context_vowel,
+                                      -segmental_context))
+
+d.stims.swedish.pivoted2.no.offset %>% distinct()
+attributes(d.stims.swedish.pivoted2.no.offset$rvowel.step1)
+
+duplicated(oskuld)
+distinct(d.stims.copy)
+d.stims.step1 <- d.stims
+d.stims.step1 %>% distinct()
+d.stims.step1 %>% pivot_longer(
+    cols = c(contains("vowel"), contains("closure"), contains("burst"), -has_long_vowel),
+    names_to = c(".value", "ContextCorrected"),
+    names_pattern = "r{0,1}([a-z]+)[\\.]{0,1}(step[0-9]){0,1}"
+  )
+```
+
+
+
+```{r explore step2 in wide format}
+# apply correction functions directly to English subset of d.stims.step1
+ d.stims.english <- d.stims %>% filter(NativeLanguage == "English")
+d.stims.swedish<- d.stims %>% filter(NativeLanguage == "Swedish")
+
+d.stims.english.step1 %>% mutate(offset_suprasegmental_context_vowel =
+                              get_predictions_for_suprasegmental_context(data.fit = d.stims.english.step1, 
+                                                                                cue.name = "vowel", 
+                                                                                language = "English"),
+                            offset_suprasegmental_context_closure = 
+                              get_predictions_for_suprasegmental_context(data.fit = d.stims.english.step1, 
+                                                                                cue.name = "closure", 
+                                                                                language = "English"),
+                            offset_suprasegmental_context_burst = 
+                              get_predictions_for_suprasegmental_context(data.fit = d.stims.english.step1, 
+                                                                                cue.name = "burst", 
+                                                                                language = "English"),
+                            rvowel.step2 = correct_for_suprasegmental_context(data.fit = d.stims.english.step1, 
+                                                                                     cue.name = "vowel",
+                                                                                     language = "English"),
+                            rclosure.step2 = correct_for_suprasegmental_context(data.fit = d.stims.english.step1, 
+                                                                                     cue.name = "closure",
+                                                                                     language = "English"),
+                            rburst.step2 = correct_for_suprasegmental_context(data.fit = d.stims.english.step1, 
+                                                                                     cue.name = "burst",
+                                                                                     language = "English"))
+
+
+# make a subset after step2 to check the difference between the cue values in step1 and step2
+d.stims.english.subset <- d.stims.english %>% select(c(Item.Word,
+                                        Talker,
+                                        Accent,
+                                        contains("vowel"), 
+                                        contains("closure"), 
+                                        contains("burst"), 
+                                        -contains("offset"),
+                                        -has_long_vowel
+                                        ))
+
+# this is a subset with selected columns from the main SI document after applying 2nd step to d.stims
+cue_plot.english <-  d.stims.step2 %>% select(c(Item.Word,
+                                        Talker,
+                                        Accent,
+                                        contains("vowel"), 
+                                        contains("closure"), 
+                                        contains("burst"), 
+                                        -contains("offset"),
+                                        -has_long_vowel
+                                        )) %>% filter(NativeLanguage == "English")
+
+cue_plot.swedish <-  d.stims.step2 %>% select(c(Item.Word,
+                                        Talker,
+                                        Accent,
+                                        contains("vowel"), 
+                                        contains("closure"), 
+                                        contains("burst"), 
+                                        -contains("offset"),
+                                        -has_long_vowel
+                                        )) %>% filter(NativeLanguage == "Swedish")
+
+residuals(
+      lm(
+        y ~ 1 + Talker, 
+        offset = get_predictions_for_segmental_context(data.fit = d.stims.english, "vowel", language = "English", plot = T),
+        data = d.stims.english %>%
+          mutate(y = as_vector(d.stims.english[, "vowel"]))))
+
+
+
+
+
+
+# cross-check segmental model functions with english data subset of d.stims (before step1 correction)
+ d.stims.english <- d.stims %>% filter(NativeLanguage == "English")
+d.stims.swedish<- d.stims %>% filter(NativeLanguage == "Swedish")
+
+d.stims.english.segmental.fit <- d.stims.english %>% filter(Accent == "native" & Block.Type != "exposure")
+
+
+l <- get_segmental_model(data.fit = d.stims.english.segmental.fit, "vowel", language = "English", plot = F)
+predict.lm(
+      l, 
+
+      newdata = d.stims.english  %>% mutate(Talker = first(d.stims.english.segmental.fit$Talker)), 
+      type = "terms", 
+      terms = setdiff(labels(terms(l)), "Talker"))
+
+# this function with d.stims.english.step1 data fit and vowel cue should produce the sum of the terms from code above.
+get_predictions_for_segmental_context(data.fit = d.stims.english, "vowel", language = "English", plot = F)
+
+# cross-check suprasegmental model functions with english data subset of d.stims.step1 (after step1 is completed)
+d.stims.english.step1 <- d.stims.step1 %>% filter(NativeLanguage == "English")
+d.stims.english.suprasegmental.fit <- d.stims.english.step1 %>% filter(Accent == "non-native" & Sound == "/d/")
+
+l <- get_suprasegmental_model(data.fit = d.stims.english.suprasegmental.fit, "vowel", language = "English", plot = F)
+predict.lm(
+  l,
+  newdata = d.stims.english.step1,
+  type = "terms",
+  terms = labels(terms(l))) %>% 
+  rowSums()
+
+# this function with d.stims.english.step1 data fit and vowel cue should produce the sum of the terms from code above.
+get_predictions_for_suprasegmental_context(data.fit = d.stims.english.step1, "vowel", language = "English", plot = F)
+
+
+d.stims.english %>% filter(coda_has_nasal == "yes") 
+d.stims.english %>% filter(Accent == "native" & coda_has_nasal == "no")
+```
+
+
+
+```{r}
+selected_cues = c("vowel", "closure", "burst")
+
+plot_corrected_cues2 = function(.data, title = "Cues corrected for phonetic context") {
+  plot_ly(data = .data %>% 
+            droplevels(),
+          frame= ~ContextCorrected,
+          ids= ~Item.Word, 
+          x= ~vowel,
+          y= ~closure,
+          z= ~burst,
+          text= ~Item.Word,
+          color= ~Sound,
+          colors = colors.Category,
+          opacity = .35, 
+          symbol= ~Used_for,
+          symbols = shapes.Category,
+          hoverinfo = "text", showlegend = T,
+          type="scatter3d", mode="markers")
+}
+
+# Make ellipsis from mu and Sigma, and return as tibble with 3 columns, named after cue names
+make_ellipse = function(model, cues) {
+  ellipse = rgl::ellipse3d(model$Sigma, subdivide = 5)
+  message("make_ellipse() currently expects three cues: vowel, closure, burst (corrected or uncorrected).")
+  
+  # Could be revised to accept a flexible number of cues
+  x = as.numeric(ellipse$vb[1,] + model$mu[1])
+  y = as.numeric(ellipse$vb[2,] + model$mu[2])
+  z = as.numeric(ellipse$vb[3,] + model$mu[3])
+  
+  t = tibble(x, y, z)
+  names(t) = cues
+  return(t)
+}
+
+```
+
+```{r}
+
+# function to make a 3D plot of context corrected cues for the main Frontiers manuscript
+# get all the step2 values from d.stims. Filter out the exposure words. We only want minimal pairs.
+d.minimal.pairs <- d.stims.step2 %>% filter(Block.Type != "exposure") %>% 
+  droplevels()
+
+# set ranges of axes outside of the plot functions
+axx <-  list(
+  range = c(-200, 300),
+  title = "vowel (ms)",
+  nticks = 4,
+  titlefont = list(size = 18),
+  showticklabels = TRUE
+)
+
+axy <-  list(
+  range = c(-150, 150),
+  title = "closure (ms)",
+  nticks = 4,
+  titlefont = list(size = 18),
+  showticklabels = TRUE
+)
+
+axz <-  list(
+  range = c(-130, 150),
+  title = "burst (ms)",
+  nticks = 4,
+  titlefont = list(size = 18),
+  showticklabels = TRUE
+)
+
+my.plot.corrected <- function(d){
+  
+  d %>%  
+  plot_ly(
+    x = ~`rvowel`,
+    y = ~ `rclosure`,
+    z = ~ `rburst`,
+    type = 'scatter3d',
+    mode = 'markers',
+    color = ~`Sound`,
+    colors = colors.Category,
+    opacity = 0.2,
+    text = ~Item.Word,
+    hoverinfo = "text",
+    showlegend = TRUE
+    ) %>%  
+    layout(scene = list(xaxis = axx, 
+                        yaxis = axy, 
+                        zaxis = axz,
+                        aspectmode = "cube"))
+           
+}
+
+
+# function for plotting 3D scatter with ellipses; this adds the ellipse as a layer over the scatter plot created with function above.
+my.plot.ellipse = function(d, p, cues = c("vowel", "closure", "burst")) {
+require(rgl)
+
+  #CategoryVoiced = "test"
+  d.ellipse = d %>%
+    rename(
+      cue1 = !! rlang::sym(cues[1]),
+      cue2 = !! rlang::sym(cues[2]),
+      cue3 = !! rlang::sym(cues[3])
+      
+    ) %>% 
+    group_by(Sound) %>% 
+    do(
+      {
+        cat_cov = cov(cbind(.$cue1, .$cue2, .$cue3))
+        cat_mean = c(mean(.$cue1), mean(.$cue2), mean(.$cue3))
+        ellipse = rgl::ellipse3d(cat_cov, subdivide = 3)
+        x = ellipse$vb[1,] + cat_mean[1]
+        y = ellipse$vb[2,] + cat_mean[2]
+        z = ellipse$vb[3,] + cat_mean[3]
+        data.frame(x = x, y = y, z = z) 
+      } 
+    )  %>% 
+    mutate(CategoryVoiced = ifelse(Sound == "/d/", 1, 0))
+
+  #use trace with a small point size to get a netting effect. use add_mesh for full surface ellipse 
+    p %>% add_mesh( 
+      data = d.ellipse,
+                 inherit = F,
+                 x = ~x, y = ~y, z = ~z,
+                 color = ~Sound,
+                 intensity = ~CategoryVoiced,
+                 colors = colors.Category, #[d$Sound],
+                 colorscale = list(c(0, 1), c("orange", "blue")),
+                 showscale = FALSE,
+                 cmin = 0,
+                 cmax = 1,
+                 alphahull = 0, 
+                 size = I(1),
+                 # Determines which algorithm to use to plot hull. 0 is right.
+                 # contour = list(
+                 #   show=TRUE,
+                 #   color="gray", width=1),
+                 opacity = .1, showlegend = TRUE)    
+  
+}
+
+# plot the category means
+my.plot.mean <- function(d){
+  
+  d %>%  group_by(Sound) %>% 
+    mutate(vowel =  mean(rvowel.step2),
+           closure = mean(rclosure.step2),
+           burst = mean(rburst.step2)) %>% 
+  plot_ly(
+    x = ~vowel,
+    y = ~closure,
+    z = ~ burst,
+    type = 'scatter3d',
+    mode = 'markers',
+    color = ~Sound,
+    colors = colors.Category,
+    opacity = 0,
+    showlegend = TRUE
+    ) %>% 
+    layout(scene = list(xaxis = axx, 
+                        yaxis = axy, 
+                        zaxis = axz,
+                        aspectmode = "cube"))
+           
+}
+```
+
+
+```{r}
+d.swed.native <- d.stims %>% filter(NativeLanguage == "Swedish" & Accent == "native")
+p1 <- d.swed.native  %>% my.plot.corrected()
+
+my.plot.ellipse(d.swed.native, p1, cues = c("rvowel", "rclosure", "rburst"))
+
+#p1.mean <- d.swed.native %>% filter(Sound == "/d/") %>% my.plot.mean()
+#p1.mean
+
+```
+
+
+
+```{r}
+d.swed.nonnative <- d.stims.step2 %>% filter(NativeLanguage == "Swedish" & Accent == "non-native")
+p2 <- d.swed.nonnative  %>% my.plot.corrected()
+my.plot.ellipse(d.swed.nonnative, p2, cues = c("rvowel.step2", "rclosure.step2", "rburst.step2"))
+
+```
+
+
+```{r}
+d.eng.native<- d.stims.step2 %>% filter(NativeLanguage == "English" & Accent == "native")
+p3 <- my.plot.corrected(d.eng.native)
+my.plot.ellipse(d.eng.native, p3, cues = c("rvowel.step2", "rclosure.step2", "rburst.step2"))
+```
+
+```{r}
+d.eng.nonnative<- d.stims.step2 %>% filter(NativeLanguage == "English" & Accent == "non-native")
+p4 <- my.plot.corrected(d.eng.nonnative)
+my.plot.ellipse(d.eng.nonnative, p4, cues = c("rvowel.step2", "rclosure.step2", "rburst.step2"))
+```
+
+
+```{r}
+#plot training IO models for presentation slides without axes tick values
+
+plot_IO_test = function(
+  .data.IO, 
+  .data.test = NULL,
+  language, 
+  cues,
+  show.difference = FALSE, # Should the difference between native and non-native posterior be plotted?
+  points.alpha = .8,
+  points.size = 6,
+  points.line.width = 3,
+  ellipses.alpha = .2
+) {
+  message("plot_IO() currently expects three cues: vowel, closure, burst (corrected or uncorrected).")
+  
+  # If .data.test contains more than one instance per unique combination of stimulus & model, summarize it down to one observation 
+  # per stimulus & model
+  .data.test %<>% 
+    filter(Model.Group.matchesParticipant.Group == "yes") %>%
+    select(-Model.Group.matchesParticipant.Group) %>%
+     distinct(NativeLanguage, 
+              Item.Word, Item.WordID, Item.MinimalPair, 
+              Model.Group,
+              Model.Posterior.d, Model.Posterior.Intended, rvowel, rclosure, rburst, Sound) %>%
+    filter(NativeLanguage %in% language) %>%
+    mutate(
+      vowel = !! rlang::sym(cues[1]),
+      closure = !! rlang::sym(cues[2]),
+      burst = !! rlang::sym(cues[3]))
+  
+  # Unnest data if that hasn't already happened
+  if ("ellipse" %in% names(.data.IO)) .data.IO %<>%
+    unnest(ellipse)
+
+  axes = get_axes(.data.IO, .data.test, cues)
+  
+  
+  # Add ideal observer, or---if differences are to be shown---add color scale
+  if (!show.difference) {
+    if (length(unique(.data.test$Model.Group)) > 1) {
+       p = plot_ly() %>%
+      add_trace(data = .data.test,
+            x = ~rvowel,
+            y = ~rclosure,
+            z = ~rburst,
+            frame = ~Model.Group,
+            type = "scatter3d", 
+            mode = "markers",
+            color = ~Sound, 
+            colors = colors.Category,
+            showlegend = T,
+            visible = "legendonly") 
+    } else {
+       p = plot_ly() %>%
+      add_trace(data = .data.test,
+            x = ~rvowel,
+            y = ~rclosure,
+            z = ~rburst,
+            type = "scatter3d", 
+            mode = "markers",
+            color = ~Sound, 
+            colors = colors.Category,
+            showlegend = T,
+            visible = "legendonly") 
+    }
+    
+    p = plot_IO(.data.IO, language = language, .plot = p, cues = cues, alpha = ellipses.alpha, addSlider = F) 
+  }
+  
+  if (!is.null(.data.test)) {
+    # Plot difference ...
+    if (show.difference) {
+      .data.test %<>%
+        select(-Model.Posterior.d) %>%
+        pivot_wider(
+          names_from = Model.Group,
+          values_from = Model.Posterior.Intended
+        ) %>%
+        # Using difference. Could use ratio instead
+        mutate(Model.Posterior.Intended.Difference = `/d/-exposure` - control)
+      
+      p = 
+        plot_ly(
+          data = .data.test,
+          type = "scatter3d", 
+          mode = "markers",
+          showlegend = F) %>%
+        add_trace(
+          type = "scatter3d",
+          x = ~vowel, 
+          y = ~closure,
+          z = ~burst,
+          marker = list(
+            color = ~Model.Posterior.Intended.Difference, 
+            line = list(
+              color = colors.Category[.data.test$Sound],
+              width = points.line.width),
+            opacity = points.alpha,
+            size = points.size,
+            autocolorscale = F,
+            # list three colors: gray,white and red
+            colorscale = list(c(0, colors.Group[2]),
+                              list(0.5, 'white'),
+                              list(1, colors.Group[1])), 
+            cmin = -1,
+            cmid = 0,
+            cmax = 1,
+            colorbar = list(
+              len = .75,
+              title = 'Advantage of\n/d/-exposure over\ncontrol model')),
+          hoverinfo = 'text',
+          text = ~paste("Advantage:", signif(Model.Posterior.Intended.Difference, 3),
+                        "<br>Intended category:", Sound,
+                        "<br>Vowel:", signif(vowel, 4),
+                        "<br>Closure:", signif(closure, 4),
+                        "<br>Burst:", signif(burst, 4))) 
+    # ... or posterior by accent
+    } else 
+      # If there is more than one model group, use frame to express model group
+      if (length(unique(.data.test$Model.Group)) > 1) {
+        p = p %>%
+          add_trace(
+            data = .data.test,
+            type = "scatter3d",
+            x = ~vowel, 
+            y = ~closure,
+            z = ~burst,
+            frame = ~Model.Group,
+            showlegend = T,
+            marker = list(
+              color = ~Model.Posterior.d, 
+              line = list(
+                color = colors.Category[.data.test$Sound],
+                width = points.line.width),
+              opacity = points.alpha,
+              size = points.size,
+              autocolorscale = F,
+              # the bottom of the scale is 0 (1t and 0d, the middle is 0.5t and 0.5d, the top is 0t and 1d)
+              colorscale = list(c(0, colors.Category[2]),
+                                list(0.5,'white'),
+                                list(1, colors.Category[1])), 
+              cmin = 0,
+              cmid = 0.5,
+              cmax = 1,
+              colorbar = list(
+                len = .75,
+                title = 'Model-predicted\nposterior of /d/')),
+            hoverinfo = 'text',
+            text = ~paste("Posterior predicted /d/:", signif(Model.Posterior.d, 4),
+                          "<br>Intended category:", Sound,
+                          "<br>Vowel:", signif(vowel, 4),
+                          "<br>Closure:", signif(closure, 4),
+                          "<br>Burst:", signif(burst, 4))) 
+      # if there's only one model group, don't use frame
+      } else {
+        p = p %>%
+          add_trace(
+            data = .data.test,
+            type = "scatter3d",
+            x = ~rvowel, 
+            y = ~rclosure,
+            z = ~rburst,
+            showlegend = F,
+            marker = list(
+              color = ~Model.Posterior.d, 
+              line = list(
+                color = colors.Category[.data.test$Sound],
+                width = points.line.width),
+              opacity = points.alpha,
+              size = points.size,
+              autocolorscale = T,
+              # the bottom of the scale is 0 (1t and 0d, the middle is 0.5t and 0.5d, the top is 0t and 1d)
+              colorscale = list(c(0, colors.Category[2]),
+                                list(0.5,'white'),
+                                list(1, colors.Category[1])), 
+              cmin = 0,
+              cmid = 0.5,
+              cmax = 1,
+              colorbar = list(
+                len = .75,
+                title = 'Model-predicted\nposterior of /d/')),
+            hoverinfo = 'text',
+            text = ~paste("Posterior predicted /d/:", signif(Model.Posterior.d, 4),
+                          "<br>Intended category:", Sound,
+                          "<br>Vowel:", signif(vowel, 4),
+                          "<br>Closure:", signif(closure, 4),
+                          "<br>Burst:", signif(burst, 4))) 
+      }
+  } else p = plot_ly()
+  
+  p = p %>%
+    # specify axis range to be held constant across plots
+    layout(scene = list(xaxis = axes[[1]], yaxis = axes[[2]], zaxis = axes[[3]], aspectmode='cube'), 
+           legend = list(itemsizing = "constant"))
+
+  if (!show.difference & length(unique(.data.test$Model.Group)) > 1)
+    p = p %>%
+    animation_slider(
+      currentvalue = list(prefix = paste0("Ideal observer for ", language, ": "), 
+                          font = list(color="black"))) 
+  
+  return(p)
+}
+
+
+```
+
+
+```{r}
+# surgery to find out how those complicated functions work
+
+d.stims.try <- d.stims
+
+
+selected_cues = c("rvowel", "rclosure", "rburst")
+
+# Draws on training set for all four IO models (i.e., English & Swedish x native & non-native)
+# The only random part is the selection of the native English training data
+draw_training_data = function(
+  .data
+) {
+  # Draw English and Swedish training data for /t/ and /d/ category of control models
+  .data %>%
+    filter(Used_for == "training", Accent == "native") %>%
+    group_by(NativeLanguage, Talker, Sound) %>%
+    droplevels() %>% 
+    # For the native data, one can sample with replacement since this is really meant to represent 
+    # knowledge from a much larger base of experience
+    sample_n(30, replace = T) %>%
+    mutate(Used_for.Model.Group = "control") %>%
+    ungroup() %>%
+    # Duplicate this training data for the /t/ category of /d/-exposure models
+    { . ->> temp } %>% 
+    rbind(temp %>% 
+            filter(Sound == "/t/") %>%
+            mutate(Used_for.Model.Group = "/d/-exposure")) %>%
+    # Draw English and Swedish training data for /d/ category of /d/-exposure model
+    full_join(
+      .data %>%
+        filter(Used_for == "training", Accent == "non-native" & Sound == "/d/") %>% 
+        droplevels() %>% 
+        group_by(NativeLanguage, Talker, Item.Word) %>%
+        sample_n(1) %>%
+        mutate(Used_for.Model.Group = "/d/-exposure")
+    ) %>% 
+    ungroup() %>%
+    rename(
+      Used_for.Model.NativeLanguage = NativeLanguage,
+      Used_for.Model.Sound = Sound) %>%
+    mutate_at(vars(Used_for, Used_for.Model.NativeLanguage, Used_for.Model.Group, Used_for.Model.Sound,
+           Talker,Item.Word), factor) %>%
+    select(Used_for, Used_for.Model.NativeLanguage, Used_for.Model.Group, Used_for.Model.Sound,
+           Talker,Item.Word, 
+           vowel, closure, burst, 
+           rvowel, rclosure, rburst) %>%
+    applyFactorLevels()
+}
+
+# Guesses groups for data
+guess_groups = function(.data) {
+  groups = c()
+  
+  if (length(unique(.data$Used_for.Model.NativeLanguage)) > 1) groups = append(groups, "Used_for.Model.NativeLanguage") 
+  if (length(unique(.data$Used_for.Model.Group)) > 1) groups = append(groups, "Used_for.Model.Group") 
+  if (length(unique(.data$Used_for.Model.Sound)) > 1) groups = append(groups, "Used_for.Model.Sound") 
+  if (length(unique(.data$Talker)) > 1) groups = append(groups, "Talker") 
+
+  return(groups)  
+}
+
+# Returns the mu and Sigma for a data set
+make_IO = function(
+  .data, 
+  cues, 
+  # Guess maximal grouping structure from data
+  groups = guess_groups(.data)
+) {
+  # Make sure that only training data is used
+  .data %<>%
+    ungroup() %>%
+    filter(Used_for == "training") %>%
+    droplevels()
+  
+  # Get the mean and covariance matrix
+  .data %>%
+    # If there's more than one talker do the subsequent steps separately for each talker
+    group_by(!!! rlang::syms(groups)) %>%
+    summarise(
+      mu = list(colMeans(cbind(!!! rlang::syms(cues)))),
+      Sigma = list(cov(cbind(!!! rlang::syms(cues))))
+    ) %>%
+    # If there's more than one talker get the average of by-talker mu and Sigma
+    { if (nlevels(.data$Talker) > 1) {
+      # Group by everything *except* for Talker
+      group_by(., !!! rlang::syms(setdiff(groups, "Talker"))) %>%
+        summarise(
+          Model = list(list(
+            mu = Reduce("+", mu) / length(mu),
+            Sigma = Reduce("+", Sigma) / length(Sigma)))
+        ) } else . } %>%
+    select(!!! rlang::syms(setdiff(groups, "Talker")), Model) %>%
+    # Now that IO is made, change the "Used_for" columns into "Model" columns
+    rename_at(vars(starts_with("Used_for.")), ~str_remove(.x, pattern = "Used_for.")) %>%
+    applyFactorLevels()
+}
+
+
+d.stims.try.30 <- d.stims.try %>% filter(Used_for == "training", Accent == "native") %>%  group_by(NativeLanguage, Talker, Sound) %>% 
+  droplevels() %>% 
+    sample_n(30, replace = T) %>%
+    mutate(Used_for.Model.Group = "control") %>%
+    ungroup() %>% { . ->> temp2 }
+
+d.stims.try.30 %>% 
+  summarise(length(NativeLanguage))
+
+```
+
+
+
+
+
+
+
+
+
+```{r}
+plot_IO_test(d.IO, d.test.IO, language = "English", cues = selected_cues)
+
+
+
+d.mytest <- d.test.IO %>% 
+    filter(Model.Group.matchesParticipant.Group == "yes") %>%
+    select(-Model.Group.matchesParticipant.Group) %>%
+     distinct(NativeLanguage, 
+              Item.Word, Item.WordID, Item.MinimalPair, 
+              Model.Group,
+              Model.Posterior.d, Model.Posterior.Intended, rvowel, rclosure, rburst, Sound) %>%
+    filter(NativeLanguage  == "English") %>%
+    mutate(
+      vowel = !! rlang::sym(cues[1]),
+      closure = !! rlang::sym(cues[2]),
+      burst = !! rlang::sym(cues[3]))
+  
+  # Unnest data if that hasn't already happened
+  if ("ellipse" %in% names(.data.IO)) .data.IO %<>%
+    unnest(ellipse)
+
+  axes = get_axes(.data.IO, .data.test, cues)
+  
+ p = 
+        plot_ly(
+          data = .data.test,
+          type = "scatter3d", 
+          mode = "markers",
+          showlegend = F) %>%
+        add_trace(
+          type = "scatter3d",
+          x = ~vowel, 
+          y = ~closure,
+          z = ~burst,
+          marker = list(
+            color = ~Model.Posterior.Intended.Difference, 
+            line = list(
+              color = colors.Category[.data.test$Sound],
+              width = points.line.width),
+            opacity = points.alpha,
+            size = points.size,
+            autocolorscale = F,
+            # list three colors: gray,white and red
+            colorscale = list(c(0, colors.Group[2]),
+                              list(0.5, 'white'),
+                              list(1, colors.Group[1])), 
+            cmin = -1,
+            cmid = 0,
+            cmax = 1,
+            colorbar = list(
+              len = .75,
+              title = 'Advantage of\n/d/-exposure over\ncontrol model')),
+          hoverinfo = 'text',
+          text = ~paste("Advantage:", signif(Model.Posterior.Intended.Difference, 3),
+                        "<br>Intended category:", Sound,
+                        "<br>Vowel:", signif(vowel, 4),
+                        "<br>Closure:", signif(closure, 4),
+                        "<br>Burst:", signif(burst, 4))) 
+
+
+p = p %>%
+          add_trace(
+            data = .data.test,
+            type = "scatter3d",
+            x = ~vowel, 
+            y = ~closure,
+            z = ~burst,
+            frame = ~Model.Group,
+            showlegend = T,
+            marker = list(
+              color = ~Model.Posterior.d, 
+              line = list(
+                color = colors.Category[.data.test$Sound],
+                width = points.line.width),
+              opacity = points.alpha,
+              size = points.size,
+              autocolorscale = F,
+              # the bottom of the scale is 0 (1t and 0d, the middle is 0.5t and 0.5d, the top is 0t and 1d)
+              colorscale = list(c(0, colors.Category[2]),
+                                list(0.5,'white'),
+                                list(1, colors.Category[1])), 
+              cmin = 0,
+              cmid = 0.5,
+              cmax = 1,
+              colorbar = list(
+                len = .75,
+                title = 'Model-predicted\nposterior of /d/')),
+            hoverinfo = 'text',
+            text = ~paste("Posterior predicted /d/:", signif(Model.Posterior.d, 4),
+                          "<br>Intended category:", Sound,
+                          "<br>Vowel:", signif(vowel, 4),
+                          "<br>Closure:", signif(closure, 4),
+                          "<br>Burst:", signif(burst, 4))) 
+
+
+```
+
+
+
+
+
+
+
+
+```{r}
+# pairwise correlation plots for the cue distributions
+library(ggforce)
+
+plot_cue_matrix <- function(data) {
+  data %>% mutate("Vowel" = rvowel,
+         "Closure" = rclosure,
+         "Burst" = rburst) %>% 
+  ggplot(aes(x = .panel_x, y = .panel_y, colour = Sound, fill = Sound)) +
+  scale_colour_manual(values = colors.Category) +
+  scale_fill_manual(values = colors.Category) +
+  geom_point(alpha = 0.6, shape = 16, size = 1, aes(fill = Sound)) +
+  geom_autodensity(alpha = .04, position = "identity") +
+  stat_ellipse(type = "norm") +
+  facet_matrix(vars(c(Vowel, Closure, Burst)), layer.diag = 2, layer.upper = 3, 
+                    grid.y.diag= FALSE) +
+  theme_bw()
+} 
+
+
+plot_cue_matrix(d.stims %>% filter(NativeLanguage == "English" & Accent == "native"))
+plot_cue_matrix(d.stims %>% filter(NativeLanguage == "English" & Accent == "non-native") )
+plot_cue_matrix(d.stims %>% filter(NativeLanguage == "Swedish" & Accent == "native"))
+plot_cue_matrix(d.stims %>% filter(NativeLanguage == "Swedish" & Accent == "non-native"))
+
+```
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

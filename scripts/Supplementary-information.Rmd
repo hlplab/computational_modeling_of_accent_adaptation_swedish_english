@@ -2518,7 +2518,7 @@ d.test.IO.wTraining_folds.wTest_folds.byItem <-
     Model.Posterior.d = Model.Posterior.d,
     Rating.Response.d.normalized = (Rating.Response.d.zscored - min(Rating.Response.d.zscored)) / (max(Rating.Response.d.zscored) - min(Rating.Response.d.zscored)))
 
-p.loglik.by.fold <- d.test.IO.wTraining_folds.wTest_folds.byItem %>% 
+p.loglik.byItem.fold <- d.test.IO.wTraining_folds.wTest_folds.byItem %>% 
    crossing(
     bias.d = .5,
     lapse_rate = 10^c(seq(-10, 0, length.out = 51))) %>%
@@ -2527,26 +2527,24 @@ p.loglik.by.fold <- d.test.IO.wTraining_folds.wTest_folds.byItem %>%
   mutate(per_token_loglik = unlist(pmap(.l = list(data, lapse_rate, bias.d), .f = function(x, y, z) get_per_token_log_likelihood(x, y, z))))
 ```
 
+(ref:IO-log-likelihood-wTraining-folds-folded-test) **Per item log likelihood across training-by-test folds**. Shaded areas show 95\% confidence intervals over by-item predictions. Each row shows one training fold excluding a different half of the native training data. Each column shows a separate test bin with 15 randomly chosen minimal pairs (resulting in 4 test folds for the English experiment and 2 test folds for the Swedish experiment). For additional details, see Figure \@ref(fig:IO-ratings-results-byItem).
+```{r IO-log-likelihood-wTraining-folds-folded-test, fig.cap="(ref:IO-log-likelihood-wTraining-folds-folded-test)", fig.height, fig.width, out.width='100%'}
 
-```{r IO-log-likelihood-wTraining-folds-folded-test, fig.cap="(ref:IO-log-likelihood-wTraining-folds-folded-test)", fig.height=8.5, fig.width = 10.5, out.width='100%'}
 
-
-p.loglik.by.fold %>% mutate(Model.Group.matchesParticipant.Group = ifelse(Model.Group.matchesParticipant.Group == "yes", "Matching", "Mismatching")) %>% 
+p.loglik.byItem.fold %>% mutate(Model.Group.matchesParticipant.Group = ifelse(Model.Group.matchesParticipant.Group == "yes", "Matching", "Mismatching")) %>% 
   ggplot(mapping = aes(x = lapse_rate, y = per_token_loglik, color = Group, fill = Group)) +
   geom_ribbon(stat = "smooth", alpha = 0.2, aes(colour = NULL, group = Group)) +
   geom_line(stat = "smooth", mapping = aes(line = Group)) +
     scale_x_continuous(
     "lapse rate",
-    breaks = 10^c(seq(-10, 0, 2))) +
+    breaks = 10^c(seq(-10, 0, 2)),
+    trans = "log10") +
   scale_y_continuous("Fit against perceptual responses\n(per token log likelihood)") +
   scale_color_manual("Exposure group",
     breaks = c("/d/-exposure", "control"),
     labels = c("/d/-exposure", "control"),
     values = colors.Accent) +
-  scale_fill_manual("Exposure group",
-    breaks = c("/d/-exposure", "control"),
-    labels = c("/d/-exposure", "control"),
-    values = colors.Accent) +
+  scale_fill_manual(values = colors.Accent) +
   # scale_linetype_manual("Ideal observer",
   #   breaks = c("yes", "no"),
   #   labels = c("matching", "mismatching"),
@@ -2556,10 +2554,13 @@ p.loglik.by.fold %>% mutate(Model.Group.matchesParticipant.Group = ifelse(Model.
   #   labels = c("matching", "mismatching"),
   #   values = 1:2) +
   #coord_trans(x = "log10") +
-  facet_grid(Model.Group.matchesParticipant.Group ~ Language) +
+  facet_grid(Group ~ Language) +
   theme(panel.grid.minor = element_blank())
+
 ggsave(filename = "../figures/IO-log-likelihood-wTraining-folds-folded-test.png",
        width = 10.5, height = 8.5)
+
+
   
 ```
 
