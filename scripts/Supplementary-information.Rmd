@@ -2527,7 +2527,7 @@ p.loglik.byItem.fold <- d.test.IO.wTraining_folds.wTest_folds.byItem %>%
   mutate(per_token_loglik = unlist(pmap(.l = list(data, lapse_rate, bias.d), .f = function(x, y, z) get_per_token_log_likelihood(x, y, z))))
 ```
 
-(ref:IO-log-likelihood-wTraining-folds-folded-test) **Per item log likelihood across training-by-test folds**. Lines show per item log likelihoods smoothed all training and test folds, and at each lapse rate for the /d/-exposure and control models that either match or do not match the human exposure groups Shaded areas show 95\% confidence intervals over average per item log likelihoods across all training and test folds, and at each lapse rate for the /d/-exposure and control models that either match or do not match the human exposure groups. Each row shows one training fold excluding a different half of the native training data. Each column shows a separate test bin with 15 randomly chosen minimal pairs (resulting in 4 test folds for the English experiment and 2 test folds for the Swedish experiment). For additional details, see Figure \@ref(fig:IO-ratings-results-byItem).
+
 ```{r IO-log-likelihood-wTraining-folds-folded-test, fig.cap="(ref:IO-log-likelihood-wTraining-folds-folded-test)", fig.height=8.5, fig.width=10.5, out.width='100%'}
 
 
@@ -2552,6 +2552,7 @@ ggsave(filename = "../figures/IO-log-likelihood-wTraining-folds-folded-test.png"
   
 ```
 
+(ref:IO-log-likelihood-wTraining-folds-folded-test) **Per item log likelihood across training-by-test folds**. Lines show per item log likelihoods at each lapse rate smoothed over all training and test folds, for the /d/-exposure and control models. Solid lines represent ideal observers that match human exposure groups while broken lines are models that do not match human exposure groups. Shaded areas show 95\% confidence intervals over the fitted lines. 
 
 ## Item-level comparison between human and model-predicted ratings
 
