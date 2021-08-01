@@ -2518,24 +2518,36 @@ d.test.IO.wTraining_folds.wTest_folds.byItem <-
     Model.Posterior.d = Model.Posterior.d,
     Rating.Response.d.normalized = (Rating.Response.d.zscored - min(Rating.Response.d.zscored)) / (max(Rating.Response.d.zscored) - min(Rating.Response.d.zscored)))
 
-p.loglik.byItem.fold <- d.test.IO.wTraining_folds.wTest_folds.byItem %>% 
+# cross in variable lapse rate
+loglik.byItem.fold.lapse <- d.test.IO.wTraining_folds.wTest_folds.byItem %>% 
    crossing(
     bias.d = .5,
     lapse_rate = 10^c(seq(-10, 0, length.out = 51))) %>%
   group_by(Language, Group, Model.Group.matchesParticipant.Group, Training_fold, Test_fold, lapse_rate, bias.d) %>%
   nest() %>%
   mutate(per_token_loglik = unlist(pmap(.l = list(data, lapse_rate, bias.d), .f = function(x, y, z) get_per_token_log_likelihood(x, y, z))))
+
+
+#cross in variable d-bias and variable lapse rate
+loglik.byItem.fold.lapse.bias <-  d.test.IO.wTraining_folds.wTest_folds.byItem %>% 
+  crossing(
+    lapse_rate = seq(0, 0.2, length.out = 51),
+    bias.d = seq(0, 1, length.out = 51)) %>%
+  group_by(Language, Group, Model.Group.matchesParticipant.Group, lapse_rate, bias.d) %>%
+  nest() %>%
+  mutate(per_token_loglik = unlist(pmap(.l = list(data, lapse_rate, bias.d), .f = function(x, y, z) get_per_token_log_likelihood(x, y, z)))) %>%  
+  drop_na()
 ```
+
 
 
 ```{r IO-log-likelihood-wTraining-folds-folded-test, fig.cap="(ref:IO-log-likelihood-wTraining-folds-folded-test)", fig.height=8.5, fig.width=10.5, out.width='100%'}
 
 
-p.loglik.byItem.fold %>% mutate(Model.Group.matchesParticipant.Group = ifelse(Model.Group.matchesParticipant.Group == "yes", "Matching", "Mismatching")) %>% 
+loglik.byItem.fold.lapse  %>% mutate(Model.Group.matchesParticipant.Group = ifelse(Model.Group.matchesParticipant.Group == "yes", "Matching", "Mismatching")) %>% 
   ggplot(mapping = aes(x = lapse_rate, y = per_token_loglik, linetype = Model.Group.matchesParticipant.Group, color = Group)) +
   geom_ribbon(stat = "smooth", alpha = 0.2, aes(colour = NULL, fill = Group)) +
   geom_line(stat = "smooth", mapping = aes(line = Model.Group.matchesParticipant.Group, color = Group)) +
-  geom_rug(mapping = aes(x = NULL, y = per_token_loglik)) +
     scale_x_continuous(
     "lapse rate",
     breaks = 10^c(seq(-10, 0, 2)),
@@ -2552,7 +2564,35 @@ ggsave(filename = "../figures/IO-log-likelihood-wTraining-folds-folded-test.png"
   
 ```
 
-(ref:IO-log-likelihood-wTraining-folds-folded-test) **Per item log likelihood across training-by-test folds**. Lines show per item log likelihoods at each lapse rate smoothed over all training and test folds, for the /d/-exposure and control models. Solid lines represent ideal observers that match human exposure groups while broken lines are models that do not match human exposure groups. Shaded areas show 95\% confidence intervals over the fitted lines. 
+(ref:IO-log-likelihood-wTraining-folds-folded-test) **Per item log likelihood across training-by-test folds** Lines show per item log likelihoods at each lapse rate smoothed over all training and test folds, for the /d/-exposure and control models. Solid lines represent ideal observers that match human exposure groups while broken lines are models that do not match human exposure groups. Shaded areas show 95\% confidence intervals over the fitted lines. 
+
+
+```{r IO-log-likelihood-wTraining-folds-folded-test-bias-lapse, fig.cap="(ref:IO-log-likelihood-wTraining-folds-folded-test)", fig.height=8.5, fig.width=10.5, out.width='100%'}
+ group_by(Language, Group, Model.Group.matchesParticipant.Group) %>% 
+  summarise(n())
+
+
+
+
+loglik.byItem.fold.lapse.bias %>% ggplot(aes(x = lapse_rate, y = bias.d, fill = per_token_loglik)) +
+  geom_raster(interpolate = T) +
+  scale_x_continuous(
+    "lapse rate",
+    breaks = seq(0, .2, .05)) +
+  scale_y_continuous(
+    "bias towards /d/",
+    breaks = seq(0, 1, .1)) +
+  scale_fill_viridis_c("Fit against perceptual responses\n(per token log likelihood)") +
+  coord_cartesian(expand = 0) +
+  facet_grid(Group + Model.Group.matchesParticipant.Group ~ Language) +
+  theme(panel.grid.minor = element_blank())
+
+
+
+```
+
+
+
 
 ## Item-level comparison between human and model-predicted ratings
 
