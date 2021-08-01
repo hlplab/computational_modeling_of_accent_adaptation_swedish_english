@@ -19,3 +19,12 @@ scripts/libs/
 data/_TEMP/
 figures/
 scripts/local/
+data/data_IO training_both languages.Rdata
+data/data_perception_exposure phase_both languages.Rdata
+data/data_perception_test phase plus IO predictions_both languages-2 training folds.Rdata
+data/data_perception_test phase plus IO predictions_both languages.Rdata
+data/data_perception_test phase_both languages.Rdata
+data/data_production_corrected for phonetic context_both languages.Rdata
+models/IBBU_updates.RData
+models/bootstrap-summary.RData
+models/bootstrap.RData
