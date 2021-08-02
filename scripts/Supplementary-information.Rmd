@@ -2505,6 +2505,69 @@ d.test.IO.byItem %>%
 ```
 
 
+TESTING NEW LOG LIKELIHOOD FUNCTION
+The following functions are written based on a broader definition for the binomial coefficient as detailed in https://www.johndcook.com/blog/binomial_coefficients/ . I used DEFINITION 2 to create ```binom_coeff()```. This definition is supposed to be implemented in ```choose(r, k)``` function but when I used ```choose()``` it warns of non integer values and rounds up. We need an extended version of thw binomial pmf that can take non-integer values.
+
+Our aim is to check the likelihood of the human ratings under the parameters of the various ideal observer models (matching vs. non-matching human groups), lapse rates and bias rates. The per-item human ratings are all expressed as d-goodness ratings, z-scored within participants, and normalised to between 0 and 1. We also note the number of ratings for each item (n.ratings) which we take to be the number of tries, n. We multiply n.ratings by the average normalised ratings per item (n.ratings*ratings) to get the number of successes, k. For each item we can get the likelihood under the respective model's parameters, which is it's posterior for d after factoring in the lapse and bias rates. $\binom{n}{k}p^k(1-p)^{n-k}$ The log of which gives: $log\binom{n}{k}+ k\ log(p) + (n-k)log(1-p)$ After the per token log likelihood is obtained, the data is grouped by Language, Model, Model.Group.matchesParticipant.Group and the average per token log likelihood is computed, summarising the result to 8 log likelihood values.
+
+```{r}
+
+# The kth falling power of r starts with r and multiplies together k numbers, each being one less than its predecessor. Given this notation, define the binomial coefficients as
+k_fall <- function(n, k){
+  sequence <- seq(n, n-k+1)
+  as.numeric(sequence) %>% reduce(`*`)
+}
+
+binom_coeff <- function(n, k) {
+  #message("binom_coeff: n=",n," k=",k,"\n")
+  if(k >= 0) {
+    #message("k_fall:",k_fall(n, k))
+    k_fall(n, k)/factorial(k)
+  } 
+  else (k = 0) 
+}
+
+log_likelihood <- function(n, rating, p) {
+  #message("vars: ",n," ",rating," ",p,"\n")
+  #message("bin:",binom_coeff(n, n*rating))
+  #message("mid:",(n*rating)*log(p))
+  #message("last:",(n-n*rating)*(log(1-p)))
+  log(binom_coeff(n, n*rating)) + (n*rating)*log(p) + (n-n*rating)*(log(1-p))
+}
+
+
+get_average_log_likelihood <- function(data, lapse_rate = .1, bias.d = .5) {
+  data %>% 
+    mutate(
+      prediction.d = (1 - lapse_rate) * Model.Posterior.d + lapse_rate * bias.d,
+      log.likelihood = pmap_dbl(.l = list(n.ratings, Rating.Response.d.normalized, prediction.d), .f = function(x, y, z) log_likelihood(x, y, z))) %>% 
+    group_by(Language, Group, Model.Group.matchesParticipant.Group) %>% 
+    summarise(per_token_loglik = mean(log.likelihood)) %>% 
+    pull(per_token_loglik)
+}
+
+# mutate column with number of ratings for each item
+d.test.IO.n <-  left_join(d.test.IO, 
+                          d.test.IO %>% 
+                            group_by(Language, Group, Model.Group.matchesParticipant.Group, Item.WordID) %>% summarise(n.ratings = n())) 
+
+d.test.IO.n <- d.test.IO.n %>% group_by(Language, Group, Model.Group.matchesParticipant.Group, Sound, Item.WordID, n.ratings) %>%
+  summarise(
+    Model.Posterior.d = mean(Model.Posterior.d),
+    Rating.Response.d.zscored = mean(Rating.Response.d.zscored)) %>%
+  # Normalize human ratings'
+  group_by(Language, Group, Model.Group.matchesParticipant.Group) %>% 
+  mutate(
+    Model.Posterior.d = Model.Posterior.d,
+    Rating.Response.d.normalized = (Rating.Response.d.zscored - min(Rating.Response.d.zscored)) / (max(Rating.Response.d.zscored) - min(Rating.Response.d.zscored)))
+
+
+temp <- get_average_log_likelihood(d.test.IO.n)
+
+
+```
+
+
 ```{r IO-wTraining-folds-folded-test}
 d.test.IO.wTraining_folds.wTest_folds.byItem <- 
   d.test.IO.wTraining_folds.wTest_folds %>% 
