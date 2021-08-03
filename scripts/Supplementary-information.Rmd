@@ -2515,7 +2515,7 @@ Our aim is to check the likelihood of the human ratings under the parameters of 
 # The kth falling power of r starts with r and multiplies together k numbers, each being one less than its predecessor. Given this notation, define the binomial coefficients as
 k_fall <- function(n, k){
   sequence <- seq(n, n-k+1)
-  as.numeric(sequence) %>% reduce(`*`)
+  as.numeric(sequence) %>% reduce(`*`) #as.numeric is required because seq() makes integers.
 }
 
 binom_coeff <- function(n, k) {
@@ -2532,7 +2532,7 @@ log_likelihood <- function(n, rating, p) {
   #message("bin:",binom_coeff(n, n*rating))
   #message("mid:",(n*rating)*log(p))
   #message("last:",(n-n*rating)*(log(1-p)))
-  log(binom_coeff(n, n*rating)) + (n*rating)*log(p) + (n-n*rating)*(log(1-p))
+  log(binom_coeff(n, n*rating)) + (n*rating)*log(p) + (n-n*rating)*log(1-p)
 }
 
 # below I removed pull(per_token_likelihood) because I figured we want a column of average per token log likelihood for each model. pull() seems to cause problems
@@ -2572,7 +2572,7 @@ d.test.nested <- d.test.IO.n %>% crossing(
   nest() %>% 
   mutate(per_token_loglik = unlist(pmap(.l = list(data, lapse_rate, bias.d), .f = function(x, y, z) get_average_log_likelihood(x, y, z))))
 
-# try plotting. The figures are mmoving in the opposite direction to the previous fitting method. Don't know if this makes sense. For English, the general pattern of d-exposure-matching performing better than control-matching is there, and d-exposure-nonmatching worse than control-non matching. This is stable all the way. The Swedish data looks a bit crazy.
+# try plotting. The figures are moving in the opposite direction to the previous fitting method. Don't know if this makes sense --it's saying that the higher the lapse rate, the better the fit? For English, the general pattern of d-exposure-matching performing better than control-matching is there, and d-exposure-nonmatching worse than control-non matching. This is stable all the way. The Swedish data looks a bit crazy.
 
 d.test.nested %>% ggplot(aes(x = lapse_rate, y = per_token_loglik, color = Group, linetype = Model.Group.matchesParticipant.Group)) +
   geom_line(alpha = .9) +
