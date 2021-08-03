@@ -2535,16 +2535,16 @@ log_likelihood <- function(n, rating, p) {
   log(binom_coeff(n, n*rating)) + (n*rating)*log(p) + (n-n*rating)*(log(1-p))
 }
 
-
+# below I removed pull(per_token_likelihood) because I figured we want a column of average per token log likelihood for each model. pull() seems to cause problems
 get_average_log_likelihood <- function(data, lapse_rate = .1, bias.d = .5) {
   data %>% 
     mutate(
       prediction.d = (1 - lapse_rate) * Model.Posterior.d + lapse_rate * bias.d,
       log.likelihood = pmap_dbl(.l = list(n.ratings, Rating.Response.d.normalized, prediction.d), .f = function(x, y, z) log_likelihood(x, y, z))) %>% 
-    group_by(Language, Group, Model.Group.matchesParticipant.Group) %>% 
-    summarise(per_token_loglik = mean(log.likelihood)) %>% 
-    pull(per_token_loglik)
-}
+    #group_by(Language, Group, Model.Group.matchesParticipant.Group) %>%
+    summarise(per_token_loglik = mean(log.likelihood)) 
+ # %>% pull(per_token_loglik)
+  }
 
 # mutate column with number of ratings for each item
 d.test.IO.n <-  left_join(d.test.IO, 
@@ -2561,8 +2561,37 @@ d.test.IO.n <- d.test.IO.n %>% group_by(Language, Group, Model.Group.matchesPart
     Model.Posterior.d = Model.Posterior.d,
     Rating.Response.d.normalized = (Rating.Response.d.zscored - min(Rating.Response.d.zscored)) / (max(Rating.Response.d.zscored) - min(Rating.Response.d.zscored)))
 
+# this gives 8 log likelihood values (the sum of log likelihood calculations are divided by the number of log likelihoods -- the number equals the number of tokens, within each language, model group and match-- for English this is 120 and Swedish this is 60)
+temp <- get_average_log_likelihood(d.test.IO.n) 
 
-temp <- get_average_log_likelihood(d.test.IO.n)
+
+# now cross-in a sequence of different lapse rates 
+d.test.nested <- d.test.IO.n %>% crossing(
+    bias.d = .5,
+    lapse_rate = 10^c(seq(-10, 0, length.out = 51))) %>% group_by(Language, Group, Model.Group.matchesParticipant.Group, lapse_rate, bias.d) %>%
+  nest() %>% 
+  mutate(per_token_loglik = unlist(pmap(.l = list(data, lapse_rate, bias.d), .f = function(x, y, z) get_average_log_likelihood(x, y, z))))
+
+# try plotting. The figures are mmoving in the opposite direction to the previous fitting method. Don't know if this makes sense. For English, the general pattern of d-exposure-matching performing better than control-matching is there, and d-exposure-nonmatching worse than control-non matching. This is stable all the way. The Swedish data looks a bit crazy.
+
+d.test.nested %>% ggplot(aes(x = lapse_rate, y = per_token_loglik, color = Group, linetype = Model.Group.matchesParticipant.Group)) +
+  geom_line(alpha = .9) +
+  scale_x_continuous(
+    "lapse rate",
+    breaks = 10^c(seq(-10, 0, 2))) +
+  scale_y_continuous("Fit against perceptual responses\n(per token log likelihood)") +
+  scale_color_manual("Exposure group",
+    breaks = c("/d/-exposure", "control"),
+    labels = c("/d/-exposure", "control"),
+    values = colors.Accent) +
+  scale_linetype_manual("Ideal observer",
+    breaks = c("yes", "no"),
+    labels = c("matching", "mismatching"),
+    values = 1:2) +
+  coord_trans(x = "log10") +
+  facet_wrap(~ Language) +
+  theme(panel.grid.minor = element_blank())
+
 
 
 ```
