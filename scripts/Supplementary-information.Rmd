@@ -2576,7 +2576,8 @@ d.test.nested <- d.test.IO.n %>% crossing(
 
 # try plotting. The figures are moving in the opposite direction to the previous fitting method. Don't know if this makes sense --it's saying that the higher the lapse rate, the better the fit? For English, the general pattern of d-exposure-matching performing better than control-matching is there, and d-exposure-nonmatching worse than control-non matching. This is stable all the way. The Swedish data looks a bit crazy.
 
-d.test.nested %>% ggplot(aes(x = lapse_rate, y = per_token_loglik, color = Group, linetype = Model.Group.matchesParticipant.Group)) +
+d.test.nested %>% 
+  ggplot(aes(x = lapse_rate, y = per_token_loglik, color = Group, linetype = Model.Group.matchesParticipant.Group)) +
   geom_line(alpha = .9) +
   scale_x_continuous(
     "lapse rate",
@@ -2595,20 +2596,19 @@ d.test.nested %>% ggplot(aes(x = lapse_rate, y = per_token_loglik, color = Group
   theme(panel.grid.minor = element_blank())
 
 
-
+# see how the log likelihood changes as a function of lapse rate and lapse bias
 d.test.nested %>%
   filter(per_token_loglik != "-Inf") %>%
-#  mutate(per_token_loglik = ifelse(per_token_loglik == "-Inf", -280, per_token_loglik))  %>%
   ungroup() %>%
-  group_by(lapse_rate, bias.d, Group, Model.Group.matchesParticipant.Group) %>%
+  group_by(lapse_rate, bias.d, Group, Model.Group.matchesParticipant.Group, Language) %>%
   summarise(per_token_loglik = as.integer(mean(per_token_loglik))) %>%
   ggplot(aes(x = round(lapse_rate), y = bias.d, fill = per_token_loglik)) +
   geom_raster(interpolate = T) +
   scale_fill_viridis_c("Average log likelihood by token") + 
-  facet_grid(Group~ Model.Group.matchesParticipant.Group) +
-  coord_cartesian(expand = c(0)) +
+  facet_grid(Language + Group~ Model.Group.matchesParticipant.Group) +
   theme(legend.position = "top")+ 
- # scale_x_continuous(labels = c("0","0.05","0.1","0.15","0.2")) +
+  coord_cartesian(xlim = c(0,1), ylim = c(0,1)) +
+  scale_x_continuous(labels = c("0","0.25","0.5","0.75","1")) +
   xlab("Lapse rate") + ylab("Lapse bias")
 
 
