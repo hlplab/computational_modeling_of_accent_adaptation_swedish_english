@@ -2313,9 +2313,9 @@ The ideal observers' predictions differ from the human ratings in a number of wa
 The ideal observers do, however, predict the qualitative patterns in the human goodness ratings. For the English data, the ideal observers predict significantly higher ratings from the /d/-exposure model over the control model for both /d/ and /t/. This advantage of /d/-exposure seems more pronounced for the /t/-category than for the /d/ category. Though less obviously so, this also is the case for the human ratings: for the /t/ category, the CIs of the two models do not include the means of the other model; for the /d/ category, they do. For the Swedish data, the ideal observers predict no difference between the control and /d/-exposure model for /d/ but higher ratings for the the *control* model for /t/. This qualitatively mirrors the asymmetry between /d/ and /t/ observed for the human ratings, though the effect for /t/ is only marginal for the human ratings.
 
 ## How robust are these results? How much data does this type of modeling require?
-Our initial analysis did not employ cross-validation or similar methods. This decision was made since the data the ideal observers are tested on do not overlap with the data the ideal observers are tested on. During the review process, reviewers raised questions about the amount of data that would be required for the type of computational analysis conducted here. Here we address this questions by subsetting the training and test data to assess the variability of the results across different folds of the training and test data. This also allows us to assess the extent to which the results in the previous section are due to overfitting to the training data. 
+Our initial analysis did not employ cross-validation or similar methods. This decision was made since the training data do not overlap with the test data. During the review process, reviewers raised questions about the amount of data that would be required for the type of computational analysis conducted here. Here we address this questions by subsetting the training and test data to assess the variability of the results across cross-validated folds of the training and test data. This allows us to assess the extent to which the results in the previous section are due to overfitting to the training data. 
 
-Our ideal observers are trained on two types of data: data that estimate native listeners' expectations about /d/ and /t/ based on previous lifelong experienced with their native language, and data that estimate the effects of the exposure phase (for the /d/ category in the /d/-exposure condition). For the former data, we randomly created two non-overlapping folds of 50% of the data. The folds were created by sampling (without replacement) the native data described in Section \@ref(sec:IO-training) *within* each unique combination of talker and category. Each model was then trained on one of the two folds (50% of the data, i.e., 15 tokens per category and talker), resulting in two models, each omitting another half of the native training data. Since the exposure data---by hypothesis---form the basis of adaptation, we do *not* resample or subset these data but rather hold them constant across all folds of the training data. By comparing across these two models, we can thus assess the extent to which the specific native data used to train the ideal observers affects our results (recall that these data determine the /t/ category in both the control and the /d/-exposure model, as well as the /d/ category in the control model). At the same time, this analysis sheds light on whether 15 tokens per talker and category are even remotely sufficiently to achieve robust estimates of category means and covariances. This is a question, in particular, for the Swedish models, for which we had phonetically annotated data for only *one* native talker (as opposed to 6 talkers for the English data).  
+Our ideal observers are trained on two types of data: data that estimate native listeners' expectations about /d/ and /t/ based on previous lifelong experience with their native language, and data that estimate the effects of the exposure to nonnative accented speech (for the /d/ category in the /d/-exposure condition). For the former data, we randomly created two non-overlapping folds, each containing 50% of the native training data. The folds were created by sampling (with replacement) the native data described in Section \@ref(sec:IO-training) *within* each unique combination of talker and category. Each model was then trained on one of the two folds (50% of the data, i.e., 15 tokens per category and talker), resulting in two models, each omitting another half of the native training data. Since the exposure data---by hypothesis---form the basis of adaptation, we do *not* resample or subset these data but rather hold them constant across all folds of the training data. By comparing across these two models, we can thus assess the extent to which the specific native data used to train the ideal observers affects our results (recall that these data determine the /t/ category in both the control and the /d/-exposure models, as well as the /d/ category in the control model). At the same time, this analysis sheds light on whether 15 tokens per talker and category are even remotely sufficient to achieve robust estimates of category means and covariances. This is a question, in particular, for the Swedish models, for which we had phonetically annotated data from only *one* native talker (as opposed to 6 talkers for the English data).  
 
 ```{r cross-validation-train-IO, include = FALSE}
 k <- 2 # set number of training iterations
@@ -2348,9 +2348,9 @@ d.IO.wTraining_folds <- map(
   group_by(Training_fold, .add = T)
 ```
 
-We first evaluated the two folded models on the entire test set, following the same procedure outlined in Section \@ref(sec:IO-test). Figure \@ref(fig:IO-ratings-results-byItem-wTraining-folds) plots the predictions of the ideal observers. For English, we find that the /d/-exposure model continues to outperform the control model in both training folds. For both training folds, the predictions closely reflect those of the model trained on 100% of the data \@ref(fig:IO-ratings-results-byItem) and thus continue to provide a good qualitative fit for the human goodness ratings in the English experiment (shown in \@ref(fig:ratings-results-byItem)). Specifically, we continue to see that the predicted effects of /d/-exposure, compared to control exposure, are larger for the /t/ category than for the /d/ category, mirroring the human ratings.
+We first evaluated the two-folded training models on the entire test set, following the same procedure outlined in Section \@ref(sec:IO-test). Figure \@ref(fig:IO-ratings-results-byItem-wTraining-folds) plots the predictions of the ideal observers. For English, we find that the /d/-exposure model consistently outperform the control model in both training folds. For both training folds, the predictions closely reflect those of the model trained on 100% of the data \@ref(fig:IO-ratings-results-byItem) and thus continue to provide a good qualitative fit for the human goodness ratings in the English experiment (shown in \@ref(fig:ratings-results-byItem)). Specifically, we continue to see that the predicted effects of /d/-exposure, compared to control exposure, are larger for the /t/ category than for the /d/ category, mirroring the human ratings. 
 
-For Swedish, the predictions of two models are consistent for the /d/ category: as was the case for the models fit to the complete training data, and mirroring human ratings, the models for both folds find that /d/-exposure should not affect ratings. For the /t/ category, however, the predictions are less consistent across the two folds. Whereas one fold predicts no difference between /d/-exposure and control, the other fold predicts an advantage of control exposure. This latter prediction is driven by the fact that /t/ test items are recognized with 100% accuracy by the model trained on the second training fold (see gray points the bottom-right bar of bottom-right panel of Figure \@ref(fig:IO-ratings-results-byItem-wTraining-folds)). This suggests that the prediction of a small numerical advantage of control exposure for /t/-ratings might reflect over-fitting to the training data, and that the fact that this prediction matched the numerical advantage of control exposure for /t/ observed in the human ratings should be interpreted with caution. What is, however, stable across training folds even for the Swedish /t/ category is that no model predicts and advantage of /d/-exposure over control. Taken together, we find the consistency across training folds surprising, though encouraging, given the relatively small amount of data that the ideal observers were trained on---in particular for Swedish, for which we only had access to recordings from a single native talker (age and gender-matched to the non-native talker).
+For Swedish,the models using both folds find that /d/-exposure should not affect ratings. This is consistent with the models fit to the complete training data as well as the human ratings. For the /t/ category, however, the predictions are less consistent across the two folds. Whereas one fold predicts no difference between /d/-exposure and control, the other fold predicts an advantage of control exposure. This latter prediction is driven by the fact that /t/ test items are recognized with 100% accuracy by the model trained on the second training fold (see gray points the bottom-right bar of bottom-right panel of Figure \@ref(fig:IO-ratings-results-byItem-wTraining-folds)). This suggests that the prediction of a small numerical advantage of control exposure for /t/-ratings might reflect over-fitting to the training data, and that the similarity between this prediction and the human ratings should be interpreted with caution. What is, however, stable across training folds even for the Swedish /t/ category is that no model predicts and advantage of /d/-exposure over control. Taken together, we find the consistency across training folds encouraging, given the relatively small amount of data that the ideal observers were trained on---in particular for Swedish, for which we only had access to recordings from a single native talker (age and gender-matched to the non-native talker).
 
 (ref:IO-ratings-results-byItem-wTraining-folds) **2-fold cross-validated ideal observer /d/-goodness ratings** during test (z-scored) predicted by the control and /d/-exposure ideal observers. Error bars show 95\% bootstrapped confidence intervals over by-item predictions (since there aren't multiple subjects). Each row shows one training fold excluding a different half of the native training data. For additional details, see Figure \@ref(fig:IO-ratings-results-byItem). 
 
@@ -2371,8 +2371,8 @@ ggsave(filename = "../figures/Result-ratings-byItem-wTraining_folds.png",
 
 ```
 
-Next, we evaluated the two training folds on separately folded test folds. By comparing across test folds within each training fold, we can estimate how robust our results are as the test items change. Specifically, we randomly split the test data into folds of 30 tokens each (15 minimal pairs), resulting in 2 folds for the Swedish test data (which had 60 test tokens) and 4 folds for the English test data (which had 120 test tokens). Each fold was created by sampling minimal pairs---rather than individual words---to hold the phonological context constant between the /d/ and /t/ test items within each fold. To compare like with like, we then compared the model predictions for each test fold against the human ratings on the same test items. 
-Figure \@ref(fig:IO-ratings-results-byItem-wTraining-folds-folded-test) plots the predictions for each combination of training and test fold. As expected given that the number of test items had quartered for English and halved for Swedish, the confidence interval of the mean predicted goodness ratings by the ideal observers noticeably widened. For the English data, the qualitative fit to the human ratings remained across all test folds except for the combination of training-fold 1 and test-fold 1. Here the /d/ ratings prediction by the /d/-exposure model no longer had an advantage over the control model instead they were both matched in average performance. Within each training-fold, the predictions of the control models varied more from test-fold to test-fold but the average predictions of the control models never performed better than the /d/-exposure model predictions. This result is encouraging and suggests that there was sufficient data to produce robust predictions that qualitatively match the human ratings for the English experiment.
+Next, we evaluated the two training folds on cross-validated test folds. By comparing across test folds within each training fold, we can estimate how robust our results are as the test items change. Specifically, we randomly split the test data into folds of 30 tokens each (15 minimal pairs), resulting in 2 folds for the Swedish test data (which had 60 test tokens) and 4 folds for the English test data (which had 120 test tokens). Each fold was created by sampling minimal pairs---rather than individual words---to hold the phonological context constant between the /d/ and /t/ test items within each fold. We then compared the model predictions for each test fold against the human ratings on the same test items. 
+Figure \@ref(fig:IO-ratings-results-byItem-wTraining-folds-folded-test) plots the predictions for each combination of training and test fold. As expected, now with only 1/4 of the test items for English and 1/2 for Swedish, the confidence interval of the mean goodness ratings predicted by the ideal observers noticeably widened. For the English data, the qualitative fit to the human ratings remained across all test folds except for the combination of training-fold 1 and test-fold 1. Here the /d/ ratings predicted by the /d/-exposure model no longer yielded an advantage over the control model. Within each training-fold, the predictions of the control models varied more from test-fold to test-fold but the average predictions of the control models never performed better than the /d/-exposure model predictions. This result is encouraging and suggests that there was sufficient data to produce robust predictions that qualitatively matched the human ratings for the English experiment.
 
 The Swedish models were expected to display more variable results between test folds and this was indeed apparent from the four training-test runs. Within the first test fold the /d/-exposure models of both training folds perform better than the control models for /d/ predictions. This does not parallel human ratings. Within the second test fold, both training folds do qualitatively match human ratings. Although the models do not accurately predict the human ratings across both sets of test folds, there is some measure of consistency across training folds. 
 
@@ -2540,7 +2540,7 @@ get_average_log_likelihood <- function(data, lapse_rate = .1, bias.d = .5) {
   data %>% 
     mutate(
       prediction.d = (1 - lapse_rate) * Model.Posterior.d + lapse_rate * bias.d,
-      log.likelihood = pmap_dbl(.l = list(n.ratings, Rating.Response.d.normalized, prediction.d), .f = function(x, y, z) log_likelihood(x, y, z))) %>% 
+      log.likelihood = pmap_dbl(.l = list(n.ratings, Rating.Response.d.normalized, prediction.d), .f = function(x, y, z) log_likelihood(x, y, z))) %>%
     #group_by(Language, Group, Model.Group.matchesParticipant.Group) %>%
     summarise(per_token_loglik = mean(log.likelihood)) 
  # %>% pull(per_token_loglik)
@@ -2567,10 +2567,11 @@ temp <- get_average_log_likelihood(d.test.IO.n)
 
 # now cross-in a sequence of different lapse rates 
 d.test.nested <- d.test.IO.n %>% crossing(
-    # bias.d = 10^c(seq(-10, 0, length.out = 51)),
-    # lapse_rate = 10^c(seq(-10, 0, length.out = 51))
-    bias.d = seq(0, 1, length.out = 51),
-    lapse_rate = seq(0, 1, length.out = 51)) %>% group_by(Language, Group, Model.Group.matchesParticipant.Group, lapse_rate, bias.d) %>%
+    bias.d = 0.5,
+    lapse_rate = 10^c(seq(-10, 0, length.out = 51))
+    # bias.d = seq(0, 1, length.out = 51),
+    # lapse_rate = seq(0, 1, length.out = 51)
+    ) %>% group_by(Language, Group, Model.Group.matchesParticipant.Group, lapse_rate, bias.d) %>%
   nest() %>% 
   mutate(per_token_loglik = unlist(pmap(.l = list(data, lapse_rate, bias.d), .f = function(x, y, z) get_average_log_likelihood(x, y, z))))
 
@@ -2596,20 +2597,20 @@ d.test.nested %>%
   theme(panel.grid.minor = element_blank())
 
 
-# see how the log likelihood changes as a function of lapse rate and lapse bias
-d.test.nested %>%
-  filter(per_token_loglik != "-Inf") %>%
-  ungroup() %>%
-  group_by(lapse_rate, bias.d, Group, Model.Group.matchesParticipant.Group, Language) %>%
-  summarise(per_token_loglik = as.integer(mean(per_token_loglik))) %>%
-  ggplot(aes(x = round(lapse_rate), y = bias.d, fill = per_token_loglik)) +
-  geom_raster(interpolate = T) +
-  scale_fill_viridis_c("Average log likelihood by token") + 
-  facet_grid(Language + Group~ Model.Group.matchesParticipant.Group) +
-  theme(legend.position = "top")+ 
-  coord_cartesian(xlim = c(0,1), ylim = c(0,1)) +
-  scale_x_continuous(labels = c("0","0.25","0.5","0.75","1")) +
-  xlab("Lapse rate") + ylab("Lapse bias")
+# # see how the log likelihood changes as a function of lapse rate and lapse bias
+# d.test.nested %>%
+#   filter(per_token_loglik != "-Inf") %>%
+#   ungroup() %>%
+#   group_by(lapse_rate, bias.d, Group, Model.Group.matchesParticipant.Group, Language) %>%
+#   summarise(per_token_loglik = as.integer(mean(per_token_loglik))) %>%
+#   ggplot(aes(x = round(lapse_rate), y = bias.d, fill = per_token_loglik)) +
+#   geom_raster(interpolate = T) +
+#   scale_fill_viridis_c("Average log likelihood by token") + 
+#   facet_grid(Language + Group~ Model.Group.matchesParticipant.Group) +
+#   theme(legend.position = "top")+ 
+#   coord_cartesian(xlim = c(0,1), ylim = c(0,1)) +
+#   scale_x_continuous(labels = c("0","0.25","0.5","0.75","1")) +
+#   xlab("Lapse rate") + ylab("Lapse bias")
 
 
 
