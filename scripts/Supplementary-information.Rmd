@@ -2504,13 +2504,12 @@ d.test.IO.byItem %>%
 # Make difference plots (AFTER FIGURING OUT WHETHER THESE FUNCTIONS DO THE RIGHT THING)
 ```
 
+Comparing the models against
+The following functions are written based on a broader definition for the binomial coefficient as detailed in https://www.johndcook.com/blog/binomial_coefficients/ . I used DEFINITION 2 to create ```binom_coeff()```. This definition is supposed to be implemented in ```choose(r, k)``` function but when I used ```choose()``` it warns of non integer values and rounds up. We need an extended version of the binomial pmf that can take non-integer values.
 
-TESTING NEW LOG LIKELIHOOD FUNCTION
-The following functions are written based on a broader definition for the binomial coefficient as detailed in https://www.johndcook.com/blog/binomial_coefficients/ . I used DEFINITION 2 to create ```binom_coeff()```. This definition is supposed to be implemented in ```choose(r, k)``` function but when I used ```choose()``` it warns of non integer values and rounds up. We need an extended version of thw binomial pmf that can take non-integer values.
+Our aim is to check the likelihood of the human ratings under the parameters of the various ideal observer models (matching vs. non-matching human groups), lapse rates and bias rates. The per-item human ratings are all expressed as d-goodness ratings, z-scored within participants, and normalised to between 0 and 1. We also note the number of ratings for each item (n.ratings) which we take to be the number of tries, n. We multiply n.ratings by the average normalised ratings per item (n.ratings*average normalised.ratings) to get the number of successes, k. For each item we can get the likelihood under the respective model's parameters, which is it's posterior for d after factoring in the lapse and bias rates. $$\binom{n}{k}p^k(1-p)^{n-k}$$ The log of which gives: $$log\binom{n}{k}+ k\ log(p) + (n-k)log(1-p)$$ After the per token log likelihood is obtained, the data is grouped by Language, Model, Model.Group.matchesParticipant.Group and the average per token log likelihood is computed, summarising the result to 8 log likelihood values.
 
-Our aim is to check the likelihood of the human ratings under the parameters of the various ideal observer models (matching vs. non-matching human groups), lapse rates and bias rates. The per-item human ratings are all expressed as d-goodness ratings, z-scored within participants, and normalised to between 0 and 1. We also note the number of ratings for each item (n.ratings) which we take to be the number of tries, n. We multiply n.ratings by the average normalised ratings per item (n.ratings*ratings) to get the number of successes, k. For each item we can get the likelihood under the respective model's parameters, which is it's posterior for d after factoring in the lapse and bias rates. $\binom{n}{k}p^k(1-p)^{n-k}$ The log of which gives: $log\binom{n}{k}+ k\ log(p) + (n-k)log(1-p)$ After the per token log likelihood is obtained, the data is grouped by Language, Model, Model.Group.matchesParticipant.Group and the average per token log likelihood is computed, summarising the result to 8 log likelihood values.
-
-```{r}
+```{r log-likelihood-function}
 
 # The kth falling power of r starts with r and multiplies together k numbers, each being one less than its predecessor. Given this notation, define the binomial coefficients as
 k_fall <- function(n, k){
@@ -2540,18 +2539,22 @@ get_average_log_likelihood <- function(data, lapse_rate = .1, bias.d = .5) {
   data %>% 
     mutate(
       prediction.d = (1 - lapse_rate) * Model.Posterior.d + lapse_rate * bias.d,
-      log.likelihood = pmap_dbl(.l = list(n.ratings, Rating.Response.d.normalized, prediction.d), .f = function(x, y, z) log_likelihood(x, y, z))) %>% 
-    #group_by(Language, Group, Model.Group.matchesParticipant.Group) %>%
+      log.likelihood = pmap_dbl(.l = list(n.ratings, Rating.Response.d.normalized, prediction.d), 
+                                .f = function(x, y, z) log_likelihood(x, y, z))) %>% 
     summarise(per_token_loglik = mean(log.likelihood)) 
  # %>% pull(per_token_loglik)
   }
 
 # mutate column with number of ratings for each item
-d.test.IO.n <-  left_join(d.test.IO, 
-                          d.test.IO %>% 
-                            group_by(Language, Group, Model.Group.matchesParticipant.Group, Item.WordID) %>% summarise(n.ratings = n())) 
+d.test.IO.n <- left_join(d.test.IO, d.test.IO %>% 
+                           group_by(Language, 
+                                    Group, 
+                                    Model.Group.matchesParticipant.Group, 
+                                    Item.WordID) %>% 
+                           summarise(n.ratings = n())) 
 
-d.test.IO.n <- d.test.IO.n %>% group_by(Language, Group, Model.Group.matchesParticipant.Group, Sound, Item.WordID, n.ratings) %>%
+d.test.IO.n <- d.test.IO.n %>% 
+  group_by(Language, Group, Model.Group.matchesParticipant.Group, Sound, Item.WordID, n.ratings) %>%
   summarise(
     Model.Posterior.d = mean(Model.Posterior.d),
     Rating.Response.d.zscored = mean(Rating.Response.d.zscored)) %>%
@@ -2566,11 +2569,13 @@ temp <- get_average_log_likelihood(d.test.IO.n)
 
 
 # now cross-in a sequence of different lapse rates 
-d.test.nested <- d.test.IO.n %>% crossing(
+d.test.nested <- d.test.IO.n %>% 
+  crossing(
     # bias.d = 10^c(seq(-10, 0, length.out = 51)),
     # lapse_rate = 10^c(seq(-10, 0, length.out = 51))
-    bias.d = seq(0, 1, length.out = 51),
-    lapse_rate = seq(0, 1, length.out = 51)) %>% group_by(Language, Group, Model.Group.matchesParticipant.Group, lapse_rate, bias.d) %>%
+    bias.d = .5, 
+    lapse_rate = 10^c(seq(-10, 0, length.out = 51))) %>% 
+  group_by(Language, Group, Model.Group.matchesParticipant.Group, lapse_rate, bias.d) %>%
   nest() %>% 
   mutate(per_token_loglik = unlist(pmap(.l = list(data, lapse_rate, bias.d), .f = function(x, y, z) get_average_log_likelihood(x, y, z))))
 
@@ -2597,8 +2602,20 @@ d.test.nested %>%
 
 
 # see how the log likelihood changes as a function of lapse rate and lapse bias
+
+d.test.nested <- d.test.IO.n %>% crossing(
+    # bias.d = 10^c(seq(-10, 0, length.out = 51)),
+    # lapse_rate = 10^c(seq(-10, 0, length.out = 51))
+  # lapse_rate = seq(0, 1, length.out = 51))
+    bias.d = seq(0, 1, length.out = 51),
+    lapse_rate = 10^c(seq(-10, 0, length.out = 51))) %>% 
+  group_by(Language, Group, Model.Group.matchesParticipant.Group, lapse_rate, bias.d) %>%
+  nest() %>% 
+  mutate(per_token_loglik = unlist(pmap(.l = list(data, lapse_rate, bias.d), 
+                                        .f = function(x, y, z) get_average_log_likelihood(x, y, z))))
+
 d.test.nested %>%
-  filter(per_token_loglik != "-Inf") %>%
+  #filter(per_token_loglik != "-Inf") %>%
   ungroup() %>%
   group_by(lapse_rate, bias.d, Group, Model.Group.matchesParticipant.Group, Language) %>%
   summarise(per_token_loglik = as.integer(mean(per_token_loglik))) %>%
@@ -2617,9 +2634,16 @@ d.test.nested %>%
 
 
 ```{r IO-wTraining-folds-folded-test}
-d.test.IO.wTraining_folds.wTest_folds.byItem <- 
-  d.test.IO.wTraining_folds.wTest_folds %>% 
-  group_by(Language, Group, Model.Group.matchesParticipant.Group, Training_fold, Test_fold, Sound, Item.WordID) %>%
+d.test.IO.wTraining_folds.wTest_folds <- left_join(d.test.IO.wTraining_folds.wTest_folds, 
+                                                          d.test.IO.wTraining_folds.wTest_folds %>% 
+                                                            group_by(Language, Group,
+                                                                     Model.Group.matchesParticipant.Group,
+                                                                     Training_fold, Test_fold, Item.WordID) %>% 
+                                                            summarise(n.ratings = n()))
+
+
+d.test.IO.wTraining_folds.wTest_folds.byItem <- d.test.IO.wTraining_folds.wTest_folds %>% 
+  group_by(Language, Group, Model.Group.matchesParticipant.Group, Training_fold, Test_fold, Sound, Item.WordID, n.ratings) %>%
   summarise(
     Model.Posterior.d = mean(Model.Posterior.d),
     Rating.Response.d.zscored = mean(Rating.Response.d.zscored)) %>%
@@ -2636,7 +2660,8 @@ loglik.byItem.fold.lapse <- d.test.IO.wTraining_folds.wTest_folds.byItem %>%
     lapse_rate = 10^c(seq(-10, 0, length.out = 51))) %>%
   group_by(Language, Group, Model.Group.matchesParticipant.Group, Training_fold, Test_fold, lapse_rate, bias.d) %>%
   nest() %>%
-  mutate(per_token_loglik = unlist(pmap(.l = list(data, lapse_rate, bias.d), .f = function(x, y, z) get_per_token_log_likelihood(x, y, z))))
+  mutate(per_token_loglik = unlist(pmap(.l = list(data, lapse_rate, bias.d), 
+                                        .f = function(x, y, z) get_average_log_likelihood(x, y, z))))
 
 
 #cross in variable d-bias and variable lapse rate
@@ -2646,8 +2671,10 @@ loglik.byItem.fold.lapse.bias <-  d.test.IO.wTraining_folds.wTest_folds.byItem %
     bias.d = seq(0, 1, length.out = 51)) %>%
   group_by(Language, Group, Model.Group.matchesParticipant.Group, lapse_rate, bias.d) %>%
   nest() %>%
-  mutate(per_token_loglik = unlist(pmap(.l = list(data, lapse_rate, bias.d), .f = function(x, y, z) get_per_token_log_likelihood(x, y, z)))) %>%  
+  mutate(per_token_loglik = unlist(pmap(.l = list(data, lapse_rate, bias.d), .f = function(x, y, z) get_average_log_likelihood(x, y, z)))) %>%  
   drop_na()
+
+
 ```
 
 
@@ -2679,10 +2706,6 @@ ggsave(filename = "../figures/IO-log-likelihood-wTraining-folds-folded-test.png"
 
 
 ```{r IO-log-likelihood-wTraining-folds-folded-test-bias-lapse, fig.cap="(ref:IO-log-likelihood-wTraining-folds-folded-test)", fig.height=8.5, fig.width=10.5, out.width='100%'}
- group_by(Language, Group, Model.Group.matchesParticipant.Group) %>% 
-  summarise(n())
-
-
 
 
 loglik.byItem.fold.lapse.bias %>% ggplot(aes(x = lapse_rate, y = bias.d, fill = per_token_loglik)) +
