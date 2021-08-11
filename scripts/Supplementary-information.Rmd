@@ -2553,7 +2553,7 @@ get_average_log_likelihood <- function(data, lapse_rate = 0.1, bias.d = .5) {
     #group_by(Language, Group, Model.Group.matchesParticipant.Group) %>%
     summarise(per_token_loglik = mean(log.likelihood)) 
       log.likelihood = pmap_dbl(.l = list(n.ratings, Rating.Response.d.normalized, prediction.d), 
-                                .f = function(x, y, z) log_likelihood(x, y, z)))  
+                                .f = function(x, y, z) log_likelihood(x, y, z)) 
   }
 
 # mutate column with number of ratings for each item
