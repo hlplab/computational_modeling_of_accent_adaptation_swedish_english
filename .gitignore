@@ -17,7 +17,6 @@ scripts/Supplementary-information_cache/
 scripts/bookdown_assets/
 scripts/libs/
 data/_TEMP/
-figures/
 scripts/local/
 data/data_IO training_both languages.Rdata
 data/data_perception_exposure phase_both languages.Rdata

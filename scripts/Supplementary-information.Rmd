@@ -59,7 +59,8 @@ knitr::opts_chunk$set(echo = FALSE,
 
 ```{r preamble, message=FALSE, warning=FALSE, error=FALSE, echo=FALSE, results='hide'}
 rm(list=ls())
-library(bookdown)       # r markdown references to figures, tables, sections regardless of output format
+library(bookdown) # r markdown references to figures, tables, sections regardless of output format
+library(MASS)
 library(tidyverse)      # There is only one universe
 library(magrittr)       # Pipes!
 library(stringi)
@@ -87,7 +88,7 @@ library(daver)
 # devtools::install_github("kleinschmidt/phondisttools")
 library(phondisttools)
 # devtools::install_github("hlplab/MVBeliefUpdatr")
-#library(MVBeliefUpdatr)
+library(MVBeliefUpdatr)
 ```
 
 ```{r constants and environments}
@@ -418,7 +419,7 @@ d.swedish %<>%
     X = NULL
   ) %>%
   # Order columns
-  select(Language, 
+  dplyr::select(Language, 
          NativeLanguage, 
          Group, Participant,
          Block.Type, Block.Order,
@@ -462,7 +463,7 @@ d.english.test %<>%
 # Combine Swedish and English *test* data
 d.test = d.swedish %>%
   filter(Block.Type == "test", Sound.Position == "final") %>%
-  select(Language,
+  dplyr::select(Language,
          NativeLanguage,
          Group, Participant,
          Block.Type, Block.Order,
@@ -491,7 +492,7 @@ d.test = d.swedish %>%
 d.exposure = 
   d.swedish %>%
   filter(Block.Type == "exposure") %>%
-  select(Language, NativeLanguage, Group, Participant, 
+  dplyr::select(Language, NativeLanguage, Group, Participant, 
          Block.Type, Item.Type, Item.WordStatus,
          LD.Correct, LD.RT) %>%
   # Expand the English data so that we can have a combined tibble
@@ -575,7 +576,7 @@ get_LD.RT_byGroup = . %>%
 # functions
 extract_columns <- function(data) {
   extracted_data <- data %>%
-    select(.dots = common_cols)
+    dplyr::select(.dots = common_cols)
   return(extracted_data)
 }
 
@@ -870,7 +871,7 @@ original.tvalue =
   lmer.rating.simple %>% 
   tidy() %>%
   filter(NativeLanguage == "Swedish") %>%
-  select(statistic) %>%
+  dplyr::select(statistic) %>%
   as.numeric()
 
 # Define the bootstrap function
@@ -895,7 +896,7 @@ bootstrap = function(replacement = T) {
   # Add rating information for /d/ and /t/ item of minimal pair
   left_join(
     d.test %>% 
-      select(NativeLanguage, Group, Participant, Item.MinimalPair, 
+      dplyr::select(NativeLanguage, Group, Participant, Item.MinimalPair, 
              Sound, Rating.Response.d.zscored),
     by = c("NativeLanguage", "Group", "Participant", "Item.MinimalPair")) %>%
   # Make sure contrasts are the same as in main analysis
@@ -1072,7 +1073,7 @@ d.stims =
   # Remove the 4 items because -rd and -rt are pronounced differently in Swedish than d/t in other context
   # (the same items were removed from the perception data)
   filter(! Word %in% c("voart", "voard", "hoart", "hoard")) %>%
-  select(-mimic, -MinimalPairID, -Item.Filename) %>% 
+  dplyr::select(-mimic, -MinimalPairID, -Item.Filename) %>% 
   rename(
     has_long_vowel = phon_ctxt_canonical_vl,
     has_stress = phon_ctxt_stress,
@@ -1116,7 +1117,7 @@ d.stims =
         NativeLanguage = "English",
         Accent = "non-native",
         Talker = "M5") %>%
-      select(-Word)
+      dplyr::select(-Word)
   ) %>%
   mutate(
     Used_for = case_when(
@@ -1136,7 +1137,7 @@ d.stims =
       filter(!(Speaker %in% c("E12", "E3", "E7", "E9"))) %>%  # apply this if only speakers with a high ratio of burst releases are included
       # exclude the nasal words for now due to different annotation criteria compared to Xie et al. 2017 (to check).
       #filter(coda_has_nasal == "no") %>% 
-      select(-Word) %>%
+      dplyr::select(-Word) %>%
       rename(
         Talker = Speaker,
         has_stress = phon_ctxt_stress,
@@ -1150,7 +1151,7 @@ d.stims =
       mutate(Used_for = "training")
   ) %>%
   # Select columns and order them
-  select(NativeLanguage, Accent, Talker, Used_for, Block.Type, 
+  dplyr::select(NativeLanguage, Accent, Talker, Used_for, Block.Type, 
          Item.MinimalPair, Item.WordID, Item.Word, Sound,
          vowel, closure, burst, 
          starts_with("has"), starts_with("onset"), starts_with("coda"), everything()) %>%
@@ -1651,7 +1652,7 @@ Figures \@ref(fig:native-english-cue-before-and-after-suprasegmental-correction)
 ```{r prepare for cue plot after step 1 and 2, include=FALSE}
 d.stims.long = 
   d.stims.step2 %>% 
-  select(c(-contains("offset"))) %>% 
+  dplyr::select(c(-contains("offset"))) %>% 
   make_long()
 ```
 
@@ -1783,7 +1784,7 @@ draw_training_data = function(
       Used_for.Model.Sound = Sound) %>%
     mutate_at(vars(Used_for, Used_for.Model.NativeLanguage, Used_for.Model.Group, Used_for.Model.Sound,
            Talker,Item.Word), factor) %>%
-    select(Used_for, Used_for.Model.NativeLanguage, Used_for.Model.Group, Used_for.Model.Sound,
+    dplyr::select(Used_for, Used_for.Model.NativeLanguage, Used_for.Model.Group, Used_for.Model.Sound,
            Talker,Item.Word, 
            vowel, closure, burst, 
            rvowel, rclosure, rburst) %>%
@@ -1832,7 +1833,7 @@ make_IO = function(
             mu = Reduce("+", mu) / length(mu),
             Sigma = Reduce("+", Sigma) / length(Sigma)))
         ) } else . } %>%
-    select(!!! rlang::syms(setdiff(groups, "Talker")), Model) %>%
+    dplyr::select(!!! rlang::syms(setdiff(groups, "Talker")), Model) %>%
     # Now that IO is made, change the "Used_for" columns into "Model" columns
     rename_at(vars(starts_with("Used_for.")), ~str_remove(.x, pattern = "Used_for.")) %>%
     applyFactorLevels()
@@ -2017,7 +2018,7 @@ d.IO %>% plot_IO_training(d.IO.training, language = "Swedish", cues = selected_c
 ```{r IO-categorization-functions, include=FALSE}
 drop_ellipse <- function(.data.IO) {
   if ("ellipse" %in% colnames(.data.IO))
-    .data.IO %<>% select(-c(ellipse)) 
+    .data.IO %<>% dplyr::select(-c(ellipse)) 
   
   return(.data.IO)
 }
@@ -2218,7 +2219,7 @@ d.english.ID <- d.english.ID %>%
   left_join(
     d.test %>%
       filter(NativeLanguage == "English") %>%
-      select(Item.Word, Item.MinimalPair, Sound) %>%
+      dplyr::select(Item.Word, Item.MinimalPair, Sound) %>%
       distinct(), by = c("Item.Word", "Sound")) %>%
   applyFactorLevels()
 ```
@@ -2236,7 +2237,7 @@ d.english.test.byItem <-
   summarise(zRating.d = mean(Rating.Response.d.zscored),
             Proportion.d = mean(ID.Response.d)) %>% 
 ungroup() %>%
-  select(-Task) %>% 
+  dplyr::select(-Task) %>% 
   pivot_longer(c("zRating.d", "Proportion.d"),
                names_to = "resp",
                values_to = "value") %>% 
@@ -2427,93 +2428,83 @@ ggsave(filename = "../figures/Result-ratings-byItem-wTraining_folds-folded-test.
 # TO DO: THIS NEEDS WORK. IS THE LIKELIHOOD FUNCTION DOING THE RIGHT THING?
 <!-- # Could add lapse-rate-based fit eval here? -->
 ```{r}
-get_per_token_log_likelihood <- function(data, lapse_rate = .1, bias.d = .5) {
-  data %>%
-    mutate(
-      prediction.d = (1 - lapse_rate) * Model.Posterior.d + lapse_rate * bias.d,
-      log_likelihood = log(
-        Rating.Response.d.normalized * prediction.d + 
-        (1 - Rating.Response.d.normalized) * (1 - prediction.d))) %>%
-    summarise(per_token_loglik = sum(log_likelihood) / length(log_likelihood)) %>%
-    pull(per_token_loglik)
-}
-
-d.test.IO.byItem <- 
-  d.test.IO %>%
-  # There seem to be points for which no model predictions exist. 
-  # Removing them for now (It's two English data points: Item.WordID E104, E105)
-  #filter(!is.na(Model.Group.matchesParticipant.Group)) %>%
-  group_by(Language, Group, Model.Group.matchesParticipant.Group, Sound, Item.WordID) %>%
-  summarise(
-    Model.Posterior.d = mean(Model.Posterior.d),
-    Rating.Response.d.zscored = mean(Rating.Response.d.zscored)) %>%
-  # Normalize human ratings'
-  group_by(Language, Group, Model.Group.matchesParticipant.Group) %>%
-  mutate(
-    Model.Posterior.d = Model.Posterior.d,
-    Rating.Response.d.normalized = (Rating.Response.d.zscored - min(Rating.Response.d.zscored)) / (max(Rating.Response.d.zscored) - min(Rating.Response.d.zscored))) 
-
-d.test.IO.byItem %>%
-  # Crossing in lapse rate and apply likelihood
-  crossing(
-    bias.d = .5,
-    lapse_rate = 10^c(seq(-10, 0, length.out = 51))) %>%
-  group_by(Language, Group, Model.Group.matchesParticipant.Group, lapse_rate, bias.d) %>%
-  nest() %>%
-  mutate(per_token_loglik = unlist(pmap(.l = list(data, lapse_rate, bias.d), .f = function(x, y, z) get_per_token_log_likelihood(x, y, z)))) %>%
-  ggplot(aes(x = lapse_rate, y = per_token_loglik, color = Group, linetype = Model.Group.matchesParticipant.Group)) +
-  geom_line(alpha = .9) +
-  scale_x_continuous(
-    "lapse rate",
-    breaks = 10^c(seq(-10, 0, 2))) +
-  scale_y_continuous("Fit against perceptual responses\n(per token log likelihood)") +
-  scale_color_manual("Exposure group",
-    breaks = c("/d/-exposure", "control"),
-    labels = c("/d/-exposure", "control"),
-    values = colors.Accent) +
-  scale_linetype_manual("Ideal observer",
-    breaks = c("yes", "no"),
-    labels = c("matching", "mismatching"),
-    values = 1:2) +
-  coord_trans(x = "log10") +
-  facet_wrap(~ Language) +
-  theme(panel.grid.minor = element_blank())
-
-d.test.IO.byItem %>%
-  # Crossing in lapse rate and bias and then apply likelihood
-  crossing(
-    lapse_rate = seq(0, 0.2, length.out = 51),
-    bias.d = seq(0, 1, length.out = 51)) %>%
-  group_by(Language, Group, Model.Group.matchesParticipant.Group, lapse_rate, bias.d) %>%
-  nest() %>%
-  mutate(per_token_loglik = unlist(pmap(.l = list(data, lapse_rate, bias.d), .f = function(x, y, z) get_per_token_log_likelihood(x, y, z)))) %>%  
-  drop_na() %>%
-  ggplot(aes(x = lapse_rate, y = bias.d, fill = per_token_loglik)) +
-  geom_raster(interpolate = T) +
-  scale_x_continuous(
-    "lapse rate",
-    breaks = seq(0, .2, .05)) +
-  scale_y_continuous(
-    "bias towards /d/",
-    breaks = seq(0, 1, .1)) +
-  scale_fill_viridis_c("Fit against perceptual responses\n(per token log likelihood)") +
-  coord_cartesian(expand = 0) +
-  facet_grid(Group + Model.Group.matchesParticipant.Group ~ Language) +
-  theme(panel.grid.minor = element_blank())
+# get_per_token_log_likelihood <- function(data, lapse_rate = .1, bias.d = .5) {
+#   data %>%
+#     mutate(
+#       prediction.d = (1 - lapse_rate) * Model.Posterior.d + lapse_rate * bias.d,
+#       log_likelihood = log(
+#         Rating.Response.d.normalized * prediction.d +
+#         (1 - Rating.Response.d.normalized) * (1 - prediction.d))) %>%
+#     summarise(per_token_loglik = sum(log_likelihood) / length(log_likelihood)) %>%
+#     pull(per_token_loglik)
+# }
+# 
+# d.test.IO.byItem <-
+#   d.test.IO %>%
+#   # There seem to be points for which no model predictions exist.
+#   # Removing them for now (It's two English data points: Item.WordID E104, E105)
+#   #filter(!is.na(Model.Group.matchesParticipant.Group)) %>%
+#   group_by(Language, Group, Model.Group.matchesParticipant.Group, Sound, Item.WordID) %>%
+#   summarise(
+#     Model.Posterior.d = mean(Model.Posterior.d),
+#     Rating.Response.d.zscored = mean(Rating.Response.d.zscored)) %>%
+#   # Normalize human ratings'
+#   group_by(Language, Group, Model.Group.matchesParticipant.Group) %>%
+#   mutate(
+#     Model.Posterior.d = Model.Posterior.d,
+#     Rating.Response.d.normalized = (Rating.Response.d.zscored - min(Rating.Response.d.zscored)) / (max(Rating.Response.d.zscored) - min(Rating.Response.d.zscored)))
+# 
+# d.test.IO.byItem %>%
+#   # Crossing in lapse rate and apply likelihood
+#   crossing(
+#     bias.d = .5,
+#     lapse_rate = 10^c(seq(-10, 0, length.out = 51))) %>%
+#   group_by(Language, Group, Model.Group.matchesParticipant.Group, lapse_rate, bias.d) %>%
+#   nest() %>%
+#   mutate(per_token_loglik = unlist(pmap(.l = list(data, lapse_rate, bias.d), .f = function(x, y, z) get_per_token_log_likelihood(x, y, z)))) %>%
+#   ggplot(aes(x = lapse_rate, y = per_token_loglik, color = Group, linetype = Model.Group.matchesParticipant.Group)) +
+#   geom_line(alpha = .9) +
+#   scale_x_continuous(
+#     "lapse rate",
+#     breaks = 10^c(seq(-10, 0, 2))) +
+#   scale_y_continuous("Fit against perceptual responses\n(per token log likelihood)") +
+#   scale_color_manual("Exposure group",
+#     breaks = c("/d/-exposure", "control"),
+#     labels = c("/d/-exposure", "control"),
+#     values = colors.Accent) +
+#   scale_linetype_manual("Ideal observer",
+#     breaks = c("yes", "no"),
+#     labels = c("matching", "mismatching"),
+#     values = 1:2) +
+#   coord_trans(x = "log10") +
+#   facet_wrap(~ Language) +
+#   theme(panel.grid.minor = element_blank())
+# 
+# d.test.IO.byItem %>%
+#   # Crossing in lapse rate and bias and then apply likelihood
+#   crossing(
+#     lapse_rate = seq(0, 0.2, length.out = 51),
+#     bias.d = seq(0, 1, length.out = 51)) %>%
+#   group_by(Language, Group, Model.Group.matchesParticipant.Group, lapse_rate, bias.d) %>%
+#   nest() %>%
+#   mutate(per_token_loglik = unlist(pmap(.l = list(data, lapse_rate, bias.d), .f = function(x, y, z) get_per_token_log_likelihood(x, y, z)))) %>%
+#   drop_na() %>%
+#   ggplot(aes(x = lapse_rate, y = bias.d, fill = per_token_loglik)) +
+#   geom_raster(interpolate = T) +
+#   scale_x_continuous(
+#     "lapse rate",
+#     breaks = seq(0, .2, .05)) +
+#   scale_y_continuous(
+#     "bias towards /d/",
+#     breaks = seq(0, 1, .1)) +
+#   scale_fill_viridis_c("Fit against perceptual responses\n(per token log likelihood)") +
+#   coord_cartesian(expand = 0) +
+#   facet_grid(Group + Model.Group.matchesParticipant.Group ~ Language) +
+#   theme(panel.grid.minor = element_blank())
 
 # Make difference plots (AFTER FIGURING OUT WHETHER THESE FUNCTIONS DO THE RIGHT THING)
 ```
 
-### Comparing model likelihoods
-In this section we walk-through how we assess the ideal observer models' goodness-of-fit to the respective human experimental groups. One way to do this is to compare the average likelihood of test token ratings given the predictions of its representative ideal observer (e.g. human ratings by the /d/-exposure group under the /d/-exposure ideal observer; "matching" ) against its average likelihood under an ideal observer that does not represent that group (e.g. human ratings by the /d/-exposure group under the control exposure ideal observer; "non-matching).
-
-Given our assumption of a linear link between categorisation and ratings response, the rating of each token was treated as a Bernoulli process. The rating responses for an item can thus be considered a binomial distribution of the number of /d/-responses given out of the total number of responses, given the model's posterior prediction of /d/ for that item, $$p$$. 
-
-To obtain the likelihood of response for each test token we first averaged participant ratings and normalised each token's average rating response to be between 0 and 1. We took the number of participant ratings for each token as the number of trials, $$n$$ and the number of trials multiplied by the per-token normalised ratings as the number of successes, $$k$$. As this would result in non discrete values for $$k$$ we used an extended definition for the binomial distribution for non-integer values.
-
-The likelihood of each token is obtained through the binomial distribution: $$L(k) = \binom{n}{k}p^k(1-p)^{n-k}$$.The log of which gives: $$LL(k) = log\binom{n}{k}+ k\ log(p) + (n-k)log(1-p)$$. Averaging the per-token log likelihoods gives the average per-token log likehood under each model. This was obtained for the /d/-exposure matching and non-matching, and control exposure matching and non-matching models respectively. 
-
-For Mandarin-accented English the matching /d/-exposure ideal observer model was XXX [NEED HELP DETERMINING THE RATIO -- LRT?]  times more likely to correctly predict the human ratings than the non-matching model. This pattern was reversed for the control models where the mismatching models gave a better fit. Matching and non-matching models for Swedish showed little difference in goodness-of-fit. 
 
 ### Model fit under lapse rates and categorisation biases
 To check model fit under different scenarios of (non-neural) noise we modified the model posterior predictions for /d/ to include different rates of attentional lapses in decisions and biases.
@@ -2550,11 +2541,8 @@ get_average_log_likelihood <- function(data, lapse_rate = 0.1, bias.d = .5) {
     mutate(
       prediction.d = (1 - lapse_rate) * Model.Posterior.d + lapse_rate * bias.d,
       log.likelihood = pmap_dbl(.l = list(n.ratings, Rating.Response.d.normalized, prediction.d), .f = function(x, y, z) log_likelihood(x, y, z))) %>%
-    #group_by(Language, Group, Model.Group.matchesParticipant.Group) %>%
     summarise(per_token_loglik = mean(log.likelihood)) 
-      log.likelihood = pmap_dbl(.l = list(n.ratings, Rating.Response.d.normalized, prediction.d), 
-                                .f = function(x, y, z) log_likelihood(x, y, z)) 
-  }
+}
 
 # mutate column with number of ratings for each item
 d.test.IO.n <- left_join(d.test.IO, d.test.IO %>% 
@@ -2578,21 +2566,19 @@ d.test.IO.n <- d.test.IO.n %>%
 # no log likelihoods for Swedish data if the lapse rate is 0
 Model.likelihood <- get_average_log_likelihood(d.test.IO.n) 
 
-Model.likelihood %>% filter(Language == "Flemish-accented Swedish")
 
 # now cross-in a sequence of different lapse rates 
-
 d.test.nested <- d.test.IO.n %>% 
   crossing(
     # bias.d = 10^c(seq(-10, 0, length.out = 51)),
     # lapse_rate = 10^c(seq(-10, 0, length.out = 51))
     bias.d = .5, 
-    lapse_rate = 10^c(seq(-10, 0, length.out = 51))) %>% 
+    lapse_rate = 10^c(seq(-10, 0.1, length.out = 51))) %>% 
   group_by(Language, Group, Model.Group.matchesParticipant.Group, lapse_rate, bias.d) %>%
   nest() %>% 
   mutate(per_token_loglik = unlist(pmap(.l = list(data, lapse_rate, bias.d), .f = function(x, y, z) get_average_log_likelihood(x, y, z))))
 
-# try plotting. The figures are moving in the opposite direction to the previous fitting method. Don't know if this makes sense --it's saying that the higher the lapse rate, the better the fit? For English, the general pattern of d-exposure-matching performing better than control-matching is there, and d-exposure-nonmatching worse than control-non matching. This is stable all the way. The Swedish data looks a bit crazy.
+# try plotting.
 
 d.test.nested %>% 
   ggplot(aes(x = lapse_rate, y = per_token_loglik, color = Group, linetype = Model.Group.matchesParticipant.Group)) +
@@ -2612,52 +2598,50 @@ d.test.nested %>%
   coord_trans(x = "log10") +
   facet_wrap(~ Language) +
   theme(panel.grid.minor = element_blank())
-
-
 ```
 
 
 ```{r IO-wTraining-folds-folded-test}
-d.test.IO.wTraining_folds.wTest_folds <- left_join(d.test.IO.wTraining_folds.wTest_folds, 
-                                                          d.test.IO.wTraining_folds.wTest_folds %>% 
-                                                            group_by(Language, Group,
-                                                                     Model.Group.matchesParticipant.Group,
-                                                                     Training_fold, Test_fold, Item.WordID) %>% 
-                                                            summarise(n.ratings = n()))
-
-
-d.test.IO.wTraining_folds.wTest_folds.byItem <- d.test.IO.wTraining_folds.wTest_folds %>% 
-  group_by(Language, Group, Model.Group.matchesParticipant.Group, Training_fold, Test_fold, Sound, Item.WordID, n.ratings) %>%
-  summarise(
-    Model.Posterior.d = mean(Model.Posterior.d),
-    Rating.Response.d.zscored = mean(Rating.Response.d.zscored)) %>%
-  # Normalize human ratings'
-  group_by(Language, Group, Model.Group.matchesParticipant.Group, Training_fold, Test_fold) %>%
-  mutate(
-    Model.Posterior.d = Model.Posterior.d,
-    Rating.Response.d.normalized = (Rating.Response.d.zscored - min(Rating.Response.d.zscored)) / (max(Rating.Response.d.zscored) - min(Rating.Response.d.zscored)))
+# d.test.IO.wTraining_folds.wTest_folds <- left_join(d.test.IO.wTraining_folds.wTest_folds, 
+#                                                           d.test.IO.wTraining_folds.wTest_folds %>% 
+#                                                             group_by(Language, Group,
+#                                                                      Model.Group.matchesParticipant.Group,
+#                                                                      Training_fold, Test_fold, Item.WordID) %>% 
+#                                                             summarise(n.ratings = n()))
+# 
+# 
+# d.test.IO.wTraining_folds.wTest_folds.byItem <- d.test.IO.wTraining_folds.wTest_folds %>% 
+#   group_by(Language, Group, Model.Group.matchesParticipant.Group, Training_fold, Test_fold, Sound, Item.WordID, n.ratings) %>%
+#   summarise(
+#     Model.Posterior.d = mean(Model.Posterior.d),
+#     Rating.Response.d.zscored = mean(Rating.Response.d.zscored)) %>%
+#   # Normalize human ratings'
+#   group_by(Language, Group, Model.Group.matchesParticipant.Group, Training_fold, Test_fold) %>%
+#   mutate(
+#     Model.Posterior.d = Model.Posterior.d,
+#     Rating.Response.d.normalized = (Rating.Response.d.zscored - min(Rating.Response.d.zscored)) / (max(Rating.Response.d.zscored) - min(Rating.Response.d.zscored)))
 
 # cross in variable lapse rate
-loglik.byItem.fold.lapse <- d.test.IO.wTraining_folds.wTest_folds.byItem %>% 
-   crossing(
-    bias.d = .5,
-    lapse_rate = 10^c(seq(-10, 0, length.out = 51))) %>%
-  group_by(Language, Group, Model.Group.matchesParticipant.Group, Training_fold, Test_fold, lapse_rate, bias.d) %>%
-  nest() %>%
-  mutate(per_token_loglik = unlist(pmap(.l = list(data, lapse_rate, bias.d), 
-                                        .f = function(x, y, z) get_average_log_likelihood(x, y, z))))
+# loglik.byItem.fold.lapse <- d.test.IO.wTraining_folds.wTest_folds.byItem %>% 
+#    crossing(
+#     bias.d = .5,
+#     lapse_rate = 10^c(seq(-10, 0, length.out = 51))) %>%
+#   group_by(Language, Group, Model.Group.matchesParticipant.Group, Training_fold, Test_fold, lapse_rate, bias.d) %>%
+#   nest() %>%
+#   mutate(per_token_loglik = unlist(pmap(.l = list(data, lapse_rate, bias.d), 
+#                                         .f = function(x, y, z) get_average_log_likelihood(x, y, z))))
 
 
-#cross in variable d-bias and variable lapse rate
-loglik.byItem.fold.lapse.bias <-  d.test.IO.wTraining_folds.wTest_folds.byItem %>% 
-  crossing(
-    lapse_rate = seq(0, 0.2, length.out = 51),
-    bias.d = seq(0, 1, length.out = 51)) %>%
-  group_by(Language, Group, Model.Group.matchesParticipant.Group, lapse_rate, bias.d) %>%
-  nest() %>%
-  mutate(per_token_loglik = unlist(pmap(.l = list(data, lapse_rate, bias.d), .f = function(x, y, z) get_average_log_likelihood(x, y, z)))) %>%  
-  drop_na()
-
+# #cross in variable d-bias and variable lapse rate
+# loglik.byItem.fold.lapse.bias <-  d.test.IO.wTraining_folds.wTest_folds.byItem %>% 
+#   crossing(
+#     lapse_rate = seq(0, 0.2, length.out = 51),
+#     bias.d = seq(0, 1, length.out = 51)) %>%
+#   group_by(Language, Group, Model.Group.matchesParticipant.Group, lapse_rate, bias.d) %>%
+#   nest() %>%
+#   mutate(per_token_loglik = unlist(pmap(.l = list(data, lapse_rate, bias.d), .f = function(x, y, z) get_average_log_likelihood(x, y, z)))) %>%  
+#   drop_na()
+# 
 
 ```
 
@@ -2666,23 +2650,23 @@ loglik.byItem.fold.lapse.bias <-  d.test.IO.wTraining_folds.wTest_folds.byItem %
 ```{r IO-log-likelihood-wTraining-folds-folded-test, fig.cap="(ref:IO-log-likelihood-wTraining-folds-folded-test)", fig.height=8.5, fig.width=10.5, out.width='100%'}
 
 
-loglik.byItem.fold.lapse  %>% mutate(Model.Group.matchesParticipant.Group = ifelse(Model.Group.matchesParticipant.Group == "yes", "Matching", "Mismatching")) %>% 
-  ggplot(mapping = aes(x = lapse_rate, y = per_token_loglik, linetype = Model.Group.matchesParticipant.Group, color = Group)) +
-  geom_ribbon(stat = "smooth", alpha = 0.2, aes(colour = NULL, fill = Group)) +
-  geom_line(stat = "smooth", mapping = aes(line = Model.Group.matchesParticipant.Group, color = Group)) +
-    scale_x_continuous(
-    "lapse rate",
-    breaks = 10^c(seq(-10, 0, 2)),
-    trans = "log10") +
-  scale_y_continuous("Fit against perceptual responses\n(per token log likelihood)") +
-  scale_color_manual(values = colors.Accent) +
-  scale_fill_manual(values = colors.Accent) +
-  scale_linetype_manual("Ideal Observer", breaks = c("Matching", "Mismatching"), values = c(1, 2)) +
-  facet_grid(Group ~ Language) +
-  theme(panel.grid.minor = element_blank())
-
-ggsave(filename = "../figures/IO-log-likelihood-wTraining-folds-folded-test.png",
-       width = 10.5, height = 8.5)
+# loglik.byItem.fold.lapse  %>% mutate(Model.Group.matchesParticipant.Group = ifelse(Model.Group.matchesParticipant.Group == "yes", "Matching", "Mismatching")) %>% 
+#   ggplot(mapping = aes(x = lapse_rate, y = per_token_loglik, linetype = Model.Group.matchesParticipant.Group, color = Group)) +
+#   geom_ribbon(stat = "smooth", alpha = 0.2, aes(colour = NULL, fill = Group)) +
+#   geom_line(stat = "smooth", mapping = aes(line = Model.Group.matchesParticipant.Group, color = Group)) +
+#     scale_x_continuous(
+#     "lapse rate",
+#     breaks = 10^c(seq(-10, 0, 2)),
+#     trans = "log10") +
+#   scale_y_continuous("Fit against perceptual responses\n(per token log likelihood)") +
+#   scale_color_manual(values = colors.Accent) +
+#   scale_fill_manual(values = colors.Accent) +
+#   scale_linetype_manual("Ideal Observer", breaks = c("Matching", "Mismatching"), values = c(1, 2)) +
+#   facet_grid(Group ~ Language) +
+#   theme(panel.grid.minor = element_blank())
+# 
+# ggsave(filename = "../figures/IO-log-likelihood-wTraining-folds-folded-test.png",
+#        width = 10.5, height = 8.5)
   
 ```
 
@@ -2691,24 +2675,82 @@ ggsave(filename = "../figures/IO-log-likelihood-wTraining-folds-folded-test.png"
 
 ```{r IO-log-likelihood-wTraining-folds-folded-test-bias-lapse, fig.cap="(ref:IO-log-likelihood-wTraining-folds-folded-test)", fig.height=8.5, fig.width=10.5, out.width='100%'}
 
-
-loglik.byItem.fold.lapse.bias %>% ggplot(aes(x = lapse_rate, y = bias.d, fill = per_token_loglik)) +
-  geom_raster(interpolate = T) +
-  scale_x_continuous(
-    "lapse rate",
-    breaks = seq(0, .2, .05)) +
-  scale_y_continuous(
-    "bias towards /d/",
-    breaks = seq(0, 1, .1)) +
-  scale_fill_viridis_c("Fit against perceptual responses\n(per token log likelihood)") +
-  coord_cartesian(expand = 0) +
-  facet_grid(Group + Model.Group.matchesParticipant.Group ~ Language) +
-  theme(panel.grid.minor = element_blank())
-
-
+# loglik.byItem.fold.lapse.bias %>% ggplot(aes(x = lapse_rate, y = bias.d, fill = per_token_loglik)) +
+#   geom_raster(interpolate = T) +
+#   scale_x_continuous(
+#     "lapse rate",
+#     breaks = seq(0, .2, .05)) +
+#   scale_y_continuous(
+#     "bias towards /d/",
+#     breaks = seq(0, 1, .1)) +
+#   scale_fill_viridis_c("Fit against perceptual responses\n(per token log likelihood)") +
+#   coord_cartesian(expand = 0) +
+#   facet_grid(Group + Model.Group.matchesParticipant.Group ~ Language) +
+#   theme(panel.grid.minor = element_blank())
 
 ```
 
+
+### Obtaining model likelihoods 
+
+We use a linear mixed-effects regression to predict human /d/-goodness ratings from the posterior probability of /d/ predicted by the ideal observers, while also including the maximal converging random effect structure (random intercepts by participant and minimal pair). For each experimental grouping within each language, we regressed the human /d/-ratings on predicted posterior probabilities of /d/ by the matching ideal observer model as well as the non-matching ideal observer model. Then we obtain the log likelihood of each linear model. 
+
+```{r compare-log-likelihood, echo = FALSE}
+lmer_model <- function(.data) {
+  loglik <- lmer(Rating.Response.d.zscored ~ 1 + Model.Posterior.d + 
+         (1 | Item.MinimalPair) +  (1 + Model.Posterior.d | Participant), 
+                     data = .data) %>% logLik()
+  return(loglik[[1]])
+}
+
+model.likelihood <- d.test.IO %>% 
+  group_by(NativeLanguage, Group, Model.Group.matchesParticipant.Group) %>% 
+  nest() %>% 
+  mutate(
+    log.likelihood = map_dbl(data, ~ lmer_model(.x))
+  ) 
+
+# get the log likelihood for all training-test fold models
+my.models <- d.test.IO.wTraining_folds.wTest_folds %>% 
+  group_by(Language, Group, Model.Group.matchesParticipant.Group, Training_fold, Test_fold) %>% 
+  nest()%>% 
+  mutate(
+    log.likelihood = map_dbl(data, ~ lmer_model(.x))
+  ) 
+
+# plot_grid(my.models %>% filter(Language == "Mandarin-accented English") %>% 
+#   ggplot(aes(x = Group , y = log.likelihood, colour = Group, shape = Model.Group.matchesParticipant.Group)) +
+#   geom_point() +
+#      scale_color_manual(values = colors.Accent) +
+#   scale_fill_manual(values = colors.Accent) +
+#     scale_shape_manual("Ideal Observer", breaks = c("Matching", "Mismatching"), values = c(1, 2)) +
+#   facet_grid(Training_fold ~ Test_fold, scales="free_y") +
+#     ggtitle("Mandarin-accented English"),
+#   my.models %>%
+#     filter(Language == "Flemish-accented Swedish") %>% 
+#   ggplot(aes(x = Group , y = log.likelihood, colour = Group, shape = Model.Group.matchesParticipant.Group)) +
+#   geom_point() +
+#      scale_color_manual(values = colors.Accent) +
+#   scale_fill_manual(values = colors.Accent) +
+#     scale_shape_manual("Ideal Observer", breaks = c("Matching", "Mismatching"), values = c(1, 2)) +
+#   facet_grid(Training_fold ~ Test_fold, scales="free_y") +
+#     ggtitle("Flemish-accented Swedish"),
+#   nrow = 1,
+#   rel_widths = c(14, 10))
+```
+
+
+
+```{r IO-log-likelihood-training-test-folds}
+my.models %>% mutate(Model.Group.matchesParticipant.Group = ifelse(Model.Group.matchesParticipant.Group == "yes", "Matching", "Mismatching")) %>% 
+  ggplot(aes(x = Group , y = log.likelihood, colour = Group, shape = Model.Group.matchesParticipant.Group)) +
+  stat_summary(fun.data = "mean_cl_boot", size = 0.6, position = position_dodge(width = 0.3)) +
+     scale_color_manual(values = colors.Accent) +
+  scale_fill_manual(values = colors.Accent) +
+    scale_shape_manual("Ideal Observer", breaks = c("Matching", "Mismatching"), values = c(1, 2)) +
+  facet_wrap( ~ Language)
+
+```
 
 
 
@@ -2822,7 +2864,7 @@ plot_IO_test = function(
   # summarize it down to one observation per stimulus & model
   .data.test %<>% 
     filter(Model.Group.matchesParticipant.Group == "yes") %>%
-    select(-Model.Group.matchesParticipant.Group) %>%
+    dplyr::select(-Model.Group.matchesParticipant.Group) %>%
      distinct(NativeLanguage, 
               Item.Word, Item.WordID, Item.MinimalPair, 
               Model.Group,
@@ -2878,7 +2920,7 @@ plot_IO_test = function(
   # Plot difference ...
   if (show.difference) {
     .data.test %<>%
-      select(-Model.Posterior.d) %>%
+      dplyr::select(-Model.Posterior.d) %>%
       pivot_wider(
         names_from = Model.Group,
         values_from = Model.Posterior.Intended
@@ -3100,7 +3142,7 @@ if (!file.exists("../models/IBBU_updates.RData")) {
       cues = c("rvowel", "rclosure", "rburst"),
       kappa = 8,
       nu = 8) %>%
-    select(-c(kappa, nu)) %>%
+    dplyr::select(-c(kappa, nu)) %>%
     # Consider a range of prior strengths
     crossing(
       kappa = 2^(0:9),
@@ -3148,7 +3190,7 @@ d.IBBU.test <-
   full_join(
     # Get test data (after removing IO information and removing duplicate rows)
     d.test.IO %>%
-      select(
+      dplyr::select(
         NativeLanguage, Item.MinimalPair, Sound, rvowel, rclosure, rburst) %>%
       distinct()) %>%
   make_vector_column(
@@ -3156,7 +3198,7 @@ d.IBBU.test <-
     vector_col = "x") %>%
   arrange(NativeLanguage, prior_kappa, prior_nu, Item.MinimalPair, Sound, category) %>%
   group_by(NativeLanguage, prior_kappa, prior_nu) %>%
-  select(Item.MinimalPair, Sound, x, category, m, S, kappa, nu, lapse_rate) %>%
+  dplyr::select(Item.MinimalPair, Sound, x, category, m, S, kappa, nu, lapse_rate) %>%
   nest(belief = c(category, m, S, kappa, nu, lapse_rate)) %>%
   nest(data = c(Item.MinimalPair, Sound, x)) %>%
   # Get posterior probability of /d/ for each data point
@@ -3201,7 +3243,7 @@ d.test.IBBU <-
   full_join(
     # Get test data (after removing IO information and removing duplicate rows)
     d.test.IO %>%
-      select(
+      dplyr::select(
         NativeLanguage,
         Item.MinimalPair, Sound, Rating.Response.d.zscored,
         rvowel, rclosure, rburst) %>%
@@ -3211,7 +3253,7 @@ d.test.IBBU <-
     vector_col = "x") %>%
   arrange(NativeLanguage, prior_kappa, prior_nu, Item.MinimalPair, Sound, category) %>%
   group_by(NativeLanguage, prior_kappa, prior_nu) %>%
-  select(Item.MinimalPair, Sound, x, Rating.Response.d.zscored,
+  dplyr::select(Item.MinimalPair, Sound, x, Rating.Response.d.zscored,
          category, m, S, kappa, nu, lapse_rate) %>%
   nest(belief = c(category, m, S, kappa, nu, lapse_rate)) %>%
   nest(data = c(Item.MinimalPair, Sound, x, Rating.Response.d.zscored)) %>%
@@ -3281,7 +3323,7 @@ read_csv("../data/English/English_perception_rating_test_Xie et al 2017.csv") %>
   pivot_wider(
     names_from = Sound,
     values_from = Word) %>%
-  select(-MinimalPairID) %>%
+  dplyr::select(-MinimalPairID) %>%
   rename_all(.funs = function(x) paste0("/", x, "/-final")) %>%
    kbl() %>% 
    kable_styling(bootstrap_options = "striped", full_width = F, position = "center")
