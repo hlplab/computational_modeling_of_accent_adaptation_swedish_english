@@ -2691,7 +2691,7 @@ d.test.nested %>%
 ```
 
 
-### Obtaining model likelihoods (**DELETE THE PREVIOUS CALCULATIONS OF LIKELIHOODS AFTER REVIEWING THIS**)
+### Obtaining model likelihoods 
 
 We use a linear mixed-effects regression to predict human /d/-goodness ratings from the posterior probability of /d/ predicted by the ideal observers, while also including the maximal converging random effect structure (random intercepts by participant and minimal pair). For each experimental grouping within each language, we regressed the human /d/-ratings on predicted posterior probabilities of /d/ by the matching ideal observer model as well as the non-matching ideal observer model. Then we obtain the log likelihood of each linear model. 
 
@@ -2703,7 +2703,7 @@ lmer_model <- function(.data) {
   return(loglik[[1]])
 }
 
-d.test.IO %>% 
+model.likelihood <- d.test.IO %>% 
   group_by(NativeLanguage, Group, Model.Group.matchesParticipant.Group) %>% 
   nest() %>% 
   mutate(
@@ -2718,8 +2718,6 @@ my.models <- d.test.IO.wTraining_folds.wTest_folds %>%
     log.likelihood = map_dbl(data, ~ lmer_model(.x))
   ) 
 
-my.models %<>% mutate(Model.Group.matchesParticipant.Group = ifelse(Model.Group.matchesParticipant.Group == "yes", "Matching", "Mismatching"))
- 
 # plot_grid(my.models %>% filter(Language == "Mandarin-accented English") %>% 
 #   ggplot(aes(x = Group , y = log.likelihood, colour = Group, shape = Model.Group.matchesParticipant.Group)) +
 #   geom_point() +
@@ -2743,10 +2741,10 @@ my.models %<>% mutate(Model.Group.matchesParticipant.Group = ifelse(Model.Group.
 
 
 
-```{r}
+```{r IO-log-likelihood-training-test-folds}
 my.models %>% mutate(Model.Group.matchesParticipant.Group = ifelse(Model.Group.matchesParticipant.Group == "yes", "Matching", "Mismatching")) %>% 
   ggplot(aes(x = Group , y = log.likelihood, colour = Group, shape = Model.Group.matchesParticipant.Group)) +
-  stat_summary(size = 0.6, position = position_dodge(width = 0.3)) +
+  stat_summary(fun.data = "mean_cl_boot", size = 0.6, position = position_dodge(width = 0.3)) +
      scale_color_manual(values = colors.Accent) +
   scale_fill_manual(values = colors.Accent) +
     scale_shape_manual("Ideal Observer", breaks = c("Matching", "Mismatching"), values = c(1, 2)) +
