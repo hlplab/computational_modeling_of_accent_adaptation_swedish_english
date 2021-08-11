@@ -88,7 +88,7 @@ library(daver)
 # devtools::install_github("kleinschmidt/phondisttools")
 library(phondisttools)
 # devtools::install_github("hlplab/MVBeliefUpdatr")
-#library(MVBeliefUpdatr)
+library(MVBeliefUpdatr)
 ```
 
 ```{r constants and environments}
