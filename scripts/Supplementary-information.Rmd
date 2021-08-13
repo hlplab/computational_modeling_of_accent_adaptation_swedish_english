@@ -2497,8 +2497,6 @@ models.likelihood %>%
 (ref:IO-log-likelihood-training-test-folds) **Relative goodness-of-fit of matching ideal observers against that of mismatching ideal observers** to human ratings across all training and test folds. The log likelihood measures the fit of a linear mixed effects regression on human ratings with the posterior /d/-ratings by the respective ideal observers as a predictor. Error bars indicate 95\% bootstrapped confidence interval over the average log likelihood per token.
 
 
-
-(ref: IO-t-values-posterior-d) **Comparing t-values of model posterior /d/-ratings** when the linear mixed effects regression models include or exclude sound as a predictor. 
 ```{r IO-t-values-posterior-d, fig.cap="(ref:IO-t-values-posterior-d)", fig.height=4.5, out.width='75%'}
 my.models <- full_join(models.sound.likelihood, models.likelihood)
 
@@ -2513,7 +2511,9 @@ my.models %>% mutate(model.label = ifelse(model.sound == "no", "model without so
   facet_grid(model.label ~ Language)
 
 ```
-(ref:IO-log-likelihood-training-test-folds-sound) **Relative goodness-of-fit of matching ideal observers against that of mismatching ideal observers** to human ratings across all training and test folds. The log likelihood measures the fit of a linear mixed effects regression on human ratings with the posterior /d/-ratings by the respective ideal observers and sound as predictors. Error bars indicate 95% bootstrapped confidence interval over the average log likelihood per token.
+(ref: IO-t-values-posterior-d) **Comparing t-values of model posterior /d/-ratings** when the linear mixed effects regression models include or exclude sound as a predictor. 
+
+
 
 ```{r IO-log-likelihood-training-test-folds-sound, fig.cap="(ref:IO-log-likelihood-training-test-folds-sound)", fig.height=4.5, out.width='75%'}
 models.sound.likelihood %>% 
@@ -2526,7 +2526,7 @@ models.sound.likelihood %>%
   facet_wrap( ~ Language)
 
 ```
-
+(ref:IO-log-likelihood-training-test-folds-sound) **Relative goodness-of-fit of matching ideal observers against that of mismatching ideal observers** to human ratings across all training and test folds. The log likelihood measures the fit of a linear mixed effects regression on human ratings with the posterior /d/-ratings by the respective ideal observers and sound as predictors. Error bars indicate 95% bootstrapped confidence interval over the average log likelihood per token.
 
 
 ## Item-level comparison between human and model-predicted ratings
