@@ -2419,25 +2419,24 @@ ggsave(filename = "../figures/Result-ratings-byItem-wTraining_folds-folded-test.
        width = 30, height = 20)
 ```
 
-
-
 # Comparing model likelihoods 
 
 We used a linear mixed-effects regression to predict human /d/-goodness ratings from the posterior probability of /d/ predicted by the ideal observers, while also including the maximal converging random effect structure (random intercepts by participant and minimal pair). For each experimental group within each language, we regressed the human /d/-ratings on predicted posterior probabilities for /d/ by the *matching* ideal observer model as well as the *mismatching* ideal observer model (for the /d/-exposure group the mismatched model would be the control ideal observer and vice versa). We did this for each of the eight training-test folds for English, and four training-test folds for Swedish, totalling 48 models. Then we obtained the log likelihood per test token of each model. Comparing the likelihoods of the matching with the mismatching models indicates the relative goodness-of-fit of the ideal observers to the human ratings and whether the matching models closely reflect the exposure effects on the respective experimental groups.
 
 Figure \@ref(fig:IO-log-likelihood-training-test-folds) shows the fit of matching and mismatching ideal observers to the human /d/-goodness ratings averaged across the training-test folds. For the English data the matching ideal observer provided a better fit over the non-matching model for the /d/-exposure group while the non-matching ideal observer fit the human data better in the control group. In the Swedish results the pattern was reversed with the non-matching ideal observer providing a better fit for the /d/-exposure group and the matching ideal observer, for the control group. The large overlapping confidence intervals for the Swedish models however indicate that matching and non-matching models were less likely to have been significantly different in terms of fit to the data and this reflects the fact that we did not find an advantage of the /d/-exposure over control models in any of the training-test folds in the Swedish data.
 
-What may be surprising from this analysis is that for the English models, the /d/-exposure ideal observers not only captured the effects /d/-exposure group better, but they also fit the control group's ratings better than the control ideal observers. This is unexpected given that the relative performance of the /d/-exposure and control models had qualitatively resembled the results of the human ratings. Reexamining figures \@ref(fig:IO-ratings-results-byItem) and \@ref(fig:ratings-results-byItem) helps explain this apparent incompatibility. Notice that in figure \@ref(fig:ratings-results-byItem) the /d/-ratings relative to /t/-ratings given by participants were distinctly in opposite directions for both the /d/-exposure and control groups. Looking at their corresponding models in figure \@ref(fig:IO-ratings-results-byItem) we find that the /d/-exposure group's ratings are clearly reflected by the /d/-exposure ideal observer but less so for the control group (grey bars). In fact, the control ideal observer, although different in its categorisation of /d/ and /t/, could barely capture the difference exhibited in human ratings by the control group. That difference within the control group is instead better captured by the red bars of the /d/-exposure model. This reveals several insights to our modelling efforts. Firstly, 
+What may be surprising from this analysis is that for the English models, the /d/-exposure ideal observers not only captured the effects /d/-exposure group better, but they also fit the control group's ratings better than the control ideal observers. This is unexpected given that the relative performance of the /d/-exposure and control models had qualitatively resembled the results of the human ratings. Reexamining figures \@ref(fig:IO-ratings-results-byItem) and \@ref(fig:ratings-results-byItem) helps explain this apparent incompatibility. Notice that in figure \@ref(fig:ratings-results-byItem) the /d/-ratings relative to /t/-ratings given by participants were distinctly in opposite directions for both the /d/-exposure and control groups. Looking at their corresponding models in figure \@ref(fig:IO-ratings-results-byItem) we find that the /d/-exposure group's ratings are clearly reflected by the /d/-exposure ideal observer but less so for the control group (grey bars). In fact, the control ideal observer, although different in its categorisation of /d/ and /t/, could barely capture the difference exhibited in human ratings by the control group. As indicated by the confidence interval, it is not clear that the contrast between mean /d/-ratings and mean /t/-ratings are statistically significant even if there is a numeric difference. That difference within the control group is instead, better captured by the red bars of the /d/-exposure model. This reveals several insights to our modelling efforts. Firstly, our models in their current form and assumptions, are limited in their capacity to predict the different effects of the two exposure types on human ratings. The fact that the control group, even without receiving any exposure to final stops by the Mandarin-accented talker, could still differentiate the categories substantially well suggests that a) they may have come to the experiment with some prior experience of the accented /d/ and /t/, which our models currently assume none of or b) human listeners use different cues to perceive the contrast which our models do not capture.
+
+<insert explanation on the poverty of models; when sound is included the posterior predictive power falls>
 
 ```{r compare-log-likelihood, include = FALSE}
 
 lmer_IO <- function(.data, model.sound = "no") {
   if (model.sound == "no") { 
     my.model <- lmer(Rating.Response.d.zscored ~ 1 + scale(Model.Posterior.d) + 
-         (1 | Item.MinimalPair) +  (1 + scale(Model.Posterior.d) | Participant), 
+         (1 + scale(Model.Posterior.d) | Item.MinimalPair) +  (1 + scale(Model.Posterior.d) | Participant), 
                      data = .data, 
          control = lmerControl(optCtrl = list(maxfun=20000)), REML = F)
-
   } else 
     my.model <- lmer(Rating.Response.d.zscored ~ 1 + Sound + scale(Model.Posterior.d) + 
          (1 + Sound + scale(Model.Posterior.d) | Item.MinimalPair) +  (1 + scale(Model.Posterior.d) | Participant), 
@@ -2452,7 +2451,6 @@ get_loglik <- function(.data, model.sound) {
 }
 
 get_tvalue <- function(.data, model.sound) {
-  
   my.model <- lmer_IO(.data, model.sound) %>% tidy()
   if (model.sound == "no") {
     return(my.model[[2, 6]])
@@ -2496,22 +2494,26 @@ models.likelihood %>%
   facet_wrap( ~ Language)
 
 ```
+(ref:IO-log-likelihood-training-test-folds) **Relative goodness-of-fit of matching ideal observers against that of mismatching ideal observers** to human ratings across all training and test folds. The log likelihood measures the fit of a linear mixed effects regression on human ratings with the posterior /d/-ratings by the respective ideal observers as a predictor. Error bars indicate 95\% bootstrapped confidence interval over the average log likelihood per token.
 
-```{r, }
+
+
+(ref: IO-t-values-posterior-d) **Comparing t-values of model posterior /d/-ratings** when the linear mixed effects regression models include or exclude sound as a predictor. 
+```{r IO-t-values-posterior-d, fig.cap="(ref:IO-t-values-posterior-d)", fig.height=4.5, out.width='75%'}
 my.models <- full_join(models.sound.likelihood, models.likelihood)
 
-my.models %>% 
+my.models %>% mutate(model.label = ifelse(model.sound == "no", "model without sound", "model with sound")) %>% 
   ggplot(aes(x = t.value.posterior, y = log.likelihood.per.token, colour = Group, shape = Model.Group.matchesParticipant.Group)) +
   geom_point(size = 2.5, alpha = 0.7, position = position_jitterdodge(jitter.width = 0.95)) +
   geom_vline( xintercept = 2, linetype = 3) +
   scale_color_manual(values = colors.Accent) +
   scale_shape_manual("IO matches exposure", breaks = c("yes", "no"), values = c(16, 17)) +
   scale_y_continuous(name = "Fit against perceptual responses\n(per token log likelihood") +
-  scale_x_continuous(name = "t-values: posterior predictions effects on human ratings") +
-  facet_grid(model.sound ~ Language, labeller = )
+  scale_x_continuous(name = "t-value: posterior prediction effect on human ratings") +
+  facet_grid(model.label ~ Language)
 
 ```
-
+(ref:IO-log-likelihood-training-test-folds-sound) **Relative goodness-of-fit of matching ideal observers against that of mismatching ideal observers** to human ratings across all training and test folds. The log likelihood measures the fit of a linear mixed effects regression on human ratings with the posterior /d/-ratings by the respective ideal observers and sound as predictors. Error bars indicate 95% bootstrapped confidence interval over the average log likelihood per token.
 
 ```{r IO-log-likelihood-training-test-folds-sound, fig.cap="(ref:IO-log-likelihood-training-test-folds-sound)", fig.height=4.5, out.width='75%'}
 models.sound.likelihood %>% 
@@ -2898,169 +2900,169 @@ We use incremental Bayesan belief updating to .... MORE HERE.
 We set the prior $m_0$ and $S_0$ for the /t/ and /d/ categories based on the category mean $\mu$ and covariance $\Sigma$ observed for the native data (i.e., the control model) and then consider a range of values for the strengths of the prior beliefs about the mean ($\kappa$) and covariance ($\nu$). Specifically, for each $\nu$, $S_0$ is set so that the *expected value* of the covariance matrix $\Sigma$ is identical to the observed category covariance in the native data. We consider $\kappa$ = 1, 2, 4, ..., 512 and $\nu$ = 8, 16, ..., 512 (the model is only well defined for $\nu > D + 1$, where $D$ is the number of cues).
 
 ```{r belief-updating-setup}
-if (!file.exists("../models/IBBU_updates.RData")) {
-  d.IBBU <-
-    d.IO.training %>%
-    # Make priors from control model's training data
-    filter(Used_for.Model.Group == "control") %>%
-    rename(
-      NativeLanguage = Used_for.Model.NativeLanguage,
-      category = Used_for.Model.Sound) %>%
-    # Assume kappa = nu = 8 in generating the prior
-    # (this choice is arbitrary but needs to be taken into account below when different nus are
-    # considered since the scatter matrix S_0 is set to yield the sample Sigma given the assumed
-    # nu),
-    make_NIW_prior_from_data(
-      groups = "NativeLanguage",
-      cues = c("rvowel", "rclosure", "rburst"),
-      kappa = 8,
-      nu = 8) %>%
-    dplyr::select(-c(kappa, nu)) %>%
-    # Consider a range of prior strengths
-    crossing(
-      kappa = 2^(0:9),
-      nu = 2^(3:9)) %>%
-    # Correct the S_0 for each nu so that it's still the case that the expected covariance
-    # matrix Sigma matches the sample covariance matrix.
-    mutate(
-      S = map2(S, nu, ~ get_Sigma_from_S(.x, 8) %>% get_S_from_Sigma(nu = .y))) %>%
-    # Make a copy of kappa and nu and keep it around as a grouping variable (factor)
-    mutate(
-      prior_kappa = factor(kappa),
-      prior_nu = factor(nu)) %>%
-    # Update each prior with exposure data from /d/-exposure group
-    group_by(NativeLanguage, prior_kappa, prior_nu) %>%
-    group_map(
-      ~ update_NIW_beliefs_incrementally(
-        .x,
-        # Select exposure data to be only /d/-exposure data for /d/ category
-        # for the matching NativeLanguage
-        exposure = d.IO.training %>%
-          filter(
-            Used_for.Model.NativeLanguage == .y$NativeLanguage,
-            Used_for.Model.Sound == "/d/",
-            Used_for.Model.Group == "/d/-exposure") %>%
-          rename(
-            NativeLanguage = Used_for.Model.NativeLanguage,
-            category = Used_for.Model.Sound),
-        add_noise = NULL),
-      .keep = T) %>%
-    reduce(rbind)
-  save(d.IBBU, file = "../models/IBBU_updates.RData", compress = T)
-} else {
-  message("Loading previously calculated incremental Bayesian belief updates. If you have made changes to the training data of the ideal observers, delete the file IBBU_updates.RData under models/ and then rerun this code.")
-  load("../models/IBBU_updates.RData")
-}
-```
-
-Does super quick updating indeed provide the best fit against the *ground truth* (not yet the human responses)? This is not guaranteed because the training and test data (for /d/) is not the same. Plotting the posterior probability of the correct category under the IBBU model for English (top) and Swedish (bottom).
-
-```{r IBBU-sanity-check, fig.width=10}
-d.IBBU.test <-
-  d.IBBU %>%
-  # select final (updated) IOs
-  filter(observation.n == 30) %>%
-  full_join(
-    # Get test data (after removing IO information and removing duplicate rows)
-    d.test.IO %>%
-      dplyr::select(
-        NativeLanguage, Item.MinimalPair, Sound, rvowel, rclosure, rburst) %>%
-      distinct()) %>%
-  make_vector_column(
-    cols = c("rvowel", "rclosure", "rburst"),
-    vector_col = "x") %>%
-  arrange(NativeLanguage, prior_kappa, prior_nu, Item.MinimalPair, Sound, category) %>%
-  group_by(NativeLanguage, prior_kappa, prior_nu) %>%
-  dplyr::select(Item.MinimalPair, Sound, x, category, m, S, kappa, nu, lapse_rate) %>%
-  nest(belief = c(category, m, S, kappa, nu, lapse_rate)) %>%
-  nest(data = c(Item.MinimalPair, Sound, x)) %>%
-  # Get posterior probability of /d/ for each data point
-  mutate(IBBU.Posterior.d = map2(
-    data,
-    belief,
-    ~ get_posterior_predictive_from_NIW_belief(.x$x, .y, log = F) %>%
-      mutate(ID = rep(1:(nrow(.)/2), 2)) %>%
-      group_by(ID) %>%
-      pivot_wider(
-        values_from = pp,
-        names_from = category) %>%
-      transmute(posterior = `/d/` / (`/d/` + `/t/`)) %>%
-      pull(posterior))) %>%
-  # Get posterior probability of correct category
-  # (and then collapse to overall probability of data)
-  mutate(
-    IBBU.Posterior.Intended = map2(
-      data,
-      IBBU.Posterior.d,
-      ~ ifelse(.x$Sound == "/d/", .y, 1 - .y)),
-    IBBU.Posterior.Intended.AllData = unlist(map(
-      IBBU.Posterior.Intended,
-      ~ prod(.x)^(1/length(.x)) %>% unlist())))
-    #~ get_categorization_from_NIW_belief(.x$x, .y, decision_rule = "proportional")))
-
-d.IBBU.test %>%
-  ggplot(aes(x = prior_kappa, y = prior_nu, fill = IBBU.Posterior.Intended.AllData)) +
-  geom_raster(interpolate = T) +
-  scale_fill_viridis_b("Avg. posterior probability\nof correct category\nunder IBBU") +
-  facet_wrap(~ NativeLanguage)
-```
-
-Predicting participants' responses for English (top) and Swedish (bottom).
-
-```{r}
-d.test.IBBU <-
-  d.IBBU %>%
-  # select final (updated) IOs
-  filter(observation.n == 30) %>%
-  # Get test data (after removing IO information and removing duplicate rows)
-  full_join(
-    # Get test data (after removing IO information and removing duplicate rows)
-    d.test.IO %>%
-      dplyr::select(
-        NativeLanguage,
-        Item.MinimalPair, Sound, Rating.Response.d.zscored,
-        rvowel, rclosure, rburst) %>%
-      distinct()) %>%
-  make_vector_column(
-    cols = c("rvowel", "rclosure", "rburst"),
-    vector_col = "x") %>%
-  arrange(NativeLanguage, prior_kappa, prior_nu, Item.MinimalPair, Sound, category) %>%
-  group_by(NativeLanguage, prior_kappa, prior_nu) %>%
-  dplyr::select(Item.MinimalPair, Sound, x, Rating.Response.d.zscored,
-         category, m, S, kappa, nu, lapse_rate) %>%
-  nest(belief = c(category, m, S, kappa, nu, lapse_rate)) %>%
-  nest(data = c(Item.MinimalPair, Sound, x, Rating.Response.d.zscored)) %>%
-  # Get posterior probability of /d/ for each data point
-  mutate(IBBU.Posterior.d = map2(
-    data,
-    belief,
-    ~ get_posterior_predictive_from_NIW_belief(.x$x, .y, log = F) %>%
-      mutate(ID = rep(1:(nrow(.)/2), 2)) %>%
-      group_by(ID) %>%
-      pivot_wider(
-        values_from = pp,
-        names_from = category) %>%
-      transmute(posterior = `/d/` / (`/d/` + `/t/`)) %>%
-      pull(posterior))) %>%
-  # Get posterior probabiltiy of correct category
-  # (and then collapse to overall probability of data)
-  mutate(
-    IBBU.Posterior.Correlation = unlist(map2(
-      data,
-      IBBU.Posterior.d,
-      ~ cor(.x$Rating.Response.d.zscored, .y))))
-
-d.test.IBBU %>%
-  filter(NativeLanguage == "English") %>%
-  ggplot(aes(x = prior_kappa, y = prior_nu, fill = IBBU.Posterior.Correlation)) +
-  geom_raster(interpolate = T) +
-  scale_fill_viridis_b("Correlation between\nIBBU posterior\nand participant ratings")
-
-d.test.IBBU %>%
-  filter(NativeLanguage == "Swedish") %>%
-  ggplot(aes(x = prior_kappa, y = prior_nu, fill = IBBU.Posterior.Correlation)) +
-  geom_raster(interpolate = T) +
-  scale_fill_viridis_b("Correlation between\nIBBU posterior\nand participant ratings")
+# if (!file.exists("../models/IBBU_updates.RData")) {
+#   d.IBBU <-
+#     d.IO.training %>%
+#     # Make priors from control model's training data
+#     filter(Used_for.Model.Group == "control") %>%
+#     rename(
+#       NativeLanguage = Used_for.Model.NativeLanguage,
+#       category = Used_for.Model.Sound) %>%
+#     # Assume kappa = nu = 8 in generating the prior
+#     # (this choice is arbitrary but needs to be taken into account below when different nus are
+#     # considered since the scatter matrix S_0 is set to yield the sample Sigma given the assumed
+#     # nu),
+#     make_NIW_prior_from_data(
+#       groups = "NativeLanguage",
+#       cues = c("rvowel", "rclosure", "rburst"),
+#       kappa = 8,
+#       nu = 8) %>%
+#     dplyr::select(-c(kappa, nu)) %>%
+#     # Consider a range of prior strengths
+#     crossing(
+#       kappa = 2^(0:9),
+#       nu = 2^(3:9)) %>%
+#     # Correct the S_0 for each nu so that it's still the case that the expected covariance
+#     # matrix Sigma matches the sample covariance matrix.
+#     mutate(
+#       S = map2(S, nu, ~ get_Sigma_from_S(.x, 8) %>% get_S_from_Sigma(nu = .y))) %>%
+#     # Make a copy of kappa and nu and keep it around as a grouping variable (factor)
+#     mutate(
+#       prior_kappa = factor(kappa),
+#       prior_nu = factor(nu)) %>%
+#     # Update each prior with exposure data from /d/-exposure group
+#     group_by(NativeLanguage, prior_kappa, prior_nu) %>%
+#     group_map(
+#       ~ update_NIW_beliefs_incrementally(
+#         .x,
+#         # Select exposure data to be only /d/-exposure data for /d/ category
+#         # for the matching NativeLanguage
+#         exposure = d.IO.training %>%
+#           filter(
+#             Used_for.Model.NativeLanguage == .y$NativeLanguage,
+#             Used_for.Model.Sound == "/d/",
+#             Used_for.Model.Group == "/d/-exposure") %>%
+#           rename(
+#             NativeLanguage = Used_for.Model.NativeLanguage,
+#             category = Used_for.Model.Sound),
+#         add_noise = NULL),
+#       .keep = T) %>%
+#     reduce(rbind)
+#   save(d.IBBU, file = "../models/IBBU_updates.RData", compress = T)
+# } else {
+#   message("Loading previously calculated incremental Bayesian belief updates. If you have made changes to the training data of the ideal observers, delete the file IBBU_updates.RData under models/ and then rerun this code.")
+#   load("../models/IBBU_updates.RData")
+# }
+# ```
+# 
+# Does super quick updating indeed provide the best fit against the *ground truth* (not yet the human responses)? This is not guaranteed because the training and test data (for /d/) is not the same. Plotting the posterior probability of the correct category under the IBBU model for English (top) and Swedish (bottom).
+# 
+# ```{r IBBU-sanity-check, fig.width=10}
+# d.IBBU.test <-
+#   d.IBBU %>%
+#   # select final (updated) IOs
+#   filter(observation.n == 30) %>%
+#   full_join(
+#     # Get test data (after removing IO information and removing duplicate rows)
+#     d.test.IO %>%
+#       dplyr::select(
+#         NativeLanguage, Item.MinimalPair, Sound, rvowel, rclosure, rburst) %>%
+#       distinct()) %>%
+#   make_vector_column(
+#     cols = c("rvowel", "rclosure", "rburst"),
+#     vector_col = "x") %>%
+#   arrange(NativeLanguage, prior_kappa, prior_nu, Item.MinimalPair, Sound, category) %>%
+#   group_by(NativeLanguage, prior_kappa, prior_nu) %>%
+#   dplyr::select(Item.MinimalPair, Sound, x, category, m, S, kappa, nu, lapse_rate) %>%
+#   nest(belief = c(category, m, S, kappa, nu, lapse_rate)) %>%
+#   nest(data = c(Item.MinimalPair, Sound, x)) %>%
+#   # Get posterior probability of /d/ for each data point
+#   mutate(IBBU.Posterior.d = map2(
+#     data,
+#     belief,
+#     ~ get_posterior_predictive_from_NIW_belief(.x$x, .y, log = F) %>%
+#       mutate(ID = rep(1:(nrow(.)/2), 2)) %>%
+#       group_by(ID) %>%
+#       pivot_wider(
+#         values_from = pp,
+#         names_from = category) %>%
+#       transmute(posterior = `/d/` / (`/d/` + `/t/`)) %>%
+#       pull(posterior))) %>%
+#   # Get posterior probability of correct category
+#   # (and then collapse to overall probability of data)
+#   mutate(
+#     IBBU.Posterior.Intended = map2(
+#       data,
+#       IBBU.Posterior.d,
+#       ~ ifelse(.x$Sound == "/d/", .y, 1 - .y)),
+#     IBBU.Posterior.Intended.AllData = unlist(map(
+#       IBBU.Posterior.Intended,
+#       ~ prod(.x)^(1/length(.x)) %>% unlist())))
+#     #~ get_categorization_from_NIW_belief(.x$x, .y, decision_rule = "proportional")))
+# 
+# d.IBBU.test %>%
+#   ggplot(aes(x = prior_kappa, y = prior_nu, fill = IBBU.Posterior.Intended.AllData)) +
+#   geom_raster(interpolate = T) +
+#   scale_fill_viridis_b("Avg. posterior probability\nof correct category\nunder IBBU") +
+#   facet_wrap(~ NativeLanguage)
+# ```
+# 
+# Predicting participants' responses for English (top) and Swedish (bottom).
+# 
+# ```{r}
+# d.test.IBBU <-
+#   d.IBBU %>%
+#   # select final (updated) IOs
+#   filter(observation.n == 30) %>%
+#   # Get test data (after removing IO information and removing duplicate rows)
+#   full_join(
+#     # Get test data (after removing IO information and removing duplicate rows)
+#     d.test.IO %>%
+#       dplyr::select(
+#         NativeLanguage,
+#         Item.MinimalPair, Sound, Rating.Response.d.zscored,
+#         rvowel, rclosure, rburst) %>%
+#       distinct()) %>%
+#   make_vector_column(
+#     cols = c("rvowel", "rclosure", "rburst"),
+#     vector_col = "x") %>%
+#   arrange(NativeLanguage, prior_kappa, prior_nu, Item.MinimalPair, Sound, category) %>%
+#   group_by(NativeLanguage, prior_kappa, prior_nu) %>%
+#   dplyr::select(Item.MinimalPair, Sound, x, Rating.Response.d.zscored,
+#          category, m, S, kappa, nu, lapse_rate) %>%
+#   nest(belief = c(category, m, S, kappa, nu, lapse_rate)) %>%
+#   nest(data = c(Item.MinimalPair, Sound, x, Rating.Response.d.zscored)) %>%
+#   # Get posterior probability of /d/ for each data point
+#   mutate(IBBU.Posterior.d = map2(
+#     data,
+#     belief,
+#     ~ get_posterior_predictive_from_NIW_belief(.x$x, .y, log = F) %>%
+#       mutate(ID = rep(1:(nrow(.)/2), 2)) %>%
+#       group_by(ID) %>%
+#       pivot_wider(
+#         values_from = pp,
+#         names_from = category) %>%
+#       transmute(posterior = `/d/` / (`/d/` + `/t/`)) %>%
+#       pull(posterior))) %>%
+#   # Get posterior probabiltiy of correct category
+#   # (and then collapse to overall probability of data)
+#   mutate(
+#     IBBU.Posterior.Correlation = unlist(map2(
+#       data,
+#       IBBU.Posterior.d,
+#       ~ cor(.x$Rating.Response.d.zscored, .y))))
+# 
+# d.test.IBBU %>%
+#   filter(NativeLanguage == "English") %>%
+#   ggplot(aes(x = prior_kappa, y = prior_nu, fill = IBBU.Posterior.Correlation)) +
+#   geom_raster(interpolate = T) +
+#   scale_fill_viridis_b("Correlation between\nIBBU posterior\nand participant ratings")
+# 
+# d.test.IBBU %>%
+#   filter(NativeLanguage == "Swedish") %>%
+#   ggplot(aes(x = prior_kappa, y = prior_nu, fill = IBBU.Posterior.Correlation)) +
+#   geom_raster(interpolate = T) +
+#   scale_fill_viridis_b("Correlation between\nIBBU posterior\nand participant ratings")
 ```
 
 
