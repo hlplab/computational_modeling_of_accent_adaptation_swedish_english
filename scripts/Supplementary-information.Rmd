@@ -2492,12 +2492,24 @@ models.likelihood %>%
     scale_shape_manual("IO matches exposure", breaks = c("yes", "no"), values = c(16, 17)) +
   scale_y_continuous(name = "Fit against perceptual responses\n(per token log likelihood)") +
   facet_wrap( ~ Language)
-
 ```
 (ref:IO-log-likelihood-training-test-folds) **Relative goodness-of-fit of matching ideal observers against that of mismatching ideal observers** to human ratings across all training and test folds. The log likelihood measures the fit of a linear mixed effects regression on human ratings with the posterior /d/-ratings by the respective ideal observers as a predictor. Error bars indicate 95\% bootstrapped confidence interval over the average log likelihood per token.
 
+```{r IO-log-likelihood-training-test-folds-sound, fig.cap="(ref:IO-log-likelihood-training-test-folds-sound)", fig.height=4.5, out.width='75%'}
+models.sound.likelihood %>% 
+  ggplot(aes(x = Group , y = log.likelihood.per.token, colour = Group, shape = Model.Group.matchesParticipant.Group)) +
+  stat_summary(geom = "pointrange", fun.data = mean_cl_boot, size = 0.8, position = position_dodge(width = 0.3)) +
+  layer(geom = "point", stat = "identity", position = position_dodge(width = 0.3), params = list(size = 1)) +
+     scale_color_manual(values = colors.Accent) +
+    scale_shape_manual("IO matches exposure", breaks = c("yes", "no"), values = c(16, 17)) +
+  scale_y_continuous(name = "Fit against perceptual responses\n(per token log likelihood)") +
+  facet_wrap( ~ Language)
 
-```{r IO-t-values-posterior-d, fig.cap="(ref:IO-t-values-posterior-d)", fig.height=4.5, out.width='75%'}
+```
+(ref:IO-log-likelihood-training-test-folds-sound) **Relative goodness-of-fit of matching ideal observers against that of mismatching ideal observers** to human ratings across all training and test folds. The log likelihood measures the fit of a linear mixed effects regression on human ratings with the posterior /d/-ratings by the respective ideal observers and sound as predictors. Error bars indicate 95% bootstrapped confidence interval over the average log likelihood per token.
+
+
+```{r IO-t-values-posterior-d, fig.cap="(ref:IO-t-values-posterior-d)", fig.height=6.5, out.width='75%'}
 my.models <- full_join(models.sound.likelihood, models.likelihood)
 
 my.models %>% mutate(model.label = ifelse(model.sound == "no", "model without sound", "model with sound")) %>% 
@@ -2515,18 +2527,7 @@ my.models %>% mutate(model.label = ifelse(model.sound == "no", "model without so
 
 
 
-```{r IO-log-likelihood-training-test-folds-sound, fig.cap="(ref:IO-log-likelihood-training-test-folds-sound)", fig.height=4.5, out.width='75%'}
-models.sound.likelihood %>% 
-  ggplot(aes(x = Group , y = log.likelihood.per.token, colour = Group, shape = Model.Group.matchesParticipant.Group)) +
-  stat_summary(geom = "pointrange", fun.data = mean_cl_boot, size = 0.8, position = position_dodge(width = 0.3)) +
-  layer(geom = "point", stat = "identity", position = position_dodge(width = 0.3), params = list(size = 1)) +
-     scale_color_manual(values = colors.Accent) +
-    scale_shape_manual("IO matches exposure", breaks = c("yes", "no"), values = c(16, 17)) +
-  scale_y_continuous(name = "Fit against perceptual responses\n(per token log likelihood)") +
-  facet_wrap( ~ Language)
 
-```
-(ref:IO-log-likelihood-training-test-folds-sound) **Relative goodness-of-fit of matching ideal observers against that of mismatching ideal observers** to human ratings across all training and test folds. The log likelihood measures the fit of a linear mixed effects regression on human ratings with the posterior /d/-ratings by the respective ideal observers and sound as predictors. Error bars indicate 95% bootstrapped confidence interval over the average log likelihood per token.
 
 
 ## Item-level comparison between human and model-predicted ratings
