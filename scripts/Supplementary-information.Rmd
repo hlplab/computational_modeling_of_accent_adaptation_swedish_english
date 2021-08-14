@@ -2433,7 +2433,7 @@ What may be surprising from this analysis is that for the English models, the /d
 
 lmer_IO <- function(.data, include.sound = FALSE) {
   if (include.sound) { 
-    my.model <- lmer(Rating.Response.d.zscored ~ 1 + Sound + scale(Model.Posterior.d) + 
+    my.model <- lmer(Rating.Response.d.zscored ~ 1 + scale(Model.Posterior.d) + Sound +
          (1 + Sound + scale(Model.Posterior.d) | Item.MinimalPair) + 
            (1 + scale(Model.Posterior.d) | Participant), 
                      data = .data, control = lmerControl(optCtrl = list(maxfun=20000)), REML = F)
@@ -2452,12 +2452,9 @@ get_loglik <- function(.data, include.sound) {
 }
 
 get_tvalue <- function(.data, include.sound) {
-  my.model <- lmer_IO(.data, include.sound) %>% tidy()
-  if (include.sound) {
-   return(my.model[[3, 6]])
-  } else { 
+  my.model <- lmer_IO(.data, include.sound) %>% 
+    tidy()
    return(my.model[[2, 6]])
-  }
 }
 
 models.likelihood <- d.test.IO.wTraining_folds.wTest_folds %>% 
@@ -2487,16 +2484,18 @@ models.sound.likelihood <- d.test.IO.wTraining_folds.wTest_folds %>%
 ```{r IO-log-likelihood-training-test-folds, fig.cap="(ref:IO-log-likelihood-training-test-folds)", fig.height=4.5, out.width='75%'}
 p.likelihood <- models.likelihood %>% 
   ggplot(aes(x = Group , y = log.likelihood.per.token, colour = Group, shape = Model.Group.matchesParticipant.Group)) +
-  geom_point(aes(alpha = 0.06, size = 2, shape = Model.Group.matchesParticipant.Group), 
+  geom_point(aes(alpha = 0.04, size = 1, shape = Model.Group.matchesParticipant.Group), 
                colour = "lightgrey", 
                stroke = 1, position = position_dodge(width = 0.3), 
                show.legend = FALSE)
   
   p.likelihood + 
-    stat_summary(geom = "pointrange", fun.data = mean_cl_boot, size = 1.2, position = position_dodge(width = 0.3)) +
+    stat_summary(geom = "pointrange", fun.data = mean_cl_boot, size = 1, position = position_dodge(width = 0.3)) +
     scale_color_manual(values = colors.Accent) +
     scale_shape_manual("IO matches exposure", breaks = c("yes", "no"), values = c(16, 17)) +
   scale_y_continuous(name = "Fit against perceptual responses\n(per token log likelihood)") +
+    guides(shape = guide_legend(override.aes = list(size = .7)),
+           colour = guide_legend(override.aes = list(size = .7))) +
   facet_wrap( ~ Language)
 ```
 (ref:IO-log-likelihood-training-test-folds) **Relative goodness-of-fit of matching ideal observers against that of mismatching ideal observers** to human ratings across all training and test folds. The log likelihood measures the fit of a linear mixed effects regression on human ratings with the posterior /d/-ratings by the respective ideal observers as a predictor. Error bars indicate 95\% bootstrapped confidence interval over the average log likelihood per token.
@@ -2504,16 +2503,18 @@ p.likelihood <- models.likelihood %>%
 ```{r IO-log-likelihood-training-test-folds-sound, fig.cap="(ref:IO-log-likelihood-training-test-folds-sound)", fig.height=4.5, out.width='75%'}
 p.sound.likelihood <- models.sound.likelihood %>% 
   ggplot(aes(x = Group , y = log.likelihood.per.token, colour = Group, shape = Model.Group.matchesParticipant.Group)) +
-  geom_point(aes(alpha = 0.06, size = 2, shape = Model.Group.matchesParticipant.Group), 
+  geom_point(aes(alpha = 0.04, size = 1, shape = Model.Group.matchesParticipant.Group), 
                colour = "lightgrey", 
                stroke = 1, position = position_dodge(width = 0.3), 
                show.legend = FALSE)
   
   p.sound.likelihood + 
-    stat_summary(geom = "pointrange", fun.data = mean_cl_boot, size = 1.2, position = position_dodge(width = 0.3)) +
+    stat_summary(geom = "pointrange", fun.data = mean_cl_boot, size = 1, position = position_dodge(width = 0.3)) +
     scale_color_manual(values = colors.Accent) +
     scale_shape_manual("IO matches exposure", breaks = c("yes", "no"), values = c(16, 17)) +
   scale_y_continuous(name = "Fit against perceptual responses\n(per token log likelihood)") +
+      guides(shape = guide_legend(override.aes = list(size = .7)),
+           colour = guide_legend(override.aes = list(size = .7))) +
   facet_wrap( ~ Language)
 ```
 (ref:IO-log-likelihood-training-test-folds-sound) **Relative goodness-of-fit of matching ideal observers against that of mismatching ideal observers** to human ratings across all training and test folds. The log likelihood measures the fit of a linear mixed effects regression on human ratings with the posterior /d/-ratings by the respective ideal observers and sound as predictors. Error bars indicate 95% bootstrapped confidence interval over the average log likelihood per token.
