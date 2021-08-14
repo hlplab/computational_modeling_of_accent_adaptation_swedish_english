@@ -2431,55 +2431,56 @@ What may be surprising from this analysis is that for the English models, the /d
 
 ```{r compare-log-likelihood, include = FALSE}
 
-lmer_IO <- function(.data, model.sound = "no") {
-  if (model.sound == "no") { 
-    my.model <- lmer(Rating.Response.d.zscored ~ 1 + scale(Model.Posterior.d) + 
-         (1 + scale(Model.Posterior.d) | Item.MinimalPair) +  (1 + scale(Model.Posterior.d) | Participant), 
-                     data = .data, 
-         control = lmerControl(optCtrl = list(maxfun=20000)), REML = F)
-  } else 
+lmer_IO <- function(.data, include.sound = FALSE) {
+  if (include.sound) { 
     my.model <- lmer(Rating.Response.d.zscored ~ 1 + Sound + scale(Model.Posterior.d) + 
-         (1 + Sound + scale(Model.Posterior.d) | Item.MinimalPair) +  (1 + scale(Model.Posterior.d) | Participant), 
-                     data = .data, 
-         control = lmerControl(optCtrl = list(maxfun=20000)), REML = F) 
+         (1 + Sound + scale(Model.Posterior.d) | Item.MinimalPair) + 
+           (1 + scale(Model.Posterior.d) | Participant), 
+                     data = .data, control = lmerControl(optCtrl = list(maxfun=20000)), REML = F)
+  } else {
+    my.model <- lmer(Rating.Response.d.zscored ~ 1 + scale(Model.Posterior.d) + 
+         (1 + scale(Model.Posterior.d) | Item.MinimalPair) + 
+           (1 + scale(Model.Posterior.d) | Participant), 
+                     data = .data, control = lmerControl(optCtrl = list(maxfun=20000)), REML = F)
+  }
 }
 
-get_loglik <- function(.data, model.sound) {
-  my.model <- lmer_IO(.data, model.sound) %>% 
-    logLik()
-  return(my.model[[1]])
+get_loglik <- function(.data, include.sound) {
+  LikeIndex <- 1
+  my.model <- lmer_IO(.data, include.sound) %>% logLik()
+  return(my.model[[LikeIndex]])
 }
 
-get_tvalue <- function(.data, model.sound) {
-  my.model <- lmer_IO(.data, model.sound) %>% tidy()
-  if (model.sound == "no") {
-    return(my.model[[2, 6]])
-  } else
-  return(my.model[[3, 6]])
+get_tvalue <- function(.data, include.sound) {
+  my.model <- lmer_IO(.data, include.sound) %>% tidy()
+  if (include.sound) {
+   return(my.model[[3, 6]])
+  } else { 
+   return(my.model[[2, 6]])
+  }
 }
 
 models.likelihood <- d.test.IO.wTraining_folds.wTest_folds %>% 
   group_by(Language, Group, Model.Group.matchesParticipant.Group, Training_fold, Test_fold) %>% 
   nest()%>% 
   mutate(
-    model.sound = "no",
+    include.sound = FALSE,
     n.token = map_dbl(data, ~ nrow(.x)),
-    log.likelihood = map2_dbl(.x = data, .y = model.sound, ~ get_loglik(.x, .y)), 
+    log.likelihood = map2_dbl(.x = data, .y = include.sound, ~ get_loglik(.x, .y)), 
     log.likelihood.per.token = log.likelihood/n.token,
-    t.value.posterior = map2_dbl(.x = data, .y = model.sound, ~ get_tvalue(.x, .y))
+    t.value.posterior = map2_dbl(.x = data, .y = include.sound, ~ get_tvalue(.x, .y))
   ) 
 
 models.sound.likelihood <- d.test.IO.wTraining_folds.wTest_folds %>% 
   group_by(Language, Group, Model.Group.matchesParticipant.Group, Training_fold, Test_fold) %>% 
   nest()%>% 
   mutate(
-    model.sound = "yes",
+    include.sound = TRUE,
     n.token = map_dbl(data, ~ nrow(.x)),
-    log.likelihood = map2_dbl(.x = data, .y = model.sound, ~ get_loglik(.x, .y)), 
+    log.likelihood = map2_dbl(.x = data, .y = include.sound, ~ get_loglik(.x, .y)), 
     log.likelihood.per.token = log.likelihood/n.token,
-    t.value.posterior = map2_dbl(.x = data, .y = model.sound, ~ get_tvalue(.x, .y))
+    t.value.posterior = map2_dbl(.x = data, .y = include.sound, ~ get_tvalue(.x, .y))
   ) 
-
 ```
 
 
@@ -2509,12 +2510,12 @@ models.sound.likelihood %>%
 (ref:IO-log-likelihood-training-test-folds-sound) **Relative goodness-of-fit of matching ideal observers against that of mismatching ideal observers** to human ratings across all training and test folds. The log likelihood measures the fit of a linear mixed effects regression on human ratings with the posterior /d/-ratings by the respective ideal observers and sound as predictors. Error bars indicate 95% bootstrapped confidence interval over the average log likelihood per token.
 
 
-```{r IO-t-values-posterior-d, fig.cap="(ref:IO-t-values-posterior-d)", fig.height=8.5, fig.width=6.5, out.width='75%'}
+```{r IO-t-values-posterior-d, fig.cap="(ref:IO-t-values-posterior-d)", fig.height=6.5, fig.width=6.5, out.width='85%'}
 my.models <- full_join(models.sound.likelihood, models.likelihood)
 
-my.models %>% mutate(model.label = ifelse(model.sound == "no", "model without sound", "model with sound")) %>% 
+my.models %>% mutate(model.label = ifelse(include.sound == FALSE, "model without sound", "model with sound")) %>% 
   ggplot(aes(x = t.value.posterior, y = log.likelihood.per.token, colour = Group, shape = Model.Group.matchesParticipant.Group)) +
-  geom_point(size = 2.5, alpha = 0.7, position = position_jitterdodge(jitter.width = 0.95)) +
+  geom_point(size = 2.5, alpha = 0.7, position = position_dodge(width = 0.95)) +
   geom_vline( xintercept = 2, linetype = 3) +
   scale_color_manual(values = colors.Accent) +
   scale_shape_manual("IO matches exposure", breaks = c("yes", "no"), values = c(16, 17)) +
