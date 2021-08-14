@@ -2509,7 +2509,7 @@ p.sound.likelihood <- models.sound.likelihood %>%
                stroke = 1, position = position_dodge(width = 0.3), 
                show.legend = FALSE)
   
-  p.likelihood + 
+  p.sound.likelihood + 
     stat_summary(geom = "pointrange", fun.data = mean_cl_boot, size = 1.2, position = position_dodge(width = 0.3)) +
     scale_color_manual(values = colors.Accent) +
     scale_shape_manual("IO matches exposure", breaks = c("yes", "no"), values = c(16, 17)) +
