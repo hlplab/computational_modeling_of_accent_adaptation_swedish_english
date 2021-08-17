@@ -2271,11 +2271,11 @@ ggscatter(d.english.test.byItem, x = "Proportion.d", y = "zRating.d", color = "G
 
 # Results of ideal observer analyses {#sec:IO-results}
 
-<!-- Maryann, Xin: this text needs to be expanded, following the style used in the remainder of the SI -->
+We evaluate the ideal observers against human responses in two ways. First, we qualitatively compare *average group-level* for the two exposure groups (/d/-exposure vs. control). Second, we analyze and visualize the quantitative item-level fit between the predictions of ideal observers and human responses. This leads us to discuss how the use of naturally distributed test tokens limits the statistical power of the experiments analyzed here---in ways that are likely to apply to many, if not most, experiments on accent adaptation. 
 
-We evaluate the ideal observers against human responses in two ways. First, we qualitatively compare *average group-level* for the two exposure groups (/d/-exposure vs. control). Second, we analyze and visualize item-level correlations between the ideal observer and human responses.  
+Finally, we assess whether ideal observers that match the exposure condition of participants match those participants' responses better than ideal observers that do not match participants' exposure condition. 
 
-## Group-level comparison between human and model-predicted ratings {#sec:results-main}
+## Qualitative group-level comparison between human and model-predicted ratings {#sec:results-main}
 
 Figure \@ref(fig:IO-ratings-results-byItem) plots the predictions of the ideal observers. Figure \@ref(fig:ratings-results-byItem) replots the human rating results for the English and Swedish experiments from Figure \@ref(fig:ratings-results) in Section \@ref(sec:results). However, unlike the original Figure \@ref(fig:ratings-results), Figure \@ref(fig:ratings-results-byItem) shows by-item (rather than by-subject) means. This is done to facilitate comparison to the ideal observer predictions, which---by necessity---are predictions about individual items. 
 
@@ -2315,12 +2315,14 @@ ggsave(p.results.percept.byItem, filename = "../figures/Result-ratings-byItem.pn
        width = 7, height = 4)
 ```
 
-The ideal observers' predictions differ from the human ratings in a number of ways. First, the human data is more gradient than predicted by the ideal observers. This is most evident for the Swedish data. One likely explanation for this is that the simple ideal observers we employ here do not account for perceptual noise [cf. @feldman2009influence] or attentional lapses (see Table S1 with model assumptions). Second, the differences between the different ideal observers are more pronounced than for the z-scored human ratings. This is the case both across languages, and across exposure conditions within each language.
+The ideal observers' predictions differ from the human ratings in a number of ways. First, the human data is more gradient than predicted by the ideal observers. This is most evident for the Swedish data. One likely explanation for this is that the simple ideal observers we employ here do not account for perceptual noise [cf. @feldman2009influence] or attentional lapses (see Table S1 with model assumptions). Second, the differences between the different ideal observers are more pronounced than for the z-scored human ratings. This is the case both across languages, and across exposure conditions within each language. This difference between model predictions and human ratings is particularly evident for /t/ test items after control exposure in the English experiment (gray bars on the right side of the left panels of Figures \@ref(fig:IO-ratings-results-byItem) and \@ref(fig:ratings-results-byItem)): whereas the ideal observers predicts very little of a difference between /d/ and /t/ test items, the ratings of human participants show a clear difference. We will return to this particular difference below, since it suggests that even participants in the English control condition where able to distinguish the L2-accented /d/ from the L2-accented /t/.
 
 The ideal observers do, however, predict the qualitative patterns in the human goodness ratings. For the English data, the ideal observers predict significantly higher ratings from the /d/-exposure model over the control model for both /d/ and /t/. This advantage of /d/-exposure seems more pronounced for the /t/-category than for the /d/ category. Though less obviously so, this also is the case for the human ratings: for the /t/ category, the CIs of the two models do not include the means of the other model; for the /d/ category, they do. For the Swedish data, the ideal observers predict no difference between the control and /d/-exposure model for /d/ but higher ratings for the the *control* model for /t/. This qualitatively mirrors the asymmetry between /d/ and /t/ observed for the human ratings, though the effect for /t/ is only marginal for the human ratings.
 
-## How robust are these results? How much data does this type of modeling require?
-Our initial analysis did not employ cross-validation or similar methods. This decision was made since the training data do not overlap with the test data. During the review process, reviewers raised questions about the amount of data that would be required for the type of computational analysis conducted here. Here we address this questions by subsetting the training and test data to assess the variability of the results across cross-validated folds of the training and test data. This allows us to assess the extent to which the results in the previous section are due to overfitting to the training data. 
+## How robust are these qualitative predictions? How much data is required for this type of modeling approach?
+Our initial analysis did not employ any safe-guards against over-fitting to the data. This decision was made since the training and test data are completely non-overlapping. Except for the *intended* statistical dependencies between the training and test data for the /d/-exposure condition (for which the training and test data are drawn from the same talker), the training and test data are thus expected to be statistically independent of each other. This differs from the common scenario of training and testing computational models on the same data, in which case it is absolutely critical to guard against over-optimism/over-fitting by subsetting the data into separate training and test subsets.
+
+During the review process, reviewers raised questions about the amount of data that would be required for the type of computational analysis conducted here. This is likely a question of interested to any researcher interested in applying a computational approach to the interpretation of their experiments on speech perception. Here, we address this question by subsetting the training and test data to assess the variability of the results across cross-validated folds of the training and test data. This allows us to assess the extent to which the results in the previous section are due to overfitting to the training data. 
 
 Our ideal observers are trained on two types of data: data that estimate native listeners' expectations about /d/ and /t/ based on previous lifelong experience with their native language, and data that estimate the effects of the exposure to nonnative accented speech (for the /d/ category in the /d/-exposure condition). For the former data, we randomly created two non-overlapping folds, each containing 50% of the native training data. The folds were created by sampling (with replacement) the native data described in Section \@ref(sec:IO-training) *within* each unique combination of talker and category. Each model was then trained on one of the two folds (50% of the data, i.e., 15 tokens per category and talker), resulting in two models, each omitting another half of the native training data. Since the exposure data---by hypothesis---form the basis of adaptation, we do *not* resample or subset these data but rather hold them constant across all folds of the training data. By comparing across these two models, we can thus assess the extent to which the specific native data used to train the ideal observers affects our results (recall that these data determine the /t/ category in both the control and the /d/-exposure models, as well as the /d/ category in the control model). At the same time, this analysis sheds light on whether 15 tokens per talker and category are even remotely sufficient to achieve robust estimates of category means and covariances. This is a question, in particular, for the Swedish models, for which we had phonetically annotated data from only *one* native talker (as opposed to 6 talkers for the English data).  
 
@@ -2357,11 +2359,11 @@ d.IO.wTraining_folds <- map(
 
 We first evaluated the two-folded training models on the entire test set, following the same procedure outlined in Section \@ref(sec:IO-test). Figure \@ref(fig:IO-ratings-results-byItem-wTraining-folds) plots the predictions of the ideal observers. For English, we find that the /d/-exposure model consistently outperform the control model in both training folds. For both training folds, the predictions closely reflect those of the model trained on 100% of the data \@ref(fig:IO-ratings-results-byItem) and thus continue to provide a good qualitative fit for the human goodness ratings in the English experiment (shown in \@ref(fig:ratings-results-byItem)). Specifically, we continue to see that the predicted effects of /d/-exposure, compared to control exposure, are larger for the /t/ category than for the /d/ category, mirroring the human ratings. 
 
-For Swedish,the models using both folds find that /d/-exposure should not affect ratings. This is consistent with the models fit to the complete training data as well as the human ratings. For the /t/ category, however, the predictions are less consistent across the two folds. Whereas one fold predicts no difference between /d/-exposure and control, the other fold predicts an advantage of control exposure. This latter prediction is driven by the fact that /t/ test items are recognized with 100% accuracy by the model trained on the second training fold (see gray points the bottom-right bar of bottom-right panel of Figure \@ref(fig:IO-ratings-results-byItem-wTraining-folds)). This suggests that the prediction of a small numerical advantage of control exposure for /t/-ratings might reflect over-fitting to the training data, and that the similarity between this prediction and the human ratings should be interpreted with caution. What is, however, stable across training folds even for the Swedish /t/ category is that no model predicts an advantage of /d/-exposure over control. We find the consistency across training folds encouraging, given the relatively small amount of data that the ideal observers were trained on---in particular for Swedish, for which we only had access to recordings from a single native talker (age and gender-matched to the non-native talker).
+For Swedish,the models using both folds find that /d/-exposure should not affect ratings. This is consistent with the models fit to the complete training data as well as the human ratings. For the /t/ category, too, the predictions are qualitatively consistent across the two folds, and reflect what we found in the overall analysis and---marginally---in the human goodness ratings for /t/. It is, however, also apparent that the difference between the /d/-exposure and control model is more pronounced in the first test fold. This numerical difference is driven by the fact that training can lead to an ideal observer for the control condition that recognized most, if not all, /t/ test items with 100% accuracy (see gray points the bottom-right bar of bottom-right panel of Figure \@ref(fig:IO-ratings-results-byItem-wTraining-folds)). In other training folds, we found that the signigicant advantage of control exposure for /t/-ratings can disappear in one of the test folds, suggesting that this aspect of our results should be interpreted with caution. What is, however, stable across training folds even for the Swedish /t/ category is that no model predicts an advantage of /d/-exposure over control. We find the consistency across training folds encouraging, given the relatively small amount of data that the ideal observers were trained on---in particular for Swedish, for which we only had access to recordings from a single native talker (age and gender-matched to the non-native talker).
 
 (ref:IO-ratings-results-byItem-wTraining-folds) **2-fold cross-validated ideal observer /d/-goodness ratings** during test (z-scored) predicted by the control and /d/-exposure ideal observers. Error bars show 95\% bootstrapped confidence intervals over by-item predictions (since there aren't multiple subjects). Each row shows one training fold excluding a different half of the native training data. For additional details, see Figure \@ref(fig:IO-ratings-results-byItem). 
 
-```{r IO-ratings-results-byItem-wTraining-folds, set.seed(333), fig.cap="(ref:IO-ratings-results-byItem-wTraining-folds)", fig.height=8.5, out.width='75%'}
+```{r IO-ratings-results-byItem-wTraining-folds, fig.cap="(ref:IO-ratings-results-byItem-wTraining-folds)", fig.height=8.5, out.width='75%'}
 # Following same steps as above for non-CV testing
 d.IO.test.wTraining_folds <- categorize_stims_by_IO(d.stims, d.IO.wTraining_folds)
 d.test.IO.wTraining_folds <- join_IO_categorizations_with_human_test(d.IO.test.wTraining_folds, d.test)
@@ -2377,11 +2379,13 @@ ggsave(filename = "../figures/Result-ratings-byItem-wTraining_folds.png",
        width = 14, height = 20)
 ```
 
-Next, we evaluated the two training folds on cross-validated test folds. By comparing across test folds within each training fold, we can estimate how robust our results are as the test items change. Specifically, we randomly split the test data into folds of 30 tokens each (15 minimal pairs), resulting in 2 folds for the Swedish test data (which had 60 test tokens) and 4 folds for the English test data (which had 120 test tokens). Each fold was created by sampling minimal pairs---rather than individual words---to hold the phonological context constant between the /d/ and /t/ test items within each fold. We then compared the model predictions for each test fold against the human ratings on the same test items. 
+Next, we evaluated the models obtained from both training folds on cross-validated test folds. By comparing across test folds within each training fold, we can estimate how robust our results are as the test items change. Specifically, we randomly split the test data into folds of 30 tokens each (15 minimal pairs), resulting in 2 folds for the Swedish test data (which had 60 test tokens) and 4 folds for the English test data (which had 120 test tokens). Each fold was created by sampling minimal pairs---rather than individual words---to hold the phonological context constant between the /d/ and /t/ test items within each fold. We then compared the model predictions for each test fold against the human ratings on the same test items. 
 
-Figure \@ref(fig:IO-ratings-results-byItem-wTraining-folds-folded-test) plots the predictions for each combination of training and test fold. As expected, now with only 1/4 of the test items for English and 1/2 for Swedish, the confidence interval of the mean goodness ratings predicted by the ideal observers noticeably widened. For the English data, the qualitative fit to the human ratings remained good across all test folds except for the combination of training-fold 1 and test-fold 1. Here the /d/ ratings predicted by the /d/-exposure model no longer yielded an advantage over the control model. Within each training-fold, the predictions of the control models varied more from test-fold to test-fold but the average predictions of the control models never performed better than the /d/-exposure model predictions. This result is encouraging and suggests that there was sufficient data to produce robust predictions that qualitatively matched the human ratings for the English experiment.
+Figure \@ref(fig:IO-ratings-results-byItem-wTraining-folds-folded-test) plots the predictions for each combination of training and test fold. As expected, now with only 1/4 of the test items for English and 1/2 for Swedish, the confidence interval of the mean goodness ratings predicted by the ideal observers noticeably widened, leaving most contrasts between the /d/-exposure and control models no longer significant. Encouragingly, however, the qualitative pattern of predictions---the contrast between the /d/-exposure and control models---remained largely stable across test folds within the same training fold for both the English and Swedish data. Thus is appears that, at the group-level, the predictions of the two ideal observers we developed are relatively stable even for small amounts of training and test data.
 
-The Swedish models were expected to display more variable results between test folds and this was indeed apparent from the four training-test runs, since they already exhibited more variability across training folds. Within the first test fold the /d/-exposure models of both training folds performs significantly better than the control models for /d/ predictions. This does *not* parallel human ratings. Within the second test fold, both training folds do qualitatively match human ratings. This inconsistency across training-test folds confirms that we might not have had enough instances of native Swedish /d/ and /t/ to robustly train the ideal observers. What remains robust though is XXXXXXXXXXXXXXXXXXXXXXXX XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX <!-- This might need to get adjusted after seed has been set -->
+At the same time, Figure \@ref(fig:IO-ratings-results-byItem-wTraining-folds-folded-test) suggest clear limits to what can be inferred from our data: the predicted contrast between /d/ and /t/ test items in the English control model is numerically reversed in three of the test folds for the first training fold (top row of left panel of Figure \@ref(fig:IO-ratings-results-byItem-wTraining-folds-folded-test)). This stands in stark contrast to what we observe in the human ratings, as already noted in the previous section. This mismatch is particularly noteworthy, since we generally see the opposite pattern: as noted in the previous section, the predictions of our ideal observers are generally *more* categorical than the actual pattern of human ratings. This also means that the ideal observers' failure to reliably predict a contrast between /d/ and /t/ test items after control exposure in the English experiment is unlikely to be due to our assumption of noise-free perception (as the inclusion of noise should lead to even less categorical predictions). In short, while cross-validation confirms the qualitative contrasts between /d/-exposure and control models that continue to parallel those observed for human participants, we also find a qualitative mismatch between the models and the human data with regard to the ability to distinguish between /d/ and /t/ even after *control* exposure. As we discuss in the general discussion in the main text, this mismatch might mean that the participants in the English experiment already had exposure to Mandarin-accented English /d/ prior to the experiment. Alternatively, it might mean that even the control exposure (which contains Mandarin-accented English but not Mandarin-accented English /d/) provided participants in the English experiment with helpful information about how Mandarin-accented /d/ and /t/ are realized---information that is not captured by the ideal observers we developed here. It is, however, also possible that this mismatch points to other, more severe, deficiencies of the models we developed here---including the possibility that distributional learning does *not* underlie accent adaptation.
+
+Whatever the reasons are for this mismatch between the ideal observer and the results of the English experiment, it also the reasons for another at first blush unexpected result that we describe next.
 
 (ref:IO-ratings-results-byItem-wTraining-folds-folded-test) **2-fold cross-validated ideal observer /d/-goodness ratings evaluated on separate test folds**. Error bars show 95\% bootstrapped confidence intervals over by-item predictions (since there aren't multiple subjects). Each row shows one training fold excluding a different half of the native training data. Each column shows a separate test bin with 15 randomly chosen minimal pairs (resulting in 4 test folds for the English experiment and 2 test folds for the Swedish experiment). For additional details, see Figure \@ref(fig:IO-ratings-results-byItem).
 
@@ -2428,180 +2432,59 @@ ggsave(filename = "../figures/Result-ratings-byItem-wTraining_folds-folded-test.
        width = 30, height = 20)
 ```
 
-# Comparing model likelihoods 
-We used a linear mixed-effects regression to predict human /d/-goodness ratings from the posterior probability of /d/ predicted by the ideal observers, while also including the maximal converging random effect structure (random intercepts by participant and minimal pair). For each unique combination of native language (English and Swedish), experimental group (/d/-exposure vs. control), and training-test fold (eight for the English experiment, 4 for the Swedish experiment), we regressed human /d/-ratings on the predicted posterior probabilities for /d/ predicted by the *matching* ideal observer model as well as the *mismatching* ideal observer model (for the /d/-exposure group the mismatched model would be the control ideal observer and vice versa). We did this for each of the eight training-test folds for English, and four training-test folds for Swedish. From t
+## Quantitative item-level comparison between human and model-predicted ratings
 
-Then we obtained the log likelihood per test token for each training-test fold. Comparing the likelihoods of the matching with the mismatching models indicates the relative goodness-of-fit of the ideal observers to the human ratings and whether the matching models closely reflect the exposure effects on the respective experimental groups.
+So far we have compared the qualitative patterns of ideal observer predictions and human ratings. Next, we assess the predictive power of ideal observer more directly.  We first predicted human responses across all native languages and exposure conditions from the ideal observers that are meant for those languages and exposure conditions. That is, we predict human ratings in the /d/-exposure group from the /d/-exposure ideal observer, and human ratings in the control group from the control ideal observer. Specifically, we use a linear mixed-effects regression, predicting human /d/-goodness ratings from the posterior probability of /d/ predicted by the ideal observers, while also including the maximal converging random effect structure (random intercepts by participant and minimal pair). 
+ 
+This analysis is summarized in Table \@ref(tab:ratings-IO-analysis) and found a highly significant effect of ideal observer predicted posterior probabilities on the z-scored human goodness ratings ($\hat{\beta} = 1.25, t = 25.09, p < .001$). 
+ 
+```{r item-level-regression-between-ID-rating-tasks}
+lmer.IOtoRating =
+  lmer(Rating.Response.d.zscored ~ 1 + Model.Posterior.d + 
+         (1 | Item.MinimalPair) +  (1 + Model.Posterior.d | Participant), 
+                     data = d.test.IO %>%
+                       filter(Model.Group.matchesParticipant.Group == "yes"))
 
-Figure \@ref(fig:IO-log-likelihood-training-test-folds) shows the fit of matching and mismatching ideal observers to the human /d/-goodness ratings averaged across the training-test folds. For the English data the matching ideal observer provided a better fit over the mismatching model for the /d/-exposure group while the mismatching ideal observer fit the human data better in the control group. In the Swedish results the pattern was reversed with the mismatching ideal observer providing a better fit for the /d/-exposure group and the matching ideal observer, for the control group. The large overlapping confidence intervals for the Swedish models however indicate that matching and mismatching models were less likely to have been significantly different in terms of fit to the data and this reflects the fact that we did not find an advantage of the /d/-exposure over control models in any of the training-test folds in the Swedish data.
-
-What may be surprising from this analysis is that for the English models, the /d/-exposure ideal observers not only captured the effects /d/-exposure group better, but they also fit the control group's ratings better than the control ideal observers. This is unexpected given that the relative performance of the /d/-exposure and control models had qualitatively resembled the results of the human ratings. 
-
-Reexamining figures \@ref(fig:IO-ratings-results-byItem) and \@ref(fig:ratings-results-byItem) helps explain this apparent incompatibility. Notice that in figure \@ref(fig:ratings-results-byItem) the /d/-ratings relative to /t/-ratings given by participants were distinctly in opposite directions for both the /d/-exposure and control groups. Looking at their corresponding models in figure \@ref(fig:IO-ratings-results-byItem) we find that the /d/-exposure group's ratings are clearly reflected by the /d/-exposure ideal observer but less so for the control group (grey bars). In fact, the control ideal observer, although different in its categorisation of /d/ and /t/, could barely capture the difference exhibited in human ratings by the control group. As indicated by the confidence interval, it is not clear that the contrast between mean /d/-ratings and mean /t/-ratings are statistically significant even if there is a numeric difference. That difference within the control group is instead, better captured by the red bars of the /d/-exposure model. 
-
-This reveals several insights to our modelling efforts. Firstly, our models in their current form hold assumptions that limit their capacity to predict the different effects of the two exposure types on human ratings. The fact that the control group, even without receiving any exposure to final stops by the Mandarin-accented talker, could still differentiate the categories substantially well suggests that:
-
-a) they may have come to the experiment with some prior experience of the accented /d/ and /t/, which our models currently assume none of or 
-b) human listeners use different cues to perceive the contrast which our models do not capture.
-
-<insert explanation on the poverty of models; when sound is included the posterior predictive power falls>
-
-```{r compare-log-likelihood, include = FALSE}
-
-lmer_IO <- function(.data, include.sound = FALSE) {
-  if (include.sound) { 
-    my.model <- lmer(Rating.Response.d.zscored ~ 1 + scale(Model.Posterior.d) + Sound +
-         (1 + Sound + scale(Model.Posterior.d) | Item.MinimalPair) + 
-           (1 + scale(Model.Posterior.d) | Participant), 
-                     data = .data, control = lmerControl(optCtrl = list(maxfun=20000)), REML = F)
-  } else {
-    my.model <- lmer(Rating.Response.d.zscored ~ 1 + scale(Model.Posterior.d) + 
-         (1 + scale(Model.Posterior.d) | Item.MinimalPair) + 
-           (1 + scale(Model.Posterior.d) | Participant), 
-                     data = .data, control = lmerControl(optCtrl = list(maxfun=20000)), REML = F)
-  }
-}
-
-get_loglik <- function(.data, include.sound) {
-  LikeIndex <- 1
-  my.model <- lmer_IO(.data, include.sound) %>% logLik()
-  return(my.model[[LikeIndex]])
-}
-
-get_tvalue <- function(.data, include.sound) {
-  my.model <- lmer_IO(.data, include.sound) %>%
-  tidy()
-  post.d <- 2
-  t.value <- 6
-  return(my.model[[post.d, t.value]])
-}
-
-models.likelihood <- d.test.IO.wTraining_folds.wTest_folds %>% 
-  group_by(Language, Group, Model.Group.matchesParticipant.Group, Training_fold, Test_fold) %>% 
-  nest() %>% 
-  mutate(
-    include.sound = FALSE,
-    n.token = map_dbl(data, ~ nrow(.x)),
-    log.likelihood = map2_dbl(.x = data, .y = include.sound, ~ get_loglik(.x, .y)), 
-    log.likelihood.per.token = log.likelihood/n.token,
-    t.value.posterior = map2_dbl(.x = data, .y = include.sound, ~ get_tvalue(.x, .y))
-  ) 
-
-models.sound.likelihood <- d.test.IO.wTraining_folds.wTest_folds %>% 
-  group_by(Language, Group, Model.Group.matchesParticipant.Group, Training_fold, Test_fold) %>% 
-  nest() %>% 
-  mutate(
-    include.sound = TRUE,
-    n.token = map_dbl(data, ~ nrow(.x)),
-    log.likelihood = map2_dbl(.x = data, .y = include.sound, ~ get_loglik(.x, .y)), 
-    log.likelihood.per.token = log.likelihood/n.token,
-    t.value.posterior = map2_dbl(.x = data, .y = include.sound, ~ get_tvalue(.x, .y))
-  ) 
-```
-
-
-```{r IO-log-likelihood-training-test-folds, fig.cap="(ref:IO-log-likelihood-training-test-folds)", fig.height=4.5, out.width='75%'}
-p.likelihood <- models.likelihood %>% 
-  ggplot(aes(x = Group , y = log.likelihood.per.token, colour = Group, shape = Model.Group.matchesParticipant.Group)) +
-  geom_dotplot(aes(fill = Group),  
-               alpha = .3,  dotsize = 0.5, 
-               binaxis = "y", stackdir = "center", 
-               position = position_dodge(.4)) +
-  scale_fill_manual(values = colors.Accent)
-  
-  p.likelihood + 
-    stat_summary(geom = "pointrange", fun.data = mean_cl_boot, size = 0.7, position = position_dodge(width = 0.4)) +
-    scale_color_manual(values = colors.Accent) +
-    scale_shape_manual("IO matches exposure", breaks = c("yes", "no"), values = c(16, 17)) +
-  scale_y_continuous(name = "Fit against perceptual responses\n(per token log likelihood)") +
-    guides(shape = guide_legend(override.aes = list(size = .7)),
-           colour = guide_legend(override.aes = list(size = .7))) +
-  facet_wrap( ~ Language)
-```
-
-(ref:IO-log-likelihood-training-test-folds) **Relative goodness-of-fit of matching ideal observers against that of mismatching ideal observers** to human ratings across all training and test folds. The log likelihood measures the fit of a linear mixed effects regression on human ratings with the posterior /d/-ratings by the respective ideal observers as a predictor. Error bars indicate 95\% bootstrapped confidence interval over the average log likelihood per token.
-
-```{r IO-log-likelihood-training-test-folds-sound, fig.cap="(ref:IO-log-likelihood-training-test-folds-sound)", fig.height=4.5, out.width='75%'}
-p.sound.likelihood <- models.sound.likelihood %>% 
-  ggplot(aes(x = Group , y = log.likelihood.per.token, colour = Group, shape = Model.Group.matchesParticipant.Group)) +
-  geom_dotplot(aes(fill = Group),  
-               alpha = .3,  dotsize = 0.5, 
-               binaxis = "y", stackdir = "center", 
-               position = position_dodge(.4)) +
-  scale_fill_manual(values = colors.Accent)
-  
-  p.sound.likelihood + 
-    stat_summary(geom = "pointrange", fun.data = mean_cl_boot, size = 0.7, position = position_dodge(width = 0.4)) +
-    scale_color_manual(values = colors.Accent) +
-    scale_shape_manual("IO matches exposure", breaks = c("yes", "no"), values = c(16, 17)) +
-  scale_y_continuous(name = "Fit against perceptual responses\n(per token log likelihood)") +
-      guides(shape = guide_legend(override.aes = list(size = .7)),
-           colour = guide_legend(override.aes = list(size = .7))) +
-  facet_wrap( ~ Language)
-```
-
-(ref:IO-log-likelihood-training-test-folds-sound) **Relative goodness-of-fit of matching ideal observers against that of mismatching ideal observers** to human ratings across all training and test folds. The log likelihood measures the fit of a linear mixed effects regression on human ratings with the posterior /d/-ratings by the respective ideal observers and sound as predictors. Error bars indicate 95% bootstrapped confidence interval over the average log likelihood per token.
-
-
-```{r IO-t-values-posterior-d, fig.cap="(ref:IO-t-values-posterior-d)", fig.height=6.5, fig.width=6.5, out.width='85%'}
-my.models <- full_join(models.sound.likelihood, models.likelihood)
-
-my.models %>% mutate(model.label = ifelse(include.sound == FALSE, "LMER without sound", "LMER with sound")) %>% 
-  ggplot(aes(x = t.value.posterior, y = log.likelihood.per.token, colour = Group, shape = Model.Group.matchesParticipant.Group)) +
-  geom_point(size = 2.5, alpha = 0.7, position = position_dodge(width = 0.95)) +
-  geom_vline(xintercept = 2, linetype = 3) +
-  scale_color_manual(values = colors.Accent) +
-  scale_shape_manual("IO matches exposure", breaks = c("yes", "no"), values = c(16, 17)) +
-  scale_y_continuous(name = "Fit against perceptual responses\n(per token log likelihood") +
-  scale_x_continuous(name = "t-value: IO-predicted posterior of /d/") +
-  facet_grid(model.label ~ Language)
-```
-(ref:IO-t-values-posterior-d) **Comparing t-values of ideal observer predicted posterior /d/-ratings** when the linear mixed effects regression models include or exclude sound as a predictor. 
-
-
-
-
-
-
-
-## Do ideal observers that model an exposure condition predict human /d/-goodness rating responses *better* than ideal observers intended for a different exposure condition?
-
-Next, we asked whether ideal observers that match the exposure conditions (i.e., the control ideal observer for the control condition and the /d/-exposure ideal observer for the /d/-exposure condition) provide a better fit against human ratings than ideal observers that do not. This would provide the strongest item-level evidence that the ideal observers we constructed capture the effects of exposure in the English and Swedish experiments. To this end, we repeated the linear mixed-effects analysis while including the posterior predictions for both matching and mismatching ideal observers in the analysis and letting them interact with an indicator variable (sum-coded: mismatching = -1 vs. matching = 1) and the native language (sum-coded: English = -1 vs. Swedish = 1). The analysis again contained random intercepts by participant and minimal pair.
-
-This analysis replicates the effect of ideal observer predicted posterior probabilities on the z-scored human goodness ratings ($\hat{\beta} = 1.2, t = 35.4, p < .0001$). A simple effect analysis reported in Table \@ref(tab:ratings-IO-model-comparison) confirmed that the effect of ideal observer predicted posterior probabilities was highly significant for both languages. No other effect, including any of the interactions with the indicator variable, reached significance.   
-
-```{r item-level-regression-between-models}
-contrasts(d.test.IO$Model.Group.matchesParticipant.Group) = cbind("Yes.vs.No" = c(-1, 1))
-d.test.IO$cModel.Posterior.d = d.test.IO$Model.Posterior.d - mean(d.test.IO$Model.Posterior.d)
-
-# summary(lmer(Rating.Response.d.zscored ~ 1 + NativeLanguage * cModel.Posterior.d * Model.Group.matchesParticipant.Group + 
-#                (1 | Item.MinimalPair) + 
-#                (1 | Participant), data = d.test.IO))
-
-lmer.IOtoRating.ModelComparison =
-  lmer(
-    Rating.Response.d.zscored ~ 1 + NativeLanguage / (cModel.Posterior.d * Model.Group.matchesParticipant.Group) + 
-      (1 | Item.MinimalPair) + (1 | Participant), 
-                     data = d.test.IO)
-
-pred.labels = c("Intercept",
-                "NativeLanguage (Swedish vs English)",
-                "English : IO-predicted posterior of /d/",
-                "Swedish : IO-predicted posterior of /d/",
-                "English : IO matches exposure (Yes vs No)",
-                "Swedish : IO matches exposure (Yes vs No)",
-                "English : IO-predicted posterior : IO matches exposure",
-                "Swedish : IO-predicted posterior : IO matches exposure")
-tab_model(lmer.IOtoRating.ModelComparison,
+# summary(lmer.IOtoRating)
+pred.labels = c("Intercept", "IO-predicted posterior of /d/")
+tab_model(lmer.IOtoRating,
           show.r2 = F,
-          title = "(\\#tab:ratings-IO-model-comparison) Results of linear mixed-effects regression of /d/-goodness ratings on matching vs mismatching ideal observer models.",
+          title = "(\\#tab:ratings-IO-analysis) Results of linear mixed-effects regression of /d/-goodness ratings on ideal observer posterior /d/ predictions.",
           pred.labels = pred.labels,
           dv.labels = "/d/-goodness rating (z-scored)")
 ```
 
-In short, we did *not* find evidence that ideal observers that match the exposure condition of human participants did significantly better in predicting human goodness ratings. One possible reason for this becomes apparent when we visualize the predictions of the ideal observers. Figure \@ref(fig:plot-3d-test-IO-English) and \@ref(fig:plot-3d-test-IO-Swedish) visualises the posterior predictions of the control and /d/-exposure ideal observers for all test token. Figure \@ref(fig:plot-3d-test-IO-English-difference) and Figure \@ref(fig:plot-3d-test-IO-Swedish-difference) show the *difference* between the predictions of the control and /d/-exposure ideal observers. These latter figures thus highlight the test tokens that can distinguish between the control and /d/-exposure models. 
+Next, we asked whether the effect of the ideal observer predicted posterior probabilities differed depending on the native language, exposure group, and/or the test token's intended category label. To this end, we repeated the above analysis while incrementally including additional control predictors in the model. We started by adding only native language, then the full factorial of native language and exposure condition, and finally the full factorial of native language, exposure condition, and sound category. At each step, we asked whether the effect of the ideal observer predicted posterior probability of /d/ was still significant. All control predictors were sum-coded (native language: English = -1 vs. Swedish = 1; exposure group: control = -1 vs. /d/-exposure = 1; sound category: /t/ = -1 vs. /d/ = 1), and all analyses contained the the maximal converging random effect structure by-items (random intercept and slopes for sound category) and by-participant (random intercepts).
+ 
+The effect of the ideal observer predicted posterior probability of /d/ remained significant when native language or its full factorial with exposure group were added to the model ($p$s $< .02$), but stopped being a significant predictor once the tokens' correct (intended) category label was included in the model. This final analysis is summarized in Table \@ref(tab:ratings-IO-analysis-full). Together with the first analysis, this suggests that the effect of the ideal observer predicted posterior probability is largely driven by the fact that the ideal observer correctly predicts whether a sound should be categorized as /d/ or /t/.^[This loss of significance remained unchanged when the ideal observer predicted posterior probability was allowed to interact with all of the other predictors. Simple effect analyses showed that the predicted posterior probability had no significant effect for any of the combinations for native language, exposure group, and sound category.] 
 
-On the one hand, the results are encouraging: the /d/-exposure model predicts the intended (non-native) category better for English but not for Swedish, paralleling the results for human ratings. On the other hand, these plots also show clear limitations of the present approach: for many test tokens, the control and /d/-exposure ideal observers make basically identical predictions, limiting our ability to distinguish between the two models. This provides a straightforward explanation as to why ideal observers that match the exposure condition do not provide a better fit against human ratings: the control and /d/-exposure models do not differ sufficiently enough in their predictions. We note that this is not *necessarily* a limitation of the ideal observers but likely at least in part is a limitation of experiments that use natural speech stimuli as test tokens. These natural speech stimuli were not chosen so as to maximize the statistical power to detect differences between the exposure groups (or ideal observers) but rather reflect the natural distribution of the relevant non-native accent.
+```{r}
+# summary(lmer(Rating.Response.d.zscored ~ 1 + NativeLanguage * Group + Model.Posterior.d  + (1 + Group * Sound | Item.MinimalPair) + (1 + Model.Posterior.d | Participant),
+#                       data = d.test.IO %>%
+#                         filter(Model.Group.matchesParticipant.Group == "yes")))
+lmer.IOtoRating.full <- lmer(Rating.Response.d.zscored ~ 
+                               1 + NativeLanguage * Group * Sound + Model.Posterior.d + 
+                               (1 + Sound | Item.MinimalPair) + (1 + Model.Posterior.d | Participant),
+                     data = d.test.IO %>%
+                       filter(Model.Group.matchesParticipant.Group == "yes"))
+
+pred.labels = c("Intercept",
+                "Native language (Swedish vs. English)",
+                "Group (/d/-exposure vs. control)",
+                "Sound (/d/ vs /t/)",
+                "IO-predicted posterior of /d/",
+                "Native language : Group",
+                "Native language : Sound",
+                "Group : Sound",
+                "Native language : Group : Sound")
+tab_model(lmer.IOtoRating.full,
+          show.r2 = F,
+          title = "(\\#tab:ratings-IO-analysis-full) Results of linear mixed-effects regression of /d/-goodness ratings on ideal observer posterior /d/ predictions with full interactions of native language, exposure group and sound.",
+          pred.labels = pred.labels,
+          dv.labels = "/d/-goodness rating (z-scored)")
+```
+
+To understand this result, it is important to keep in mind that the test data for both experiments comes from natural productions (as is common for experiments on accent adaptation), rather than experimenter-controlled resynthesized speech (as is common for experiments on, e.g., perceptual recalibration). This lends ecological validity to the design of experiments on accent adaptation. However,it also reduces the power to find significant correlations between model predictions and human ratings *within* categories since most test tokens fall close to the category mean. This is evident in Figure \@ref(fig:plot-3d-test-IO-English) and \@ref(fig:plot-3d-test-IO-Swedish): comparatively few of our test tokens fell into the phonetic space exactly between the /d/ and /t/ categories. This means that comparatively few of the test tokens fall into the space for which the gradient posterior probability of /d/ or /t/ provides information that goes beyond what is already contained in the category label. In short, there is little power to detect effects of the ideal observer predicted posterior probabilities *within* each category.^[This, we think, highlights an important but perhaps under-appreciated consequence of using naturally distributed productions in experiments on accent adaptation: reduced power to detect within-category differences in the perception of test tokens. An interesting venue for future work is to employ naturally produced accented tokens but to select a subset of test tokens that are maximally informative about the effects of exposure. This would allow researchers to maintain the ecological validity of natural (rather than synthesized) productions, while also providing more statistical power during test.]
 
 ```{r functions to plot-ideal-observers-results-3D}
 plot_IO_test = function(
@@ -2813,65 +2696,205 @@ plot_IO_test = function(
 
 (ref:plot-3d-test-IO-English-difference) Difference between /d/-exposure and control ideal observer predicted posterior probabilities of the *intended* category for all test tokens of the experiment in English. The posterior probability predicted by the control ideal observer is subtracted from the posterior probability predicted by the /d/-exposure ideal observer. Positive values thus indicate test tokens for which the /d/-exposure ideal observer makes better predictions.
 
-(ref:plot-3d-test-IO-Swedish) Ideal observer predicted posterior probabilities for all test tokens of the experiment in Swedish. Shapes indicate the intended sound category and color indicates whether the posterior probability of that *intended* category was low or high. 
-
-(ref:plot-3d-test-IO-Swedish-difference) Difference between /d/-exposure and control ideal observer predicted posterior probabilities for all test tokens of the experiment on Swedish. 
-
 ```{r plot-3d-test-IO-English, fig.cap="(ref:plot-3d-test-IO-English)", fig.height=6.5, out.width="95%", cache=FALSE}
 plot_IO_test(d.IO, d.test.IO, language = "English", cues = selected_cues)
 ``` 
+
+```{r plot-3d-test-IO-Swedish, fig.cap="(ref:plot-3d-test-IO-Swedish)", fig.height=6.5, out.width="95%", cache=FALSE}
+plot_IO_test(d.IO, d.test.IO, language = "Swedish", cues = selected_cues)
+``` 
+
+
+## Do ideal observers that model an exposure condition predict item-lvel human /d/-goodness ratings *better* than ideal observers intended for a different exposure condition?
+
+Finally, we asked whether ideal observers that match the exposure conditions (i.e., the control ideal observer for participants in the control condition and the /d/-exposure ideal observer for participants in the /d/-exposure condition) provide a better fit against human ratings than ideal observers that do not (i.e., the control ideal observer for the /d/-exposure condition and the /d/-exposure ideal observer for the control condition). This would provide the strongest item-level evidence that the ideal observers we constructed capture the effects of exposure in the English and Swedish experiments. To this end, we repeated the linear mixed-effects analysis while including the posterior predictions for both matching and mismatching ideal observers in the analysis and letting them interact with an indicator variable (sum-coded: mismatching = -1 vs. matching = 1) and the native language (sum-coded: English = -1 vs. Swedish = 1). The analysis again contained the maximal random effect structure that converged (random intercepts by participant and minimal pair).
+
+This analysis replicates the effect of ideal observer predicted posterior probabilities on the z-scored human goodness ratings ($\hat{\beta} = 1.2, t = 35.4, p < .0001$). A simple effect analysis reported in Table \@ref(tab:ratings-IO-model-comparison) confirmed that the effect of ideal observer predicted posterior probabilities was highly significant for both languages. No other effect, including any of the interactions with the indicator variable, reached significance.   
+
+```{r item-level-regression-between-models}
+contrasts(d.test.IO$Model.Group.matchesParticipant.Group) = cbind("Yes.vs.No" = c(-1, 1))
+d.test.IO$cModel.Posterior.d = d.test.IO$Model.Posterior.d - mean(d.test.IO$Model.Posterior.d)
+
+# summary(lmer(Rating.Response.d.zscored ~ 1 + NativeLanguage * cModel.Posterior.d * Model.Group.matchesParticipant.Group + 
+#                (1 | Item.MinimalPair) + 
+#                (1 | Participant), data = d.test.IO))
+
+lmer.IOtoRating.ModelComparison =
+  lmer(
+    Rating.Response.d.zscored ~ 1 + NativeLanguage / (cModel.Posterior.d * Model.Group.matchesParticipant.Group) + 
+      (1 | Item.MinimalPair) + (1 | Participant), 
+                     data = d.test.IO)
+
+pred.labels = c("Intercept",
+                "NativeLanguage (Swedish vs English)",
+                "English : IO-predicted posterior of /d/",
+                "Swedish : IO-predicted posterior of /d/",
+                "English : IO matches exposure (Yes vs No)",
+                "Swedish : IO matches exposure (Yes vs No)",
+                "English : IO-predicted posterior : IO matches exposure",
+                "Swedish : IO-predicted posterior : IO matches exposure")
+tab_model(lmer.IOtoRating.ModelComparison,
+          show.r2 = F,
+          title = "(\\#tab:ratings-IO-model-comparison) Results of linear mixed-effects regression of /d/-goodness ratings on matching vs mismatching ideal observer models.",
+          pred.labels = pred.labels,
+          dv.labels = "/d/-goodness rating (z-scored)")
+```
+
+In short, we did *not* find evidence that ideal observers that match the exposure condition of human participants did significantly better in predicting human goodness ratings. XXXXXXXXXXXXXXXXXXXXXX CONTINUE HERE: This result was also confirmed separately for all training-test folds. XXXXXXXXXXXXXXXXXXXXXXXXXXX
+
+There are at least two reasons for this, both of which shed light on the data that can be obtained from typical experiments on accent adaptation limit the conclusions we can draw from them.
+
+
+
+
+
+
+
+Figure \@ref(fig:plot-3d-test-IO-English-difference) and Figure \@ref(fig:plot-3d-test-IO-Swedish-difference) show the *difference* between the predictions of the control and /d/-exposure ideal observers. These figures thus highlight the test tokens that can distinguish between the control and /d/-exposure models. 
+
+On the other hand, it is also clear the both the control and the /d/-exposure models make qualitatively identical (correct) predictions for most of the test items---namely all those test items that are not close to the boundary between the two categories. This visualizes that the reduced power to detect differences between the two XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+, limiting our ability to distinguish between the matching and mismatching models. This provides a straightforward explanation as to why ideal observers that match the exposure condition do not provide a better fit against human ratings: the control and /d/-exposure models do not differ sufficiently enough in their predictions. We note that this is not *necessarily* a limitation of the ideal observers but likely at least in part is a limitation of experiments that use natural speech stimuli as test tokens. These natural speech stimuli were not chosen so as to maximize the statistical power to detect differences between the exposure groups (or ideal observers) but rather reflect the natural distribution of the relevant non-native accent.
+
+(ref:plot-3d-test-IO-Swedish) Ideal observer predicted posterior probabilities for all test tokens of the experiment in Swedish. Shapes indicate the intended sound category and color indicates whether the posterior probability of that *intended* category was low or high. 
+
+(ref:plot-3d-test-IO-Swedish-difference) Difference between /d/-exposure and control ideal observer predicted posterior probabilities for all test tokens of the experiment on Swedish. 
 
 ```{r plot-3d-test-IO-English-difference, fig.cap="(ref:plot-3d-test-IO-English-difference)", fig.height=6.5, out.width="95%", cache=FALSE}
 plot_IO_test(d.IO, d.test.IO, language = c("English"), cues = selected_cues, show.difference = T,
              points.alpha = .9, points.line.width = 2)
 ```
 
-```{r plot-3d-test-IO-Swedish, fig.cap="(ref:plot-3d-test-IO-Swedish)", fig.height=6.5, out.width="95%", cache=FALSE}
-plot_IO_test(d.IO, d.test.IO, language = "Swedish", cues = selected_cues)
-``` 
-
 ```{r plot-3d-test-IO-Swedish-difference, fig.cap="(ref:plot-3d-test-IO-Swedish-difference)", fig.height=6.5, out.width="95%", cache=FALSE}
 plot_IO_test(d.IO, d.test.IO, language = c("Swedish"), cues = selected_cues, show.difference = T, 
              points.alpha = .9, points.line.width = 2)
 ```
 
-Figure \@ref(fig:IO-ratings-results-correlation-byItem) shows the correlation between ideal observer posterior predictions and human /d/-goodness ratings of each item in both the English and Swedish experiments. The left column shows the correlation of human ratings with a mismatched ideal observer model, that is, an ideal observer that was modelled for the opposing condition. The column on the right shows the correlation with ideal observers for that intended condition.
-
-For the English data, the /d/-exposure ideal observer correlates with human ratings in *both* exposure conditions, whereas the control ideal observer did not correlate with human ratings in either exposure condition. That is, the /d/-exposure ideal observer performed better in predicting human ratings regardless of whether it matched the exposure condition. This is unexpected. While the correlation with human ratings was numerically highest when the ideal observer's assumptions matched the exposure condition, follow-up analyses reported below found that this difference was not significant. For the Swedish data, both the native and the /d/-exposure ideal observers exhibited significant correlations of with human ratings. The magnitude of these correlations did not differ depending on whether the ideal observer matched the exposure condition. In short, while the ideal observers correctly predict the qualitative pattern found in the human results, the item-level analyses suggest that the ideal observers either predict the correct qualitative patterns for the wrong reasons, or that the ideal observers ....XXXX
-
-This ideal situation is based on the following assumptions:
-
-  1. We have enough participant data.
-  2. Models use all cues that human have access to---likely to lead to lines shifted apart (assuming also the other assumptions are orthogonal to this particular assumption.
-  3. The space in which we assess performance is the same as that used by human participants.
-  4. Cues are multi-Gaussian distributions.
-  5. The link function between the IO predictions and human responses is correct.
-1. Are there correlations between human ratings and ideal observers predictions?
-2. Are the correlations stronger for the consistent pairing (consistence coded as "yes": /d/-exposure and /d/-exposure model; control and control model)?
 
 
-(ref:IO-ratings-results-correlation-byItem) Item-by-item correlations between ideal observer-predicted ratings and human ratings of /d/-goodness for the /t,d/-final test words from the English and Swedish experiment. Data for both participants groups (/d/-exposure vs. control) are shown.
+## Assessing the first aga
+We used a linear mixed-effects regression to predict human /d/-goodness ratings from the posterior probability of /d/ predicted by the ideal observers, while also including the maximal converging random effect structure (random intercepts by participant and minimal pair). For each unique combination of native language (English and Swedish), experimental group (/d/-exposure vs. control), and training-test fold (eight for the English experiment, 4 for the Swedish experiment), we regressed human /d/-ratings on the predicted posterior probabilities for /d/ predicted by the *matching* ideal observer model as well as the *mismatching* ideal observer model (for the /d/-exposure group the mismatched model would be the control ideal observer and vice versa). We did this for each of the eight training-test folds for English, and four training-test folds for Swedish. From t
 
-```{r IO-ratings-results-correlation-byItem, fig.cap = "(ref:IO-ratings-results-correlation-byItem)", fig.height = 9, out.width="100%"}
-ggscatter(data = d.test.IO %>%
-            group_by(Language, NativeLanguage, Group, Model.Group, Model.Group.matchesParticipant.Group, Item.Word, Sound) %>%
-            summarise(
-              Model.Posterior.d = mean(Model.Posterior.d),
-              Model.Rating.d.zscored = mean(Model.Rating.d.zscored),
-              Rating.Response.d.zscored = mean(Rating.Response.d.zscored)),
-          x = "Model.Posterior.d", y = "Rating.Response.d.zscored", color = "Group",
-          cor.method = "pearson",
-          xlab = "Ideal observer posterior of /d/", ylab = "human mean /d/-goodness rating") +
-  stat_cor(label.x.npc = "middle", label.y.npc = "bottom") +
-  geom_smooth(method = "lm", formula = y ~ x, color = "black", fill = "black") +
-  scale_color_manual(
-    breaks = c("/d/-exposure", "control", ""),
-    values = append(colors.Group, "black")
-  ) +
-  facet_grid(NativeLanguage + Group ~ Model.Group.matchesParticipant.Group,
-             # margins = c("NativeLanguage"),
-             labeller = "label_both")
+Then we obtained the log likelihood per test token for each training-test fold. Comparing the likelihoods of the matching with the mismatching models indicates the relative goodness-of-fit of the ideal observers to the human ratings and whether the matching models closely reflect the exposure effects on the respective experimental groups.
+
+Figure \@ref(fig:IO-log-likelihood-training-test-folds) shows the fit of matching and mismatching ideal observers to the human /d/-goodness ratings averaged across the training-test folds. For the English data the matching ideal observer provided a better fit over the mismatching model for the /d/-exposure group while the mismatching ideal observer fit the human data better in the control group. In the Swedish results the pattern was reversed with the mismatching ideal observer providing a better fit for the /d/-exposure group and the matching ideal observer, for the control group. The large overlapping confidence intervals for the Swedish models however indicate that matching and mismatching models were less likely to have been significantly different in terms of fit to the data and this reflects the fact that we did not find an advantage of the /d/-exposure over control models in any of the training-test folds in the Swedish data.
+
+What may be surprising from this analysis is that for the English models, the /d/-exposure ideal observers not only captured the effects /d/-exposure group better, but they also fit the control group's ratings better than the control ideal observers. This is unexpected given that the relative performance of the /d/-exposure and control models had qualitatively resembled the results of the human ratings. 
+
+Reexamining figures \@ref(fig:IO-ratings-results-byItem) and \@ref(fig:ratings-results-byItem) helps explain this apparent incompatibility. Notice that in figure \@ref(fig:ratings-results-byItem) the /d/-ratings relative to /t/-ratings given by participants were distinctly in opposite directions for both the /d/-exposure and control groups. Looking at their corresponding models in figure \@ref(fig:IO-ratings-results-byItem) we find that the /d/-exposure group's ratings are clearly reflected by the /d/-exposure ideal observer but less so for the control group (grey bars). In fact, the control ideal observer, although different in its categorisation of /d/ and /t/, could barely capture the difference exhibited in human ratings by the control group. As indicated by the confidence interval, it is not clear that the contrast between mean /d/-ratings and mean /t/-ratings are statistically significant even if there is a numeric difference. That difference within the control group is instead, better captured by the red bars of the /d/-exposure model. 
+
+This reveals several insights to our modelling efforts. Firstly, our models in their current form hold assumptions that limit their capacity to predict the different effects of the two exposure types on human ratings. The fact that the control group, even without receiving any exposure to final stops by the Mandarin-accented talker, could still differentiate the categories substantially well suggests that:
+
+a) they may have come to the experiment with some prior experience of the accented /d/ and /t/, which our models currently assume none of or 
+b) human listeners use different cues to perceive the contrast which our models do not capture.
+
+<insert explanation on the poverty of models; when sound is included the posterior predictive power falls>
+
+```{r compare-log-likelihood, include = FALSE}
+
+lmer_IO <- function(.data, include.sound = FALSE) {
+  if (include.sound) { 
+    my.model <- lmer(Rating.Response.d.zscored ~ 1 + scale(Model.Posterior.d) + Sound +
+         (1 + Sound + scale(Model.Posterior.d) | Item.MinimalPair) + 
+           (1 + scale(Model.Posterior.d) | Participant), 
+                     data = .data, control = lmerControl(optCtrl = list(maxfun=20000)), REML = F)
+  } else {
+    my.model <- lmer(Rating.Response.d.zscored ~ 1 + scale(Model.Posterior.d) + 
+         (1 + scale(Model.Posterior.d) | Item.MinimalPair) + 
+           (1 + scale(Model.Posterior.d) | Participant), 
+                     data = .data, control = lmerControl(optCtrl = list(maxfun=20000)), REML = F)
+  }
+}
+
+get_loglik <- function(.data, include.sound) {
+  LikeIndex <- 1
+  my.model <- lmer_IO(.data, include.sound) %>% logLik()
+  return(my.model[[LikeIndex]])
+}
+
+get_tvalue <- function(.data, include.sound) {
+  my.model <- lmer_IO(.data, include.sound) %>%
+  tidy()
+  post.d <- 2
+  t.value <- 6
+  return(my.model[[post.d, t.value]])
+}
+
+models.likelihood <- d.test.IO.wTraining_folds.wTest_folds %>% 
+  group_by(Language, Group, Model.Group.matchesParticipant.Group, Training_fold, Test_fold) %>% 
+  nest() %>% 
+  mutate(
+    include.sound = FALSE,
+    n.token = map_dbl(data, ~ nrow(.x)),
+    log.likelihood = map2_dbl(.x = data, .y = include.sound, ~ get_loglik(.x, .y)), 
+    log.likelihood.per.token = log.likelihood/n.token,
+    t.value.posterior = map2_dbl(.x = data, .y = include.sound, ~ get_tvalue(.x, .y))
+  ) 
+
+models.sound.likelihood <- d.test.IO.wTraining_folds.wTest_folds %>% 
+  group_by(Language, Group, Model.Group.matchesParticipant.Group, Training_fold, Test_fold) %>% 
+  nest() %>% 
+  mutate(
+    include.sound = TRUE,
+    n.token = map_dbl(data, ~ nrow(.x)),
+    log.likelihood = map2_dbl(.x = data, .y = include.sound, ~ get_loglik(.x, .y)), 
+    log.likelihood.per.token = log.likelihood/n.token,
+    t.value.posterior = map2_dbl(.x = data, .y = include.sound, ~ get_tvalue(.x, .y))
+  ) 
 ```
+
+
+```{r IO-log-likelihood-training-test-folds, fig.cap="(ref:IO-log-likelihood-training-test-folds)", fig.height=4.5, out.width='75%'}
+p.likelihood <- models.likelihood %>% 
+  ggplot(aes(x = Group , y = log.likelihood.per.token, colour = Group, shape = Model.Group.matchesParticipant.Group)) +
+  geom_dotplot(aes(fill = Group),  
+               alpha = .3,  dotsize = 0.5, 
+               binaxis = "y", stackdir = "center", 
+               position = position_dodge(.4)) +
+  scale_fill_manual(values = colors.Accent)
+  
+  p.likelihood + 
+    stat_summary(geom = "pointrange", fun.data = mean_cl_boot, size = 0.7, position = position_dodge(width = 0.4)) +
+    scale_color_manual(values = colors.Accent) +
+    scale_shape_manual("IO matches exposure", breaks = c("yes", "no"), values = c(16, 17)) +
+  scale_y_continuous(name = "Fit against perceptual responses\n(per token log likelihood)") +
+    guides(shape = guide_legend(override.aes = list(size = .7)),
+           colour = guide_legend(override.aes = list(size = .7))) +
+  facet_wrap( ~ Language)
+```
+
+(ref:IO-log-likelihood-training-test-folds) **Relative goodness-of-fit of matching ideal observers against that of mismatching ideal observers** to human ratings across all training and test folds. The log likelihood measures the fit of a linear mixed effects regression on human ratings with the posterior /d/-ratings by the respective ideal observers as a predictor. Error bars indicate 95\% bootstrapped confidence interval over the average log likelihood per token.
+
+```{r IO-log-likelihood-training-test-folds-sound, fig.cap="(ref:IO-log-likelihood-training-test-folds-sound)", fig.height=4.5, out.width='75%'}
+p.sound.likelihood <- models.sound.likelihood %>% 
+  ggplot(aes(x = Group , y = log.likelihood.per.token, colour = Group, shape = Model.Group.matchesParticipant.Group)) +
+  geom_dotplot(aes(fill = Group),  
+               alpha = .3,  dotsize = 0.5, 
+               binaxis = "y", stackdir = "center", 
+               position = position_dodge(.4)) +
+  scale_fill_manual(values = colors.Accent)
+  
+  p.sound.likelihood + 
+    stat_summary(geom = "pointrange", fun.data = mean_cl_boot, size = 0.7, position = position_dodge(width = 0.4)) +
+    scale_color_manual(values = colors.Accent) +
+    scale_shape_manual("IO matches exposure", breaks = c("yes", "no"), values = c(16, 17)) +
+  scale_y_continuous(name = "Fit against perceptual responses\n(per token log likelihood)") +
+      guides(shape = guide_legend(override.aes = list(size = .7)),
+           colour = guide_legend(override.aes = list(size = .7))) +
+  facet_wrap( ~ Language)
+```
+
+(ref:IO-log-likelihood-training-test-folds-sound) **Relative goodness-of-fit of matching ideal observers against that of mismatching ideal observers** to human ratings across all training and test folds. The log likelihood measures the fit of a linear mixed effects regression on human ratings with the posterior /d/-ratings by the respective ideal observers and sound as predictors. Error bars indicate 95% bootstrapped confidence interval over the average log likelihood per token.
+ 
+
+
+
+
+
+
+
+
+
+
 
 
 
