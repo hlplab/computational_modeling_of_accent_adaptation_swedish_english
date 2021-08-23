@@ -730,12 +730,6 @@ p.results.perception = d.test %>%
   stat_summary(aes(group = Group), fun.data = mean_cl_boot, geom = "linerange", 
                size = .8, 
                position = position_dodge(.93)) +
-  geom_signif(
-    # comparisons = list(c("", 2), c(3, 4)),
-    test = "t.test",
-    test.args = list(paired = T),
-    y_position = .95,
-    position = position_dodge(.93)) +
   scale_x_discrete("Intended sound category") +
   scale_y_continuous("/d/-goodness rating (z-scored)") +
   scale_color_manual(values = colors.Group) +
@@ -755,7 +749,29 @@ p.results.perception.bySubject = insertLayer(
                binaxis = "y", stackdir = "center", 
                position = position_dodge(.9)))
 
-p.results.perception.bySubject + scale_y_continuous("Mean /d/-goodness ratings\n(z-scored) by subject")
+# Comparisons
+stat.test <- compare_means(
+  Rating.mean ~ Group, 
+  data = d.test %>%
+  group_by(Language, NativeLanguage, Group, Sound, Participant) %>%
+  summarise(Rating.mean = mean(Rating.Response.d.zscored)), 
+  group.by = c("Language", "NativeLanguage", "Sound"),
+  method = "wilcox.test",
+  comparison = c(1,2),
+  paired = F
+)
+
+p.results.perception.bySubject + 
+  scale_y_continuous("Mean /d/-goodness ratings\n(z-scored) by subject") +
+  stat_pvalue_manual(
+    stat.test, 
+    x = "Sound", 
+    y.position = 1,
+    label = "p.signif",
+    position = position_dodge(0.9), 
+    remove.bracket = FALSE,
+    bracket.size = 2,
+    tip.length = 1)
 ```
 
 Figure \@ref(fig:ratings-results) shows the z-scored /d/-goodness ratings from both experiments. To compare participants' ratings for the /d,t/-final test words across the two experiments, we conducted a linear mixed-effects regression [@baayen2008mixed] over the combined data from both experiments. The regression predicted z-scored /d/-goodness ratings based on the sound category (sum-coded: 1 = word recording intended to end in /d/ vs. -1 = word recording intended to end in /t/), exposure group (sum-coded: 1 =  /d/-exposure vs. -1 = control), the experiment (sum-coded: 1 = Swedish vs. -1 = English), and all their interactions. The regression contained the maximal random effect structure justified by the design (random by-participant intercepts and slope for sound; random by-item intercepts and slopes for sound, exposure group, and their interaction).^[Even this simplified model estimated the variance of the by-participant intercepts to be zero (see below), presumably because the z-scoring of ratings within participant already removed that variance. If all by-participant random effects are excluded, the results reported below do not change. If non-z-scored ratings are analyzed instead (unlike in previous work), the three-way interaction is no longer significant ($p = .11$).]
@@ -2297,7 +2313,29 @@ p.IO_prediction <- p.results.perception.bySubject %+%
     values = colors.Accent) +
   ylim(-1.25, 1.25)
 
-p.IO_prediction
+stat.test <- compare_means(
+  Rating.mean ~ Model.Group, 
+  data = d.test.IO %>%
+     filter(Model.Group.matchesParticipant.Group == "yes") %>%
+     group_by(Language, NativeLanguage, Group, Sound, Item.WordID, Model.Group) %>%
+     summarise(Rating.mean = mean(Model.Posterior.d * 2 - 1)), 
+  group.by = c("Language", "NativeLanguage", "Sound"),
+  method = "wilcox.test",
+  comparison = c(1,2),
+  paired = T
+)
+
+p.IO_prediction + 
+  stat_pvalue_manual(
+    stat.test, 
+    x = "Sound", 
+    y.position = 1.1,
+    label = "p.signif",
+    position = position_dodge(0.9), 
+    remove.bracket = FALSE,
+    bracket.size = 2,
+    tip.length = 1)
+
 ggsave(p.IO_prediction, filename = "../figures/IO-result-ratings-byItem.png",
        width = 7, height = 4)
 ```
@@ -2311,7 +2349,27 @@ p.results.percept.byItem <- p.results.perception.bySubject %+%
   ylab("Mean /d/-goodness ratings\n(z-scored) by item") +
   ylim(-1.25, 1.30)
 
-p.results.percept.byItem
+stat.test <- compare_means(
+  Rating.mean ~ Group, 
+  data = d.test %>%
+     group_by(Language, NativeLanguage, Group, Sound, Item.WordID) %>%
+     summarise(Rating.mean = mean(Rating.Response.d.zscored)), 
+  group.by = c("Language", "NativeLanguage", "Sound"),
+  method = "wilcox.test",
+  comparison = c(1,2),
+  paired = T
+)
+
+p.results.percept.byItem + 
+  stat_pvalue_manual(
+    stat.test, 
+    x = "Sound", 
+    y.position = 1.3,
+    label = "p.signif",
+    position = position_dodge(0.9), 
+    remove.bracket = FALSE,
+    bracket.size = 2,
+    tip.length = 1)
 ggsave(p.results.percept.byItem, filename = "../figures/Result-ratings-byItem.png",
        width = 7, height = 4)
 ```
@@ -2370,12 +2428,33 @@ d.IO.test.wTraining_folds <- categorize_stims_by_IO(d.stims, d.IO.wTraining_fold
 d.test.IO.wTraining_folds <- join_IO_categorizations_with_human_test(d.IO.test.wTraining_folds, d.test)
 save(d.test.IO.wTraining_folds, file = "../data/data_perception_test phase plus IO predictions_both languages-2 training folds.Rdata")
 
+stat.test <- compare_means(
+  Rating.mean ~ Model.Group, 
+  data = d.test.IO.wTraining_folds %>%
+     filter(Model.Group.matchesParticipant.Group == "yes") %>%
+     group_by(Language, NativeLanguage, Group, Sound, Item.WordID, Model.Group, Training_fold) %>%
+     summarise(Rating.mean = mean(Model.Posterior.d * 2 - 1)), 
+  group.by = c("Language", "NativeLanguage", "Sound", "Training_fold"),
+  method = "wilcox.test",
+  comparison = c(1,2),
+  paired = T
+)
+
 p.IO_prediction %+% 
   (d.test.IO.wTraining_folds %>%
      filter(Model.Group.matchesParticipant.Group == "yes") %>%
      group_by(Language, NativeLanguage, Group, Sound, Item.WordID, Model.Group, Training_fold) %>%
      summarise(Rating.mean = mean(Model.Posterior.d * 2 - 1))) +
-  facet_grid(Training_fold ~ Language, scales="free_y") 
+  facet_grid(Training_fold ~ Language, scales="free_y") +
+  stat_pvalue_manual(
+    stat.test, 
+    x = "Sound", 
+    y.position = 1.1,
+    label = "p.signif",
+    position = position_dodge(0.9), 
+    remove.bracket = FALSE,
+    bracket.size = 2,
+    tip.length = 1)
 ggsave(filename = "../figures/Result-ratings-byItem-wTraining_folds.png",
        width = 14, height = 20)
 ```
