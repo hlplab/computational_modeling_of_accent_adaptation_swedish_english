@@ -2304,7 +2304,7 @@ p.IO_prediction <- p.results.perception.bySubject %+%
     values = colors.Accent) +
   ylim(-1.25, 1.25)
 
-p.IO_prediction
+p.IO_prediction + stat_pvalue_manual(d.test.IO.t %>% add_x_position(x = "Sound", dodge = 0.93), y.position = 1.25, label = "p.adj.signif", tip.length = 0.01)
 ggsave(p.IO_prediction, filename = "../figures/IO-result-ratings-byItem.png",
        width = 7, height = 4)
 ```
@@ -2318,7 +2318,7 @@ p.results.percept.byItem <- p.results.perception.bySubject %+%
   ylab("Mean /d/-goodness ratings\n(z-scored) by item") +
   ylim(-1.25, 1.30)
 
-p.results.percept.byItem + stat_pvalue_manual(d.test.IO.t %>% add_x_position(x = "Sound", dodge = 0.93), y.position = 1.25, label = "p.adj.signif", tip.length = 0.01)
+p.results.percept.byItem 
 ggsave(p.results.percept.byItem, filename = "../figures/Result-ratings-byItem.png",
        width = 7, height = 4)
 ```
