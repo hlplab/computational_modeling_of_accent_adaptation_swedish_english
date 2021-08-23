@@ -2379,8 +2379,6 @@ p.results.percept.byItem +
     bracket.size = 2,
     tip.length = 1)
 
-p.results.percept.byItem 
-
 ggsave(p.results.percept.byItem, filename = "../figures/Result-ratings-byItem.png",
        width = 7, height = 4)
 ```
