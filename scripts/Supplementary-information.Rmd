@@ -79,6 +79,7 @@ library(cowplot)        # multi-plot figures
 library(plotly)         # 3D plotting 
 library(shiny)          # tabs
 library(ggpubr)
+library(rstatix)
 library(ggforce)
 library(ggsignif)       # for significance stars on plots
 library(gridExtra)
