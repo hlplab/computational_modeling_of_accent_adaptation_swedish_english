@@ -2389,7 +2389,7 @@ Whatever the reasons are for this mismatch between the ideal observer and the re
 
 (ref:IO-ratings-results-byItem-wTraining-folds-folded-test) **2-fold cross-validated ideal observer /d/-goodness ratings evaluated on separate test folds**. Error bars show 95\% bootstrapped confidence intervals over by-item predictions (since there aren't multiple subjects). Each row shows one training fold excluding a different half of the native training data. Each column shows a separate test bin with 15 randomly chosen minimal pairs (resulting in 4 test folds for the English experiment and 2 test folds for the Swedish experiment). For additional details, see Figure \@ref(fig:IO-ratings-results-byItem).
 
-```{r cross-validation-fold-test}
+```{r cross-validation-fold-test, set.seed(333)}
 d.test.IO.wTraining_folds.wTest_folds <-
   left_join(
     d.IO.test.wTraining_folds,
@@ -2401,9 +2401,40 @@ d.test.IO.wTraining_folds.wTest_folds <-
         NativeLanguage == "English" ~ ntile(runif(length(Item.MinimalPair)), 4),
         NativeLanguage == "Swedish" ~ ntile(runif(length(Item.MinimalPair)), 2)))) %>%
   join_IO_categorizations_with_human_test(d.test)
+
+# To provide annotations for the training-test plot grid, get the mean model rating of d, for each word within each training-test fold:
+my.filter <- d.test.IO.wTraining_folds.wTest_folds %>%
+  filter(Model.Group.matchesParticipant.Group == "yes") %>%
+  group_by(Language, Model.Group, Sound, Training_fold, Test_fold, Item.WordID) %>%
+  summarise(mean.model.rating.d = mean(Model.Rating.d.zscored))
+ 
+# set up t-test function to compare the predicted ratings by each model.group (i.e., diff between predicted ratings for /d/ by control and predicted ratings for /d/ by d-exposure, etc…)
+ signif_test <- function(.data) {
+    model.t <- t.test(mean.model.rating.d ~ Model.Group, paired = TRUE, .data)
+    pvalue <- 3
+    model.t[[pvalue]]
+}
+ 
+# Get the p-values of the t-test:
+ my.pvalues <- my.filter %>% group_by(Language, Sound, Training_fold, Test_fold) %>%
+  nest() %>%
+  mutate(t.test.p = map_dbl(data, ~ signif_test(.x))) %>% 
+   unnest(data) %>% 
+   group_by(Language, Model.Group, Sound, Training_fold, Test_fold, t.test.p) %>% 
+   nest() %>% select(-data) %>% 
+   group_by(Training_fold, Test_fold) %>% 
+   pivot_wider(names_from = Model.Group, values_from = Sound) %>% 
+   mutate(signif = ifelse(t.test.p <= .05, "*", "n.s")) 
+ 
+  
 ```
 
 ```{r IO-ratings-results-byItem-wTraining-folds-folded-test, fig.cap="(ref:IO-ratings-results-byItem-wTraining-folds-folded-test)", fig.height=8.5, fig.width=10.5, out.width='100%'}
+
+my.pvalues %<>%  rename(group1 = `/d/-exposure`,
+          group2 = `control`) %>% 
+  group_by(Language, Training_fold, Test_fold) %>% summarise(n())
+
 plot_grid(
   p.IO_prediction %+% 
     (d.test.IO.wTraining_folds.wTest_folds %>%
@@ -2411,6 +2442,10 @@ plot_grid(
        group_by(Language, NativeLanguage, Group, Sound, Item.WordID, Model.Group, Training_fold, Test_fold) %>%
        summarise(Rating.mean = mean(Model.Posterior.d * 2 - 1))) +
     facet_grid(Training_fold ~ Test_fold, scales="free_y") +
+    stat_pvalue_manual(my.pvalues %>% 
+                         filter(Language == "Mandarin-accented English"),
+                       y.position = 1.125, 
+                       label = "signif") +
     ggtitle("Mandarin-accented English"),
   p.IO_prediction %+% 
     (d.test.IO.wTraining_folds.wTest_folds %>%
@@ -2418,9 +2453,13 @@ plot_grid(
        group_by(Language, NativeLanguage, Group, Sound, Item.WordID, Model.Group, Training_fold, Test_fold) %>%
        summarise(Rating.mean = mean(Model.Posterior.d * 2 - 1))) +
     facet_grid(Training_fold ~ Test_fold, scales="free_y") +
+    stat_pvalue_manual(my.pvalues %>% filter(Language == "Flemish-accented Swedish"),
+                       y.position = 1.125, 
+                       label = "signif") +
     ggtitle("Flemish-accented Swedish"),
   nrow = 1,
   rel_widths = c(4, 2))
+
 
 ggsave(filename = "../figures/Result-ratings-byItem-wTraining_folds-folded-test.png",
        width = 30, height = 20)
