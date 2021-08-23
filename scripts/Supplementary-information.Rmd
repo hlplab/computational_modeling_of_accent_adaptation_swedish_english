@@ -2301,6 +2301,13 @@ Figure \@ref(fig:IO-ratings-results-byItem) plots the predictions of the ideal o
 (ref:ratings-results-byItem) **Human /d/-goodness ratings** during test (z-scored) by native language and exposure group. To facilitate comparison of the human data to the ideal observers in Figure \@ref(fig:IO-ratings-results-byItem), we first aggregate the human data by exposure condition and *item*, averaging across all subjects. These are the individual points shown in the figure. The bars show the mean of these by-item means, and the error interval shows the 95\% confidence interval over the by-item means. This contrasts with Figure \@ref(fig:ratings-results) in Section \@ref(sec:results), where we plotted the mean and confidence interval of by-subject means. 
 
 ```{r IO-ratings-results-byItem, fig.cap="(ref:IO-ratings-results-byItem)", fig.height=4.5, out.width='75%', fig.align='center'}
+
+d.test.IO.t <- d.test.IO %>% filter(Model.Group.matchesParticipant.Group == "yes") %>%
+  group_by(Language, NativeLanguage, Group, Sound, Item.WordID, Model.Group) %>% 
+  summarise(mean.model.rating.d = mean(Model.Rating.d.zscored)) %>% 
+  group_by(Language, Sound) %>% 
+  rstatix::pairwise_t_test(mean.model.rating.d ~ Model.Group, paired = TRUE) 
+
 p.IO_prediction <- p.results.perception.bySubject %+%
   (d.test.IO %>%
      filter(Model.Group.matchesParticipant.Group == "yes") %>%
@@ -2349,6 +2356,7 @@ p.results.percept.byItem <- p.results.perception.bySubject %+%
   ylab("Mean /d/-goodness ratings\n(z-scored) by item") +
   ylim(-1.25, 1.30)
 
+<<<<<<< HEAD
 stat.test <- compare_means(
   Rating.mean ~ Group, 
   data = d.test %>%
@@ -2370,6 +2378,9 @@ p.results.percept.byItem +
     remove.bracket = FALSE,
     bracket.size = 2,
     tip.length = 1)
+=======
+p.results.percept.byItem 
+>>>>>>> 4720f5a48001286be55a89a458279e36e70dc7b6
 ggsave(p.results.percept.byItem, filename = "../figures/Result-ratings-byItem.png",
        width = 7, height = 4)
 ```
@@ -2495,6 +2506,7 @@ my.filter <- d.test.IO.wTraining_folds.wTest_folds %>%
     model.t[[pvalue]]
 }
  
+  
 # Get the p-values of the t-test:
  my.pvalues <- my.filter %>% group_by(Language, Sound, Training_fold, Test_fold) %>%
   nest() %>%
