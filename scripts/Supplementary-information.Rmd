@@ -2356,7 +2356,7 @@ p.results.percept.byItem <- p.results.perception.bySubject %+%
   ylab("Mean /d/-goodness ratings\n(z-scored) by item") +
   ylim(-1.25, 1.30)
 
-<<<<<<< HEAD
+
 stat.test <- compare_means(
   Rating.mean ~ Group, 
   data = d.test %>%
@@ -2378,9 +2378,9 @@ p.results.percept.byItem +
     remove.bracket = FALSE,
     bracket.size = 2,
     tip.length = 1)
-=======
+
 p.results.percept.byItem 
->>>>>>> 4720f5a48001286be55a89a458279e36e70dc7b6
+
 ggsave(p.results.percept.byItem, filename = "../figures/Result-ratings-byItem.png",
        width = 7, height = 4)
 ```
