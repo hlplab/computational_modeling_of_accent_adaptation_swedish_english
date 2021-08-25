@@ -2319,17 +2319,17 @@ p.IO_prediction <- p.results.perception.bySubject %+%
     values = colors.Accent) +
   ylim(-1.25, 1.25)
 
-stat.test <- compare_means(
-  Rating.mean ~ Model.Group, 
-  data = d.test.IO %>%
-     filter(Model.Group.matchesParticipant.Group == "yes") %>%
-     group_by(Language, NativeLanguage, Group, Sound, Item.WordID, Model.Group) %>%
-     summarise(Rating.mean = mean(Model.Posterior.d * 2 - 1)), 
-  group.by = c("Language", "NativeLanguage", "Sound"),
-  method = "wilcox.test",
-  comparison = c(1,2),
-  paired = T
-)
+# stat.test <- compare_means(
+#   Rating.mean ~ Model.Group, 
+#   data = d.test.IO %>%
+#      filter(Model.Group.matchesParticipant.Group == "yes") %>%
+#      group_by(Language, NativeLanguage, Group, Sound, Item.WordID, Model.Group) %>%
+#      summarise(Rating.mean = mean(Model.Posterior.d * 2 - 1)), 
+#   group.by = c("Language", "NativeLanguage", "Sound"),
+#   method = "wilcox.test",
+#   comparison = c(1,2),
+#   paired = T
+# )
 
 
 p.IO_prediction + 
@@ -2366,7 +2366,7 @@ stat.test <- compare_means(
   paired = T
 )
 
-p.results.percept.byItem + 
+p.results.percept.byItem 
   # stat_pvalue_manual(
   #   stat.test, 
   #   y.position = 1.3,
@@ -2432,17 +2432,26 @@ d.IO.test.wTraining_folds <- categorize_stims_by_IO(d.stims, d.IO.wTraining_fold
 d.test.IO.wTraining_folds <- join_IO_categorizations_with_human_test(d.IO.test.wTraining_folds, d.test)
 save(d.test.IO.wTraining_folds, file = "../data/data_perception_test phase plus IO predictions_both languages-2 training folds.Rdata")
 
-stat.test <- compare_means(
-  Rating.mean ~ Model.Group, 
-  data = d.test.IO.wTraining_folds %>%
+
+stat.test <- d.test.IO.wTraining_folds %>%
      filter(Model.Group.matchesParticipant.Group == "yes") %>%
      group_by(Language, NativeLanguage, Group, Sound, Item.WordID, Model.Group, Training_fold) %>%
-     summarise(Rating.mean = mean(Model.Posterior.d * 2 - 1)), 
-  group.by = c("Language", "NativeLanguage", "Sound", "Training_fold"),
-  method = "wilcox.test",
-  comparison = c(1,2),
-  paired = T
+     summarise(Rating.mean = mean(Model.Posterior.d * 2 - 1)) %>% 
+  group_by(Language, NativeLanguage, Sound, Training_fold) %>%
+     pairwise_t_test(Rating.mean ~ Model.Group, paired = T
 )
+
+# stat.test <- compare_means(
+#   Rating.mean ~ Model.Group, 
+#   data = d.test.IO.wTraining_folds %>%
+#      filter(Model.Group.matchesParticipant.Group == "yes") %>%
+#      group_by(Language, NativeLanguage, Group, Sound, Item.WordID, Model.Group, Training_fold) %>%
+#      summarise(Rating.mean = mean(Model.Posterior.d * 2 - 1)), 
+#   group.by = c("Language", "NativeLanguage", "Sound", "Training_fold"),
+#   method = "wilcox.test",
+#   comparison = c(1,2),
+#   paired = T
+# )
 
 p.IO_prediction %+% 
   (d.test.IO.wTraining_folds %>%
@@ -2450,15 +2459,12 @@ p.IO_prediction %+%
      group_by(Language, NativeLanguage, Group, Sound, Item.WordID, Model.Group, Training_fold) %>%
      summarise(Rating.mean = mean(Model.Posterior.d * 2 - 1))) +
   facet_grid(Training_fold ~ Language, scales="free_y") +
-  stat_pvalue_manual(
-    stat.test, 
-    x = "Sound", 
-    y.position = 1.1,
-    label = "p.signif",
-    position = position_dodge(0.9), 
-    remove.bracket = FALSE,
-    bracket.size = 2,
-    tip.length = 1)
+  stat_pvalue_manual(stat.test %>% 
+                       add_x_position(x = "Sound", dodge = 0.9),
+                     y.position = 1.25,
+    label = "p.adj.signif",
+    bracket.size = .5,
+    tip.length = .02)
 ggsave(filename = "../figures/Result-ratings-byItem-wTraining_folds.png",
        width = 14, height = 20)
 ```
@@ -2516,9 +2522,17 @@ my.filter <- d.test.IO.wTraining_folds.wTest_folds %>%
 
 ```{r IO-ratings-results-byItem-wTraining-folds-folded-test, fig.cap="(ref:IO-ratings-results-byItem-wTraining-folds-folded-test)", fig.height=8.5, fig.width=10.5, out.width='100%'}
 
-my.pvalues %<>%  rename(group1 = `/d/-exposure`,
-          group2 = `control`) %>% 
-  group_by(Language, Training_fold, Test_fold) 
+# my.pvalues %<>%  rename(group1 = `/d/-exposure`,
+#           group2 = `control`) %>% 
+#   group_by(Language, Training_fold, Test_fold) 
+
+stat.test <- d.test.IO.wTraining_folds.wTest_folds %>%
+     filter(Model.Group.matchesParticipant.Group == "yes") %>%
+     group_by(Language, NativeLanguage, Group, Sound, Item.WordID, Model.Group, Training_fold, Test_fold) %>%
+     summarise(Rating.mean = mean(Model.Posterior.d * 2 - 1)) %>% 
+  group_by(Language, NativeLanguage, Sound, Training_fold, Test_fold) %>%
+     pairwise_t_test(Rating.mean ~ Model.Group, paired = T
+)
 
 plot_grid(
   p.IO_prediction %+% 
@@ -2527,10 +2541,13 @@ plot_grid(
        group_by(Language, NativeLanguage, Group, Sound, Item.WordID, Model.Group, Training_fold, Test_fold) %>%
        summarise(Rating.mean = mean(Model.Posterior.d * 2 - 1))) +
     facet_grid(Training_fold ~ Test_fold, scales="free_y") +
-    stat_pvalue_manual(my.pvalues %>% 
-                         filter(Language == "Mandarin-accented English"),
+    stat_pvalue_manual(stat.test %>% 
+                         filter(Language == "Mandarin-accented English") %>%
+                         add_x_position(x = "Sound", dodge = .9),
                        y.position = 1.125, 
-                       label = "signif") +
+                       label = "p.adj.signif",
+                       bracket.size = .5,
+                       tip.length = .01) +
     ggtitle("Mandarin-accented English"),
   p.IO_prediction %+% 
     (d.test.IO.wTraining_folds.wTest_folds %>%
@@ -2538,9 +2555,13 @@ plot_grid(
        group_by(Language, NativeLanguage, Group, Sound, Item.WordID, Model.Group, Training_fold, Test_fold) %>%
        summarise(Rating.mean = mean(Model.Posterior.d * 2 - 1))) +
     facet_grid(Training_fold ~ Test_fold, scales="free_y") +
-    stat_pvalue_manual(my.pvalues %>% filter(Language == "Flemish-accented Swedish"),
+    stat_pvalue_manual(stat.test %>% 
+                         filter(Language == "Flemish-accented Swedish") %>%
+                         add_x_position(x = "Sound", dodge = .9),
                        y.position = 1.125, 
-                       label = "signif") +
+                       label = "p.adj.signif",
+                       bracket.size = .5,
+                       tip.length = .01) +
     ggtitle("Flemish-accented Swedish"),
   nrow = 1,
   rel_widths = c(4, 2))
