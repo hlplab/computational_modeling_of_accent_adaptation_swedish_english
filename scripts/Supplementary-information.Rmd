@@ -729,7 +729,7 @@ p.results.perception = d.test %>%
                position = position_dodge(.93)) +
   stat_summary(aes(group = Group), fun.data = mean_cl_boot, geom = "linerange", 
                size = .8, 
-               position = position_dodge(.93)) +
+               position = position_dodge(.9)) +
   scale_x_discrete("Intended sound category") +
   scale_y_continuous("/d/-goodness rating (z-scored)") +
   scale_color_manual(values = colors.Group) +
@@ -750,27 +750,35 @@ p.results.perception.bySubject = insertLayer(
                position = position_dodge(.9)))
 
 # Comparisons
-stat.test <- compare_means(
-  Rating.mean ~ Group, 
+# stat.test <- compare_means(
+#   Rating.mean ~ Group,
+#   data = d.test %>%
+#   group_by(Language, NativeLanguage, Group, Sound, Participant) %>%
+#   summarise(Rating.mean = mean(Rating.Response.d.zscored)),
+#   group.by = c("Language", "NativeLanguage", "Sound"),
+#   method = "wilcox.test",
+#   comparison = c(1,2),
+#   paired = F
+# )
+
+stat.test <- t_test(
   data = d.test %>%
   group_by(Language, NativeLanguage, Group, Sound, Participant) %>%
-  summarise(Rating.mean = mean(Rating.Response.d.zscored)), 
-  group.by = c("Language", "NativeLanguage", "Sound"),
-  method = "wilcox.test",
-  comparison = c(1,2),
+  summarise(Rating.mean = mean(Rating.Response.d.zscored)) %>% 
+    group_by(Language, NativeLanguage, Sound),
+  Rating.mean ~ Group, 
   paired = F
-) 
+) %>% mutate(signif = ifelse(p <= .05, "*", "ns"))
 
 p.results.perception.bySubject + 
   scale_y_continuous("Mean /d/-goodness ratings\n(z-scored) by subject") +
   stat_pvalue_manual(
-    stat.test, 
+    stat.test %>% add_x_position(x = "Sound", dodge = .9), 
     y.position = 1,
-    label = "p.signif",
-    position = position_dodge(0.9), 
+    label = "signif",
     remove.bracket = FALSE,
-    bracket.size = 2,
-    tip.length = 1)
+    bracket.size = 0.3,
+    tip.length = .006)
 ```
 
 Figure \@ref(fig:ratings-results) shows the z-scored /d/-goodness ratings from both experiments. To compare participants' ratings for the /d,t/-final test words across the two experiments, we conducted a linear mixed-effects regression [@baayen2008mixed] over the combined data from both experiments. The regression predicted z-scored /d/-goodness ratings based on the sound category (sum-coded: 1 = word recording intended to end in /d/ vs. -1 = word recording intended to end in /t/), exposure group (sum-coded: 1 =  /d/-exposure vs. -1 = control), the experiment (sum-coded: 1 = Swedish vs. -1 = English), and all their interactions. The regression contained the maximal random effect structure justified by the design (random by-participant intercepts and slope for sound; random by-item intercepts and slopes for sound, exposure group, and their interaction).^[Even this simplified model estimated the variance of the by-participant intercepts to be zero (see below), presumably because the z-scoring of ratings within participant already removed that variance. If all by-participant random effects are excluded, the results reported below do not change. If non-z-scored ratings are analyzed instead (unlike in previous work), the three-way interaction is no longer significant ($p = .11$).]
