@@ -53,7 +53,7 @@ div.main-container {
 
 ```{r rmarkdown setup, include=FALSE}
 knitr::opts_chunk$set(echo = FALSE, 
-                      message=FALSE, warning=FALSE, error=TRUE, fig.align = 'center')
+                      message=FALSE, warning=FALSE, error=TRUE, cache = FALSE, fig.cap="left-aligned")
 ```
 
 
@@ -749,26 +749,15 @@ p.results.perception.bySubject = insertLayer(
                binaxis = "y", stackdir = "center", 
                position = position_dodge(.9)))
 
-# Comparisons
-# stat.test <- compare_means(
-#   Rating.mean ~ Group,
-#   data = d.test %>%
-#   group_by(Language, NativeLanguage, Group, Sound, Participant) %>%
-#   summarise(Rating.mean = mean(Rating.Response.d.zscored)),
-#   group.by = c("Language", "NativeLanguage", "Sound"),
-#   method = "wilcox.test",
-#   comparison = c(1,2),
-#   paired = F
-# )
-
 stat.test <- t_test(
   data = d.test %>%
   group_by(Language, NativeLanguage, Group, Sound, Participant) %>%
   summarise(Rating.mean = mean(Rating.Response.d.zscored)) %>% 
     group_by(Language, NativeLanguage, Sound),
   Rating.mean ~ Group, 
-  paired = F
-) %>% mutate(signif = ifelse(p <= .05, "*", "ns"))
+  var.equal = F, 
+  paired = F) %>% 
+  mutate(signif = ifelse(p <= .05, "*", "ns"))
 
 p.results.perception.bySubject + 
   scale_y_continuous("Mean /d/-goodness ratings\n(z-scored) by subject") +
@@ -812,19 +801,6 @@ tab_model(lmer.rating,
           title = "(\\#tab:ratings-analysis) Results of linear mixed-effects regression of /d/-goodness ratings.",
           pred.labels = pred.labels,
           dv.labels = "/d/-goodness rating (z-scored)")
-
-
-# summary(lmer(Rating.Response.d.zscored ~ 
-#                      NativeLanguage / (Group * Sound) + 
-#          (1 + Sound * Group | Item.MinimalPair) + (1 | Participant), 
-#        data = d.test %>% 
-#          applyContrasts()))
-
-# summary(lmer(Rating.Response.d.zscored ~ 
-#                      (NativeLanguage * Sound) / Group + 
-#          (1 + Sound * Group | Item.MinimalPair) + (1 | Participant), 
-#        data = d.test %>% 
-#          applyContrasts()))
 
 # Get simple effects via emmeans
 emm = emmeans(lmer.rating,  ~ Group : Sound | NativeLanguage,
@@ -2254,7 +2230,7 @@ d.english.ID <- d.english.ID %>%
 
 (ref:ID-to-ratings) Item-level correlation of human identification and rating responses from two experiments in @xie2017more. The two experiments used the same exposure and test stimuli, and differed only in the task during test (identification vs. rating). The trend line shows a generalized additive model fit with a non-parametric smoother. That is, the fit would in principle allow non-linearity in the relation between identification and rating responses. The fact that no non-linearity is detected suggests that the relation is largely linear. Shaded areas show 95\% confidence intervals.
 
-```{r ID-to-ratings, fig.cap="(ref:ID-to-ratings)", fig.height = 4.5, out.width="75%", fig.align='center'}
+```{r ID-to-ratings, fig.cap="(ref:ID-to-ratings)", fig.height = 4.5, out.width="75%"}
 d.english.test.byItem <- 
  plyr::rbind.fill(d.test %>% filter(NativeLanguage == "English") %>%
                      droplevels() %>% 
@@ -2307,13 +2283,7 @@ Figure \@ref(fig:IO-ratings-results-byItem) plots the predictions of the ideal o
 
 (ref:ratings-results-byItem) **Human /d/-goodness ratings** during test (z-scored) by native language and exposure group. To facilitate comparison of the human data to the ideal observers in Figure \@ref(fig:IO-ratings-results-byItem), we first aggregate the human data by exposure condition and *item*, averaging across all subjects. These are the individual points shown in the figure. The bars show the mean of these by-item means, and the error interval shows the 95\% confidence interval over the by-item means. This contrasts with Figure \@ref(fig:ratings-results) in Section \@ref(sec:results), where we plotted the mean and confidence interval of by-subject means. 
 
-```{r IO-ratings-results-byItem, fig.cap="(ref:IO-ratings-results-byItem)", fig.height=4.5, out.width='75%', fig.align='center'}
-
-d.test.IO.t <- d.test.IO %>% filter(Model.Group.matchesParticipant.Group == "yes") %>%
-  group_by(Language, NativeLanguage, Group, Sound, Item.WordID, Model.Group) %>% 
-  summarise(Rating.mean = mean(Model.Posterior.d * 2 - 1)) %>% 
-  group_by(Language, NativeLanguage, Sound) %>% 
-  rstatix::pairwise_t_test(Rating.mean ~ Model.Group, paired = TRUE) 
+```{r IO-ratings-results-byItem, fig.cap="(ref:IO-ratings-results-byItem)", fig.height=4.5, out.width='75%'}
 
 p.IO_prediction <- p.results.perception.bySubject %+%
   (d.test.IO %>%
@@ -2338,11 +2308,25 @@ p.IO_prediction <- p.results.perception.bySubject %+%
 #   comparison = c(1,2),
 #   paired = T
 # )
-
+stat.test <- d.test.IO %>% filter(Model.Group.matchesParticipant.Group == "yes") %>%
+  group_by(Language, 
+           NativeLanguage, 
+           Group, Sound, 
+           Item.WordID, 
+           Model.Group) %>% 
+  summarise(Rating.mean = mean(Model.Posterior.d * 2 - 1)) %>% 
+  group_by(Language, 
+           NativeLanguage, 
+           Sound) %>% 
+  rstatix::pairwise_t_test(Rating.mean ~ Model.Group, 
+                           paired = TRUE,
+                           var.equal = FALSE) 
 
 p.IO_prediction + 
   stat_pvalue_manual(
-    d.test.IO.t %>% add_x_position(x = "Sound", dodge = 0.9), 
+    stat.test %>% 
+      add_x_position(x = "Sound", 
+                     dodge = 0.9), 
     y.position = 1.2,
     label = "p.adj.signif",
     remove.bracket = FALSE,
@@ -2354,7 +2338,7 @@ ggsave(p.IO_prediction, filename = "../figures/IO-result-ratings-byItem.png",
 ```
 
 
-```{r ratings-results-byItem, fig.cap="(ref:ratings-results-byItem)", fig.height=4.5, out.width='75%', fig.align='center'}
+```{r ratings-results-byItem, fig.cap="(ref:ratings-results-byItem)", fig.height=4.5, out.width='75%'}
 p.results.percept.byItem <- p.results.perception.bySubject %+%
   (d.test %>%
      group_by(Language, NativeLanguage, Group, Sound, Item.WordID) %>%
@@ -2362,13 +2346,19 @@ p.results.percept.byItem <- p.results.perception.bySubject %+%
   ylab("Mean /d/-goodness ratings\n(z-scored) by item") +
   ylim(-1.25, 1.30)
 
-
 stat.test <- pairwise_t_test(data = d.test %>%
-     group_by(Language, NativeLanguage, Group, Sound, Item.WordID) %>%
+     group_by(Language, 
+              NativeLanguage, 
+              Group, 
+              Sound, 
+              Item.WordID) %>%
      summarise(Rating.mean = mean(Rating.Response.d.zscored)) %>% 
-       group_by(Language, NativeLanguage, Sound),
+       group_by(Language, 
+                NativeLanguage, 
+                Sound),
    Rating.mean ~ Group,
-  paired = T
+  paired = T,
+  var.equal = FALSE
 )
 
 p.results.percept.byItem +
@@ -2437,26 +2427,24 @@ d.IO.test.wTraining_folds <- categorize_stims_by_IO(d.stims, d.IO.wTraining_fold
 d.test.IO.wTraining_folds <- join_IO_categorizations_with_human_test(d.IO.test.wTraining_folds, d.test)
 save(d.test.IO.wTraining_folds, file = "../data/data_perception_test phase plus IO predictions_both languages-2 training folds.Rdata")
 
-
 stat.test <- d.test.IO.wTraining_folds %>%
      filter(Model.Group.matchesParticipant.Group == "yes") %>%
-     group_by(Language, NativeLanguage, Group, Sound, Item.WordID, Model.Group, Training_fold) %>%
+     group_by(Language, 
+              NativeLanguage, 
+              Group, 
+              Sound, 
+              Item.WordID, 
+              Model.Group, 
+              Training_fold) %>%
      summarise(Rating.mean = mean(Model.Posterior.d * 2 - 1)) %>% 
-  group_by(Language, NativeLanguage, Sound, Training_fold) %>%
-     pairwise_t_test(Rating.mean ~ Model.Group, paired = T
+  group_by(Language, 
+           NativeLanguage, 
+           Sound, 
+           Training_fold) %>%
+     pairwise_t_test(Rating.mean ~ Model.Group, 
+                     paired = T,
+                     var.equal = FALSE
 )
-
-# stat.test <- compare_means(
-#   Rating.mean ~ Model.Group, 
-#   data = d.test.IO.wTraining_folds %>%
-#      filter(Model.Group.matchesParticipant.Group == "yes") %>%
-#      group_by(Language, NativeLanguage, Group, Sound, Item.WordID, Model.Group, Training_fold) %>%
-#      summarise(Rating.mean = mean(Model.Posterior.d * 2 - 1)), 
-#   group.by = c("Language", "NativeLanguage", "Sound", "Training_fold"),
-#   method = "wilcox.test",
-#   comparison = c(1,2),
-#   paired = T
-# )
 
 p.IO_prediction %+% 
   (d.test.IO.wTraining_folds %>%
@@ -2476,7 +2464,7 @@ ggsave(filename = "../figures/Result-ratings-byItem-wTraining_folds.png",
 
 Next, we evaluated the models obtained from both training folds on cross-validated test folds. By comparing across test folds within each training fold, we can estimate how robust our results are as the test items change. Specifically, we randomly split the test data into folds of 30 tokens each (15 minimal pairs), resulting in 2 folds for the Swedish test data (which had 60 test tokens) and 4 folds for the English test data (which had 120 test tokens). Each fold was created by sampling minimal pairs---rather than individual words---to hold the phonological context constant between the /d/ and /t/ test items within each fold. We then compared the model predictions for each test fold against the human ratings on the same test items. 
 
-Figure \@ref(fig:IO-ratings-results-byItem-wTraining-folds-folded-test) plots the predictions for each combination of training and test fold. As expected, now with only 1/4 of the test items for English and 1/2 for Swedish, the confidence interval of the mean goodness ratings predicted by the ideal observers noticeably widened, leaving most contrasts between the /d/-exposure and control models no longer significant. Encouragingly, however, the qualitative pattern of predictions---the contrast between the /d/-exposure and control models---remained largely stable across test folds within the same training fold for both the English and Swedish data. Thus is appears that, at the group-level, the predictions of the two ideal observers we developed are relatively stable even for small amounts of training and test data.
+Figure \@ref(fig:IO-ratings-results-byItem-wTraining-folds-folded-test) plots the predictions for each combination of training and test fold. As expected, now with only 1/4 of the test items for English and 1/2 for Swedish, the confidence interval of the mean goodness ratings predicted by the ideal observers noticeably widened, leaving most contrasts between the /d/-exposure and control models no longer significant. Encouragingly, however, the qualitative pattern of predictions---the contrast between the /d/-exposure and control models---remained largely stable across test folds within the same training fold for both the English and Swedish data. Thus it appears that, at the group-level, the predictions of the two ideal observers we developed are relatively stable even for small amounts of training and test data.
 
 At the same time, Figure \@ref(fig:IO-ratings-results-byItem-wTraining-folds-folded-test) suggest clear limits to what can be inferred from our data: the predicted contrast between /d/ and /t/ test items in the English control model is numerically reversed in three of the test folds for the first training fold (top row of left panel of Figure \@ref(fig:IO-ratings-results-byItem-wTraining-folds-folded-test)). This stands in stark contrast to what we observe in the human ratings, as already noted in the previous section. This mismatch is particularly noteworthy, since we generally see the opposite pattern: as noted in the previous section, the predictions of our ideal observers are generally *more* categorical than the actual pattern of human ratings. This also means that the ideal observers' failure to reliably predict a contrast between /d/ and /t/ test items after control exposure in the English experiment is unlikely to be due to our assumption of noise-free perception (as the inclusion of noise should lead to even less categorical predictions). In short, while cross-validation confirms the qualitative contrasts between /d/-exposure and control models that continue to parallel those observed for human participants, we also find a qualitative mismatch between the models and the human data with regard to the ability to distinguish between /d/ and /t/ even after *control* exposure. As we discuss in the general discussion in the main text, this mismatch might mean that the participants in the English experiment already had exposure to Mandarin-accented English /d/ prior to the experiment. Alternatively, it might mean that even the control exposure (which contains Mandarin-accented English but not Mandarin-accented English /d/) provided participants in the English experiment with helpful information about how Mandarin-accented /d/ and /t/ are realized---information that is not captured by the ideal observers we developed here. It is, however, also possible that this mismatch points to other, more severe, deficiencies of the models we developed here---including the possibility that distributional learning does *not* underlie accent adaptation.
 
@@ -2496,48 +2484,29 @@ d.test.IO.wTraining_folds.wTest_folds <-
         NativeLanguage == "English" ~ ntile(runif(length(Item.MinimalPair)), 4),
         NativeLanguage == "Swedish" ~ ntile(runif(length(Item.MinimalPair)), 2)))) %>%
   join_IO_categorizations_with_human_test(d.test)
-
-# To provide annotations for the training-test plot grid, get the mean model rating of d, for each word within each training-test fold:
-my.filter <- d.test.IO.wTraining_folds.wTest_folds %>%
-  filter(Model.Group.matchesParticipant.Group == "yes") %>%
-  group_by(Language, Model.Group, Sound, Training_fold, Test_fold, Item.WordID) %>%
-  summarise(mean.model.rating.d = mean(Model.Rating.d.zscored))
- 
-# set up t-test function to compare the predicted ratings by each model.group (i.e., diff between predicted ratings for /d/ by control and predicted ratings for /d/ by d-exposure, etc…)
- signif_test <- function(.data) {
-    model.t <- t.test(mean.model.rating.d ~ Model.Group, paired = TRUE, .data)
-    pvalue <- 3
-    model.t[[pvalue]]
-}
- 
-  
-# Get the p-values of the t-test:
- my.pvalues <- my.filter %>% group_by(Language, Sound, Training_fold, Test_fold) %>%
-  nest() %>%
-  mutate(t.test.p = map_dbl(data, ~ signif_test(.x))) %>% 
-   unnest(data) %>% 
-   group_by(Language, Model.Group, Sound, Training_fold, Test_fold, t.test.p) %>% 
-   nest() %>% select(-data) %>% 
-   group_by(Training_fold, Test_fold) %>% 
-   pivot_wider(names_from = Model.Group, values_from = Sound) %>% 
-   mutate(signif = ifelse(t.test.p <= .05, "*", "n.s")) 
- 
-  
 ```
 
 ```{r IO-ratings-results-byItem-wTraining-folds-folded-test, fig.cap="(ref:IO-ratings-results-byItem-wTraining-folds-folded-test)", fig.height=8.5, fig.width=10.5, out.width='100%'}
 
-# my.pvalues %<>%  rename(group1 = `/d/-exposure`,
-#           group2 = `control`) %>% 
-#   group_by(Language, Training_fold, Test_fold) 
-
 stat.test <- d.test.IO.wTraining_folds.wTest_folds %>%
      filter(Model.Group.matchesParticipant.Group == "yes") %>%
-     group_by(Language, NativeLanguage, Group, Sound, Item.WordID, Model.Group, Training_fold, Test_fold) %>%
+     group_by(Language, 
+              NativeLanguage, 
+              Group, 
+              Sound, 
+              Item.WordID, 
+              Model.Group, 
+              Training_fold, 
+              Test_fold) %>%
      summarise(Rating.mean = mean(Model.Posterior.d * 2 - 1)) %>% 
-  group_by(Language, NativeLanguage, Sound, Training_fold, Test_fold) %>%
-     pairwise_t_test(Rating.mean ~ Model.Group, paired = T
-)
+  group_by(Language, 
+           NativeLanguage, 
+           Sound, 
+           Training_fold, 
+           Test_fold) %>%
+     pairwise_t_test(Rating.mean ~ Model.Group, 
+                     paired = T, 
+                     var.equal = FALSE)
 
 plot_grid(
   p.IO_prediction %+% 
@@ -2548,7 +2517,8 @@ plot_grid(
     facet_grid(Training_fold ~ Test_fold, scales="free_y") +
     stat_pvalue_manual(stat.test %>% 
                          filter(Language == "Mandarin-accented English") %>%
-                         add_x_position(x = "Sound", dodge = .9),
+                         add_x_position(x = "Sound", 
+                                        dodge = .9),
                        y.position = 1.125, 
                        label = "p.adj.signif",
                        bracket.size = .5,
@@ -2562,12 +2532,13 @@ plot_grid(
     facet_grid(Training_fold ~ Test_fold, scales="free_y") +
     stat_pvalue_manual(stat.test %>% 
                          filter(Language == "Flemish-accented Swedish") %>%
-                         add_x_position(x = "Sound", dodge = .9),
+                         add_x_position(x = "Sound", 
+                                        dodge = .9),
                        y.position = 1.125, 
                        label = "p.adj.signif",
                        bracket.size = .5,
                        tip.length = .01) +
-    ggtitle("Flemish-accented Swedish"),
+    ggtitle("Flemish-accented Swedish"), 
   nrow = 1,
   rel_widths = c(4, 2))
 
@@ -2860,7 +2831,7 @@ plot_IO_test(d.IO, d.test.IO, language = c("Swedish"), cues = selected_cues, sho
              points.alpha = .9, points.line.width = 2)
 ```
 
-## Do ideal observers that model an exposure condition predict item-lvel human /d/-goodness ratings *better* than ideal observers intended for a different exposure condition? {#sec:matching-vs-mismatching-IO}
+## Do ideal observers that model an exposure condition predict item-level human /d/-goodness ratings *better* than ideal observers intended for a different exposure condition? {#sec:matching-vs-mismatching-IO}
 
 All analyses presented so far predicted human ratings from the predictions of ideal observers that are intended to *match* the exposure condition that participants experienced. As we have shown in the preceding sections, these analyses find a good fit between the posterior probabilities of /d/ predicted by the ideal observers and human /d/-goodness ratings. These analyses do, however, leave open whether human ratings could be predicted equally well from ideal observers that mismatch participants' exposure condition. For example, are participants' ratings after /d/-exposure exposure better predicted by an ideal observer that is intended to model /d/-exposure than by an ideal observer that is intended to model control exposure? Or, in more techincal terms, is the likelihood of the human ratings higher under an ideal observer that matches the exposure condition of the participant than under an ideal observer that models the opposite exposure condition?
 
@@ -2943,102 +2914,102 @@ b) human listeners use different cues to perceive the contrast which our models 
 
 ```{r compare-log-likelihood, include = FALSE}
 
-lmer_IO <- function(.data, include.sound = FALSE) {
-  if (include.sound) { 
-    my.model <- lmer(Rating.Response.d.zscored ~ 1 + scale(Model.Posterior.d) + Sound +
-         (1 + Sound + scale(Model.Posterior.d) | Item.MinimalPair) + 
-           (1 + scale(Model.Posterior.d) | Participant), 
-                     data = .data, control = lmerControl(optCtrl = list(maxfun=20000)), REML = F)
-  } else {
-    my.model <- lmer(Rating.Response.d.zscored ~ 1 + scale(Model.Posterior.d) + 
-         (1 + scale(Model.Posterior.d) | Item.MinimalPair) + 
-           (1 + scale(Model.Posterior.d) | Participant), 
-                     data = .data, control = lmerControl(optCtrl = list(maxfun=20000)), REML = F)
-  }
-}
-
-get_loglik <- function(.data, include.sound) {
-  LikeIndex <- 1
-  my.model <- lmer_IO(.data, include.sound) %>% logLik()
-  return(my.model[[LikeIndex]])
-}
-
-get_tvalue <- function(.data, include.sound) {
-  my.model <- 
-    lmer_IO(.data, include.sound) %>%
-      tidy()
-  return(my.model[[2, 6]])
-}
-
-models.likelihood <- d.test.IO.wTraining_folds.wTest_folds %>% 
-  group_by(Language, Group, Model.Group.matchesParticipant.Group, Training_fold, Test_fold) %>% 
-  nest() %>% 
-  mutate(
-    include.sound = FALSE,
-    n.token = map_dbl(data, ~ nrow(.x)),
-    log.likelihood = map2_dbl(.x = data, .y = include.sound, ~ get_loglik(.x, .y)), 
-    log.likelihood.per.token = log.likelihood/n.token,
-    t.value.posterior = map2_dbl(.x = data, .y = include.sound, ~ get_tvalue(.x, .y))
-  ) 
-
-models.sound.likelihood <- d.test.IO.wTraining_folds.wTest_folds %>% 
-  group_by(Language, Group, Model.Group.matchesParticipant.Group, Training_fold, Test_fold) %>% 
-  nest() %>% 
-  mutate(
-    include.sound = TRUE,
-    n.token = map_dbl(data, ~ nrow(.x)),
-    log.likelihood = map2_dbl(.x = data, .y = include.sound, ~ get_loglik(.x, .y)), 
-    log.likelihood.per.token = log.likelihood/n.token,
-    t.value.posterior = map2_dbl(.x = data, .y = include.sound, ~ get_tvalue(.x, .y))
-  ) 
+# lmer_IO <- function(.data, include.sound = FALSE) {
+#   if (include.sound) { 
+#     my.model <- lmer(Rating.Response.d.zscored ~ 1 + scale(Model.Posterior.d) + Sound +
+#          (1 + Sound + scale(Model.Posterior.d) | Item.MinimalPair) + 
+#            (1 + scale(Model.Posterior.d) | Participant), 
+#                      data = .data, control = lmerControl(optCtrl = list(maxfun=20000)), REML = F)
+#   } else {
+#     my.model <- lmer(Rating.Response.d.zscored ~ 1 + scale(Model.Posterior.d) + 
+#          (1 + scale(Model.Posterior.d) | Item.MinimalPair) + 
+#            (1 + scale(Model.Posterior.d) | Participant), 
+#                      data = .data, control = lmerControl(optCtrl = list(maxfun=20000)), REML = F)
+#   }
+# }
+# 
+# get_loglik <- function(.data, include.sound) {
+#   LikeIndex <- 1
+#   my.model <- lmer_IO(.data, include.sound) %>% logLik()
+#   return(my.model[[LikeIndex]])
+# }
+# 
+# get_tvalue <- function(.data, include.sound) {
+#   my.model <- 
+#     lmer_IO(.data, include.sound) %>%
+#       tidy()
+#   return(my.model[[2, 6]])
+# }
+# 
+# models.likelihood <- d.test.IO.wTraining_folds.wTest_folds %>% 
+#   group_by(Language, Group, Model.Group.matchesParticipant.Group, Training_fold, Test_fold) %>% 
+#   nest() %>% 
+#   mutate(
+#     include.sound = FALSE,
+#     n.token = map_dbl(data, ~ nrow(.x)),
+#     log.likelihood = map2_dbl(.x = data, .y = include.sound, ~ get_loglik(.x, .y)), 
+#     log.likelihood.per.token = log.likelihood/n.token,
+#     t.value.posterior = map2_dbl(.x = data, .y = include.sound, ~ get_tvalue(.x, .y))
+#   ) 
+# 
+# models.sound.likelihood <- d.test.IO.wTraining_folds.wTest_folds %>% 
+#   group_by(Language, Group, Model.Group.matchesParticipant.Group, Training_fold, Test_fold) %>% 
+#   nest() %>% 
+#   mutate(
+#     include.sound = TRUE,
+#     n.token = map_dbl(data, ~ nrow(.x)),
+#     log.likelihood = map2_dbl(.x = data, .y = include.sound, ~ get_loglik(.x, .y)), 
+#     log.likelihood.per.token = log.likelihood/n.token,
+#     t.value.posterior = map2_dbl(.x = data, .y = include.sound, ~ get_tvalue(.x, .y))
+#   ) 
 ```
 
 
 ```{r IO-log-likelihood-training-test-folds, fig.cap="(ref:IO-log-likelihood-training-test-folds)", fig.height=4.5, out.width='75%'}
-p.likelihood <- models.likelihood %>% 
-  ggplot(aes(x = Group , y = log.likelihood.per.token, colour = Group, shape = Model.Group.matchesParticipant.Group)) +
-  geom_dotplot(aes(fill = Group),  
-               alpha = .3,  dotsize = 0.5, 
-               binaxis = "y", stackdir = "center", 
-               position = position_dodge(.4)) +
-  scale_fill_manual(values = colors.Accent) + 
-    stat_summary(
-      geom = "pointrange", 
-      fun.data = mean_cl_boot, 
-      size = 0.7, 
-      position = position_dodge(width = 0.4)) +
-    scale_color_manual(values = colors.Accent) +
-    scale_shape_manual("IO matches exposure", breaks = c("yes", "no"), values = c(16, 17)) +
-  scale_y_continuous(name = "Fit against perceptual responses\n(per token log likelihood)") +
-    guides(shape = guide_legend(override.aes = list(size = .7)),
-           colour = guide_legend(override.aes = list(size = .7))) +
-  facet_wrap( ~ Language)
-
-p.likelihood
-p.likelihood + 
-  aes(y = t.value.posterior) +
-  scale_y_continuous(name = "Effect of model-predicted posterior\n(t-value)")
+# p.likelihood <- models.likelihood %>% 
+#   ggplot(aes(x = Group , y = log.likelihood.per.token, colour = Group, shape = Model.Group.matchesParticipant.Group)) +
+#   geom_dotplot(aes(fill = Group),  
+#                alpha = .3,  dotsize = 0.5, 
+#                binaxis = "y", stackdir = "center", 
+#                position = position_dodge(.4)) +
+#   scale_fill_manual(values = colors.Accent) + 
+#     stat_summary(
+#       geom = "pointrange", 
+#       fun.data = mean_cl_boot, 
+#       size = 0.7, 
+#       position = position_dodge(width = 0.4)) +
+#     scale_color_manual(values = colors.Accent) +
+#     scale_shape_manual("IO matches exposure", breaks = c("yes", "no"), values = c(16, 17)) +
+#   scale_y_continuous(name = "Fit against perceptual responses\n(per token log likelihood)") +
+#     guides(shape = guide_legend(override.aes = list(size = .7)),
+#            colour = guide_legend(override.aes = list(size = .7))) +
+#   facet_wrap( ~ Language)
+# 
+# p.likelihood
+# p.likelihood + 
+#   aes(y = t.value.posterior) +
+#   scale_y_continuous(name = "Effect of model-predicted posterior\n(t-value)")
 ```
 
 (ref:IO-log-likelihood-training-test-folds) **Relative goodness-of-fit of matching ideal observers against that of mismatching ideal observers** to human ratings across all training and test folds. The log likelihood measures the fit of a linear mixed effects regression on human ratings with the posterior /d/-ratings by the respective ideal observers as a predictor. Error bars indicate 95\% bootstrapped confidence interval over the average log likelihood per token.
 
 ```{r IO-log-likelihood-training-test-folds-sound, fig.cap="(ref:IO-log-likelihood-training-test-folds-sound)", fig.height=4.5, out.width='75%'}
-p.sound.likelihood <- models.sound.likelihood %>% 
-  ggplot(aes(x = Group , y = log.likelihood.per.token, colour = Group, shape = Model.Group.matchesParticipant.Group)) +
-  geom_dotplot(aes(fill = Group),  
-               alpha = .3,  dotsize = 0.5, 
-               binaxis = "y", stackdir = "center", 
-               position = position_dodge(.4)) +
-  scale_fill_manual(values = colors.Accent)
-  
-  p.sound.likelihood + 
-    stat_summary(geom = "pointrange", fun.data = mean_cl_boot, size = 0.7, position = position_dodge(width = 0.4)) +
-    scale_color_manual(values = colors.Accent) +
-    scale_shape_manual("IO matches exposure", breaks = c("yes", "no"), values = c(16, 17)) +
-  scale_y_continuous(name = "Fit against perceptual responses\n(per token log likelihood)") +
-      guides(shape = guide_legend(override.aes = list(size = .7)),
-           colour = guide_legend(override.aes = list(size = .7))) +
-  facet_wrap( ~ Language)
+# p.sound.likelihood <- models.sound.likelihood %>% 
+#   ggplot(aes(x = Group , y = log.likelihood.per.token, colour = Group, shape = Model.Group.matchesParticipant.Group)) +
+#   geom_dotplot(aes(fill = Group),  
+#                alpha = .3,  dotsize = 0.5, 
+#                binaxis = "y", stackdir = "center", 
+#                position = position_dodge(.4)) +
+#   scale_fill_manual(values = colors.Accent)
+#   
+#   p.sound.likelihood + 
+#     stat_summary(geom = "pointrange", fun.data = mean_cl_boot, size = 0.7, position = position_dodge(width = 0.4)) +
+#     scale_color_manual(values = colors.Accent) +
+#     scale_shape_manual("IO matches exposure", breaks = c("yes", "no"), values = c(16, 17)) +
+#   scale_y_continuous(name = "Fit against perceptual responses\n(per token log likelihood)") +
+#       guides(shape = guide_legend(override.aes = list(size = .7)),
+#            colour = guide_legend(override.aes = list(size = .7))) +
+#   facet_wrap( ~ Language)
 ```
 
 (ref:IO-log-likelihood-training-test-folds-sound) **Relative goodness-of-fit of matching ideal observers against that of mismatching ideal observers** to human ratings across all training and test folds. The log likelihood measures the fit of a linear mixed effects regression on human ratings with the posterior /d/-ratings by the respective ideal observers and sound as predictors. Error bars indicate 95% bootstrapped confidence interval over the average log likelihood per token.
