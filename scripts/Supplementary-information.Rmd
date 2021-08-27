@@ -1747,6 +1747,11 @@ plot_cue_matrix(
 ```
 
 
+## Assumptions of the ideal observers 
+Table \@ref(ref:XXX) summarizes the assumptions made by the computational approach taken here. 
+
+
+
 ## Training the four ideal observers {#sec:IO-training}
 
 ```{r IO-training-functions, include=FALSE}
@@ -1978,7 +1983,6 @@ plot_IO_training =
 }
 ```
 
-
 For the non-native /d/ category, we used all 30 tokens observed during non-native exposure. For the native /d/ and /t/, we sampled 30 tokens with replacement for each talker. The non-native /t/ category was identical to the native /t/ category (for each draw of a training set). In summary, we use the following training data:
 
 - **control** ideal observers: 
@@ -2013,8 +2017,6 @@ d.IO %>% plot_IO_training(d.IO.training, language = "English", cues = selected_c
 ```{r plot-IO-3D-Swedish, fig.cap="(ref:plot-IO-3D-Swedish)", out.width="75%", fig.show='hold'}
 d.IO %>% plot_IO_training(d.IO.training, language = "Swedish", cues = selected_cues)
 ``` 
-
-
 
 
 ## Testing the four ideal observers {#sec:IO-test}
