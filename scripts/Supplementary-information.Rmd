@@ -53,7 +53,7 @@ div.main-container {
 
 ```{r rmarkdown setup, include=FALSE}
 knitr::opts_chunk$set(echo = FALSE, 
-                      message=FALSE, warning=FALSE, error=TRUE, cache = FALSE, fig.cap="left-aligned")
+                      message=FALSE, warning=FALSE, error=TRUE, cache = FALSE)
 ```
 
 
@@ -546,7 +546,7 @@ save(d.exposure, file = "../data/data_perception_exposure phase_both languages.R
 save(d.test, file = "../data/data_perception_test phase_both languages.Rdata")
 ```
 
-## Lexical decision accuracy during exposure
+## Lexical decision accuracy during exposure {#sec:lexical-decision-accuracy}
 
 ```{r functions for exposure data}
 # Pipes
@@ -772,7 +772,7 @@ p.results.perception.bySubject +
 
 Figure \@ref(fig:ratings-results) shows the z-scored /d/-goodness ratings from both experiments. To compare participants' ratings for the /d,t/-final test words across the two experiments, we conducted a linear mixed-effects regression [@baayen2008mixed] over the combined data from both experiments. The regression predicted z-scored /d/-goodness ratings based on the sound category (sum-coded: 1 = word recording intended to end in /d/ vs. -1 = word recording intended to end in /t/), exposure group (sum-coded: 1 =  /d/-exposure vs. -1 = control), the experiment (sum-coded: 1 = Swedish vs. -1 = English), and all their interactions. The regression contained the maximal random effect structure justified by the design (random by-participant intercepts and slope for sound; random by-item intercepts and slopes for sound, exposure group, and their interaction).^[Even this simplified model estimated the variance of the by-participant intercepts to be zero (see below), presumably because the z-scoring of ratings within participant already removed that variance. If all by-participant random effects are excluded, the results reported below do not change. If non-z-scored ratings are analyzed instead (unlike in previous work), the three-way interaction is no longer significant ($p = .11$).]
 
-For the by-participant random effects, we had to remove the random slope for sound in order for the model to converge without perfect correlations. All other random correlations are included in the model. Table \@ref(tab:ratings-analysis) summarizes the results. We find a significant main effect of sound, so that non-native-accented productions of /d/ were judged to have higher /d/-goodness than non-native-accented productions of /t/ ($\hat{\beta} = .55, t = 19.3, p < .0001$). The two-way interaction between native language and sound was also higly significant ($\hat{\beta} = .11, t = 3.8, p < .0003$), so that the differences between the /d/-goodness ratings for /d/ and /t/ was larger for the Flemish-accented Swedish speaker than the Mandarin-accented English speaker. One possible interpretation of this is that the Flemish-accented Swedish speaker deviated less from the expectations of native Swedish listeners than the Mandarin-accented English speaker deviated from the expectations of American listeners. 
+For the by-participant random effects, we had to remove the random slope for sound in order for the model to converge without perfect correlations. All other random correlations are included in the model. Table \@ref(tab:ratings-analysis) summarizes the results. We find a significant main effect of sound, so that non-native-accented productions of /d/ were judged to have higher /d/-goodness than non-native-accented productions of /t/ ($\hat{\beta} = .56, t = 19.3, p < .0001$). The two-way interaction between native language and sound was also higly significant ($\hat{\beta} = .11, t = 3.8, p < .0003$), so that the differences between the /d/-goodness ratings for /d/ and /t/ was larger for the Flemish-accented Swedish speaker than the Mandarin-accented English speaker. One possible interpretation of this is that the Flemish-accented Swedish speaker deviated less from the expectations of native Swedish listeners than the Mandarin-accented English speaker deviated from the expectations of American listeners. 
 
 Finally, the three-way interaction between native language, sound, and exposure group was also significant ($\hat{\beta} = -.04, t = -3.3, p < .002$), suggesting that the effect of exposure on /d/-goodness ratings for /d/ and /t/ differed between the Swedish and English experiments. Simple effect analyses revealed that the two-way interaction between exposure group and sound was significant for English, so that /d/-exposure *in*creased the difference in /d/-goodness ratings for /d/ and /t/, compared to the control group ($\hat{\beta} = .04, t = 4.1, p < .0001$). That is, compared to the English control group, participants in the English /d/-exposure group rated the Mandarin-accented /d/ as a better exemplar of /d/ and the Mandarin-accented /t/ as a better exemplar of /t/. This simple effect did not reach significance in the Swedish experiment; in fact, it went in the opposite of the predicted direction ($\hat{\beta} = -.03, t = -1.6, p = .104$).
 
@@ -1590,7 +1590,7 @@ correct_for_suprasegmental_context = function(
 }
 ```
 
-Supra-segmental factors like---lexical stress and speech rate---are also known to affect the phonetic realization of sounds. For example, segments tend to have longer durations in stressed, compared to unstressed, syllables [@lindblom1963spectrographic; @van1987effects] and in words with fewer syllables [@rietveld1987effect]. We thus removed effects of lexical stress, and syllable/word complexity on vowel, closure, and burst duration.
+Supra-segmental factors like lexical stress and speech rate are also known to affect the phonetic realization of sounds. For example, segments tend to have longer durations in stressed, compared to unstressed, syllables [@lindblom1963spectrographic; @van1987effects] and in words with fewer syllables [@rietveld1987effect]. We thus removed effects of lexical stress, and syllable/word complexity on vowel, closure, and burst duration.
 
 The linear regressions were estimated using only the /d/-final words, since the syllable-final /t/ (by design) only occurred as mono-syllabic test words. Furthermore, recordings of multi-syllabic /d/-words in our English database were only available for the non-native talker, forcing us to fit the regressions with non-native data.^[While the Swedish database had native recordings of multi-syllabic /d/-words we used the non-native data to keep the modeling maximally parallel across the two languages.] Using non-native data for this purpose is not ideal given that C-CuRE is fundamentally meant to estimate the expected cue values based on native realizations but it was the only choice available to us. Our procedure thus assumes that supra-segemental effects are identical for both syllable-final /d/ and /t/. 
 
@@ -1748,9 +1748,19 @@ plot_cue_matrix(
 
 
 ## Assumptions of the ideal observers 
-Table \@ref(ref:XXX) summarizes the assumptions made by the computational approach taken here. 
+Table \@ref(tab:IO-assumptions-table) summarizes the assumptions made by the computational approach used to understand the difference between the English and Swedish data. The final column summarizes whether an assumption is likely to cause a problem for our argument—i.e., does the assumption trivially explain the model’s predictions for English and Swedish?
 
-
+```{r IO-assumptions-table, out.width="100%"}
+correction_table <- as_tibble(read_csv2("../data/IO_assumptions_table.csv")) 
+correction_table %>% 
+  kbl(caption = "Summary of IO assumptions") %>% 
+  kable_styling(bootstrap_options = c("striped", "condensed"), full_width = F) %>% 
+  column_spec(1, bold = T, border_right = T) %>% 
+  column_spec(2, bold = F, border_right = T) %>% 
+  column_spec(3, bold = F, border_right = F)  
+  # column_spec(4, bold = F, border_right = T, width = "9em") %>% 
+  # column_spec(5, bold = F, border_right = T, width = "6em") 
+```
 
 ## Training the four ideal observers {#sec:IO-training}
 
@@ -2138,7 +2148,7 @@ Figure \@ref(fig:ideal-observers-posterior) summarizes the predicted posterior p
 
 (ref:ideal-observers-posterior) Posterior probabilities of /d/ and /t/ predicted by the control and /d/-exposure ideal observers for the non-native-accented /d/- and /t/ words during test.
 
-```{r ideal-observers-posterior, fig.cap="(ref:ideal-observers-posterior)", fig.height=4.5, out.width="75%"}
+```{r ideal-observers-posterior, fig.cap="(ref:ideal-observers-posterior)", fig.height=4.5, out.width="95%"}
 p.post = d.IO.test %>%
   ggplot(aes(x= Sound, 
            y = Model.Posterior.Intended, 
@@ -2167,7 +2177,7 @@ Figure \@ref(fig:ideal-observers-accuracy) shows the predicted accuracy for a hy
 
 (ref:ideal-observers-accuracy) Predicted accuracy of control and /d/-exposure ideal observers for the non-native-accented /d/- and /t/ words during test.
 
-```{r ideal-observers-accuracy, fig.cap="(ref:ideal-observers-accuracy)", fig.height=4.5, out.width="75%"}
+```{r ideal-observers-accuracy, fig.cap="(ref:ideal-observers-accuracy)", fig.height=4.5, out.width="95%"}
 p <- p.post %+% 
   (d.IO.test) +
   geom_hline(yintercept = 1/2, color = "gray") +
@@ -2232,7 +2242,7 @@ d.english.ID <- d.english.ID %>%
 
 (ref:ID-to-ratings) Item-level correlation of human identification and rating responses from two experiments in @xie2017more. The two experiments used the same exposure and test stimuli, and differed only in the task during test (identification vs. rating). The trend line shows a generalized additive model fit with a non-parametric smoother. That is, the fit would in principle allow non-linearity in the relation between identification and rating responses. The fact that no non-linearity is detected suggests that the relation is largely linear. Shaded areas show 95\% confidence intervals.
 
-```{r ID-to-ratings, fig.cap="(ref:ID-to-ratings)", fig.height = 4.5, out.width="75%"}
+```{r ID-to-ratings, fig.cap="(ref:ID-to-ratings)", fig.height = 4.5, out.width="95%"}
 d.english.test.byItem <- 
  plyr::rbind.fill(d.test %>% filter(NativeLanguage == "English") %>%
                      droplevels() %>% 
@@ -2285,7 +2295,7 @@ Figure \@ref(fig:IO-ratings-results-byItem) plots the predictions of the ideal o
 
 (ref:ratings-results-byItem) **Human /d/-goodness ratings** during test (z-scored) by native language and exposure group. To facilitate comparison of the human data to the ideal observers in Figure \@ref(fig:IO-ratings-results-byItem), we first aggregate the human data by exposure condition and *item*, averaging across all subjects. These are the individual points shown in the figure. The bars show the mean of these by-item means, and the error interval shows the 95\% confidence interval over the by-item means. This contrasts with Figure \@ref(fig:ratings-results) in Section \@ref(sec:results), where we plotted the mean and confidence interval of by-subject means. 
 
-```{r IO-ratings-results-byItem, fig.cap="(ref:IO-ratings-results-byItem)", fig.height=4.5, out.width='75%'}
+```{r IO-ratings-results-byItem, fig.cap="(ref:IO-ratings-results-byItem)", fig.height=4.5, out.width='95%'}
 
 p.IO_prediction <- p.results.perception.bySubject %+%
   (d.test.IO %>%
@@ -2340,7 +2350,7 @@ ggsave(p.IO_prediction, filename = "../figures/IO-result-ratings-byItem.png",
 ```
 
 
-```{r ratings-results-byItem, fig.cap="(ref:ratings-results-byItem)", fig.height=4.5, out.width='75%'}
+```{r ratings-results-byItem, fig.cap="(ref:ratings-results-byItem)", fig.height=4.5, out.width='95%'}
 p.results.percept.byItem <- p.results.perception.bySubject %+%
   (d.test %>%
      group_by(Language, NativeLanguage, Group, Sound, Item.WordID) %>%
@@ -2375,7 +2385,7 @@ ggsave(p.results.percept.byItem, filename = "../figures/Result-ratings-byItem.pn
        width = 7, height = 4)
 ```
 
-The ideal observers' predictions differ from the human ratings in a number of ways. First, the human data is more gradient than predicted by the ideal observers. This is most evident for the Swedish data. One likely explanation for this is that the simple ideal observers we employ here do not account for perceptual noise [cf. @feldman2009influence] or attentional lapses (see Table S1 with model assumptions). Second, the differences between the different ideal observers are more pronounced than for the z-scored human ratings. This is the case both across languages, and across exposure conditions within each language. This difference between model predictions and human ratings is particularly evident for /t/ test items after control exposure in the English experiment (gray bars on the right side of the left panels of Figures \@ref(fig:IO-ratings-results-byItem) and \@ref(fig:ratings-results-byItem)): whereas the ideal observers predicts very little of a difference between /d/ and /t/ test items, the ratings of human participants show a clear difference. We will return to this particular difference below, since it suggests that even participants in the English control condition where able to distinguish the L2-accented /d/ from the L2-accented /t/.
+The ideal observers' predictions differ from the human ratings in a number of ways. First, the human data is more gradient than predicted by the ideal observers. This is most evident for the Swedish data. One likely explanation for this is that the simple ideal observers we employ here do not account for perceptual noise [cf. @feldman2009influence] or attentional lapses (see @\ref(tab:IO-assumptions-table) with model assumptions). Second, the differences between the different ideal observers are more pronounced than for the z-scored human ratings. This is the case both across languages, and across exposure conditions within each language. This difference between model predictions and human ratings is particularly evident for /t/ test items after control exposure in the English experiment (gray bars on the right side of the left panels of Figures \@ref(fig:IO-ratings-results-byItem) and \@ref(fig:ratings-results-byItem)): whereas the ideal observers predicts very little of a difference between /d/ and /t/ test items, the ratings of human participants show a clear difference. We will return to this particular difference below, since it suggests that even participants in the English control condition where able to distinguish the L2-accented /d/ from the L2-accented /t/.
 
 The ideal observers do, however, predict the qualitative patterns in the human goodness ratings. For the English data, the ideal observers predict significantly higher ratings from the /d/-exposure model over the control model for both /d/ and /t/. This advantage of /d/-exposure seems more pronounced for the /t/-category than for the /d/ category. Though less obviously so, this also is the case for the human ratings: for the /t/ category, the CIs of the two models do not include the means of the other model; for the /d/ category, they do. For the Swedish data, the ideal observers predict no difference between the control and /d/-exposure model for /d/ but higher ratings for the the *control* model for /t/. This qualitatively mirrors the asymmetry between /d/ and /t/ observed for the human ratings, though the effect for /t/ is only marginal for the human ratings.
 
@@ -2423,7 +2433,7 @@ For Swedish,the models using both folds find that /d/-exposure should not affect
 
 (ref:IO-ratings-results-byItem-wTraining-folds) **2-fold cross-validated ideal observer /d/-goodness ratings** during test (z-scored) predicted by the control and /d/-exposure ideal observers. Error bars show 95\% bootstrapped confidence intervals over by-item predictions (since there aren't multiple subjects). Each row shows one training fold excluding a different half of the native training data. For additional details, see Figure \@ref(fig:IO-ratings-results-byItem). 
 
-```{r IO-ratings-results-byItem-wTraining-folds, fig.cap="(ref:IO-ratings-results-byItem-wTraining-folds)", fig.height=8.5, out.width='75%'}
+```{r IO-ratings-results-byItem-wTraining-folds, fig.cap="(ref:IO-ratings-results-byItem-wTraining-folds)", fig.height=8.5, out.width='95%'}
 # Following same steps as above for non-CV testing
 d.IO.test.wTraining_folds <- categorize_stims_by_IO(d.stims, d.IO.wTraining_folds)
 d.test.IO.wTraining_folds <- join_IO_categorizations_with_human_test(d.IO.test.wTraining_folds, d.test)
