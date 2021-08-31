@@ -2563,7 +2563,7 @@ ggsave(filename = "../figures/Result-ratings-byItem-wTraining_folds-folded-test.
 
 So far we have compared the qualitative patterns of ideal observer predictions and human ratings. Next, we assess the predictive power of ideal observer more directly.  We first predicted human responses across all native languages and exposure conditions from the ideal observers that are meant for those languages and exposure conditions. That is, we predict human ratings in the /d/-exposure group from the /d/-exposure ideal observer, and human ratings in the control group from the control ideal observer. Specifically, we use a linear mixed-effects regression, predicting human /d/-goodness ratings from the posterior probability of /d/ predicted by the ideal observers, while also including the maximal converging random effect structure (random intercepts by participant and minimal pair). 
  
-This analysis is summarized in Table \@ref(tab:ratings-IO-analysis) and found a highly significant effect of IO-predicted posterior probabilities on the z-scored human goodness ratings ($\hat{\beta} = 1.25, t = 25.09, p < .001$). 
+This analysis is summarized in Table \@ref(tab:ratings-IO-analysis) and found a highly significant effect of IO-predicted posterior probabilities on the z-scored human goodness ratings ($\hat{\beta} = 1.22, t = 25.09, p < .001$). 
  
 ```{r item-level-regression-between-ID-rating-tasks}
 lmer.IOtoRating =
