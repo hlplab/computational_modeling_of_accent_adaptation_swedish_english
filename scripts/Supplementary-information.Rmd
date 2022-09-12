@@ -59,7 +59,8 @@ knitr::opts_chunk$set(echo = FALSE,
 
 ```{r preamble, message=FALSE, warning=FALSE, error=FALSE, echo=FALSE, results='hide'}
 rm(list=ls())
-library(bookdown) # r markdown references to figures, tables, sections regardless of output format
+library(curl)
+library(bookdown)       # r markdown references to figures, tables, sections regardless of output format
 library(MASS)
 library(tidyverse)      # There is only one universe
 library(magrittr)       # Pipes!
@@ -85,11 +86,11 @@ library(ggsignif)       # for significance stars on plots
 library(gridExtra)
 
 library(assertthat)
-# devtools::install_github('kleinschmidt/daver')
+if (has_internet()) devtools::install_github('kleinschmidt/daver')
 library(daver)
-# devtools::install_github("kleinschmidt/phondisttools")
+if (has_internet()) devtools::install_github("kleinschmidt/phondisttools")
 library(phondisttools)
-# devtools::install_github("hlplab/MVBeliefUpdatr")
+if (has_internet()) devtools::install_github("hlplab/MVBeliefUpdatr")
 library(MVBeliefUpdatr)
 ```
 
